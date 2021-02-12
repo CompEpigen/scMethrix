@@ -1,5 +1,7 @@
 .Rproj.user
+.Rproj
 .Rhistory
 .RData
+.Rbuildignore
 .Ruserdata
-/test.data
+/sample.data

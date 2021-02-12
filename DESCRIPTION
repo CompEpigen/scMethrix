@@ -1,0 +1,20 @@
+Package: scMethrix
+Title: Fast and efficient summarization of single cell whole genome bisulfate data
+Version: 0.0.0.0001
+Authors@R: 
+    person("Lindsay","Andrew", role = "aut", email = "a.lindsay@dkfz.de")
+Description: What the package does (one paragraph).
+License: `use_mit_license()`, `use_gpl3_license()` or friends to
+    pick a license
+Encoding: UTF-8
+LazyData: false
+Depends: R (>= 3.6), data.table (>= 1.12.4), SingleCellExperiment
+Imports: rtracklayer, DelayedArray, HDF5Array, BSgenome, DelayedMatrixStats, parallel, methods, ggplot2, matrixStats, tools, graphics, stats, utils, GenomicRanges, IRanges
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Suggests: 
+    plotly,
+    rmarkdown,
+    testthat
+URL: https://github.com/CompEpigen/scMethrix
+BugReports: https://github.com/CompEpigen/scMethrix/issues
