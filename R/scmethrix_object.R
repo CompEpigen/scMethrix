@@ -24,12 +24,12 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
 })
 
 # Create scMethrix obj
-create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, genome_name = "hg19",
+create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL, on_disk = FALSE, genome_name = "hg19",
                            chrom_sizes = NULL, desc = NULL) {
 
-    if (is_hdf5) {
+    if (on_disk) {
 
-      sse <-
+
 
 
 
@@ -38,14 +38,14 @@ create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL
 
     } else {
 
-      sse <- SingleCellExperiment::SingleCellExperiment(assays = list(counts = as(methyl_mat, "sparseMatrix")),
-                                                      colData = colData,
+      sse <- SingleCellExperiment::SingleCellExperiment(assays = list(score = methyl_mat),
+                                                      #colData = colData,
                                                       rowRanges = rowRanges,
                                                       metadata = list(genome = genome_name,
                                                                       chrom_sizes = chrom_sizes,
                                                                       descriptive_stats = desc))
     }
 
-    return(scMethrix(rse))
+    return(scMethrix(sse))
 }
 

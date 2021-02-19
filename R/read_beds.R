@@ -27,29 +27,69 @@
 #'}
 #'
 
-read_beds <- function(files = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, h5 = NULL, h5_dir = NULL, h5temp = NULL, verbose = TRUE) {
+read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, h5 = NULL, h5_dir = NULL, h5temp = NULL, verbose = TRUE) {
+  
+  beds <- BRGenomics::import_bedGraph(files,ncores=1)
+  gr <- GRangesList(beds)
+  gr <- makeGRangesBRG(gr,ncores=1)
+  gr <- BRGenomics::mergeGRangesData(gr,ncores = 1,multiplex=TRUE)
+  
+  scores <- data.frame()
+  
+  rng <- c(gr, NULL, ignore.mcols=TRUE)
+  
+  m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=c(gr, NULL, ignore.mcols=TRUE))
 
-  genome <- Seqinfo(genome = NA_character_)
-  i <- lapply(files,basename)
-  i <- file_path_sans_ext(i)
-  names(i) <- samples
-  bl <- List(lapply(i, import, genome = genome_name))
-  gr_b <- stack(bl, "i")
-  dj <- disjoin(gr_b, ignore.strand = !stranded, with.revmap = TRUE)
-  mcols(gr_b)$i <- decode(mcols(gr_b)$i)
-  dfl <- extractList(mcols(gr_b), mcols(dj)$revmap)
-  assay <- as.matrix(dfl[, "score"], col.names = dfl[,"i"])
-  rowData <- granges(dj)
-  ans <- SummarizedExperiment(list(score = assay), rowData)
-  sse <- as(ans, "SingleCellExperiment")
-
-
-
-
-
-  return(sse)
+  return(m_obj)
 
 }
 
+
+
+
+assignInNamespace(".multiplex_gr", ns = "BRGenomics",
+                  function(data_in, field, ncores) {
+                    # data must be *sorted*, base-pair resolution coverage data
+                    if (all(vapply(data_in, function(x)
+                      all(width(x) == 1L), logical(1L)))) {
+                      data_in <- mclapply(data_in, sort, mc.cores = ncores)
+                    } else {
+                      warning(
+                        .nicemsg(
+                          "One or more inputs are not 'basepair resolution
+                         GRanges' objects. Coercing them using
+                         makeGRangesBRG()..."
+                        ),
+                        immediate. = TRUE
+                      )
+                      data_in <-
+                        mclapply(data_in, makeGRangesBRG, mc.cores = ncores)
+                    }
+                    
+                    # merge ranges
+                    gr <- do.call(c, c(data_in, use.names = FALSE))
+                    mcols(gr) <- NULL
+                    gr <- unique(sort(gr))
+                    
+                    # (Fastest to keep these next steps separated, esp. for large datasets)
+                    
+                    # get dataframe of signal counts for each dataset in the output GRanges
+                    idx <-
+                      mclapply(data_in, function(x)
+                        which(gr %in% x), mc.cores = ncores)
+                    counts <- mcmapply(function(dat, idx, field) {
+                      out <- rep.int(NA, length(gr))
+                      out[idx] <- mcols(dat)[[field]]
+                      out
+                    },
+                    data_in,
+                    idx,
+                    field,
+                    mc.cores = ncores,
+                    SIMPLIFY = TRUE)
+                    
+                    mcols(gr)[names(data_in)] <- counts
+                    gr
+                  })
 
 
