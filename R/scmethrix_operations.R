@@ -73,9 +73,77 @@ mask_methrix
 combine_methrix
 
 
+
+
+#--------------------------------------------------------------------------------------------------------------------------
+
+#' Subsets \code{\link{scMethrix}} object based on given conditions.
+#' @details Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
+#' @param m \code{\link{scMethrix}} object
+#' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
+#' @param contigs chromosome names to subset by
+#' @param samples sample names to subset by
+#' @examples
+#' data('scMethrix_data')
+#' #Subset to chromosome 1
+#' subset_scMethrix(scMethrix_data, contigs = 'chr1')
+#' @return An object of class \code{\link{scMethrix}}
+#' @export
+subset_scMethrix() <- function(m, regions = NULL, contigs = NULL, samples = NULL) {
+  
+  if (!is(m, "scMmethrix")){
+    stop("A valid scMethrix object needs to be supplied.")
+  }
+  
+  if (!is.null(regions)) {
+  
+    target_regions <- cast_ranges(regions)
+    overlaps <- subsetByOverlaps(m, target_regions)  
+    
+    if (nrow(overlaps) == 0) {
+      stop("Subsetting resulted in zero entries")
+    }
+    
+    m <- overlaps
+  }
+  
+  if (!is.null(contigs)) {
+    
+    contigs  <- GRanges(seqnames=contigs)
+    overlaps <- subsetByOverlaps(m, contigs)
+    
+    if (nrow(overlaps) == 0) {
+      stop("Subsetting resulted in zero entries")
+    }
+    
+    m <- overlaps
+  }
+  
+  if (!is.null(samples)) {
+    message("Subsetting by samples")
+    
+    overlaps <- m
+    
+    for (sample in samples) {mcols(overlaps)[[sample]] <- NULL}
+      
+    if (length(overlaps) == 0) {
+      stop("None of the samples are present in the object")
+    }
+    
+    m <- overlaps
+  }
+  
+  return(m)
+  
+}
+
 srapply <- function(s, func) {
   
   
+mcols(data.mg)  
+  
+  
+  mcols(gr)$value <- NULL
   
   
   
