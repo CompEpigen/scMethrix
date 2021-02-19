@@ -1,3 +1,8 @@
+is_ondisk = function(m) {
+  return(m@metadata$is_ondisk)
+}
+
+
 non_vect_code = function(files,verbose = FALSE,col_idx) {
   
   for (i in 1:length(files)) {

@@ -27,7 +27,7 @@
 #'}
 #'
 
-read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, h5 = NULL, h5_dir = NULL, h5temp = NULL, verbose = TRUE) {
+read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, on_disk = NULL, verbose = TRUE) {
   
   beds <- BRGenomics::import_bedGraph(files,ncores=1)
   gr <- GRangesList(beds)
