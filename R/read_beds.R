@@ -29,19 +29,36 @@
 
 read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, on_disk = NULL, verbose = TRUE) {
   
-  beds <- BRGenomics::import_bedGraph(files,ncores=1)
-  gr <- GRangesList(beds)
-  gr <- makeGRangesBRG(gr,ncores=1)
-  gr <- BRGenomics::mergeGRangesData(gr,ncores = 1,multiplex=TRUE)
+  if (is_ondisk) {
+    
+    gr <- NULL
+    
+    for (file in files) gr <- rbind(gr, data.table::fread(file, header=FALSE,nThread=8, select = c(1:3)))
+    
+    gr <- unique(gr)
+    colnames(gr) <- c("chr","start","end")
+    
+    gr <- makeGRangesFromDataFrame(gr)
+    
+    m_obj <- create_scMethrix(rowRanges=gr, files=files,  on_disk = on_disk)
+    
+  } else {
   
-  scores <- data.frame()
-  
-  rng <- c(gr, NULL, ignore.mcols=TRUE)
-  
-  m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=c(gr, NULL, ignore.mcols=TRUE))
+    beds <- BRGenomics::import_bedGraph(files,ncores=1)
+    gr <- GRangesList(beds)
+    gr <- makeGRangesBRG(gr,ncores=1)
+    gr <- BRGenomics::mergeGRangesData(gr,ncores = 1,multiplex=TRUE)
+    
+    scores <- data.frame()
+    
+    rng <- c(gr, NULL, ignore.mcols=TRUE)
+    
+    m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=c(gr, NULL, ignore.mcols=TRUE), files=files, on_disk = on_disk)
 
+  }
+  
   return(m_obj)
-
+  
 }
 
 

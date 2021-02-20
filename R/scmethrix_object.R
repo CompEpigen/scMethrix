@@ -26,16 +26,17 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
 
 # Create scMethrix obj
 create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL, on_disk = FALSE, genome_name = "hg19",
-                           chrom_sizes = NULL, desc = NULL) {
+                           chrom_sizes = NULL, desc = NULL, files = NULL) {
 
     if (on_disk) {
 
-
-
-
-
-
-
+      sse <- SingleCellExperiment::SingleCellExperiment(#colData = colData,
+                                                        rowRanges = rowRanges,
+                                                        metadata = list(genome = genome_name,
+                                                                        chrom_sizes = chrom_sizes,
+                                                                        descriptive_stats = desc,
+                                                                        is_ondisk = on_disk,
+                                                                        files = files))
 
     } else {
 
@@ -45,7 +46,8 @@ create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL
                                                       metadata = list(genome = genome_name,
                                                                       chrom_sizes = chrom_sizes,
                                                                       descriptive_stats = desc,
-                                                                      is_ondisk = on_disk))
+                                                                      is_ondisk = on_disk,
+                                                                      files = files))
     }
 
     return(scMethrix(sse))
