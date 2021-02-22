@@ -6,16 +6,13 @@
 #' @param genome_name Name of genome. Default hg19
 #' @param n_threads number of threads to use. Default 1.
 #' Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.
-#' @param h5 Should the coverage and methylation matrices be stored as 'HDF5Array'
-#' @param h5_dir directory to store H5 based object
-#' @param h5temp temporary directory to store hdf5
+#' @param on_disk Input files are of the type TABIX
 #' @param verbose Be little chatty ? Default TRUE.
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
 #' @import parallel
-#' @import DelayedMatrixStats
-#' @import SingleCellExperiment DelayedArray HDF5Array
+#' @import SingleCellExperiment BRGenomics
 #' @examples
 #'\dontrun{
 #'bdg_files = list.files(path = system.file('extdata', package = 'methrix'),
@@ -31,6 +28,9 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
   
   if (is_ondisk) {
     
+    if (!all(grepl("\\.(gz|gzip)", files))) stop("Input files must be of type gz or gzip.")
+    if (!all(grepl("\\.(gz|gzip)", paste0(files,".tbi")))) stop("Input files must have corresponding *.tbi (tabix) file in the same directory")
+    
     gr <- NULL
     
     for (file in files) gr <- rbind(gr, data.table::fread(file, header=FALSE,nThread=8, select = c(1:3)))
@@ -40,10 +40,12 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     
     gr <- makeGRangesFromDataFrame(gr)
     
-    m_obj <- create_scMethrix(rowRanges=gr, files=files,  on_disk = on_disk)
+    m_obj <- create_scMethrix(rowRanges=gr, files=files,on_disk = on_disk)
     
   } else {
   
+    if (!all(grepl("\\.(bed|bedgraph)", files))) stop("Input files must be of type bed or bedgraph.")
+    
     beds <- BRGenomics::import_bedGraph(files,ncores=1)
     gr <- GRangesList(beds)
     gr <- makeGRangesBRG(gr,ncores=1)
@@ -60,9 +62,6 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
   return(m_obj)
   
 }
-
-
-
 
 assignInNamespace(".multiplex_gr", ns = "BRGenomics",
                   function(data_in, field, ncores) {
