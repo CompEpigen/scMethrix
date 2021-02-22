@@ -81,8 +81,8 @@ combine_methrix
 #' @details Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
 #' @param m \code{\link{scMethrix}} object
 #' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param contigs chromosome names to subset by
-#' @param samples sample names to subset by
+#' @param contigs string of chromosome names to subset by
+#' @param samples string of sample names to subset by
 #' @examples
 #' data('scMethrix_data')
 #' #Subset to chromosome 1
@@ -99,59 +99,45 @@ subset_scMethrix() <- function(m, regions = NULL, contigs = NULL, samples = NULL
     
     files <- get_files(m)
     
-    if (!is.null(regions)) {
-      
-      regions <- cast_granges(regions)
-     # regions <- GRanges(seqnames = "chr1", ranges = IRanges(start = c(1:500), width = 1))
-      regions <- subsetByOverlaps(rowRanges(m), regions)
-      
-      overlaps <- NULL
-      
-      for (file in files) {
-        
-          score <- get_tabix_scores(file, regions)
-        
-          if (is.null(overlaps)) {overlaps <- score
-          } else {overlaps <- cbind(overlaps,score)}
-        
-      }
-        
-      m <- overlaps
-
-    }
-    
-    if (!is.null(contigs)) {
-      
-      regions <- GRanges(seqnames=contigs)
-      m <- subset_scMethrix(m, regions=regions)
-      
-    }
-    
     if (!is.null(samples)) {
       
       i <- unlist(lapply(files,get_sample_name))
       i <- which(i %in% samples)   
       files <- files[i]
-        
-      for (file in files) {
-        
-        score <- get_tabix_scores(file)
-        
-        if (is.null(overlaps)) {overlaps <- score
-        } else {overlaps <- cbind(overlaps,score)}
-        
-      }
-      
-      m <- overlaps  
       
     }
+    
+    if (!is.null(contigs)) {
+      
+      contigs <- GRanges(seqnames=contigs)
+      
+    }
+    
+    if (!is.null(regions)) {
+      
+      regions <- cast_granges(regions)
+     # regions <- GRanges(seqnames = "chr1", ranges = IRanges(start = c(1:500), width = 1))
+      regions <- subsetByOverlaps(regions, contigs)
+      regions <- subsetByOverlaps(rowRanges(m), regions)
+      
+    }
+    
+    overlaps <- NULL
+    
+    for (file in files) {
+      
+      score <- get_tabix_scores(file, regions)
+      if (is.null(overlaps)) {overlaps <- score
+      } else {overlaps <- cbind(overlaps,score)}
+      
+    }
+    
+    m <- overlaps
     
   } else {
   
     if (!is.null(regions)) {
     
-      
-      
       target_regions <- cast_ranges(regions)
       overlaps <- subsetByOverlaps(m, target_regions)  
       
