@@ -1,8 +1,10 @@
 is_ondisk = function(m) {
-  return(m@metadata$is_ondisk)
+  return(m@metadata$on_disk)
 }
 
 get_files = function(m, name_only = FALSE) {
+  
+  if (!is_ondisk(m)) stop("Given scMethrix object is not stored on disk.")
   
   files <- m@metadata$files
   
