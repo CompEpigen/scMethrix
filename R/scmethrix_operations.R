@@ -85,13 +85,21 @@ combine_methrix
 #' @param samples string of sample names to subset by
 #' @examples
 #' data('scMethrix_data')
+#' contigs <- 'chr1'
+#' regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,150)) 
+#' samples <- c("bed1","bed3")
+#' 
 #' #Subset to chromosome 1
-#' subset_scMethrix(scMethrix_data, contigs = 'chr1')
+#' subset_scMethrix(scMethrix_data, contigs = contigs)
+#' 
+#' #Subset to samples bed1 and bed3
+#' subset_scMethrix(scMethrix_data, samples = samples)
+#' 
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
 subset_scMethrix() <- function(m, regions = NULL, contigs = NULL, samples = NULL) {
   
-  if (!is(m, "scMmethrix")){
+  if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
   
@@ -99,37 +107,54 @@ subset_scMethrix() <- function(m, regions = NULL, contigs = NULL, samples = NULL
     
     files <- get_files(m)
     
+    if (length(files) == 0) {
+      stop("No tabix files to subset")
+    }
+    
     if (!is.null(samples)) {
       
       i <- unlist(lapply(files,get_sample_name))
       i <- which(i %in% samples)   
       files <- files[i]
       
+      if (length(files) == 0) {
+        stop("Subsetting resulted in zero entries")
+      }
+      
     }
+    
+    #
+    
+    subset <- rowRanges(m)
     
     if (!is.null(contigs)) {
       
-      contigs <- GRanges(seqnames=contigs)
-      
+      subset <- subset[seqnames(subset) == contigs]
+
     }
     
     if (!is.null(regions)) {
       
       regions <- cast_granges(regions)
-     # regions <- GRanges(seqnames = "chr1", ranges = IRanges(start = c(1:500), width = 1))
-      regions <- subsetByOverlaps(regions, contigs)
-      regions <- subsetByOverlaps(rowRanges(m), regions)
+      
+      subset <- subsetByOverlaps(subset, regions)
       
     }
+    
+    subset <- sort(subset) # TODO: Somehow subset becomes unsorted; not sure why
     
     overlaps <- NULL
     
     for (file in files) {
       
-      score <- get_tabix_scores(file, regions)
+      score <- get_tabix_scores(file, subset)
       if (is.null(overlaps)) {overlaps <- score
       } else {overlaps <- cbind(overlaps,score)}
       
+    }
+    
+    if (nrow(overlaps) == 0) {
+      stop("Subsetting resulted in zero entries")
     }
     
     m <- overlaps
@@ -177,18 +202,4 @@ subset_scMethrix() <- function(m, regions = NULL, contigs = NULL, samples = NULL
   return(m)
   
 }
-
-srapply <- function(s, func) {
-  
-  
-mcols(data.mg)  
-  
-  
-  mcols(gr)$value <- NULL
-  
-  
-  
-}
-
-
   

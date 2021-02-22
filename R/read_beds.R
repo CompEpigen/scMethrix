@@ -26,7 +26,7 @@
 
 read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, on_disk = NULL, verbose = TRUE) {
   
-  if (is_ondisk) {
+  if (on_disk) {
     
     if (!all(grepl("\\.(gz|gzip)", files))) stop("Input files must be of type gz or gzip.")
     if (!all(grepl("\\.(gz|gzip)", paste0(files,".tbi")))) stop("Input files must have corresponding *.tbi (tabix) file in the same directory")
@@ -40,7 +40,7 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     
     gr <- makeGRangesFromDataFrame(gr)
     
-    m_obj <- create_scMethrix(rowRanges=gr, files=files,on_disk = on_disk)
+    m_obj <- create_scMethrix(rowRanges=gr, files=files, on_disk = on_disk)
     
   } else {
   

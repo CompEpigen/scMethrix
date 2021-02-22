@@ -46,8 +46,7 @@ create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL
                                                       metadata = list(genome = genome_name,
                                                                       chrom_sizes = chrom_sizes,
                                                                       descriptive_stats = desc,
-                                                                      is_ondisk = on_disk,
-                                                                      files = files))
+                                                                      is_ondisk = on_disk))
     }
 
     return(scMethrix(sse))
