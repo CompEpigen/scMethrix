@@ -2,6 +2,13 @@ is_ondisk = function(m) {
   return(m@metadata$is_ondisk)
 }
 
+get_files = function(m) {
+  return(m@metadata$files)
+}
+
+get_sample_name = function(s) {
+  return(strsplit(basename(s), "[.]")[[1]][1])
+}
 
 #--------------------------------------------------------------------------------------------------------------------------
 # Parse genomic regions and convert them to key'd data.table
@@ -35,29 +42,33 @@ cast_ranges <- function(regions, set.key = TRUE) {
   target_regions
 }
 
+#------------------------------------------------------------------------
+# Replace region (text or otherwise) with Granges object
 cast_granges <- function(regions) {
-  
-  
-  
+  if (is(regions, "GRanges")) return (regions)
   
 }
 
 #------------------------------------------------------------------------
 # Gets the scores from a given tabix file for a specific region (including NA)
-get_tabix_scores <- function(file, regions){
+get_tabix_scores <- function(file, regions=NULL){
   
-  if(length(tbx) = 0) stop("Input tabix file has no entries.")
-
-  tbx = Rsamtools::scanTabix(file, param = regions)
+  if (is.null(regions)) {tbx = Rsamtools::scanTabix(file)
+  } else {tbx <- Rsamtools::scanTabix(file, param = regions)}
+ 
+  
+  if(length(tbx) == 0) stop("Input tabix file has no entries.")
+  
   tbx[lengths(tbx) == 0] <- NA_character_
   tbx <- lapply(tbx,function(x) {
                   if (is.na(x)) return(NA)
                   else return (unlist(strsplit(x,"\t"))[4])
   })
 
-  tbx2 <- do.call(rbind.data.frame, tbx)
+  tbx <- do.call(rbind.data.frame, tbx)
 
-  colnames(tbx2) <- strsplit(basename(file), "[.]")[[1]][1]
+  colnames(tbx) <- strsplit(basename(file), "[.]")[[1]][1]
   
+  return(tbx)
 }
 

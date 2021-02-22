@@ -95,44 +95,99 @@ subset_scMethrix() <- function(m, regions = NULL, contigs = NULL, samples = NULL
     stop("A valid scMethrix object needs to be supplied.")
   }
   
-  if (!is.null(regions)) {
-  
-    target_regions <- cast_ranges(regions)
-    overlaps <- subsetByOverlaps(m, target_regions)  
+  if (is_ondisk(m)) {
     
-    if (nrow(overlaps) == 0) {
-      stop("Subsetting resulted in zero entries")
-    }
+    files <- get_files(m)
     
-    m <- overlaps
-  }
-  
-  if (!is.null(contigs)) {
-    
-    contigs  <- GRanges(seqnames=contigs)
-    overlaps <- subsetByOverlaps(m, contigs)
-    
-    if (nrow(overlaps) == 0) {
-      stop("Subsetting resulted in zero entries")
-    }
-    
-    m <- overlaps
-  }
-  
-  if (!is.null(samples)) {
-    message("Subsetting by samples")
-    
-    overlaps <- m
-    
-    for (sample in samples) {mcols(overlaps)[[sample]] <- NULL}
+    if (!is.null(regions)) {
       
-    if (length(overlaps) == 0) {
-      stop("None of the samples are present in the object")
+      regions <- cast_granges(regions)
+     # regions <- GRanges(seqnames = "chr1", ranges = IRanges(start = c(1:500), width = 1))
+      regions <- subsetByOverlaps(rowRanges(m), regions)
+      
+      overlaps <- NULL
+      
+      for (file in files) {
+        
+          score <- get_tabix_scores(file, regions)
+        
+          if (is.null(overlaps)) {overlaps <- score
+          } else {overlaps <- cbind(overlaps,score)}
+        
+      }
+        
+      m <- overlaps
+
     }
     
-    m <- overlaps
-  }
+    if (!is.null(contigs)) {
+      
+      regions <- GRanges(seqnames=contigs)
+      m <- subset_scMethrix(m, regions=regions)
+      
+    }
+    
+    if (!is.null(samples)) {
+      
+      i <- unlist(lapply(files,get_sample_name))
+      i <- which(i %in% samples)   
+      files <- files[i]
+        
+      for (file in files) {
+        
+        score <- get_tabix_scores(file)
+        
+        if (is.null(overlaps)) {overlaps <- score
+        } else {overlaps <- cbind(overlaps,score)}
+        
+      }
+      
+      m <- overlaps  
+      
+    }
+    
+  } else {
   
+    if (!is.null(regions)) {
+    
+      
+      
+      target_regions <- cast_ranges(regions)
+      overlaps <- subsetByOverlaps(m, target_regions)  
+      
+      if (nrow(overlaps) == 0) {
+        stop("Subsetting resulted in zero entries")
+      }
+      
+      m <- overlaps
+    }
+    
+    if (!is.null(contigs)) {
+      
+      contigs  <- GRanges(seqnames=contigs)
+      overlaps <- subsetByOverlaps(m, contigs)
+      
+      if (nrow(overlaps) == 0) {
+        stop("Subsetting resulted in zero entries")
+      }
+      
+      m <- overlaps
+    }
+    
+    if (!is.null(samples)) {
+      message("Subsetting by samples")
+      
+      overlaps <- m
+      
+      for (sample in samples) {mcols(overlaps)[[sample]] <- NULL}
+        
+      if (length(overlaps) == 0) {
+        stop("None of the samples are present in the object")
+      }
+      
+      m <- overlaps
+    }
+  }
   return(m)
   
 }
