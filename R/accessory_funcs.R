@@ -2,8 +2,15 @@ is_ondisk = function(m) {
   return(m@metadata$is_ondisk)
 }
 
-get_files = function(m) {
-  return(m@metadata$files)
+get_files = function(m, name_only = FALSE) {
+  
+  files <- m@metadata$files
+  
+  if (name_only) {
+    files <- unlist(lapply(files,get_sample_name))
+  }
+  
+  return(files)
 }
 
 get_sample_name = function(s) {
