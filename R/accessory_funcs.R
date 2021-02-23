@@ -19,6 +19,25 @@ get_sample_name = function(s) {
   return(strsplit(basename(s), "[.]")[[1]][1])
 }
 
+divide_granges = function(gr,factor) {
+  
+  splits <- floor(length(gr)/factor)
+  splits <- 1+rep(0:(splits-1))*factor
+
+  grl <- List()
+  
+  for (i in 1:length(splits)) {
+    s <- splits[i]
+    grl[[i]] <- gr[s:(s+factor-1)]
+  }
+    
+  grl[[i+1]] <- gr[(last(splits)+factor):length(gr)]  
+    
+  #Test: all(gr == unlist(divide_granges(gr,50))
+
+  return (GRangesList(grl))
+}
+
 #--------------------------------------------------------------------------------------------------------------------------
 # Parse genomic regions and convert them to key'd data.table
 cast_ranges <- function(regions, set.key = TRUE) {
