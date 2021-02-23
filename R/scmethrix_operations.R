@@ -67,14 +67,12 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 #' 
 #' #Subset to region "chr1:1-150"
 #' subset_scMethrix(scMethrix_data, regions = regions)
-#' 
-#' 
-#' 
-#' 
-#' 
+
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
-subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL) {
+subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, verbose=TRUE) {
+  
+  message("Subsetting scMethrix")
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -85,90 +83,64 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL) 
     files <- get_files(m)
     subset <- rowRanges(m)
     
-    if (length(files) == 0) {
-      stop("No tabix files to subset", call. = FALSE)
-    }
+    if (length(files) == 0) stop("No tabix files to subset", call. = FALSE)
     
     if (!is.null(samples)) {
-      
+      message("   Subsetting by samples")
       idx <- unlist(lapply(files,get_sample_name))
       idx <- which(idx %in% samples)   
       files <- files[idx]
-
-      if (length(files) == 0) {
-        stop("Subsetting resulted in zero entries", call. = FALSE)
-      }
-      
+      if (length(files) == 0) stop("Samples not present in files", call. = FALSE)
     }
     
     if (!is.null(contigs)) {
-      
+      message("   Subsetting by contigs")
       subset <- subset[seqnames(subset) == contigs]
-
+      if (length(subset) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
     }
     
     if (!is.null(regions)) {
-      
+      message("   Subsetting by regions")
       regions <- cast_granges(regions)
-      
       subset <- subsetByOverlaps(subset, regions)
-      
+      if (length(subset) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
     }
     
     subset <- sort(subset) # TODO: Somehow subset becomes unsorted; not sure why
-    
     overlaps <- NULL
     
     for (file in files) {
-      
       score <- get_tabix_scores(file, subset)
       if (is.null(overlaps)) {overlaps <- score
       } else {overlaps <- cbind(overlaps,score)}
-      
     }
     
-    if (nrow(overlaps) == 0) {
-      stop("Subsetting resulted in zero entries", call. = FALSE)
-    }
+    if (nrow(overlaps) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
     
     m_obj <- overlaps
     
   } else {
   
     if (!is.null(regions)) {
-    
+      message("   Subsetting by regions")
       regions <- cast_granges(regions)
-      overlaps <- subsetByOverlaps(m, regions)  
-      
-      if (nrow(overlaps) == 0) {
-        stop("Subsetting resulted in zero entries", call. = FALSE)
-      }
-      
+      overlaps <- subsetByOverlaps(m, regions) 
+      if (nrow(overlaps) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
       m_obj <- overlaps
     }
     
     if (!is.null(contigs)) {
-      
+      message("   Subsetting by contigs")
       overlaps <- m[seqnames(m) == contigs]
-      
-      if (nrow(overlaps) == 0) {
-        stop("Subsetting resulted in zero entries", call. = FALSE)
-      }
-      
+      if (nrow(overlaps) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
       m_obj <- overlaps
     }
     
     if (!is.null(samples)) {
-      message("Subsetting by samples")
-      
+      message("   Subsetting by samples")
       overlaps <- m
-      
       for (sample in samples) {mcols(overlaps)[[sample]] <- NULL}
-        
-      if (length(overlaps) == 0) {
-        stop("None of the samples are present in the object", call. = FALSE)
-      }
-      
+      if (length(overlaps) == 0) stop("Samples not present in the object", call. = FALSE)
       m_obj <- overlaps
     }
   }
