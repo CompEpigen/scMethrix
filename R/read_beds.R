@@ -24,12 +24,21 @@
 #'}
 #'
 
-read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, on_disk = NULL, verbose = TRUE) {
+read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, on_disk = FALSE, verbose = TRUE) {
+  
+  if (is.null(files)) {
+    stop("Missing input files.", call. = FALSE)
+  }
+  
+  # if (is.null(ref_cpgs)) {
+  #   stop("Missing genome. Please provide a valid genome name", call. = FALSE)
+  # }
+  
   
   if (on_disk) {
     
-    if (!all(grepl("\\.(gz|gzip)", files))) stop("Input files must be of type gz or gzip.")
-    if (!all(grepl("\\.(gz|gzip)", paste0(files,".tbi")))) stop("Input files must have corresponding *.tbi (tabix) file in the same directory")
+    if (!all(grepl("\\.(gz|gzip)", files))) stop("Input files must be of type gz or gzip.", call. = FALSE)
+    if (!all(grepl("\\.(gz|gzip)", paste0(files,".tbi")))) stop("Input files must have corresponding *.tbi (tabix) file in the same directory", call. = FALSE)
     
     gr <- NULL
     
@@ -40,22 +49,22 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     
     gr <- makeGRangesFromDataFrame(gr)
     
+    names(mcols(gr)) <- lapply(names(mcols(gr)),get_sample_name)
+    
     m_obj <- create_scMethrix(rowRanges=gr, files=files, on_disk = on_disk)
     
   } else {
   
-    if (!all(grepl("\\.(bed|bedgraph)", files))) stop("Input files must be of type bed or bedgraph.")
+    if (!all(grepl("\\.(bed|bedgraph)", files))) stop("Input files must be of type bed or bedgraph.", call. = FALSE)
     
     beds <- BRGenomics::import_bedGraph(files,ncores=1)
     gr <- GRangesList(beds)
     gr <- makeGRangesBRG(gr,ncores=1)
     gr <- BRGenomics::mergeGRangesData(gr,ncores = 1,multiplex=TRUE)
+
+    rng <- c(gr, NULL, ignore.mcols=TRUE) # Remove the metadata for rowRanges input
     
-    scores <- data.frame()
-    
-    rng <- c(gr, NULL, ignore.mcols=TRUE)
-    
-    m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=c(gr, NULL, ignore.mcols=TRUE), files=files, on_disk = on_disk)
+    m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rng, files=files, on_disk = on_disk)
 
   }
   

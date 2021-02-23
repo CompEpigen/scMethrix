@@ -60,18 +60,19 @@ cast_granges <- function(regions) {
 
 #------------------------------------------------------------------------
 # Gets the scores from a given tabix file for a specific region (including NA)
+# Regions must be a subset of rowRanges of the associated scMethrix object
+# regions <- subsetByOverlaps(rowRanges(m), regions)
 get_tabix_scores <- function(file, regions=NULL){
   
   if (is.null(regions)) {tbx = Rsamtools::scanTabix(file)
   } else {tbx <- Rsamtools::scanTabix(file, param = regions)}
  
-  
-  if(length(tbx) == 0) stop("Input tabix file has no entries.")
-  
+  if(length(tbx) == 0) stop(paste("Input tabix file (",file,") has no entries."), call. = FALSE)
+ 
   tbx[lengths(tbx) == 0] <- NA_character_
   tbx <- lapply(tbx,function(x) {
-                  if (is.na(x)) return(NA)
-                  else return (unlist(strsplit(x,"\t"))[4])
+                  if (anyNA(x)) {return(NA) 
+                  } else {return (unlist(strsplit(x,"\t"))[4])}
   })
 
   tbx <- do.call(rbind.data.frame, tbx)

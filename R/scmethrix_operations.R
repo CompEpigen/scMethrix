@@ -1,11 +1,7 @@
-library("sparseMatrixStats")
-library("rbenchmark")
-
-
 get_region_summary = function (m) {
   
   if (!is(m, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
 }
@@ -44,35 +40,6 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
   return (m)
   
 }
-  
-subset_methrix= function () {}
-  
-  
-  
-  
-coverage_filter = function () {}
-
-
-get_matrix = function {}
-  
-  
-scMethrix2bsseq 
-
-
-remove_uncovered
-
-
-
-region_filter
-
-
-mask_methrix
-
-
-
-combine_methrix
-
-
 
 
 #--------------------------------------------------------------------------------------------------------------------------
@@ -85,7 +52,7 @@ combine_methrix
 #' @param samples string of sample names to subset by
 #' @examples
 #' data('scMethrix_data')
-#' contigs <- 'chr1'
+#' contigs <- c("chr1","chr3")
 #' regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,150)) 
 #' samples <- c("bed1","bed3")
 #' 
@@ -95,37 +62,44 @@ combine_methrix
 #' #Subset to samples bed1 and bed3
 #' subset_scMethrix(scMethrix_data, samples = samples)
 #' 
+#' #Subset to samples bed1 and bed3, and chromosome 1
+#' subset_scMethrix(scMethrix_data, samples = samples, contigs = contigs)
+#' 
+#' #Subset to region "chr1:1-150"
+#' subset_scMethrix(scMethrix_data, regions = regions)
+#' 
+#' 
+#' 
+#' 
+#' 
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
-subset_scMethrix() <- function(m, regions = NULL, contigs = NULL, samples = NULL) {
+subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL) {
   
   if (!is(m, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
   if (is_ondisk(m)) {
     
     files <- get_files(m)
+    subset <- rowRanges(m)
     
     if (length(files) == 0) {
-      stop("No tabix files to subset")
+      stop("No tabix files to subset", call. = FALSE)
     }
     
     if (!is.null(samples)) {
       
-      i <- unlist(lapply(files,get_sample_name))
-      i <- which(i %in% samples)   
-      files <- files[i]
-      
+      idx <- unlist(lapply(files,get_sample_name))
+      idx <- which(idx %in% samples)   
+      files <- files[idx]
+
       if (length(files) == 0) {
-        stop("Subsetting resulted in zero entries")
+        stop("Subsetting resulted in zero entries", call. = FALSE)
       }
       
     }
-    
-    #
-    
-    subset <- rowRanges(m)
     
     if (!is.null(contigs)) {
       
@@ -154,35 +128,34 @@ subset_scMethrix() <- function(m, regions = NULL, contigs = NULL, samples = NULL
     }
     
     if (nrow(overlaps) == 0) {
-      stop("Subsetting resulted in zero entries")
+      stop("Subsetting resulted in zero entries", call. = FALSE)
     }
     
-    m <- overlaps
+    m_obj <- overlaps
     
   } else {
   
     if (!is.null(regions)) {
     
-      target_regions <- cast_ranges(regions)
-      overlaps <- subsetByOverlaps(m, target_regions)  
+      regions <- cast_granges(regions)
+      overlaps <- subsetByOverlaps(m, regions)  
       
       if (nrow(overlaps) == 0) {
-        stop("Subsetting resulted in zero entries")
+        stop("Subsetting resulted in zero entries", call. = FALSE)
       }
       
-      m <- overlaps
+      m_obj <- overlaps
     }
     
     if (!is.null(contigs)) {
       
-      contigs  <- GRanges(seqnames=contigs)
-      overlaps <- subsetByOverlaps(m, contigs)
+      overlaps <- m[seqnames(m) == contigs]
       
       if (nrow(overlaps) == 0) {
-        stop("Subsetting resulted in zero entries")
+        stop("Subsetting resulted in zero entries", call. = FALSE)
       }
       
-      m <- overlaps
+      m_obj <- overlaps
     }
     
     if (!is.null(samples)) {
@@ -193,13 +166,14 @@ subset_scMethrix() <- function(m, regions = NULL, contigs = NULL, samples = NULL
       for (sample in samples) {mcols(overlaps)[[sample]] <- NULL}
         
       if (length(overlaps) == 0) {
-        stop("None of the samples are present in the object")
+        stop("None of the samples are present in the object", call. = FALSE)
       }
       
-      m <- overlaps
+      m_obj <- overlaps
     }
   }
-  return(m)
+  
+  return(m_obj)
   
 }
   
