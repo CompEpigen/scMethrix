@@ -46,12 +46,13 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     
     gr <- unique(gr)
     colnames(gr) <- c("chr","start","end")
+    gr <- makeGRangesBRG(gr,ncores=1)
     
     gr <- makeGRangesFromDataFrame(gr)
     
     names(mcols(gr)) <- lapply(names(mcols(gr)),get_sample_name)
     
-    m_obj <- create_scMethrix(rowRanges=gr, files=files, on_disk = on_disk)
+    m_obj <- create_scMethrix(rowRanges=gr, files=files, on_disk = TRUE)
     
   } else {
   
@@ -61,10 +62,11 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     gr <- GRangesList(beds)
     gr <- makeGRangesBRG(gr,ncores=1)
     gr <- BRGenomics::mergeGRangesData(gr,ncores = 1,multiplex=TRUE)
-
+    names(mcols(gr)) <- lapply(names(mcols(gr)),get_sample_name)
+    
     rng <- c(gr, NULL, ignore.mcols=TRUE) # Remove the metadata for rowRanges input
     
-    m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rng, files=files, on_disk = on_disk)
+    m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rng, files=files, on_disk = FALSE)
 
   }
   

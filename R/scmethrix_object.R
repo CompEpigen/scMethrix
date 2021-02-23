@@ -19,7 +19,7 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   cat(paste0("   n_CpGs: ", format(nrow(object), big.mark = ","), "\n"))
   cat(paste0("   n_samples: ", ncol(object), "\n"))
   cat(paste0("   assays: ", assayNames(object),"\n"))
-  cat(paste0("   on_disk: ", is_ondisk(object), "\n"))
+  cat(paste0("   on_disk: ", object@metadata$on_disk, "\n"))
   cat(paste0("   Reference: ", object@metadata$genome, "\n"))
   cat(paste0("   Physical size: ", format(object.size(object), units = "auto"), "\n"))
 })
@@ -35,7 +35,7 @@ create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL
                                                         metadata = list(genome = genome_name,
                                                                         chrom_sizes = chrom_sizes,
                                                                         descriptive_stats = desc,
-                                                                        is_ondisk = TRUE,
+                                                                        on_disk = TRUE,
                                                                         files = files))
 
     } else {
@@ -46,7 +46,8 @@ create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL
                                                       metadata = list(genome = genome_name,
                                                                       chrom_sizes = chrom_sizes,
                                                                       descriptive_stats = desc,
-                                                                      is_ondisk = FALSE))
+                                                                      on_disk = FALSE,
+                                                                      files = NULL))
     }
 
     return(scMethrix(sse))

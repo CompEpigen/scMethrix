@@ -70,6 +70,7 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
+
 subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, verbose=TRUE) {
   
   message("Subsetting scMethrix")
@@ -116,15 +117,16 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
     }
     
     if (nrow(overlaps) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
-    
-    m_obj <- overlaps
-    
+
+    m_obj <- create_scMethrix(methyl_mat = overlaps,rowRanges = subset)
+    m_obj@metadata <- m@metadata
+
   } else {
   
     if (!is.null(regions)) {
       message("   Subsetting by regions")
-      regions <- cast_granges(regions)
-      overlaps <- subsetByOverlaps(m, regions) 
+      subset <- cast_granges(regions)
+      overlaps <- subsetByOverlaps(m, subset) 
       if (nrow(overlaps) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
       m_obj <- overlaps
     }
@@ -138,8 +140,7 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
     
     if (!is.null(samples)) {
       message("   Subsetting by samples")
-      overlaps <- m
-      for (sample in samples) {mcols(overlaps)[[sample]] <- NULL}
+      overlaps <- subset(m, select=colData(m)@rownames %in% samples)
       if (length(overlaps) == 0) stop("Samples not present in the object", call. = FALSE)
       m_obj <- overlaps
     }
