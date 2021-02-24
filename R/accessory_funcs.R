@@ -19,21 +19,33 @@ get_sample_name = function(s) {
   return(strsplit(basename(s), "[.]")[[1]][1])
 }
 
-divide_granges = function(gr,factor) {
+chunk_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, percent = NULL
   
-  splits <- floor(length(gr)/factor)
-  splits <- 1+rep(0:(splits-1))*factor
+  if (length(which(is.na(c(factor,percent,num))))!=2) stop("1 argument mandatory for chunking.")
+  
+  if (!is.na(num)) {
+    splits <- length(gr)%/%num
+    splits <- num*(1:splits-1)
+  }
+  
+  if (!is.na(percent)) factor = 100/percent
+  
+  if (!is.na(factor)) {
+    num <- floor(length(gr)/factor)
+    splits <- floor(length(gr)/num)
+    splits <- 1+rep(0:(splits-1))*num
+  }
 
   grl <- List()
   
   for (i in 1:length(splits)) {
     s <- splits[i]
-    grl[[i]] <- gr[s:(s+factor-1)]
+    grl[[i]] <- gr[s:(s+num-1)]
   }
     
-  grl[[i+1]] <- gr[(last(splits)+factor):length(gr)]  
+  grl[[i+1]] <- gr[(last(splits)+num):length(gr)]  
     
-  #Test: all(gr == unlist(divide_granges(gr,50))
+  #Test: all(gr == unlist(chunk_granges(gr,factor=factor,percent=percent,num=num)))
 
   return (GRangesList(grl))
 }
