@@ -113,3 +113,29 @@ get_tabix_scores <- function(file, regions=NULL){
   return(tbx)
 }
 
+# Not sure this actually works....
+row_apply <- function(m,func,...) {
+  
+  if (!is(m, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (!is_ondisk(m)) stop("Row_apply cannot be applied to non-on_disk objects.")
+  
+  grl <- chunk_granges(m,...)
+  
+  result = NULL
+  
+  for (gr in grl) {
+    
+    data <- subset_scMethrix(m,regions = gr)
+    if (result = NULL) {result <- sapply(data,func)
+    } else {result <- rbind(result,sapply(data,func))}
+
+  }
+  
+  return(result)  
+  
+}
+
+
