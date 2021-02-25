@@ -34,7 +34,6 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
   #   stop("Missing genome. Please provide a valid genome name", call. = FALSE)
   # }
   
-  
   if (on_disk) {
     
     if (!all(grepl("\\.(gz|gzip)", files))) stop("Input files must be of type gz or gzip.", call. = FALSE)
@@ -42,21 +41,30 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     
     gr <- NULL
     
-    for (file in files) gr <- rbind(gr, data.table::fread(file, header=FALSE,nThread=8, select = c(1:3)))
+    for (file in files) {
+      
+      data <- data.table::fread(file, header=FALSE,nThread=8, select = c(1:3))
+      
+      if (is.null(gr)) {gr <- data
+      } else {gr <- rbind(gr, data)}
+      
+      message(paste0("Parsing: ",get_sample_name(file)))
+    }
     
+    message("Generating indexes")  
     gr <- unique(gr)
     colnames(gr) <- c("chr","start","end")
-    gr <- makeGRangesBRG(gr,ncores=1)
+    gr <- disjoin(makeGRangesFromDataFrame(gr))
+    gr <- BRGenomics::makeGRangesBRG(gr,ncores=1)
     
-    gr <- makeGRangesFromDataFrame(gr)
-    
-    names(mcols(gr)) <- lapply(names(mcols(gr)),get_sample_name)
-    
+    message("Creating scMethrix object")
     m_obj <- create_scMethrix(rowRanges=gr, files=files, on_disk = TRUE)
     
   } else {
   
     if (!all(grepl("\\.(bed|bedgraph)", files))) stop("Input files must be of type bed or bedgraph.", call. = FALSE)
+    
+    #TODO: Replace with tabix input instead
     
     beds <- BRGenomics::import_bedGraph(files,ncores=1)
     gr <- GRangesList(beds)

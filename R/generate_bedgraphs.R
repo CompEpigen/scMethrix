@@ -1,15 +1,14 @@
-setwd("D:\\Documents\\School\\Thesis\\scMethrix\\test.data\\10gen")
+setwd("D:\\Documents\\School\\Thesis\\scMethrix\\sample.data\\100gen")
 library(data.table)
 
 ### Convert to tabix in bash
 # From bash:
-# find . -name "*.bedgraph" -exec bgzip {} \;
-# find . -name "*.gz" -exec tabix -p bed {} \;
+# find . -name "*.bedgraph" -exec bgzip {} \; find . -name "*.gz" -exec tabix -p bed {} \;
 
 ### Generate sequential bedgraphs
-numfiles <- 10
-numrows <- 100 #per chromosome
-chrs <- 10 # must be factor of numrows
+numfiles <- 100
+numrows <- 50000 #per chromosome
+chrs <- 20 # must be factor of numrows
 rangeFactor <- 3 # max value is rangeFactor*numrows
 randomize = FALSE # set to true if genomic regions should be random
   
