@@ -11,8 +11,7 @@
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
-#' @import parallel
-#' @import SingleCellExperiment BRGenomics
+#' @import SingleCellExperiment BRGenomics GenomicRanges
 #' @examples
 #'\dontrun{
 #'bdg_files = list.files(path = system.file('extdata', package = 'methrix'),
