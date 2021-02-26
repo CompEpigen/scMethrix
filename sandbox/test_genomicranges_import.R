@@ -1,10 +1,10 @@
 library(BRGenomics)
 library(SingleCellExperiment)
 
-setwd("D:\\Documents\\School\\Thesis\\scMethrix\\sample.data\\10gen")
+setwd("D:\\Documents\\School\\Thesis\\scMethrix\\sample.data\\100gen")
 
 files <- list.files (getwd(),full.names = TRUE)
-files <- files[1:5]
+files <- files[1:10]
 
 files <- files[grepl("*.gz$", files)] #Select only gz
 files <- files[grepl("*.bedgraph$", files)] #Select only gz
