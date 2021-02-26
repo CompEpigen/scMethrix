@@ -25,6 +25,8 @@
 
 read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, on_disk = FALSE, verbose = TRUE) {
   
+  message("Reading in BEDs") 
+  
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
   }
@@ -38,17 +40,17 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     if (!all(grepl("\\.(gz|gzip)", files))) stop("Input files must be of type gz or gzip.", call. = FALSE)
     if (!all(grepl("\\.(gz|gzip)", paste0(files,".tbi")))) stop("Input files must have corresponding *.tbi (tabix) file in the same directory", call. = FALSE)
     
-    gr <- NULL
+    gr <- vector(mode = "list", length = length(files))
     
-    for (file in files) {
+    for (i in 1:length(files)) {
       
-      data <- data.table::fread(file, header=FALSE,nThread=8, select = c(1:3))
-      
-      if (is.null(gr)) {gr <- data
-      } else {gr <- rbind(gr, data)}
-      
-      message(paste0("Parsing: ",get_sample_name(file)))
+      #TODO: Parallelize fread
+      data <- data.table::fread(files[i], header=FALSE,nThread=8, select = c(1:3))
+      gr[[i]] <- data
+      message(paste0("   Parsing: ",get_sample_name(files[i])))
     }
+    
+    gr <- data.table::rbindlist(gr)
     
     message("Generating indexes")  
     gr <- unique(gr)
@@ -68,11 +70,13 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     beds <- BRGenomics::import_bedGraph(files,ncores=1)
     gr <- GRangesList(beds)
     gr <- makeGRangesBRG(gr,ncores=1)
+    message("Generating indexes")
     gr <- BRGenomics::mergeGRangesData(gr,ncores = 1,multiplex=TRUE)
     names(mcols(gr)) <- lapply(names(mcols(gr)),get_sample_name)
     
     rng <- c(gr, NULL, ignore.mcols=TRUE) # Remove the metadata for rowRanges input
     
+    message("Creating scMethrix object")
     m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rng, files=files, on_disk = FALSE)
 
   }
