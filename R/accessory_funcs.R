@@ -129,7 +129,7 @@ row_apply <- function(m,func,...) {
   for (gr in grl) {
     
     data <- subset_scMethrix(m,regions = gr)
-    if (result = NULL) {result <- sapply(data,func)
+    if (is.null(result)) {result <- sapply(data,func)
     } else {result <- rbind(result,sapply(data,func))}
 
   }
