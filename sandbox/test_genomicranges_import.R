@@ -6,8 +6,8 @@ setwd("D:\\Documents\\School\\Thesis\\scMethrix\\sample.data\\100gen")
 files <- list.files (getwd(),full.names = TRUE)
 files <- files[1:10]
 
-files <- files[grepl("*.gz$", files)] #Select only gz
-files <- files[grepl("*.bedgraph$", files)] #Select only gz
+files <- files[grepl("*.gz$", files, ignore.case = TRUE)] #Select only gz
+files <- files[grepl("*.bedgraph$", files, ignore.case = TRUE)] #Select only gz
 
 ### Make a GRanges object from all ranges in files ##############
 
