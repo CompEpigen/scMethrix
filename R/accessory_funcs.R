@@ -138,4 +138,19 @@ row_apply <- function(m,func,...) {
   
 }
 
-
+tabix2df <- function(tbx,region=NULL) {
+  
+  if (is.null(regions)) {tbx = Rsamtools::scanTabix(file)
+  } else {tbx <- Rsamtools::scanTabix(file, param = regions)}
+  
+  if(length(tbx) == 0) stop(paste("Input tabix file (",file,") has no entries."), call. = FALSE)
+  
+  tbx <- data.frame(lapply(tbx,function(x) {str_split_fixed(x, "\t", 4)}))
+  
+  colnames(tbx) <- c("chr","start","end",strsplit(basename(file), "[.]")[[1]][1])
+  tbx[,2] <- as.integer(tbx[,2])
+  tbx[,3] <- as.integer(tbx[,3])
+  tbx[,4] <- as.integer(tbx[,4])
+  
+  return(df)
+}
