@@ -25,7 +25,7 @@
 
 read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, on_disk = FALSE, verbose = TRUE) {
   
-  message("Reading in BEDs") 
+  #start.time <- Sys.time()
   
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
@@ -36,6 +36,8 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
   # }
   
   if (on_disk) {
+    
+    message("Reading in Tabix files") 
     
     if (!all(grepl("\\.(gz|gzip)", files))) stop("Input files must be of type gz or gzip.", call. = FALSE)
     if (!all(grepl("\\.(gz|gzip)", paste0(files,".tbi")))) stop("Input files must have corresponding *.tbi (tabix) file in the same directory", call. = FALSE)
@@ -63,6 +65,8 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     
   } else {
   
+    message("Reading in BED files") 
+    
     if (!all(grepl("\\.(bed|bedgraph)", files))) stop("Input files must be of type bed or bedgraph.", call. = FALSE)
     
     #TODO: Replace with tabix input instead
@@ -80,6 +84,8 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rng, files=files, on_disk = FALSE)
 
   }
+  
+  #message(paste0("Reading ",length(files)," files took ",round(Sys.time() - start.time,2),"s"))
   
   return(m_obj)
   
