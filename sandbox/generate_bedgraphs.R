@@ -1,4 +1,4 @@
-setwd("D:\\Documents\\School\\Thesis\\scMethrix\\sample.data\\100gen")
+setwd("D:\\Documents\\School\\Thesis\\scMethrix\\sample.data\\")
 
 ### Convert to tabix in bash
 # From bash:
