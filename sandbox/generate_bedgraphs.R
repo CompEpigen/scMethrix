@@ -11,6 +11,7 @@ chrs = 10          # Number of chromosomes
 sparsity = 0.5     # Minimum sparsity (minrows = numrows*sparsity)
 rangeFactor = 50   # Max range of IRange (1:rangeFactor*numrows)
 randomize = FALSE  # Randomize the chr and IRange mapping
+values <- c(0,25,50,75,100) # List of values to choose from
 
 start.time <- Sys.time()
 
@@ -19,8 +20,8 @@ start.time <- Sys.time()
     range <- sample(x = 1:(numrows*rangeFactor), size = numrows)
     if (!randomize) range <- sort(range)
     names <- rep(c(1:chrs),each=(numrows/chrs))
-    values <- sample(x = 0:4*25, size = numrows, replace = TRUE)
-    dat <- data.frame(chr = paste("chr",names,sep=""), start = range, end = range+1, val = values)
+    val <- sample(values, size = numrows, replace = TRUE)
+    dat <- data.frame(chr = paste("chr",names,sep=""), start = range, end = range+1, val = val)
     dat <- dat[sample(NROW(dat), NROW(dat)*(runif(1, sparsity, 1))),]
     dat <- dat[with(dat, order(chr, start, end)),]
     fwrite(dat, file = paste0("bed",n,".bedgraph"), quote=FALSE, sep='\t', col.names = FALSE, scipen=999)
