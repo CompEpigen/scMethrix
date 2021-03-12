@@ -36,7 +36,7 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
   }
   
   if (h5) {
-    
+
     message("Starting H5 object") 
     
     # Create the genomic ranges
@@ -57,7 +57,7 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     colnames(gr) <- c("chr","start","end")
 
     message("Writing HDF5")
-    m <- as(gr, "HDF5Matrix")
+    m <- NULL
     
     for (i in 1:length(files)) {
       
@@ -68,10 +68,14 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
       v[x] <- as.vector(unlist(data[,4]))
       v <- as(as.data.frame(v), "HDF5Matrix")
       
-      m <- cbind(m, v)
+      if (is.null(m)) {m <- v 
+      } else {m <- cbind(m, v)}
+      
       message(paste0("   Parsing: ",get_sample_name(files[i])))
     }
   
+    m <- as(m, "HDF5Array")
+    
     gr <- makeGRangesFromDataFrame(gr)
     
     message("Creating scMethrix object")
