@@ -34,7 +34,7 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
   }
-
+  
   if (h5) {
     
     message("Starting H5 object") 
@@ -55,26 +55,30 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     message("Generating indexes")  
     gr <- unique(gr)
     colnames(gr) <- c("chr","start","end")
+
+    message("Writing HDF5")
+    m <- as(gr, "HDF5Matrix")
+    
+    for (i in 1:length(files)) {
+      
+      data <- data.table::fread(files[i], header=FALSE, select = c(1:4))
+      colnames(data) <- c("chr","start","end","value")
+      x <- with(join.keys(gr, data[,1:3]), which(x %in% y))
+      v <- rep(NA_integer_,nrow(gr))
+      v[x] <- as.vector(unlist(data[,4]))
+      v <- as(as.data.frame(v), "HDF5Matrix")
+      
+      m <- cbind(m, v)
+      message(paste0("   Parsing: ",get_sample_name(files[i])))
+    }
+  
     gr <- makeGRangesFromDataFrame(gr)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     message("Creating scMethrix object")
     m_obj <- create_scMethrix(rowRanges=gr, files=files, on_disk = TRUE)
     
   } else {
-  
+    
     message("Reading in BED files") 
     
     if (!all(grepl("\\.(bed|bedgraph)", files))) stop("Input files must be of type bed or bedgraph.", call. = FALSE)
@@ -92,7 +96,7 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     
     message("Creating scMethrix object")
     m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rng, files=files, on_disk = FALSE)
-
+    
   }
   
   #message(paste0("Reading ",length(files)," files took ",round(Sys.time() - start.time,2),"s"))
