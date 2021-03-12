@@ -1,7 +1,8 @@
 #' Versatile BedGraph reader.
 #' @details Reads BED files and generates methylation matrices.
 #' Optionally arrays can be serialized as on-disk HDFS5 arrays.
-#' @param files BED files.
+#' @param files BED files containing methylation d
+#' @param ref_cpgs BED files containing list of CpG sites.
 #' @param stranded Default c
 #' @param genome_name Name of genome. Default hg19
 #' @param n_threads number of threads to use. Default 1.
@@ -23,31 +24,28 @@
 #'}
 #'
 
-read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, on_disk = FALSE, verbose = TRUE) {
+# Must generate an index CpG file first:
+#   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
+
+read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, h5 = FALSE, h5_dir = NULL, h5temp = NULL, verbose = TRUE) {
   
   #start.time <- Sys.time()
   
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
   }
-  
-  # if (is.null(ref_cpgs)) {
-  #   stop("Missing genome. Please provide a valid genome name", call. = FALSE)
-  # }
-  
-  if (on_disk) {
+
+  if (h5) {
     
-    message("Reading in Tabix files") 
+    message("Starting H5 object") 
     
-    if (!all(grepl("\\.(gz|gzip)", files))) stop("Input files must be of type gz or gzip.", call. = FALSE)
-    if (!all(grepl("\\.(gz|gzip)", paste0(files,".tbi")))) stop("Input files must have corresponding *.tbi (tabix) file in the same directory", call. = FALSE)
-    
+    # Create the genomic ranges
     gr <- vector(mode = "list", length = length(files))
     
     for (i in 1:length(files)) {
       
       #TODO: Parallelize fread
-      data <- data.table::fread(files[i], header=FALSE,nThread=8, select = c(1:3))
+      data <- data.table::fread(files[i], header=FALSE, select = c(1:3))
       gr[[i]] <- data
       message(paste0("   Parsing: ",get_sample_name(files[i])))
     }
@@ -57,8 +55,20 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     message("Generating indexes")  
     gr <- unique(gr)
     colnames(gr) <- c("chr","start","end")
-    gr <- disjoin(makeGRangesFromDataFrame(gr))
-    gr <- BRGenomics::makeGRangesBRG(gr,ncores=1)
+    gr <- makeGRangesFromDataFrame(gr)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     message("Creating scMethrix object")
     m_obj <- create_scMethrix(rowRanges=gr, files=files, on_disk = TRUE)
@@ -122,7 +132,7 @@ assignInNamespace(".multiplex_gr", ns = "BRGenomics",
                       mclapply(data_in, function(x)
                         which(gr %in% x), mc.cores = ncores)
                     counts <- mcmapply(function(dat, idx, field) {
-                      out <- rep.int(NA, length(gr))
+                      out <- rep.int(NA, length(gr))   #### <---- This line modified in this script. Reps NA instead of 0
                       out[idx] <- mcols(dat)[[field]]
                       out
                     },
