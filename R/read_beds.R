@@ -75,14 +75,13 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
       message(paste0("   Parsing: ", get_sample_name(files[i])))
     }
     
-    message("Writing HDF5")
-  
-    options(DelayedArray.block.size=2e8) # TODO: test to optimize size or let user decide?
-    hdf <- writeHDF5Array(hdf,paste0(h5dir,"/scMethrix.h5"),"assay")
-  
-    rng <- makeGRangesFromDataFrame(rng)
+    #message("Writing HDF5")
+    #options(DelayedArray.block.size=2e8) # TODO: test to optimize size or let user decide?
+    #hdf <- writeHDF5Array(hdf,paste0(h5dir,"/scMethrix.h5"),"assay")
     
     message("Creating scMethrix object")
+    
+    rng <- makeGRangesFromDataFrame(rng)
     m_obj <- create_scMethrix(methyl_mat=hdf, rowRanges=rng, is_hdf5 = h5, 
                               genome_name = genome_name,desc = desc)
     

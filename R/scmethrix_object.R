@@ -36,7 +36,13 @@ create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL
                                                                         chrom_sizes = chrom_sizes,
                                                                         descriptive_stats = desc,
                                                                         is_hdf5 = TRUE))
-
+      
+      if (!is.null(h5_dir)) {
+        tryCatch(HDF5Array::saveHDF5SummarizedExperiment(x = sse, dir = h5_dir,
+                                                         replace = TRUE), error = function(e)
+                                                           message("The dataset is not saved. Please save manually, using the HDF5Array::saveSummarizedExperiment command. "))
+      }
+      
     } else {
 
       sse <- SingleCellExperiment::SingleCellExperiment(assays = list(score = methyl_mat),
