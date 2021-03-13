@@ -7,7 +7,10 @@
 #' @param genome_name Name of genome. Default hg19
 #' @param n_threads number of threads to use. Default 1.
 #' Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.
-#' @param on_disk Input files are of the type TABIX
+#' @param h5 Should the coverage and methylation matrices be stored as 'HDF5Array'
+#' @param h5_dir directory to store H5 based object
+#' @param h5temp temporary directory to store hdf5
+#' @param desc Description of the experiment
 #' @param verbose Be little chatty ? Default TRUE.
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
@@ -27,7 +30,8 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_name = "hg19", n_threads = 1, h5 = FALSE, h5_dir = NULL, h5temp = NULL, verbose = TRUE) {
+read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
+                      h5 = FALSE, h5_dir = NULL, desc = NULL, verbose = TRUE) {
   
   #start.time <- Sys.time()
   
@@ -38,48 +42,52 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
   if (h5) {
 
     message("Starting H5 object") 
+    message("Generating indexes")  
     
     # Create the genomic ranges
-    gr <- vector(mode = "list", length = length(files))
+    rng <- vector(mode = "list", length = length(files))
     
     for (i in 1:length(files)) {
       
       #TODO: Parallelize fread
       data <- data.table::fread(files[i], header=FALSE, select = c(1:3))
-      gr[[i]] <- data
+      rng[[i]] <- data
       message(paste0("   Parsing: ",get_sample_name(files[i])))
     }
     
-    gr <- data.table::rbindlist(gr)
+    rng <- data.table::rbindlist(rng)
     
-    message("Generating indexes")  
-    gr <- unique(gr)
-    colnames(gr) <- c("chr","start","end")
+    rng <- unique(rng)
+    colnames(rng) <- c("chr","start","end")
+    setkeyv(rng, c("chr","start"))
+    
+    message("Writing HDF5")  ### Paralellize here VVVV
+    assay <- NULL
 
-    message("Writing HDF5")
-    m <- NULL
-    
     for (i in 1:length(files)) {
       
       data <- data.table::fread(files[i], header=FALSE, select = c(1:4))
       colnames(data) <- c("chr","start","end","value")
-      x <- with(join.keys(gr, data[,1:3]), which(x %in% y))
-      v <- rep(NA_integer_,nrow(gr))
-      v[x] <- as.vector(unlist(data[,4]))
-      v <- as(as.data.frame(v), "HDF5Matrix")
+      x <- rng[.(data$chr,data$start), which = TRUE]
+      #x <- with(join.keys(rng[,2:1], data[,2:1]), which(x %in% y)) ### this can be improved
+      #x <- apply(data, 1, function(x) rng[.(x[[1]],as.integer(x[[2]])), which = TRUE])
+      sample <- rep(NA_integer_,nrow(rng))
+      sample[x] <- data[[4]]
+      sample <- DelayedArray(as.matrix(sample))
       
-      if (is.null(m)) {m <- v 
-      } else {m <- cbind(m, v)}
+      if (is.null(assay)) {assay <- sample 
+      } else {assay <- cbind(assay, sample)}
       
-      message(paste0("   Parsing: ",get_sample_name(files[i])))
+      message(paste0("   Parsing: ", get_sample_name(files[i])))
     }
-  
-    m <- as(m, "HDF5Array")
+ 
+    ### Parallelize here ^^^^
     
-    gr <- makeGRangesFromDataFrame(gr)
+    rng <- makeGRangesFromDataFrame(rng)
     
     message("Creating scMethrix object")
-    m_obj <- create_scMethrix(rowRanges=gr, files=files, on_disk = TRUE)
+    m_obj <- create_scMethrix(methyl_mat=assay, rowRanges=rng, is_hdf5 = h5, 
+                              genome_name = genome_name,desc = desc)
     
   } else {
     
@@ -99,7 +107,8 @@ read_beds <- function(files = NULL, colData = NULL, stranded = FALSE, genome_nam
     rng <- c(gr, NULL, ignore.mcols=TRUE) # Remove the metadata for rowRanges input
     
     message("Creating scMethrix object")
-    m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rng, files=files, on_disk = FALSE)
+    m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rng, is_hdf5 = h5, 
+                              genome_name = genome_name, desc = desc )
     
   }
   
