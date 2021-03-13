@@ -40,7 +40,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   }
   
   if (h5) {
-
+    
     message("Starting H5 object") 
     message("Generating indexes")  
     
@@ -61,32 +61,29 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     colnames(rng) <- c("chr","start","end")
     setkeyv(rng, c("chr","start"))
     
-    message("Writing HDF5")  ### Paralellize here VVVV
-    assay <- NULL
-
+    message("Reading data") 
+    
+    hdf <- DelayedArray(matrix(data=NA_integer_,nrow=nrow(rng),ncol=length(files)))
+    
     for (i in 1:length(files)) {
       
       data <- data.table::fread(files[i], header=FALSE, select = c(1:4))
       colnames(data) <- c("chr","start","end","value")
       x <- rng[.(data$chr,data$start), which = TRUE]
-      #x <- with(join.keys(rng[,2:1], data[,2:1]), which(x %in% y)) ### this can be improved
-      #x <- apply(data, 1, function(x) rng[.(x[[1]],as.integer(x[[2]])), which = TRUE])
-      sample <- rep(NA_integer_,nrow(rng))
-      sample[x] <- data[[4]]
-      sample <- DelayedArray(as.matrix(sample))
-      
-      if (is.null(assay)) {assay <- sample 
-      } else {assay <- cbind(assay, sample)}
-      
+      hdf[x,i] <- data[[4]]
+
       message(paste0("   Parsing: ", get_sample_name(files[i])))
     }
- 
-    ### Parallelize here ^^^^
     
+    message("Writing HDF5")
+  
+    options(DelayedArray.block.size=2e8) # TODO: test to optimize size or let user decide?
+    hdf <- writeHDF5Array(hdf,paste0(h5dir,"/scMethrix.h5"),"assay")
+  
     rng <- makeGRangesFromDataFrame(rng)
     
     message("Creating scMethrix object")
-    m_obj <- create_scMethrix(methyl_mat=assay, rowRanges=rng, is_hdf5 = h5, 
+    m_obj <- create_scMethrix(methyl_mat=hdf, rowRanges=rng, is_hdf5 = h5, 
                               genome_name = genome_name,desc = desc)
     
   } else {
