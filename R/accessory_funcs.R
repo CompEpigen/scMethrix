@@ -1,3 +1,14 @@
+`?` <- function(x, y)
+  eval(
+    sapply(
+      strsplit(
+        deparse(substitute(y)), 
+        ":"
+      ), 
+      function(e) parse(text = e)
+    )[[2 - as.logical(x)]])
+
+
 is_ondisk = function(m) {
   return(m@metadata$on_disk)
 }
@@ -44,9 +55,7 @@ chunk_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, perce
   }
     
   grl[[i+1]] <- gr[(last(splits)+num):length(gr)]  
-    
-  #Test: all(gr == unlist(chunk_granges(gr,factor=factor,percent=percent,num=num)))
-
+  
   return (GRangesList(grl))
 }
 
