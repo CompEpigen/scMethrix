@@ -30,7 +30,7 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
+read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 3, 
                       h5 = FALSE, h5_dir = NULL, desc = NULL, verbose = TRUE) {
   
   #start.time <- Sys.time()
@@ -40,42 +40,25 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   }
   
   if (h5) {
-    
-    tic()
-    
+
     message("Starting H5 object") 
     message("Generating indexes")  
 
-    files_split <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
+    files_split <- split(files, ceiling(seq_along(files)/(length(files)/n_threads))) ### n_threads should be optimized
 
-    rrng <- mclapply(files_split, generate_indexes, mc.cores = n_threads)
+    rrng <- mclapply(files_split, generate_indexes, mc.cores = 1)#n_threads)
     
     rrng <- data.table::rbindlist(rrng)
     rrng <- unique(rrng)
     setkeyv(rrng, c("chr","start"))
 
-    message("Reading data") 
-    assay <- NULL
-
-     for (i in 1:length(files)) {
-       data <- data.table::fread(files[i], header = FALSE, select = c(1:4))
-       colnames(data) <- c("chr", "start", "end", "value")
-       x <- rrng[.(data$chr, data$start), which = TRUE]
-       sample <- rep(NA_integer_, nrow(rrng))
-       sample[x] <- data[[4]]
-       sample <- DelayedArray(as.matrix(sample))
-       colnames(sample) <- get_sample_name(files[i])
-       
-       assay <- (is.null(assay) ? sample : cbind(assay, sample))
-       
-       message(paste0("   Parsing: ", get_sample_name(files[i])))
-     }
-
+    message("Reading data")
+    
+    assay <- mclapply(files_split, generate_delayed_array, index = rrng, mc.cores = 1)#n_threads)
+    assay <- do.call(acbind, lapply(assay, acbind))
+    
     message("Creating scMethrix object")
-    
-    toc()
-    beep()
-    
+
     rrng <- makeGRangesFromDataFrame(rrng)
     
     m_obj <- create_scMethrix(methyl_mat=assay, rowRanges=rrng, is_hdf5 = h5, 
@@ -130,8 +113,27 @@ generate_indexes <- function(files) {
   
 }
 
-
-
+generate_delayed_array <- function(files,index) {
+  
+  assay = NULL
+  
+  for (i in 1:length(files)) {
+    data <- data.table::fread(files[i], header = FALSE, select = c(1:4))
+    colnames(data) <- c("chr", "start", "end", "value")
+    x <- index[.(data$chr, data$start), which = TRUE]
+    sample <- rep(NA_integer_, nrow(index))
+    sample[x] <- data[[4]]
+    sample <- DelayedArray(as.matrix(sample))
+    colnames(sample) <- get_sample_name(files[i])
+    
+    if (is.null(assay)) {assay <- sample
+    } else {assay <- acbind(assay, sample)}
+    
+    message(paste0("   Parsing: ", get_sample_name(files[i])))
+  }
+  
+  return(assay)
+}
 
 
 assignInNamespace(".multiplex_gr", ns = "BRGenomics",
