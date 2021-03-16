@@ -19,23 +19,23 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   cat(paste0("   n_CpGs: ", format(nrow(object), big.mark = ","), "\n"))
   cat(paste0("   n_samples: ", ncol(object), "\n"))
   cat(paste0("   assays: ", assayNames(object),"\n"))
-  cat(paste0("   on_disk: ", object@metadata$on_disk, "\n"))
+  cat(paste0("   is_h5: ", is_h5(object), "\n"))
   cat(paste0("   Reference: ", object@metadata$genome, "\n"))
   cat(paste0("   Physical size: ", format(object.size(object), units = "auto"), "\n"))
 })
 
 # Create scMethrix obj
 create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, genome_name = "hg19",
-                           chrom_sizes = NULL, desc = NULL) {
+                           chrom_sizes = NULL, desc = NULL, h5_dir=NULL) {
     if (is_hdf5) {
 
-      sse <- SingleCellExperiment::SingleCellExperiment(assays = list(score = as(methyl_mat, "HDF5Array")),
+      sse <- SingleCellExperiment::SingleCellExperiment(assays = list(score = methyl_mat),
                                                         colData = colData,
                                                         rowRanges = rowRanges,
                                                         metadata = list(genome = genome_name,
                                                                         chrom_sizes = chrom_sizes,
                                                                         descriptive_stats = desc,
-                                                                        is_hdf5 = TRUE))
+                                                                        is_h5 = is_hdf5))
       
       if (!is.null(h5_dir)) {
         tryCatch(HDF5Array::saveHDF5SummarizedExperiment(x = sse, dir = h5_dir,

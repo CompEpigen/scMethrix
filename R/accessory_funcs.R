@@ -9,8 +9,8 @@
     )[[2 - as.logical(x)]])
 
 
-is_ondisk = function(m) {
-  return(m@metadata$on_disk)
+is_h5 = function(m) {
+  return(m@metadata$is_h5)
 }
 
 get_files = function(m, name_only = FALSE) {
