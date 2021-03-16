@@ -46,7 +46,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 
     files_split <- split(files, ceiling(seq_along(files)/(length(files)/n_threads))) ### n_threads should be optimized
 
-    rrng <- mclapply(files_split, generate_indexes, mc.cores = 1)#n_threads)
+    rrng <- parallel::mclapply(files_split, generate_indexes, mc.cores = 1)#n_threads)
     
     rrng <- data.table::rbindlist(rrng)
     rrng <- unique(rrng)
@@ -54,15 +54,22 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 
     message("Reading data")
     
-    assay <- mclapply(files_split, generate_delayed_array, index = rrng, mc.cores = 1)#n_threads)
+    assay <- parallel::mclapply(files_split, generate_delayed_array, index = rrng, mc.cores = 1)#n_threads)
     assay <- do.call(acbind, lapply(assay, acbind))
+
+    rrng <- GenomicRanges::makeGRangesFromDataFrame(rrng)
+
+    colData <- t(data.frame(lapply(files,get_sample_name)))
+    
+    message("Creating HDF5 reference")
+    
+    setHDF5DumpFile(paste0(h5_dir,"/scMethrix.h5"))
+    assay <- writeHDF5Array(assay, name="assay", chunkdim=c(nrow(assay),1), verbose=TRUE)
     
     message("Creating scMethrix object")
 
-    rrng <- makeGRangesFromDataFrame(rrng)
-    
-    m_obj <- create_scMethrix(methyl_mat=assay, rowRanges=rrng, is_hdf5 = h5, 
-                              genome_name = genome_name,desc = desc)
+    m_obj <- create_scMethrix(methyl_mat=assay, rowRanges=rrng, is_hdf5 = TRUE, h5_dir = h5_dir,
+                              genome_name = genome_name,desc = desc,colData = colData)
     
   } else {
     
@@ -101,7 +108,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 #' @import data.table
 #' @examples
 generate_indexes <- function(files) {
-  
+
   rrng <- vector(mode = "list", length = length(files))
   
   for (i in 1:length(files)) {
@@ -114,7 +121,7 @@ generate_indexes <- function(files) {
   rrng <- data.table::rbindlist(rrng)
   rrng <- unique(rrng)
   colnames(rrng) <- c("chr","start","end")
-  
+
   return(rrng)
   
 }
