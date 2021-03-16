@@ -30,7 +30,7 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 3, 
+read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
                       h5 = FALSE, h5_dir = NULL, desc = NULL, verbose = TRUE) {
   
   #start.time <- Sys.time()
@@ -93,7 +93,13 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   
 }
 
-
+#' Parse BED files for unique genomic regions
+#' @details Create list of unique genomic regions from input BED files. Meant to be fed into
+#' generate_delayed_array
+#' @param files List of BED files
+#' @return data.table containing all unique genomic regions
+#' @import data.table
+#' @examples
 generate_indexes <- function(files) {
   
   rrng <- vector(mode = "list", length = length(files))
@@ -113,6 +119,15 @@ generate_indexes <- function(files) {
   
 }
 
+#' Parse indexed BED files into a \code{\link{DelayedArray}}
+#' @details Creates a delayed array of BED files. Each column is a single sample, with known methylation
+#' values places at the appropriate index from generate_indexes
+#' @param files List of BED files. Column 4 must be the methylation value
+#' @param index Generated index from generate_indexes. Must be generated using (at minimum) using all files
+#' listed in the files parameter 
+#' @return \code{\link{DelayedArray}} containing all methylation values in a dense matrix of NAs
+#' @import data.table
+#' @examples
 generate_delayed_array <- function(files,index) {
   
   assay = NULL
