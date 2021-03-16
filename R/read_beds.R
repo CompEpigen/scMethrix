@@ -41,48 +41,44 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   
   if (h5) {
     
+    tic()
+    
     message("Starting H5 object") 
     message("Generating indexes")  
-    
-    # Create the genomic ranges
-    rng <- vector(mode = "list", length = length(files))
-    
-    for (i in 1:length(files)) {
-      
-      #TODO: Parallelize fread
-      data <- data.table::fread(files[i], header=FALSE, select = c(1:3))
-      rng[[i]] <- data
-      message(paste0("   Parsing: ",get_sample_name(files[i])))
-    }
-    
-    rng <- data.table::rbindlist(rng)
-    
-    rng <- unique(rng)
-    colnames(rng) <- c("chr","start","end")
-    setkeyv(rng, c("chr","start"))
-    
-    message("Reading data") 
-    
-    hdf <- DelayedArray(matrix(data=NA_integer_,nrow=nrow(rng),ncol=length(files)))
-    
-    for (i in 1:length(files)) {
-      
-      data <- data.table::fread(files[i], header=FALSE, select = c(1:4))
-      colnames(data) <- c("chr","start","end","value")
-      x <- rng[.(data$chr,data$start), which = TRUE]
-      hdf[x,i] <- data[[4]]
 
-      message(paste0("   Parsing: ", get_sample_name(files[i])))
-    }
+    files_split <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
+
+    rrng <- mclapply(files_split, generate_indexes, mc.cores = n_threads)
     
-    #message("Writing HDF5")
-    #options(DelayedArray.block.size=2e8) # TODO: test to optimize size or let user decide?
-    #hdf <- writeHDF5Array(hdf,paste0(h5dir,"/scMethrix.h5"),"assay")
-    
+    rrng <- data.table::rbindlist(rrng)
+    rrng <- unique(rrng)
+    setkeyv(rrng, c("chr","start"))
+
+    message("Reading data") 
+    assay <- NULL
+
+     for (i in 1:length(files)) {
+       data <- data.table::fread(files[i], header = FALSE, select = c(1:4))
+       colnames(data) <- c("chr", "start", "end", "value")
+       x <- rrng[.(data$chr, data$start), which = TRUE]
+       sample <- rep(NA_integer_, nrow(rrng))
+       sample[x] <- data[[4]]
+       sample <- DelayedArray(as.matrix(sample))
+       colnames(sample) <- get_sample_name(files[i])
+       
+       assay <- (is.null(assay) ? sample : cbind(assay, sample))
+       
+       message(paste0("   Parsing: ", get_sample_name(files[i])))
+     }
+
     message("Creating scMethrix object")
     
-    rng <- makeGRangesFromDataFrame(rng)
-    m_obj <- create_scMethrix(methyl_mat=hdf, rowRanges=rng, is_hdf5 = h5, 
+    toc()
+    beep()
+    
+    rrng <- makeGRangesFromDataFrame(rrng)
+    
+    m_obj <- create_scMethrix(methyl_mat=assay, rowRanges=rrng, is_hdf5 = h5, 
                               genome_name = genome_name,desc = desc)
     
   } else {
@@ -113,6 +109,30 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   return(m_obj)
   
 }
+
+
+generate_indexes <- function(files) {
+  
+  rrng <- vector(mode = "list", length = length(files))
+  
+  for (i in 1:length(files)) {
+    data <- data.table::fread(files[i], header=FALSE, select = c(1:3))
+    rrng[[i]] <- data
+    message(paste0("   Parsing: ",get_sample_name(files[i])))
+    
+  }
+  
+  rrng <- data.table::rbindlist(rrng)
+  rrng <- unique(rrng)
+  colnames(rrng) <- c("chr","start","end")
+  
+  return(rrng)
+  
+}
+
+
+
+
 
 assignInNamespace(".multiplex_gr", ns = "BRGenomics",
                   function(data_in, field, ncores) {
