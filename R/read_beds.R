@@ -30,7 +30,7 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
+read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 10, 
                       h5 = FALSE, h5_dir = NULL, desc = NULL, verbose = TRUE) {
   
   #start.time <- Sys.time()
@@ -42,32 +42,33 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   if (h5) {
 
     message("Starting H5 object") 
-    message("Generating indexes")  
+    message("Finding unique CpG sites")  
 
     files_split <- split(files, ceiling(seq_along(files)/(length(files)/n_threads))) ### n_threads should be optimized
 
     rrng <- parallel::mclapply(files_split, generate_indexes, mc.cores = 1)#n_threads)
     
+    message("Building index")
+    
     rrng <- data.table::rbindlist(rrng)
-    rrng <- unique(rrng)
     setkeyv(rrng, c("chr","start"))
+    rrng <- unique(rrng)
 
     message("Reading data")
     
     assay <- parallel::mclapply(files_split, generate_delayed_array, index = rrng, mc.cores = 1)#n_threads)
+    
+    message("Creating scMethrix object")
+    
     assay <- do.call(acbind, lapply(assay, acbind))
 
     rrng <- GenomicRanges::makeGRangesFromDataFrame(rrng)
 
-    colData <- t(data.frame(lapply(files,get_sample_name)))
-    
-    message("Creating HDF5 reference")
-    
-  #  setHDF5DumpFile(paste0(h5_dir,"/scMethrix.h5"))
-   # assay <- writeHDF5Array(assay, name="assay", chunkdim=c(nrow(assay),1), verbose=TRUE)
-    
-    message("Creating scMethrix object")
+    colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
 
+    #setHDF5DumpFile(paste0(h5_dir,"/scMethrix.h5"))
+    #assay <- writeHDF5Array(assay, name="assay", chunkdim=c(nrow(assay),1), verbose=TRUE)
+    
     m_obj <- create_scMethrix(methyl_mat=assay, rowRanges=rrng, is_hdf5 = TRUE, h5_dir = h5_dir,
                               genome_name = genome_name,desc = desc,colData = colData)
     

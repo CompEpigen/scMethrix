@@ -29,7 +29,7 @@ create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL
                            chrom_sizes = NULL, desc = NULL, h5_dir=NULL) {
     if (is_hdf5) {
 
-      sse <- SingleCellExperiment::SingleCellExperiment(assays = list(score = methyl_mat),
+      sse <- SingleCellExperiment::SingleCellExperiment(assays = list(score = as(methyl_mat, "HDF5Array")),
                                                         colData = colData,
                                                         rowRanges = rowRanges,
                                                         metadata = list(genome = genome_name,
