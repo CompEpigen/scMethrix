@@ -38,8 +38,8 @@ create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL
                                                                         is_h5 = is_hdf5))
       
       if (!is.null(h5_dir)) {
-        tryCatch(HDF5Array::saveHDF5SummarizedExperiment(x = sse, dir = h5_dir,
-                                                         replace = TRUE), error = function(e)
+        tryCatch(HDF5Array::saveHDF5SummarizedExperiment(x = sse, dir = paste0(h5_dir,"/sse"),
+                                                         replace = TRUE, chunkdim = c(nrow(methyl_mat),1), verbose=TRUE), error = function(e)
                                                            message("The dataset is not saved. Please save manually, using the HDF5Array::saveSummarizedExperiment command. "))
       }
       

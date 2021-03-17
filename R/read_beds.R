@@ -63,8 +63,8 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     
     message("Creating HDF5 reference")
     
-    setHDF5DumpFile(paste0(h5_dir,"/scMethrix.h5"))
-    assay <- writeHDF5Array(assay, name="assay", chunkdim=c(nrow(assay),1), verbose=TRUE)
+  #  setHDF5DumpFile(paste0(h5_dir,"/scMethrix.h5"))
+   # assay <- writeHDF5Array(assay, name="assay", chunkdim=c(nrow(assay),1), verbose=TRUE)
     
     message("Creating scMethrix object")
 
