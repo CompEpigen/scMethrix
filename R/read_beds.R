@@ -158,6 +158,76 @@ generate_delayed_array <- function(files,index) {
   return(assay)
 }
 
+#' Reads in a bedgraph file and creates an indexed output for methylation values
+#' @details Extracts methylation values from a sample and aligns to a generated index of methylation sites
+#' @param file A BED file. Column 4 must be the methylation value
+#' @param index Generated index from generate_indexes. Must be generated using (at minimum) using all files
+#' listed in the files parameter 
+#' @return Vector containing all methylation values and NAs for unknown sites
+#' @import data.table
+#' @examples
+read_bdg <- function(file,index) {
+  data <- data.table::fread(file, header = FALSE, select = c(1:4))
+  colnames(data) <- c("chr", "start", "end", "value")
+  x <- index[.(data$chr, data$start), which = TRUE]
+  sample <- rep(NA_integer_, nrow(index))
+  sample[x] <- data[[4]]
+  colnames(sample) <- get_sample_name(file)
+}
+
+
+read_bed_to_hdf5 <- function(files, index, h5temp = NULL) {
+  
+if (is.null(h5temp)) {
+  h5temp <- tempdir()
+}
+
+  dimension <- as.integer(nrow(index)/2)
+
+  grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
+                                         spacings = c(dimension, 1L)) 
+  
+  
+  M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
+                                           dimnames = NULL, type = "double",
+                                           filepath = file.path(h5temp, paste0("M_sink_", sink_counter, ".h5")), name = "M", level = 6)
+  
+  
+  
+  
+  
+  
+  read_chunk_to_hdf5 <- function(files, index, grid, sink, h5temp) {
+    
+    for (i in 1:length(files)) {
+     
+      bed <- read_bdg()
+      
+      
+      DelayedArray::write_block(block = as.matrix(b$bdg[, .(beta)]),
+                                viewport = grid[[i]], sink = M_sink)
+      
+      
+       
+      
+      
+      
+      
+    }
+    
+    
+    
+    
+    
+  }
+  
+
+
+
+
+
+
+
 
 assignInNamespace(".multiplex_gr", ns = "BRGenomics",
                   function(data_in, field, ncores) {
