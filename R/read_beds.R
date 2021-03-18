@@ -30,7 +30,7 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 10, 
+read_beds2 <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 10, 
                       h5 = FALSE, h5_dir = NULL, desc = NULL, verbose = TRUE) {
   
   #start.time <- Sys.time()
@@ -101,31 +101,6 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   
 }
 
-#' Parse BED files for unique genomic regions
-#' @details Create list of unique genomic regions from input BED files. Meant to be fed into
-#' generate_delayed_array
-#' @param files List of BED files
-#' @return data.table containing all unique genomic regions
-#' @import data.table
-#' @examples
-generate_indexes <- function(files) {
-
-  rrng <- vector(mode = "list", length = length(files))
-  
-  for (i in 1:length(files)) {
-    data <- data.table::fread(files[i], header=FALSE, select = c(1:3))
-    rrng[[i]] <- data
-    message(paste0("   Parsing: ",get_sample_name(files[i])))
-    
-  }
-  
-  rrng <- data.table::rbindlist(rrng)
-  rrng <- unique(rrng)
-  colnames(rrng) <- c("chr","start","end")
-
-  return(rrng)
-  
-}
 
 #' Parse indexed BED files into a \code{\link{DelayedArray}}
 #' @details Creates a delayed array of BED files. Each column is a single sample, with known methylation
@@ -158,71 +133,126 @@ generate_delayed_array <- function(files,index) {
   return(assay)
 }
 
-#' Reads in a bedgraph file and creates an indexed output for methylation values
-#' @details Extracts methylation values from a sample and aligns to a generated index of methylation sites
-#' @param file A BED file. Column 4 must be the methylation value
-#' @param index Generated index from generate_indexes. Must be generated using (at minimum) using all files
-#' listed in the files parameter 
-#' @return Vector containing all methylation values and NAs for unknown sites
+
+read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
+                                 h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE) {
+  
+  tic()
+  tic()
+  
+  if (is.null(files)) {
+    stop("Missing input files.", call. = FALSE)
+  }
+  
+  if (h5) {
+
+    message("Starting H5 object") 
+   
+    if (is.null(h5_temp)) {
+      h5_temp <- tempdir()
+    }
+    
+    index <- read_index(files)
+    
+    toc()
+
+    message("Reading data")
+    
+    dimension <- as.integer(nrow(index))
+    
+    grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
+                                           spacings = c(dimension, 1L)) 
+    
+    M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
+                                             dimnames = NULL, type = "integer",
+                                             filepath = file.path(h5_temp, "M_sink.h5"), name = "M", level = 6)
+    
+    for (i in 1:length(files)) {
+      tic()
+      cat(paste0("   Parsing: ", get_sample_name(files[i])))
+      bed <- read_bed_by_index(files[i],index)
+      DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
+      rm(bed)
+      if (i%%10==0) gc()
+      cat(paste0(" (",capture.output(toc()),")\n"))
+    }
+    
+    message("Data read!")
+    
+    message("Building scMethrix object")
+    
+    index <- GenomicRanges::makeGRangesFromDataFrame(index)
+    
+    colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
+    
+    m_obj <- create_scMethrix(methyl_mat=as(M_sink, "HDF5Array"), rowRanges=index, is_hdf5 = TRUE, 
+                              h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData)
+ 
+    message("Object built!")
+ 
+    toc()
+    
+    return(m_obj)
+  }
+}
+
+
+#' Parse BED files for unique genomic regions
+#' @details Create list of unique genomic regions from input BED files. Meant to be fed into
+#' generate_delayed_array
+#' @param files List of BED files
+#' @return data.table containing all unique genomic regions
 #' @import data.table
 #' @examples
-read_bdg <- function(file,index) {
+read_index <- function(files) {
+  
+  message("Generating index")
+  
+  max_files <- 30 ## Test number
+  
+  rrng <- vector(mode = "list", length = max_files+1)
+  
+  for (i in 1:length(files)) {
+    tic()
+    message(paste0("   Parsing: ",get_sample_name(files[i])))
+    data <- data.table::fread(files[i], header=FALSE, select = c(1:3))
+    
+   
+    if (i%%max_files != 0) {
+      rrng[[i%%max_files]] <- data
+    } else {
+      rrng[[max_files]] <- data
+      data <- data.table::rbindlist(rrng)
+      data <- unique(data)
+      rrng <- vector(mode = "list", length = max_files)
+      rrng[[max_files+1]] <- data
+      
+    }
+    cat(paste0(" (",capture.output(toc()),")\n"))
+  }
+ 
+  rrng <- data.table::rbindlist(rrng)
+  colnames(rrng) <- c("chr","start","end")
+  setkeyv(rrng, c("chr","start"))
+  rrng <- unique(rrng)
+  
+  message("Index generated!")
+  
+  return(rrng)
+}
+
+
+read_bed_by_index <- function(file,index) {
   data <- data.table::fread(file, header = FALSE, select = c(1:4))
   colnames(data) <- c("chr", "start", "end", "value")
   x <- index[.(data$chr, data$start), which = TRUE]
   sample <- rep(NA_integer_, nrow(index))
   sample[x] <- data[[4]]
+  sample <- as.matrix(sample)
   colnames(sample) <- get_sample_name(file)
+  
+  return(sample)
 }
-
-
-read_bed_to_hdf5 <- function(files, index, h5temp = NULL) {
-  
-if (is.null(h5temp)) {
-  h5temp <- tempdir()
-}
-
-  dimension <- as.integer(nrow(index)/2)
-
-  grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
-                                         spacings = c(dimension, 1L)) 
-  
-  
-  M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
-                                           dimnames = NULL, type = "double",
-                                           filepath = file.path(h5temp, paste0("M_sink_", sink_counter, ".h5")), name = "M", level = 6)
-  
-  
-  
-  
-  
-  
-  read_chunk_to_hdf5 <- function(files, index, grid, sink, h5temp) {
-    
-    for (i in 1:length(files)) {
-     
-      bed <- read_bdg()
-      
-      
-      DelayedArray::write_block(block = as.matrix(b$bdg[, .(beta)]),
-                                viewport = grid[[i]], sink = M_sink)
-      
-      
-       
-      
-      
-      
-      
-    }
-    
-    
-    
-    
-    
-  }
-  
-
-
 
 
 
