@@ -18,5 +18,3 @@ names(bed3) <- c("chr","start","end","value")
 methylKit::df2tabix(bed1,"bed1_test.bed")
 methylKit::df2tabix(bed2,"bed2.bed")
 methylKit::df2tabix(bed3,"bed3.bed")
-
-

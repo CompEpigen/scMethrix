@@ -6,7 +6,6 @@ get_region_summary = function (m) {
   
 }
   
-  
 #--------------------------------------------------------------------------------------------------------------------------
 #' Order methrix object by SD
 #' @details Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
@@ -40,7 +39,6 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
   return (m)
   
 }
-
 
 #--------------------------------------------------------------------------------------------------------------------------
 
@@ -111,6 +109,7 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
     overlaps <- NULL
     
     for (file in files) {
+      message(paste("   Parsing:",get_sample_name(file)))
       score <- get_tabix_scores(file, subset)
       if (is.null(overlaps)) {overlaps <- score
       } else {overlaps <- cbind(overlaps,score)}
@@ -149,4 +148,15 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
   return(m_obj)
   
 }
+
+get_stats <- function(m, per_chr = TRUE, verbose = TRUE) {
   
+  message("Generating stats")
+  
+  if (!is(m, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  
+  
+}
