@@ -15,7 +15,7 @@
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
-#' @import SingleCellExperiment BRGenomics GenomicRanges
+#' @import SingleCellExperiment BRGenomics GenomicRanges tictoc
 #' @examples
 #'\dontrun{
 #'bdg_files = list.files(path = system.file('extdata', package = 'methrix'),
@@ -137,8 +137,7 @@ generate_delayed_array <- function(files,index) {
 read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
                                  h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE) {
   
-  tic()
-  tic()
+  tictoc::tic(); tictoc::tic()
   
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
@@ -168,13 +167,12 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
                                              filepath = file.path(h5_temp, "M_sink.h5"), name = "M", level = 6)
     
     for (i in 1:length(files)) {
-      tic()
       cat(paste0("   Parsing: ", get_sample_name(files[i])))
       bed <- read_bed_by_index(files[i],index)
       DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
       rm(bed)
       if (i%%10==0) gc()
-      cat(paste0(" (",capture.output(toc()),")\n"))
+      cat(paste0(" (",capture.output(tictoc::toc()),")\n"))
     }
     
     message("Data read!")
@@ -188,14 +186,15 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     m_obj <- create_scMethrix(methyl_mat=as(M_sink, "HDF5Array"), rowRanges=index, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData)
  
+    file.remove(file.path(h5_temp, "M_sink.h5"))
+    
     message("Object built!")
  
-    toc()
+    tictoc::toc()
     
     return(m_obj)
   }
 }
-
 
 #' Parse BED files for unique genomic regions
 #' @details Create list of unique genomic regions from input BED files. Meant to be fed into
@@ -205,6 +204,8 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 #' @import data.table
 #' @examples
 read_index <- function(files) {
+
+  tictoc::tic()
   
   message("Generating index")
   
@@ -213,11 +214,9 @@ read_index <- function(files) {
   rrng <- vector(mode = "list", length = max_files+1)
   
   for (i in 1:length(files)) {
-    tic()
     message(paste0("   Parsing: ",get_sample_name(files[i])))
-    data <- data.table::fread(files[i], header=FALSE, select = c(1:3))
+    data <- data.table::fread(files[i], header=FALSE, select = c(1:2))
     
-   
     if (i%%max_files != 0) {
       rrng[[i%%max_files]] <- data
     } else {
@@ -226,38 +225,32 @@ read_index <- function(files) {
       data <- unique(data)
       rrng <- vector(mode = "list", length = max_files)
       rrng[[max_files+1]] <- data
-      
     }
-    cat(paste0(" (",capture.output(toc()),")\n"))
   }
  
   rrng <- data.table::rbindlist(rrng)
-  colnames(rrng) <- c("chr","start","end")
+  colnames(rrng) <- c("chr","start")
   setkeyv(rrng, c("chr","start"))
   rrng <- unique(rrng)
+  rrng$end <- rrng$start+1
   
-  message("Index generated!")
-  
-  return(rrng)
+  cat(paste0("Index generated! (",capture.output(tictoc::toc()),")\n"))
+
+    return(rrng)
 }
 
 
 read_bed_by_index <- function(file,index) {
-  data <- data.table::fread(file, header = FALSE, select = c(1:4))
-  colnames(data) <- c("chr", "start", "end", "value")
+  data <- data.table::fread(file, header = FALSE, select = c(1:2,4))
+  colnames(data) <- c("chr", "start", "value")
   x <- index[.(data$chr, data$start), which = TRUE]
   sample <- rep(NA_integer_, nrow(index))
-  sample[x] <- data[[4]]
+  sample[x] <- data[[3]]
   sample <- as.matrix(sample)
   colnames(sample) <- get_sample_name(file)
   
   return(sample)
 }
-
-
-
-
-
 
 assignInNamespace(".multiplex_gr", ns = "BRGenomics",
                   function(data_in, field, ncores) {
