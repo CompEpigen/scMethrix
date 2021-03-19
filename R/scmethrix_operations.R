@@ -5,6 +5,36 @@ get_region_summary = function (m) {
   }
   
 }
+
+
+
+#--------------------------------------------------------------------------------------------------------------------------
+#' Loads HDF5 scMethrix object
+#' @details Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
+#' @param dir The directory to read in from. Default NULL
+#' @param ... Parameters to pass to loadHDF5SummarizedExperiment
+#' @return An object of class \code{\link{methrix}}
+#' @examples
+#' data('scMethrix_data')
+#' methrix_data_h5 <- convert_methrix(m=methrix_data)
+#' target_dir = paste0(getwd(), '/temp1/')
+#' save_HDF5_methrix(methrix_data_h5, dir = target_dir, replace = TRUE)
+#' load_HDF5_methrix(target_dir)
+#' @export
+load_HDF5_scMethrix <- function(dir = NULL, ...) {
+  
+  if (is.null(dir)) {
+    stop("Please provide the target directory containing ")
+  }
+  
+  m <- HDF5Array::loadHDF5SummarizedExperiment(dir = dir, ...)
+  m <- as(m, "scMethrix")
+  return(m)
+}
+
+
+
+
   
 #--------------------------------------------------------------------------------------------------------------------------
 #' Order methrix object by SD

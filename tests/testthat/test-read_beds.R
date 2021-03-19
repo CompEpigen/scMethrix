@@ -25,7 +25,28 @@ test_that("read_bed_by_index", {
   
 })
 
+test_that("read_bed (HDF5 in temp)", {
+  
+  scm <- read_beds(files,h5=TRUE)
+  
+  expect_equivalent(class(scm)[1],"scMethrix")
+  expect_equivalent(dim(scm),c(10,3))
+  
+})
+
+test_that("read_bed (HDF5 on disk)", {
+  
+  scm1 <- read_beds(files,h5=TRUE,h5_dir=tempdir())
+  scm2 <- load_HDF5_scMethrix(dir=file.path(tempdir(),"sse"))
+    
+  expect_equivalent(class(scm1)[1],class(scm2)[1],"scMethrix")
+  expect_equivalent(dim(scm1),dim(scm2),c(10,3))
+  
+})
 
 
-
-
+test_that("read_bed (mem)", {
+ 
+  
+  
+})
