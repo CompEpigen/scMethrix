@@ -30,110 +30,6 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds2 <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 10, 
-                      h5 = FALSE, h5_dir = NULL, desc = NULL, verbose = TRUE) {
-  
-  #start.time <- Sys.time()
-  
-  if (is.null(files)) {
-    stop("Missing input files.", call. = FALSE)
-  }
-  
-  if (h5) {
-
-    message("Starting H5 object") 
-    message("Finding unique CpG sites")  
-
-    files_split <- split(files, ceiling(seq_along(files)/(length(files)/n_threads))) ### n_threads should be optimized
-
-    rrng <- parallel::mclapply(files_split, generate_indexes, mc.cores = 1)#n_threads)
-    
-    message("Building index")
-    
-    rrng <- data.table::rbindlist(rrng)
-    setkeyv(rrng, c("chr","start"))
-    rrng <- unique(rrng)
-
-    message("Reading data")
-    
-    assay <- parallel::mclapply(files_split, generate_delayed_array, index = rrng, mc.cores = 1)#n_threads)
-    
-    message("Creating scMethrix object")
-    
-    assay <- do.call(acbind, lapply(assay, acbind))
-
-    rrng <- GenomicRanges::makeGRangesFromDataFrame(rrng)
-
-    colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
-
-    #setHDF5DumpFile(paste0(h5_dir,"/scMethrix.h5"))
-    #assay <- writeHDF5Array(assay, name="assay", chunkdim=c(nrow(assay),1), verbose=TRUE)
-    
-    m_obj <- create_scMethrix(methyl_mat=assay, rowRanges=rrng, is_hdf5 = TRUE, h5_dir = h5_dir,
-                              genome_name = genome_name,desc = desc,colData = colData)
-    
-  } else {
-    
-    message("Reading in BED files") 
-    
-    if (!all(grepl("\\.(bed|bedgraph)", files))) stop("Input files must be of type bed or bedgraph.", call. = FALSE)
-    
-    #TODO: Replace with tabix input instead
-    
-    beds <- BRGenomics::import_bedGraph(files,ncores=1)
-    gr <- GRangesList(beds)
-    gr <- makeGRangesBRG(gr,ncores=1)
-    message("Generating indexes")
-    gr <- BRGenomics::mergeGRangesData(gr,ncores = 1,multiplex=TRUE)
-    names(mcols(gr)) <- lapply(names(mcols(gr)),get_sample_name)
-    
-    rng <- c(gr, NULL, ignore.mcols=TRUE) # Remove the metadata for rowRanges input
-    
-    message("Creating scMethrix object")
-    m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rng, is_hdf5 = h5, 
-                              genome_name = genome_name, desc = desc )
-    
-  }
-  
-  #message(paste0("Reading ",length(files)," files took ",round(Sys.time() - start.time,2),"s"))
-  
-  return(m_obj)
-  
-}
-
-
-#' Parse indexed BED files into a \code{\link{DelayedArray}}
-#' @details Creates a delayed array of BED files. Each column is a single sample, with known methylation
-#' values places at the appropriate index from generate_indexes
-#' @param files List of BED files. Column 4 must be the methylation value
-#' @param index Generated index from generate_indexes. Must be generated using (at minimum) using all files
-#' listed in the files parameter 
-#' @return \code{\link{DelayedArray}} containing all methylation values in a dense matrix of NAs
-#' @import data.table
-#' @examples
-generate_delayed_array <- function(files,index) {
-  
-  assay = NULL
-  
-  for (i in 1:length(files)) {
-    data <- data.table::fread(files[i], header = FALSE, select = c(1:4))
-    colnames(data) <- c("chr", "start", "end", "value")
-    x <- index[.(data$chr, data$start), which = TRUE]
-    sample <- rep(NA_integer_, nrow(index))
-    sample[x] <- data[[4]]
-    sample <- DelayedArray(as.matrix(sample))
-    colnames(sample) <- get_sample_name(files[i])
-    
-    if (is.null(assay)) {assay <- sample
-    } else {assay <- acbind(assay, sample)}
-    
-    message(paste0("   Parsing: ", get_sample_name(files[i])))
-  }
-  
-  return(assay)
-}
-
-
 read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
                                  h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE) {
   
@@ -141,6 +37,11 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
+  }
+  
+  
+  if (!all(grepl("\\.(bed|bedgraph)", files))) {
+    stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
   }
   
   if (h5) {
@@ -153,7 +54,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     
     index <- read_index(files)
     
-    toc()
+    tictoc::toc()
 
     message("Reading data")
     
@@ -193,6 +94,28 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     tictoc::toc()
     
     return(m_obj)
+ 
+ } else {
+    
+    message("Reading in BED files") 
+
+   # beds <- lapply(files, rtracklayer::import,format = "BED")
+  #  gr <- GRangesList(beds)
+  #  rtracklayer::export.bed(unlist(gr),con=file.path(tempdir(),'bed1.bed'))
+   
+   
+    beds <- BRGenomics::import_bedGraph(files,ncores=1)
+    gr <- GRangesList(beds)
+    gr <- BRGenomics::makeGRangesBRG(gr,ncores=1)
+    message("Generating indexes")
+    gr <- BRGenomics::mergeGRangesData(gr,ncores = 1,multiplex=TRUE)
+    names(mcols(gr)) <- lapply(names(mcols(gr)),get_sample_name)
+    
+    rrng <- c(gr, NULL, ignore.mcols=TRUE) # Remove the metadata for rowRanges input
+    
+    message("Creating scMethrix object")
+    m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rrng, is_hdf5 = FALSE, 
+                              genome_name = genome_name, desc = desc )
   }
 }
 
@@ -238,7 +161,6 @@ read_index <- function(files) {
 
     return(rrng)
 }
-
 
 read_bed_by_index <- function(file,index) {
   data <- data.table::fread(file, header = FALSE, select = c(1:2,4))

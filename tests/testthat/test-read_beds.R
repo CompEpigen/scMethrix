@@ -46,7 +46,22 @@ test_that("read_bed (HDF5 on disk)", {
 
 
 test_that("read_bed (mem)", {
- 
   
+  scm <- read_beds(files,h5=FALSE)
+  
+  expect_equivalent(class(scm)[1],"scMethrix")
+  expect_equivalent(dim(scm),c(10,3))
   
 })
+
+test_that("read_bed (HDF vs memory)", {
+  
+  scm.hdf <- read_beds(files,h5=TRUE)
+  scm.mem <- read_beds(files,h5=FALSE)
+  
+  expect_equivalent(assays(scm.hdf)$score,assays(scm.mem)$score)
+  expect_equivalent(rowRanges(scm.hdf),rowRanges(scm.mem))
+})
+
+
+
