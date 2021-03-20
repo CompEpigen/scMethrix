@@ -32,9 +32,7 @@
 
 read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
                                  h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE) {
-  
-  tictoc::tic(); tictoc::tic()
-  
+
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
   }
@@ -127,8 +125,6 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 #' @import data.table
 #' @examples
 read_index <- function(files) {
-
-  tictoc::tic()
   
   message("Generating index")
   
@@ -157,7 +153,7 @@ read_index <- function(files) {
   rrng <- unique(rrng)
   rrng$end <- rrng$start+1
   
-  cat(paste0("Index generated! (",capture.output(tictoc::toc()),")\n"))
+  message(paste0("Index generated!"))
 
     return(rrng)
 }
