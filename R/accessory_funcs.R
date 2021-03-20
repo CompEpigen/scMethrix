@@ -13,19 +13,6 @@ is_h5 = function(m) {
   return(m@metadata$is_h5)
 }
 
-get_files = function(m, name_only = FALSE) {
-  
-  if (!is_ondisk(m)) stop("Given scMethrix object is not stored on disk.")
-  
-  files <- m@metadata$files
-  
-  if (name_only) {
-    files <- unlist(lapply(files,get_sample_name))
-  }
-  
-  return(files)
-}
-
 get_sample_name = function(s) {
   return(strsplit(basename(s), "[.]")[[1]][1])
 }
@@ -96,70 +83,4 @@ cast_ranges <- function(regions, set.key = TRUE) {
 cast_granges <- function(regions) {
   if (is(regions, "GRanges")) return (regions)
   
-}
-
-#------------------------------------------------------------------------
-# Gets the scores from a given tabix file for a specific region (including NA)
-# Regions must be a subset of rowRanges of the associated scMethrix object
-# regions <- subsetByOverlaps(rowRanges(m), regions)
-get_tabix_scores <- function(file, regions=NULL){
-  
-  if (is.null(regions)) {tbx = Rsamtools::scanTabix(file)
-  } else {tbx <- Rsamtools::scanTabix(file, param = regions)}
- 
-  if(length(tbx) == 0) stop(paste("Input tabix file (",file,") has no entries."), call. = FALSE)
- 
-  tbx[lengths(tbx) == 0] <- NA_character_
-  tbx <- lapply(tbx,function(x) {
-                  if (anyNA(x)) {return(NA) 
-                  } else {return (unlist(strsplit(x,"\t"))[4])}
-  })
-
-  tbx <- do.call(rbind.data.frame, tbx)
-
-  colnames(tbx) <- strsplit(basename(file), "[.]")[[1]][1]
-  
-  return(tbx)
-}
-
-# Not sure this actually works....
-row_apply <- function(m,func,...) {
-  
-  if (!is(m, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (!is_ondisk(m)) stop("Row_apply cannot be applied to non-on_disk objects.")
-  
-  grl <- chunk_granges(m,...)
-  
-  result = NULL
-  
-  for (gr in grl) {
-    
-    data <- subset_scMethrix(m,regions = gr)
-    if (is.null(result)) {result <- sapply(data,func)
-    } else {result <- rbind(result,sapply(data,func))}
-
-  }
-  
-  return(result)  
-  
-}
-
-tabix2df <- function(tbx,region=NULL) {
-  
-  if (is.null(regions)) {tbx = Rsamtools::scanTabix(file)
-  } else {tbx <- Rsamtools::scanTabix(file, param = regions)}
-  
-  if(length(tbx) == 0) stop(paste("Input tabix file (",file,") has no entries."), call. = FALSE)
-  
-  tbx <- data.frame(lapply(tbx,function(x) {str_split_fixed(x, "\t", 4)}))
-  
-  colnames(tbx) <- c("chr","start","end",strsplit(basename(file), "[.]")[[1]][1])
-  tbx[,2] <- as.integer(tbx[,2])
-  tbx[,3] <- as.integer(tbx[,3])
-  tbx[,4] <- as.integer(tbx[,4])
-  
-  return(df)
 }
