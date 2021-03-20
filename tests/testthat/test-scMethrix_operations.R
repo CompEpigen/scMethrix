@@ -1,5 +1,7 @@
 test_that("convert_HDF5_methrix", {
 
+  expect_error(convert_HDF5_methrix("not methrix"))
+  
   scm <- NULL #load the h5 object
 
   expect_true(is_h5(scm))
@@ -13,6 +15,8 @@ test_that("convert_HDF5_methrix", {
 })
 
 test_that("convert_methrix", {
+  
+  expect_error(convert_methrix("not methrix"))
   
   scm <- NULL #load the h5 object
   

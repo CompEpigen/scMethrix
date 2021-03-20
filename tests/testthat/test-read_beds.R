@@ -63,5 +63,10 @@ test_that("read_bed (HDF vs memory)", {
   expect_equivalent(rowRanges(scm.hdf),rowRanges(scm.mem))
 })
 
-
+test_that("read_bed", {
+  
+  expect_error(read_beds(NULL))
+  expect_error(read_beds(tempfile))
+  
+})
 
