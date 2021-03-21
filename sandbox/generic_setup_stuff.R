@@ -17,13 +17,8 @@ files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
 
 files <- files[1:10]
 
-h5_dir <- getwd()
-
-tic()
-  
 scm <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"))
 
 scm <- read_beds(files=files,h5=FALSE)
-  
-toc()
 
+devtools::test()

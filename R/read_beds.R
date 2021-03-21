@@ -15,7 +15,7 @@
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
-#' @import SingleCellExperiment BRGenomics GenomicRanges tictoc
+#' @import SingleCellExperiment BRGenomics GenomicRanges
 #' @examples
 #'\dontrun{
 #'bdg_files = list.files(path = system.file('extdata', package = 'methrix'),
@@ -31,7 +31,7 @@
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
 read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
-                                 h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE) {
+                                 h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE) {
 
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
@@ -42,6 +42,8 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
   }
   
+  start_proc_time <- proc.time()
+  
   if (h5) {
 
     message("Starting H5 object") 
@@ -51,8 +53,6 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     }
     
     index <- read_index(files)
-    
-    tictoc::toc()
 
     message("Reading data")
     
@@ -61,21 +61,28 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
                                            spacings = c(dimension, 1L)) 
     
+    sink_counter <- 1
+    while (any(c(paste0("M_sink_", sink_counter, ".h5"), paste0("cov_sink_",
+                                                                sink_counter, ".h5")) %in% dir(h5_temp))) {
+      sink_counter <- sink_counter + 1
+      
+    }
+    
     M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
                                              dimnames = NULL, type = "integer",
-                                             filepath = file.path(h5_temp, "M_sink.h5"), name = "M", level = 6)
+                                             filepath = file.path(h5_temp, paste0("M_sink_", sink_counter, ".h5")), name = "M", level = 6)
     
     for (i in 1:length(files)) {
       cat(paste0("   Parsing: ", get_sample_name(files[i])))
+      time <- proc.time()[[3]]
       bed <- read_bed_by_index(files[i],index)
       DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
       rm(bed)
       if (i%%10==0) gc()
-      cat(paste0(" (",capture.output(tictoc::toc()),")\n"))
+      cat(paste0(" (",sprintf(proc.time()[[3]]-time, fmt = '%#.2f'),"s)\n"))
     }
     
     message("Data read!")
-    
     message("Building scMethrix object")
     
     index <- GenomicRanges::makeGRangesFromDataFrame(index)
@@ -85,33 +92,28 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     m_obj <- create_scMethrix(methyl_mat=as(M_sink, "HDF5Array"), rowRanges=index, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData)
  
-    file.remove(file.path(h5_temp, "M_sink.h5"))
-    
     message("Object built!")
- 
-    tictoc::toc()
     
     return(m_obj)
  
  } else {
     
-    message("Reading in BED files") 
+   if (verbose) message("Reading in BED files") 
 
    # beds <- lapply(files, rtracklayer::import,format = "BED")
   #  gr <- GRangesList(beds)
   #  rtracklayer::export.bed(unlist(gr),con=file.path(tempdir(),'bed1.bed'))
    
-   
     beds <- BRGenomics::import_bedGraph(files,ncores=1)
     gr <- GRangesList(beds)
     gr <- BRGenomics::makeGRangesBRG(gr,ncores=1)
-    message("Generating indexes")
+    if (verbose) message("Generating indexes")
     gr <- BRGenomics::mergeGRangesData(gr,ncores = 1,multiplex=TRUE)
     names(mcols(gr)) <- lapply(names(mcols(gr)),get_sample_name)
     
     rrng <- c(gr, NULL, ignore.mcols=TRUE) # Remove the metadata for rowRanges input
     
-    message("Creating scMethrix object")
+    if (verbose) message("Creating scMethrix object")
     m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rrng, is_hdf5 = FALSE, 
                               genome_name = genome_name, desc = desc )
   }
@@ -121,35 +123,36 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 #' @details Create list of unique genomic regions from input BED files. Meant to be fed into
 #' generate_delayed_array
 #' @param files List of BED files
+#' @param batch_size Number of files to process before running unique. Default of 30.
 #' @return data.table containing all unique genomic regions
 #' @import data.table
 #' @examples
-read_index <- function(files) {
+read_index <- function(files, batch_size = 30, verbose = FALSE) {
   
   message("Generating index")
   
-  max_files <- 30 ## Test number
-  
-  rrng <- vector(mode = "list", length = max_files+1)
+  rrng <- vector(mode = "list", length = batch_size+1)
   
   for (i in 1:length(files)) {
-    message(paste0("   Parsing: ",get_sample_name(files[i])))
+    cat(paste0("   Parsing: ",get_sample_name(files[i])))
+    time <- proc.time()[[3]]
     data <- data.table::fread(files[i], header=FALSE, select = c(1:2))
     
-    if (i%%max_files != 0) {
-      rrng[[i%%max_files]] <- data
+    if (i%%batch_size != 0) {
+      rrng[[i%%batch_size]] <- data
     } else {
-      rrng[[max_files]] <- data
+      rrng[[batch_size]] <- data
       data <- data.table::rbindlist(rrng)
       data <- unique(data)
-      rrng <- vector(mode = "list", length = max_files)
-      rrng[[max_files+1]] <- data
+      rrng <- vector(mode = "list", length = batch_size)
+      rrng[[batch_size+1]] <- data
     }
+    cat(paste0(" (",sprintf(proc.time()[[3]]-time, fmt = '%#.2f'),"s)\n"))
   }
  
   rrng <- data.table::rbindlist(rrng)
   colnames(rrng) <- c("chr","start")
-  setkeyv(rrng, c("chr","start"))
+  data.table::setkeyv(rrng, c("chr","start"))
   rrng <- unique(rrng)
   rrng$end <- rrng$start+1
   

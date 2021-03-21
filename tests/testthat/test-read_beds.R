@@ -3,12 +3,12 @@ df1 <- data.table(chr=rep("chr1",5),start=1:5,end=2:6,value=0)
 df2 <- data.table(chr=rep("chr1",5),start=3:7,end=4:8,value=0)
 df3 <- data.table(chr=rep("chr1",5),start=6:10,end=7:11,value=0)
 
-write.table(df1, file = file.path(tempdir(),'df1.bedgraph'), row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
-write.table(df2, file = file.path(tempdir(),'df2.bedgraph'), row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
-write.table(df3, file = file.path(tempdir(),'df3.bedgraph'), row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
-
-files <- c("df1.bed","df2.bed","df3.bed")
+files <- c("df1.bedgraph","df2.bedgraph","df3.bedgraph")
 files <- file.path(tempdir(),files)
+
+write.table(df1, file = files[1], row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
+write.table(df2, file = files[2], row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
+write.table(df3, file = files[3], row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
 
 test_that("read_index", {
 
@@ -36,14 +36,15 @@ test_that("read_bed (HDF5 in temp)", {
 
 test_that("read_bed (HDF5 on disk)", {
   
-  scm1 <- read_beds(files,h5=TRUE,h5_dir=tempdir())
-  scm2 <- load_HDF5_scMethrix(dir=file.path(tempdir(),"sse"))
+  path <- file.path(tempdir(),paste0("sse-",sample.int(10000, 1)))
+  
+  scm1 <- read_beds(files,h5=TRUE,h5_dir=path)
+  scm2 <- load_HDF5_scMethrix(dir=path)
     
   expect_equivalent(class(scm1)[1],class(scm2)[1],"scMethrix")
   expect_equivalent(dim(scm1),dim(scm2),c(10,3))
   
 })
-
 
 test_that("read_bed (mem)", {
   
