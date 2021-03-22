@@ -46,43 +46,10 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   
   if (h5) {
 
-    message("Starting H5 object") 
-   
-    if (is.null(h5_temp)) {
-      h5_temp <- tempdir()
-    }
-    
     index <- read_index(files)
 
-    message("Reading data")
+    M_sink <- write_HDF5(files, index, h5_temp)
     
-    dimension <- as.integer(nrow(index))
-    
-    grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
-                                           spacings = c(dimension, 1L)) 
-    
-    sink_counter <- 1
-    while (any(c(paste0("M_sink_", sink_counter, ".h5"), paste0("cov_sink_",
-                                                                sink_counter, ".h5")) %in% dir(h5_temp))) {
-      sink_counter <- sink_counter + 1
-      
-    }
-    
-    M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
-                                             dimnames = NULL, type = "integer",
-                                             filepath = file.path(h5_temp, paste0("M_sink_", sink_counter, ".h5")), name = "M", level = 6)
-    
-    for (i in 1:length(files)) {
-      cat(paste0("   Parsing: ", get_sample_name(files[i])))
-      time <- proc.time()[[3]]
-      bed <- read_bed_by_index(files[i],index)
-      DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
-      rm(bed)
-      if (i%%10==0) gc()
-      cat(paste0(" (",sprintf(proc.time()[[3]]-time, fmt = '%#.2f'),"s)\n"))
-    }
-    
-    message("Data read!")
     message("Building scMethrix object")
     
     index <- GenomicRanges::makeGRangesFromDataFrame(index)
@@ -171,6 +138,49 @@ read_bed_by_index <- function(file,index) {
   colnames(sample) <- get_sample_name(file)
   
   return(sample)
+}
+
+
+write_HDF5 <- function(files, index, h5_temp = NULL) {
+  
+  message("Starting HDF5 object") 
+  
+  message("Reading data")
+  
+  if (is.null(h5_temp)) {
+    h5_temp <- tempdir()
+  }
+  
+  dimension <- as.integer(nrow(index))
+  
+  grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
+                                         spacings = c(dimension, 1L)) 
+  
+  sink_counter <- 1
+  while (any(c(paste0("M_sink_", sink_counter, ".h5"), paste0("cov_sink_",
+                                                              sink_counter, ".h5")) %in% dir(h5_temp))) {
+    sink_counter <- sink_counter + 1
+    
+  }
+  
+  M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
+                                           dimnames = NULL, type = "integer",
+                                           filepath = file.path(h5_temp, paste0("M_sink_", sink_counter, ".h5")), name = "M", level = 6)
+  
+  for (i in 1:length(files)) {
+    cat(paste0("   Parsing: ", get_sample_name(files[i])))
+    time <- proc.time()[[3]]
+    bed <- read_bed_by_index(files[i],index)
+    DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
+    rm(bed)
+    if (i%%10==0) gc()
+    cat(paste0(" (",sprintf(proc.time()[[3]]-time, fmt = '%#.2f'),"s)\n"))
+  }
+  
+  message("HDF5 data written!")
+  
+  return(M_sink)
+  
 }
 
 assignInNamespace(".multiplex_gr", ns = "BRGenomics",
