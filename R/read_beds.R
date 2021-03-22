@@ -15,7 +15,7 @@
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
-#' @import SingleCellExperiment BRGenomics GenomicRanges
+#' @import SingleCellExperiment BRGenomics GenomicRanges dplyr
 #' @examples
 #'\dontrun{
 #'bdg_files = list.files(path = system.file('extdata', package = 'methrix'),
@@ -31,7 +31,8 @@
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
 read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
-                                 h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE) {
+                      h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
+                      zero_based = TRUE) {
 
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
@@ -47,8 +48,10 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   if (h5) {
 
     index <- read_index(files)
+    
+    if (zero_based) {index[,2:3] <- index[,2:3]-1}
 
-    M_sink <- write_HDF5(files, index, h5_temp)
+    M_sink <- write_HDF5(files, index, h5_temp, zero_based)
     
     message("Building scMethrix object")
     
@@ -95,7 +98,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 #' @return data.table containing all unique genomic coordinates
 #' @import data.table
 #' @examples
-read_index <- function(files, batch_size = 30, verbose = FALSE) {
+read_index <- function(files, batch_size = 100, verbose = FALSE) {
   
   message("Generating index")
   
@@ -111,7 +114,7 @@ read_index <- function(files, batch_size = 30, verbose = FALSE) {
     } else {
       rrng[[batch_size]] <- data
       data <- data.table::rbindlist(rrng)
-      data <- unique(data)
+      data <- unique(data) #data <- distinct(data)# #data <- data[!duplicated(data),]
       rrng <- vector(mode = "list", length = batch_size)
       rrng[[batch_size+1]] <- data
     }
@@ -137,9 +140,10 @@ read_index <- function(files, batch_size = 30, verbose = FALSE) {
 #' @return data.table containing vector of all indexed methylation values for the input BED
 #' @import data.table
 #' @examples
-read_bed_by_index <- function(file,index) {
+read_bed_by_index <- function(file,index,zero_based=FALSE) {
   data <- data.table::fread(file, header = FALSE, select = c(1:2,4))
   colnames(data) <- c("chr", "start", "value")
+  if (zero_based) {data[,2] <- data[,2]-1}
   x <- index[.(data$chr, data$start), which = TRUE]
   sample <- rep(NA_integer_, nrow(index))
   sample[x] <- data[[3]]
@@ -158,7 +162,7 @@ read_bed_by_index <- function(file,index) {
 #' @return HDF5Array The methylation values for input BED files
 #' @import data.table DelayedArray HDF5Array
 #' @examples
-write_HDF5 <- function(files, index, h5_temp = NULL) {
+write_HDF5 <- function(files, index, h5_temp = NULL, zero_based = FALSE) {
   
   message("Starting HDF5 object") 
   
@@ -187,7 +191,7 @@ write_HDF5 <- function(files, index, h5_temp = NULL) {
   for (i in 1:length(files)) {
     cat(paste0("   Parsing: ", get_sample_name(files[i])))
     time <- proc.time()[[3]]
-    bed <- read_bed_by_index(files[i],index)
+    bed <- read_bed_by_index(files[i],index,zero_based)
     DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
     rm(bed)
     if (i%%10==0) gc()
