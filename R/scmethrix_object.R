@@ -56,7 +56,7 @@ create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL
                                                       metadata = list(genome = genome_name,
                                                                       chrom_sizes = chrom_sizes,
                                                                       descriptive_stats = desc,
-                                                                      is_hdf5 = FALSE))
+                                                                      is_h5 = FALSE))
     }
 
     return(scMethrix(sse))

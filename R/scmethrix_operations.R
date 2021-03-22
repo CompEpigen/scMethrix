@@ -52,7 +52,7 @@ convert_HDF5_methrix <- function(m = NULL) {
     stop("The input data is not in HDF5 format. Conversion aborted.")
   }
 
-  assays(m)[[i]] <- as.matrix(assays(m)[[i]])
+  assays(m)[[1]] <- as.matrix(assays(m)[[1]])
   m@metadata$is_h5 <- FALSE
   return(m)
 }
@@ -69,7 +69,7 @@ convert_HDF5_methrix <- function(m = NULL) {
 #' @export
 convert_methrix <- function(m = NULL) {
   
-  if (is.null(m) | !is(m, "methrix")) {
+  if (is.null(m) | !is(m, "scMethrix")) {
     stop("No or not valid input data provided.")
   }
   if (is_h5(m)) {

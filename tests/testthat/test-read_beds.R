@@ -25,16 +25,14 @@ test_that("read_bed_by_index", {
   
 })
 
-test_that("read_bed (HDF5 in temp)", {
+test_that("read_bed - Input errors", {
   
-  scm <- read_beds(files,h5=TRUE)
-  
-  expect_equivalent(class(scm)[1],"scMethrix")
-  expect_equivalent(dim(scm),c(10,3))
+  expect_error(read_beds(NULL))
+  expect_error(read_beds(tempfile))
   
 })
 
-test_that("read_bed (HDF5 on disk)", {
+test_that("read_bed - HDF5", {
   
   path <- file.path(tempdir(),paste0("sse-",sample.int(10000, 1)))
   
@@ -42,32 +40,28 @@ test_that("read_bed (HDF5 on disk)", {
   scm2 <- load_HDF5_scMethrix(dir=path)
     
   expect_equivalent(class(scm1)[1],class(scm2)[1],"scMethrix")
+  expect_equivalent(class(assays(scm1)[[1]])[[1]],class(assays(scm1)[[1]])[[1]],"DelayedMatrix")
   expect_equivalent(dim(scm1),dim(scm2),c(10,3))
   
 })
 
-test_that("read_bed (mem)", {
+test_that("read_bed - in-memory", {
   
   scm <- read_beds(files,h5=FALSE)
   
   expect_equivalent(class(scm)[1],"scMethrix")
+  expect_equivalent(class(assays(scm)[[1]])[[1]],"matrix")
   expect_equivalent(dim(scm),c(10,3))
   
 })
 
-test_that("read_bed (HDF vs memory)", {
+test_that("read_bed - HDF5 and in-memory equivalence", {
   
   scm.hdf <- read_beds(files,h5=TRUE)
   scm.mem <- read_beds(files,h5=FALSE)
   
-  expect_equivalent(assays(scm.hdf)$score,assays(scm.mem)$score)
+  expect_equivalent(as.matrix(assays(scm.hdf)$score),assays(scm.mem)$score)
   expect_equivalent(rowRanges(scm.hdf),rowRanges(scm.mem))
 })
 
-test_that("read_bed", {
-  
-  expect_error(read_beds(NULL))
-  expect_error(read_beds(tempfile))
-  
-})
 

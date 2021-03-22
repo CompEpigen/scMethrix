@@ -114,7 +114,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     rrng <- c(gr, NULL, ignore.mcols=TRUE) # Remove the metadata for rowRanges input
     
     if (verbose) message("Creating scMethrix object")
-    m_obj <- create_scMethrix(methyl_mat=mcols(gr), rowRanges=rrng, is_hdf5 = FALSE, 
+    m_obj <- create_scMethrix(methyl_mat=as.matrix(mcols(gr)), rowRanges=rrng, is_hdf5 = FALSE, 
                               genome_name = genome_name, desc = desc )
   }
 }
