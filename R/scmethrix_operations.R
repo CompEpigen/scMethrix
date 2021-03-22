@@ -46,10 +46,10 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 convert_HDF5_methrix <- function(m = NULL) {
   
   if (is.null(m) | !is(m, "scMethrix")) {
-    stop("Invalid input data provided.")
+    stop("Input must be of type scMethrix.")
   }
   if (!is_h5(m)) {
-    stop("The input data is not in HDF5 format. Conversion aborted.")
+    stop("Input scMethrix must be in HDF5 format.")
   }
 
   assays(m)[[1]] <- as.matrix(assays(m)[[1]])
@@ -67,18 +67,18 @@ convert_HDF5_methrix <- function(m = NULL) {
 #' data(methrix_data)
 #' m2 <- convert_methrix(m=methrix_data)
 #' @export
-convert_methrix <- function(m = NULL) {
+convert_methrix <- function(m = NULL, h5_dir = NULL) {
   
   if (is.null(m) | !is(m, "scMethrix")) {
-    stop("No or not valid input data provided.")
+    stop("Input must be of type scMethrix.")
   }
   if (is_h5(m)) {
-    stop("The input data is already in HDF5 format. No conversion happened.")
+    stop("Input scMethrix is already in HDF5 format.")
   }
   
-  m <- create_methrix(beta_mat = assays(m)[[1]],
-                      cpg_loci = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
-                      col_data = m@colData, chrom_sizes = m@metadata$chrom_sizes, ref_cpg_dt = m@metadata$ref_CpG,
+  m <- create_scMethrix(methyl_mat = assays(m)[[1]], h5_dir = h5_dir,
+                      rowRanges = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
+                      colData = m@colData, chrom_sizes = m@metadata$chrom_sizes, 
                       desc = m@metadata$descriptive_stats)
   return(m)
 }

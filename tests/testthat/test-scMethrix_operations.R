@@ -37,7 +37,7 @@ test_that("convert_methrix", {
   scm <- convert_methrix(scm)
   
   expect_true(is_h5(scm))
-  expect_equivalent(class(assays(scm)[[1]])[1],"DelayedMatrix")
+  expect_equivalent(class(assays(scm)[[1]])[1],"HDF5Matrix")
   
 })
 
