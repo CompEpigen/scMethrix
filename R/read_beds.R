@@ -86,12 +86,13 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   }
 }
 
-#' Parse BED files for unique genomic regions
-#' @details Create list of unique genomic regions from input BED files. Meant to be fed into
-#' generate_delayed_array
+#' Parse BED files for unique genomic coordinates
+#' @details Create list of unique genomic regions from input BED files. Populates a list of batch_size+1 with 
+#' the genomic coordinates from BED files, then runs unique() when the list is full and keeps the running
+#' results in the batch_size+1 position. Also indexes based on 'chr' and 'start' for later searching.
 #' @param files List of BED files
 #' @param batch_size Number of files to process before running unique. Default of 30.
-#' @return data.table containing all unique genomic regions
+#' @return data.table containing all unique genomic coordinates
 #' @import data.table
 #' @examples
 read_index <- function(files, batch_size = 30, verbose = FALSE) {
@@ -128,6 +129,14 @@ read_index <- function(files, batch_size = 30, verbose = FALSE) {
     return(rrng)
 }
 
+#' Parses BED files for methylation values using previously generated index genomic coordinates
+#' @details Creates an NA-based vector populated with methlylation values from the input BED file in the
+#' respective indexed genomic coordinates
+#' @param file The BED file to parse
+#' @param index The index of all unique coordinates from the input BED files
+#' @return data.table containing vector of all indexed methylation values for the input BED
+#' @import data.table
+#' @examples
 read_bed_by_index <- function(file,index) {
   data <- data.table::fread(file, header = FALSE, select = c(1:2,4))
   colnames(data) <- c("chr", "start", "value")
@@ -140,7 +149,15 @@ read_bed_by_index <- function(file,index) {
   return(sample)
 }
 
-
+#' Writes methylation values from input BED files into an HDF5array
+#' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
+#' values for each BED file/sample. Each column contains the meth. values for a single sample.
+#' @param files The BED files to parse
+#' @param index The index of all unique coordinates from the input BED files
+#' @param h5_temp The file location to store the RealizationSink object
+#' @return HDF5Array The methylation values for input BED files
+#' @import data.table DelayedArray HDF5Array
+#' @examples
 write_HDF5 <- function(files, index, h5_temp = NULL) {
   
   message("Starting HDF5 object") 
