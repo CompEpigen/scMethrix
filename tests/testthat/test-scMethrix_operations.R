@@ -42,3 +42,10 @@ test_that("convert_methrix", {
 })
 
 
+
+test_that("subset_scMethrix", {
+  
+
+  
+})
+
