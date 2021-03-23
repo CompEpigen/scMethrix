@@ -156,31 +156,34 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  if (is.null(regions) & is.null(contigs) & is.null(samples)) stop("At least 1 argument mandatory for subsetting")
-
+  if (is.null(regions) & is.null(contigs) & is.null(samples)) {
+    warning("At least 1 argument mandatory for subsetting. No subset generated")
+    return(m)
+  }
+    
   if (!is.null(regions)) {
     message("   Subsetting by regions")
     subset <- cast_granges(regions)
-    m_obj <- m[findOverlaps(rowRanges(m), regions)@from]
-    if (nrow(m_obj) == 0)
+    m <- m[findOverlaps(rowRanges(m), regions)@from]
+    if (nrow(m) == 0)
       stop("Subsetting resulted in zero entries", call. = FALSE)
   }
   
   if (!is.null(contigs)) {
     message("   Subsetting by contigs")
-    m_obj <- m[seqnames(m) %in% contigs]
-    if (nrow(m_obj) == 0)
+    m <- m[seqnames(m) %in% contigs]
+    if (nrow(m) == 0)
       stop("Subsetting resulted in zero entries", call. = FALSE)
   }
   
   if (!is.null(samples)) {
     message("   Subsetting by samples")
-    m_obj <- subset(m, select = colData(m)[, 1] %in% samples)
-    if (length(m_obj) == 0)
+    m <- subset(m, select = colData(m)[, 1] %in% samples)
+    if (length(m) == 0)
       stop("Samples not present in the object", call. = FALSE)
   }
 
-  return(m_obj)
+  return(m)
   
 }
 
