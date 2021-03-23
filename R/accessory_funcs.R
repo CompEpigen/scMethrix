@@ -114,3 +114,35 @@ cast_granges <- function(regions) {
   if (is(regions, "GRanges")) return (regions)
   
 }
+
+#' Starts an internal stopwatch
+#' @details Save the current time to later use for split/lap and overall times
+#' @return NULL
+#' @export
+start_time <- function() {
+  assign("time.all", proc.time()["elapsed"], envir=baseenv())
+  assign("time.split", proc.time()["elapsed"], envir=baseenv())
+  invisible(NULL)
+}
+
+#' Outputs the split/lap/iteration time 
+#' @details Gets the stored elapsed proc.time() from either the initial start_time or the previous split_time
+#' @return Returns formatted elapsed time since start_time or last split_time
+#' @export
+split_time <- function() {
+  time <- proc.time()["elapsed"]-get("time.split", envir=baseenv())
+  assign("time.split", proc.time()["elapsed"], envir=baseenv())
+  return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
+}
+
+#' Stops an internal stopwatch and outputs overall time
+#' @details Gets the stored elapsed proc.time() from initial start_time() to calculate overall runtime
+#' @return Returns formatted elapsed time since start_time
+#' @export
+stop_time <- function() {
+  time <- proc.time()["elapsed"]-get("time.all", envir=baseenv())
+  return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
+}
+
+
+

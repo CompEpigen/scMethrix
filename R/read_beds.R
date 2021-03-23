@@ -43,8 +43,6 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
   }
   
-  start_proc_time <- proc.time()
-  
   if (h5) {
 
     index <- read_index(files)
@@ -102,11 +100,12 @@ read_index <- function(files, batch_size = 100, verbose = FALSE) {
   
   message("Generating index")
   
+  start_time()
+  
   rrng <- vector(mode = "list", length = batch_size+1)
   
   for (i in 1:length(files)) {
     cat(paste0("   Parsing: ",get_sample_name(files[i])))
-    time <- proc.time()[[3]]
     data <- data.table::fread(files[i], header=FALSE, select = c(1:2))
     
     if (i%%batch_size != 0) {
@@ -118,7 +117,7 @@ read_index <- function(files, batch_size = 100, verbose = FALSE) {
       rrng <- vector(mode = "list", length = batch_size)
       rrng[[batch_size+1]] <- data
     }
-    cat(paste0(" (",sprintf(proc.time()[[3]]-time, fmt = '%#.2f'),"s)\n"))
+    cat(paste0(" (",split_time(),")\n"))
   }
  
   rrng <- data.table::rbindlist(rrng)
@@ -127,9 +126,9 @@ read_index <- function(files, batch_size = 100, verbose = FALSE) {
   rrng <- unique(rrng)
   rrng$end <- rrng$start+1
   
-  message(paste0("Index generated!"))
+  message(paste0("Index generated! (",stop_time(),")"))
 
-    return(rrng)
+  return(rrng)
 }
 
 #' Parses BED files for methylation values using previously generated index genomic coordinates
@@ -188,17 +187,18 @@ write_HDF5 <- function(files, index, h5_temp = NULL, zero_based = FALSE) {
                                            dimnames = NULL, type = "integer",
                                            filepath = file.path(h5_temp, paste0("M_sink_", sink_counter, ".h5")), name = "M", level = 6)
   
+  start_time()
+  
   for (i in 1:length(files)) {
     cat(paste0("   Parsing: ", get_sample_name(files[i])))
-    time <- proc.time()[[3]]
     bed <- read_bed_by_index(files[i],index,zero_based)
     DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
     rm(bed)
     if (i%%10==0) gc()
-    cat(paste0(" (",sprintf(proc.time()[[3]]-time, fmt = '%#.2f'),"s)\n"))
+    cat(paste0(" (",split_time(),"s)\n"))
   }
   
-  message("HDF5 data written!")
+  message(paste0("HDF5 data written! (",stop_time(),"s)\n"))
   
   return(M_sink)
   
