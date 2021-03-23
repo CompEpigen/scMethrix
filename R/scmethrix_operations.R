@@ -184,14 +184,150 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
   
 }
 
-get_stats <- function(m, per_chr = TRUE, verbose = TRUE) {
+
+#--------------------------------------------------------------------------------------------------------------------------
+#' Estimate descriptive statistics
+#' @details Calculate descriptive statistics
+#' @param m \code{\link{methrix}} object
+#' @param per_chr Estimate stats per chromosome. Default TRUE
+#' @seealso \code{\link{plot_stats}}
+#' @examples
+#' data('methrix_data')
+#' get_stats(methrix_data)
+#' @return data.table of summary stats
+#' @export
+get_stats <- function(m, per_chr = TRUE) {
+  median <- . <- sd <- chr <- NULL
+  start_proc_time <- proc.time()
   
-  message("Generating stats")
-  
-  if (!is(m, "scMethrix")){
+  if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
+  #Counting NA's seems to be not-ideal (especially in cases of masked/coverage filtered cases.)
+  # row_idx <- data.table::as.data.table(which(is.na(get_matrix(m = m,
+  #     type = "C")), arr.ind = TRUE))
+  # colnames(row_idx) <- c("row", "col")
+  # row_idx <- split(row_idx, as.factor(as.character(row_idx$col)))
   
+  if (per_chr) {
+    cov_stat <- lapply(1:ncol(m), function(i) {
+      get_matrix(m = m[, i],
+                 type = "C",
+                 add_loci = TRUE)[, c(1, 4), with = FALSE][, .(
+                   mean_cov = lapply(.SD,
+                                     matrixStats::mean2, na.rm = TRUE),
+                   median_cov = lapply(.SD,
+                                       median, na.rm = TRUE),
+                   sd_cov = lapply(.SD, sd, na.rm = TRUE)
+                 ),
+                 by = chr]
+    })
+    
+    meth_stat <- lapply(1:ncol(m), function(i) {
+      get_matrix(m = m[, i],
+                 type = "M",
+                 add_loci = TRUE)[, c(1, 4), with = FALSE][, .(
+                   mean_meth = lapply(.SD,
+                                      matrixStats::mean2, na.rm = TRUE),
+                   median_meth = lapply(.SD,
+                                        median, na.rm = TRUE),
+                   sd_meth = lapply(.SD, sd, na.rm = TRUE)
+                 ),
+                 by = chr]
+    })
+    
+    names(meth_stat) <-  colnames(m)
+    names(cov_stat) <- colnames(m)
+    
+    cov_stat <-
+      data.table::rbindlist(l = cov_stat,
+                            use.names = TRUE,
+                            idcol = "Sample_Name")
+    meth_stat <-
+      data.table::rbindlist(l = meth_stat,
+                            use.names = TRUE,
+                            idcol = "Sample_Name")
+    stats <-
+      merge(meth_stat, cov_stat, by = c("chr", "Sample_Name"))
+    colnames(stats)[1] <- "Chromosome"
+    stats$Chromosome <-
+      factor(x = stats$Chromosome,
+             levels = m@metadata$chrom_sizes$contig)
+  } else {
+    if (is_h5(m)) {
+      stats <- data.table::data.table(
+        Sample_Name = colnames(m),
+        mean_cov = DelayedMatrixStats::colMeans2(get_matrix(m = m, "C"), na.rm = TRUE),
+        median_cov = DelayedMatrixStats::colMedians(get_matrix(m = m, "C"), na.rm = TRUE),
+        sd_cov = DelayedMatrixStats::colSds(get_matrix(m = m, "C"), na.rm = TRUE)
+      )
+      
+    } else {
+      stats <-
+        data.table::data.table(
+          Sample_Name = colnames(m),
+          mean_meth = matrixStats::colMeans2(get_matrix(m = m, "M"), na.rm = TRUE),
+          median_meth = matrixStats::colMedians(get_matrix(m = m, "M"), na.rm = TRUE),
+          sd_meth = matrixStats::colSds(get_matrix(m = m, "M"), na.rm = TRUE)
+        )
+    }
+  }
   
+  gc()
+  message("-Finished in:  ", data.table::timetaken(start_proc_time))
+  
+  return(stats)
 }
+
+
+#--------------------------------------------------------------------------------------------------------------------------
+
+#' Extract methylation or coverage matrices
+#' @details Takes \code{\link{methrix}} object and returns user specified \code{methylation} or \code{coverage} matrix
+#' @param m \code{\link{methrix}} object
+#' @param type can be \code{M} or \code{C}. Default 'M'
+#' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
+#' @param in_granges Do you want the outcome in \code{GRanges}?
+#' @return Coverage or Methylation matrix
+#' @examples
+#' data('methrix_data')
+#' #Get methylation matrix
+#' get_matrix(m = methrix_data, type = 'M')
+#' #Get methylation matrix along with loci
+#' get_matrix(m = methrix_data, type = 'M', add_loci = TRUE)
+#' #' #Get methylation data as a GRanges object
+#' get_matrix(m = methrix_data, type = 'M', add_loci = TRUE, in_granges=TRUE)
+#' @export
+get_matrix <- function(scm, add_loci = FALSE, in_granges=FALSE) {
+  
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (add_loci == FALSE & in_granges == TRUE) {
+    warning("Without genomic locations (add_loci= FALSE), it is not possible to convert the results to GRanges, ", 
+            "the output will be a data.frame object. ")
+  }
+
+  mtx <- as.data.frame(SummarizedExperiment::assay(x = scm, i = 1))
+  
+  if (add_loci) {
+    
+    mtx <- as.data.frame(cbind(as.data.frame(rowRanges(scm))[,1:3],
+                               mtx))
+      
+    if (in_granges) mtx <- GenomicRanges::makeGRangesFromDataFrame(mtx, keep.extra.columns = TRUE)
+
+  }
+
+  return (mtx)
+}
+  
+  
+  
+  
+  
+  
+  
+  
