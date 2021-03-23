@@ -25,6 +25,7 @@ test_that("get_sample_name", {
 test_that("chunk_granges",{
   
   expect_error(chunk_granges("not scMethrix"))
+  expect_error(chunk_granges("not scMethrix"))
   
   expect_true(all(rowRanges(scm.h5) == unlist(chunk_granges(rowRanges(scm.h5),factor=factor,percent=percent,num=num))))
 })

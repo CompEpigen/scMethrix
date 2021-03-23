@@ -35,7 +35,7 @@ is_h5 = function(m) {
 #' get_sample_name("c:/folder/folder/sample.name.ext")
 get_sample_name = function(s) {
   
-  return(file_path_sans_ext(basename(s)))
+  return(tools::file_path_sans_ext(basename(s)))
 }
 
 #' Chunks a Granges object by factor, percent or number

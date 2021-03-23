@@ -1,5 +1,6 @@
 list.of.packages <- c("SingleCellExperiment","data.table","plyr","HDF5Array","tictoc","beepr",
-                      "GenomicRanges","parallel","roxygen2","dplyr","rbenchmark","testthat","rtracklayer")
+                      "GenomicRanges","parallel","roxygen2","dplyr","rbenchmark","testthat","rtracklayer",
+                      "BRGenomics","tools")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 lapply(list.of.packages, require, character.only = TRUE)

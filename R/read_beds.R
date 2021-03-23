@@ -15,7 +15,7 @@
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
-#' @import SingleCellExperiment BRGenomics GenomicRanges dplyr
+#' @import SingleCellExperiment BRGenomics GenomicRanges dplyr tools
 #' @examples
 #'\dontrun{
 #'bdg_files = list.files(path = system.file('extdata', package = 'methrix'),
@@ -32,7 +32,7 @@
 
 read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
-                      zero_based = TRUE) {
+                      zero_based = FALSE) {
 
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
