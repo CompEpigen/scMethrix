@@ -188,8 +188,8 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
 }
 
 #' Filter matrices by region
-#' @details Takes \code{\link{methrix}} object and filters CpGs based on supplied regions in data.table or GRanges format
-#' @param m \code{\link{methrix}} object
+#' @details Takes \code{\link{scMethrix}} object and filters CpGs based on supplied regions in data.table or GRanges format
+#' @param m \code{\link{scMethrix}} object
 #' @param regions genomic regions to filter-out. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param type defines the type of the overlap of the CpG sites with the target regions. Default value is `any`. For detailed description,
 #' see the \code{foverlaps} function of the \code{\link{data.table}} package.
@@ -226,6 +226,8 @@ region_filter <- function(m, regions=NULL, type = "any") {
 #' get_stats(methrix_data)
 #' @return data.table of summary stats
 #' @export
+
+#TODO: remove the hardlink to the assay
 get_stats <- function(m, per_chr = TRUE) {
   median <- . <- sd <- chr <- NULL
   start_proc_time <- proc.time()
@@ -234,72 +236,54 @@ get_stats <- function(m, per_chr = TRUE) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  #Counting NA's seems to be not-ideal (especially in cases of masked/coverage filtered cases.)
-  # row_idx <- data.table::as.data.table(which(is.na(get_matrix(m = m,
-  #     type = "C")), arr.ind = TRUE))
-  # colnames(row_idx) <- c("row", "col")
-  # row_idx <- split(row_idx, as.factor(as.character(row_idx$col)))
+  ends <- seqnames(m)@lengths
+  for (i in 1:length(ends))
+    ends[i] <- sum(as.vector(ends[1:i]))
+  starts <- head(c(1, ends + 1), -1)
   
-  if (per_chr) {
-    cov_stat <- lapply(1:ncol(m), function(i) {
-      get_matrix(m = m[, i],
-                 type = "C",
-                 add_loci = TRUE)[, c(1, 4), with = FALSE][, .(
-                   mean_cov = lapply(.SD,
-                                     matrixStats::mean2, na.rm = TRUE),
-                   median_cov = lapply(.SD,
-                                       median, na.rm = TRUE),
-                   sd_cov = lapply(.SD, sd, na.rm = TRUE)
-                 ),
-                 by = chr]
-    })
-    
-    meth_stat <- lapply(1:ncol(m), function(i) {
-      get_matrix(m = m[, i],
-                 type = "M",
-                 add_loci = TRUE)[, c(1, 4), with = FALSE][, .(
-                   mean_meth = lapply(.SD,
-                                      matrixStats::mean2, na.rm = TRUE),
-                   median_meth = lapply(.SD,
-                                        median, na.rm = TRUE),
-                   sd_meth = lapply(.SD, sd, na.rm = TRUE)
-                 ),
-                 by = chr]
-    })
-    
-    names(meth_stat) <-  colnames(m)
-    names(cov_stat) <- colnames(m)
-    
-    cov_stat <-
-      data.table::rbindlist(l = cov_stat,
-                            use.names = TRUE,
-                            idcol = "Sample_Name")
-    meth_stat <-
-      data.table::rbindlist(l = meth_stat,
-                            use.names = TRUE,
-                            idcol = "Sample_Name")
-    stats <-
-      merge(meth_stat, cov_stat, by = c("chr", "Sample_Name"))
-    colnames(stats)[1] <- "Chromosome"
-    stats$Chromosome <-
-      factor(x = stats$Chromosome,
-             levels = m@metadata$chrom_sizes$contig)
-  } else {
-    if (is_h5(m)) {
+  if (is_h5(m)) {
+    if (per_chr) {
+      stats <- lapply(1:length(starts), function(x) {
+        data.table::data.table(
+          Chr = levels(l@values)[x],
+          Sample_Name = colnames(m),
+          mean_meth = DelayedMatrixStats::colMeans2(assays(m)[[1]], rows = starts[x]:ends[x], na.rm = TRUE),
+          median_meth = DelayedMatrixStats::colMedians(assays(m)[[1]], rows = starts[x]:ends[x], na.rm = TRUE),
+          sd_meth = DelayedMatrixStats::colSds(assays(m)[[1]], rows = starts[x]:ends[x], na.rm = TRUE)
+        )
+      })
+      
+      stats <- data.table::rbindlist(l = stats, use.names = TRUE)
+      
+    } else {
       stats <- data.table::data.table(
         Sample_Name = colnames(m),
-        mean_cov = DelayedMatrixStats::colMeans2(get_matrix(m = m, "C"), na.rm = TRUE),
-        median_cov = DelayedMatrixStats::colMedians(get_matrix(m = m, "C"), na.rm = TRUE),
-        sd_cov = DelayedMatrixStats::colSds(get_matrix(m = m, "C"), na.rm = TRUE)
+        mean_meth = DelayedMatrixStats::colMeans2(assays(m)[[1]], na.rm = TRUE),
+        median_meth = DelayedMatrixStats::colMedians(assays(m)[[1]], na.rm = TRUE),
+        sd_meth = DelayedMatrixStats::colSds(assays(m)[[1]], na.rm = TRUE)
       )
+    }
+    
+  } else {
+    if (per_chr) {
+      stats <- lapply(1:length(starts), function(x) {
+        data.table::data.table(
+          Chr = levels(l@values)[x],
+          Sample_Name = colnames(m),
+          mean_meth = matrixStats::colMeans2(assays(m)[[1]],rows = starts[x]:ends[x],na.rm = TRUE),
+          median_meth = matrixStats::colMedians(assays(m)[[1]], rows = starts[x]:ends[x], na.rm = TRUE),
+          sd_meth = matrixStats::colSds(assays(m)[[1]],rows = starts[x]:ends[x],na.rm = TRUE)
+        )
+      })
+      stats <- data.table::rbindlist(l = stats, use.names = TRUE)
       
     } else {
       stats <-
         data.table::data.table(
           Sample_Name = colnames(m),
-          mean_meth = matrixStats::colMeans2(get_matrix(m = m, "M"), na.rm = TRUE),
-          median_meth = matrixStats::colMedians(get_matrix(m = m, "M"), na.rm = TRUE),
-          sd_meth = matrixStats::colSds(get_matrix(m = m, "M"), na.rm = TRUE)
+          mean_meth = matrixStats::colMeans2(assays(m)[[1]], na.rm = TRUE),
+          median_meth = matrixStats::colMedians(assays(m)[[1]], na.rm = TRUE),
+          sd_meth = matrixStats::colSds(assays(m)[[1]], na.rm = TRUE)
         )
     }
   }
@@ -309,7 +293,6 @@ get_stats <- function(m, per_chr = TRUE) {
   
   return(stats)
 }
-
 
 #--------------------------------------------------------------------------------------------------------------------------
 
@@ -329,9 +312,9 @@ get_stats <- function(m, per_chr = TRUE) {
 #' #' #Get methylation data as a GRanges object
 #' get_matrix(m = methrix_data, type = 'M', add_loci = TRUE, in_granges=TRUE)
 #' @export
-get_matrix <- function(scm, add_loci = FALSE, in_granges=FALSE) {
+get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
   
-  if (!is(scm, "scMethrix")) {
+  if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
@@ -340,17 +323,23 @@ get_matrix <- function(scm, add_loci = FALSE, in_granges=FALSE) {
             "the output will be a data.frame object. ")
   }
 
-  mtx <- as.data.frame(SummarizedExperiment::assay(x = scm, i = 1))
+  mtx <- as.data.frame(SummarizedExperiment::assay(x = m, i = 1))
   
   if (add_loci) {
     
-    mtx <- as.data.frame(cbind(as.data.frame(rowRanges(scm))[,1:3],
-                               mtx))
+    mtx <- as.data.frame(cbind(as.data.frame(rowRanges(m))[,1:3], (is_h5(m) ? as.data.frame(mtx) : mtx)))
       
-    if (in_granges) mtx <- GenomicRanges::makeGRangesFromDataFrame(mtx, keep.extra.columns = TRUE)
+    if (in_granges) {
+      mtx <- GenomicRanges::makeGRangesFromDataFrame(mtx, keep.extra.columns = TRUE)
 
+    } else {
+      data.table::setDT(x = mtx)
+      colnames(mtx)[1] <- "chr" #TODO: figure out why seqnames is used instead of chr
+    }
+      
   }
 
+  
   return (mtx)
 }
   
