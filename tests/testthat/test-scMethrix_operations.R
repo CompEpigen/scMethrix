@@ -66,7 +66,40 @@ test_that("subset_scMethrix", {
   
 })
 
-test_that("get_matrix") {
+test_that("subset_scMethrix", {
+  
+  expect_error(subset_scMethrix("not scMethrix"))
+  expect_warning(subset_scMethrix(scm.h5))
+  
+  samples <- c("df1","df3")
+  s <- subset_scMethrix(scm.h5, samples = samples)
+  expect_equivalent(dim(s),20,2)
+  
+  contigs <- c("chr1")
+  s <- subset_scMethrix(scm.h5, contigs = contigs)
+  expect_equivalent(dim(s),c(10,4))
+  
+  regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
+  s <- subset_scMethrix(scm.h5, regions = regions)
+  expect_equivalent(dim(s),c(5,4))
+  
+  s <- subset_scMethrix(scm.h5, samples = samples, contigs = contigs, regions = regions)
+  expect_equivalent(dim(s),c(5,2))
+  
+})
+
+test_that("region_filter", {
+  
+  expect_error(region_filter("not scMethrix"))
+  expect_warning(region_filter(scm.h5))
+  
+  regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
+  s <- region_filter(scm.h5, regions = regions)
+  expect_equivalent(dim(s),c(16,4))
+  
+})
+
+test_that("get_matrix", {
 
   expect_error(get_matrix("not scMethrix"))
   expect_warning(get_matrix(scm.h5,add_loci=FALSE, in_granges = TRUE))
@@ -84,7 +117,7 @@ test_that("get_matrix") {
   expect_equivalent(dim(mcols(m)),c(20,4))
   expect_equivalent(class(m)[1],"GRanges")
 
-}
+})
 
 
 

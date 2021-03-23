@@ -187,6 +187,33 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
   
 }
 
+#' Filter matrices by region
+#' @details Takes \code{\link{methrix}} object and filters CpGs based on supplied regions in data.table or GRanges format
+#' @param m \code{\link{methrix}} object
+#' @param regions genomic regions to filter-out. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
+#' @param type defines the type of the overlap of the CpG sites with the target regions. Default value is `any`. For detailed description,
+#' see the \code{foverlaps} function of the \code{\link{data.table}} package.
+#' @return An object of class \code{\link{methrix}}
+#' @examples
+#' data('methrix_data')
+#' region_filter(m = methrix_data,
+#' regions = data.table(chr = 'chr21', start = 27867971, end =  27868103))
+#' @export
+region_filter <- function(m, regions=NULL, type = "any") {
+
+  if (!is(m, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (is.null(regions)) {
+    warning("No region specified. No filtering performed")
+    return(m)
+  }
+
+  regions2 <- subsetByOverlaps(rowRanges(m), regions, invert = TRUE, type, maxgap=-1L, minoverlap=0L)
+  return(subset_scMethrix(m,regions=reduce(regions2)))
+  
+}
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Estimate descriptive statistics
