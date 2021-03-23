@@ -49,7 +49,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 
     index <- read_index(files)
     
-    if (zero_based) {index[,2:3] <- index[,2:3]-1}
+    if (zero_based) {index[,2:3] <- index[,2:3]+1}
 
     M_sink <- write_HDF5(files, index, h5_temp, zero_based)
     
@@ -143,7 +143,7 @@ read_index <- function(files, batch_size = 100, verbose = FALSE) {
 read_bed_by_index <- function(file,index,zero_based=FALSE) {
   data <- data.table::fread(file, header = FALSE, select = c(1:2,4))
   colnames(data) <- c("chr", "start", "value")
-  if (zero_based) {data[,2] <- data[,2]-1}
+  if (zero_based) {data[,2] <- data[,2]+1}
   x <- index[.(data$chr, data$start), which = TRUE]
   sample <- rep(NA_integer_, nrow(index))
   sample[x] <- data[[3]]
