@@ -19,12 +19,12 @@ test_that("convert_HDF5_methrix", {
   expect_error(convert_HDF5_methrix("not scMethrix"))
   
   expect_true(is_h5(scm.h5))
-  expect_equivalent(class(assays(scm.h5)[[1]])[1],"DelayedMatrix")
+  expect_equivalent(class(get_matrix(scm.h5))[1],"DelayedMatrix")
   
   scm <- convert_HDF5_methrix(scm.h5)
   
   expect_false(is_h5(scm))
-  expect_equivalent(class(assays(scm)[[1]])[1],"matrix") 
+  expect_equivalent(class(get_matrix(scm))[1],"matrix") 
   rm(scm)
   
 })
@@ -34,12 +34,12 @@ test_that("convert_methrix", {
   expect_error(convert_methrix("not scMethrix"))
   
   expect_false(is_h5(scm.mem))
-  expect_equivalent(class(assays(scm.mem)[[1]])[1],"matrix") 
+  expect_equivalent(class(get_matrix(scm.mem))[1],"matrix") 
   
   scm <- convert_methrix(scm.mem)
   
   expect_true(is_h5(scm))
-  expect_equivalent(class(assays(scm)[[1]])[1],"HDF5Matrix")
+  expect_equivalent(class(get_matrix(scm))[1],"HDF5Matrix")
   rm(scm)
   
 })
@@ -51,29 +51,7 @@ test_that("subset_scMethrix", {
   
   samples <- c("df1","df3")
   s <- subset_scMethrix(scm.h5, samples = samples)
-  expect_equivalent(dim(s),20,2)
-  
-  contigs <- c("chr1")
-  s <- subset_scMethrix(scm.h5, contigs = contigs)
-  expect_equivalent(dim(s),c(10,4))
-  
-  regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
-  s <- subset_scMethrix(scm.h5, regions = regions)
-  expect_equivalent(dim(s),c(5,4))
-  
-  s <- subset_scMethrix(scm.h5, samples = samples, contigs = contigs, regions = regions)
-  expect_equivalent(dim(s),c(5,2))
-  
-})
-
-test_that("subset_scMethrix", {
-  
-  expect_error(subset_scMethrix("not scMethrix"))
-  expect_warning(subset_scMethrix(scm.h5))
-  
-  samples <- c("df1","df3")
-  s <- subset_scMethrix(scm.h5, samples = samples)
-  expect_equivalent(dim(s),20,2)
+  expect_equivalent(dim(s),c(20,2))
   
   contigs <- c("chr1")
   s <- subset_scMethrix(scm.h5, contigs = contigs)
@@ -106,17 +84,30 @@ test_that("get_matrix", {
 
   m <- get_matrix(scm.h5)
   expect_equivalent(dim(m),c(20,4))  
-  expect_equivalent(class(m)[1],"data.frame")
+  expect_equivalent(class(m)[1],"DelayedMatrix")
   
   m <- get_matrix(scm.h5,add_loci=TRUE)
   expect_equivalent(dim(m),c(20,7))  
-  expect_equivalent(class(m)[1],"data.frame")
+  expect_equivalent(class(m)[1],"data.table")
   
   m <- get_matrix(scm.h5,add_loci=TRUE, in_granges = TRUE)
   expect_equivalent(seqnames(m)@lengths,c(10,10))
   expect_equivalent(dim(mcols(m)),c(20,4))
   expect_equivalent(class(m)[1],"GRanges")
 
+  m <- get_matrix(scm.mem)
+  expect_equivalent(dim(m),c(20,4))  
+  expect_equivalent(class(m)[1],"matrix")
+  
+  m <- get_matrix(scm.mem,add_loci=TRUE)
+  expect_equivalent(dim(m),c(20,7))  
+  expect_equivalent(class(m)[1],"data.table")
+  
+  m <- get_matrix(scm.mem,add_loci=TRUE, in_granges = TRUE)
+  expect_equivalent(seqnames(m)@lengths,c(10,10))
+  expect_equivalent(dim(mcols(m)),c(20,4))
+  expect_equivalent(class(m)[1],"GRanges")
+  
 })
 
 

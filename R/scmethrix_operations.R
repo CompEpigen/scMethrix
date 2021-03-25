@@ -247,9 +247,9 @@ get_stats <- function(m, per_chr = TRUE) {
         data.table::data.table(
           Chr = levels(l@values)[x],
           Sample_Name = colnames(m),
-          mean_meth = DelayedMatrixStats::colMeans2(assays(m)[[1]], rows = starts[x]:ends[x], na.rm = TRUE),
-          median_meth = DelayedMatrixStats::colMedians(assays(m)[[1]], rows = starts[x]:ends[x], na.rm = TRUE),
-          sd_meth = DelayedMatrixStats::colSds(assays(m)[[1]], rows = starts[x]:ends[x], na.rm = TRUE)
+          mean_meth = DelayedMatrixStats::colMeans2(get_matrix(m), rows = starts[x]:ends[x], na.rm = TRUE),
+          median_meth = DelayedMatrixStats::colMedians(get_matrix(m), rows = starts[x]:ends[x], na.rm = TRUE),
+          sd_meth = DelayedMatrixStats::colSds(get_matrix(m), rows = starts[x]:ends[x], na.rm = TRUE)
         )
       })
       
@@ -258,9 +258,9 @@ get_stats <- function(m, per_chr = TRUE) {
     } else {
       stats <- data.table::data.table(
         Sample_Name = colnames(m),
-        mean_meth = DelayedMatrixStats::colMeans2(assays(m)[[1]], na.rm = TRUE),
-        median_meth = DelayedMatrixStats::colMedians(assays(m)[[1]], na.rm = TRUE),
-        sd_meth = DelayedMatrixStats::colSds(assays(m)[[1]], na.rm = TRUE)
+        mean_meth = DelayedMatrixStats::colMeans2(get_matrix(m), na.rm = TRUE),
+        median_meth = DelayedMatrixStats::colMedians(get_matrix(m), na.rm = TRUE),
+        sd_meth = DelayedMatrixStats::colSds(get_matrix(m), na.rm = TRUE)
       )
     }
     
@@ -270,9 +270,9 @@ get_stats <- function(m, per_chr = TRUE) {
         data.table::data.table(
           Chr = levels(l@values)[x],
           Sample_Name = colnames(m),
-          mean_meth = matrixStats::colMeans2(assays(m)[[1]],rows = starts[x]:ends[x],na.rm = TRUE),
-          median_meth = matrixStats::colMedians(assays(m)[[1]], rows = starts[x]:ends[x], na.rm = TRUE),
-          sd_meth = matrixStats::colSds(assays(m)[[1]],rows = starts[x]:ends[x],na.rm = TRUE)
+          mean_meth = matrixStats::colMeans2(get_matrix(m),rows = starts[x]:ends[x],na.rm = TRUE),
+          median_meth = matrixStats::colMedians(get_matrix(m), rows = starts[x]:ends[x], na.rm = TRUE),
+          sd_meth = matrixStats::colSds(get_matrix(m),rows = starts[x]:ends[x],na.rm = TRUE)
         )
       })
       stats <- data.table::rbindlist(l = stats, use.names = TRUE)
@@ -281,9 +281,9 @@ get_stats <- function(m, per_chr = TRUE) {
       stats <-
         data.table::data.table(
           Sample_Name = colnames(m),
-          mean_meth = matrixStats::colMeans2(assays(m)[[1]], na.rm = TRUE),
-          median_meth = matrixStats::colMedians(assays(m)[[1]], na.rm = TRUE),
-          sd_meth = matrixStats::colSds(assays(m)[[1]], na.rm = TRUE)
+          mean_meth = matrixStats::colMeans2(get_matrix(m), na.rm = TRUE),
+          median_meth = matrixStats::colMedians(get_matrix(m), na.rm = TRUE),
+          sd_meth = matrixStats::colSds(get_matrix(m), na.rm = TRUE)
         )
     }
   }
@@ -323,7 +323,7 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
             "the output will be a data.frame object. ")
   }
 
-  mtx <- as.data.frame(SummarizedExperiment::assay(x = m, i = 1))
+  mtx <- SummarizedExperiment::assay(x = m, i = 1)
   
   if (add_loci) {
     
@@ -342,11 +342,5 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
   
   return (mtx)
 }
-  
-  
-  
-  
-  
-  
   
   
