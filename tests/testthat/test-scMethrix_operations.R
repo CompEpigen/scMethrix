@@ -111,4 +111,15 @@ test_that("get_matrix", {
 })
 
 
+test_that("remove_uncovered", {
+  
+  expect_error(get_matrix("not scMethrix"))
+  
+  m <- subset_scMethrix(scm.h5,samples="df1")
+  expect_equivalent(dim(m),c(20,1))
+  
+  u <- remove_uncovered(m)
+  expect_equivalent(dim(u),c(5,1))
+  
+})
 

@@ -343,4 +343,30 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
   return (mtx)
 }
   
+#' Remove loci that are uncovered across all samples
+#' @details Takes \code{\link{methrix}} object and removes loci that are uncovered across all samples
+#' @param m \code{\link{methrix}} object
+#' @return An object of class \code{\link{methrix}}
+#' @examples
+#' data('methrix_data')
+#' remove_uncovered(m = methrix_data)
+#' @export
+#'
+remove_uncovered <- function(m) {
   
+  start_time()
+  if (!is(m, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.")
+  }
+
+  row_idx <- rowSums(!is.na(get_matrix(m)))==0
+  
+  message(paste0("Removed ", format(sum(row_idx), big.mark = ","),
+                 " [", round(sum(row_idx)/nrow(m) * 100, digits = 2), "%] uncovered loci of ",
+                 format(nrow(m), big.mark = ","), " sites (",stop_time(),")"))
+  
+  if (!sum(row_idx) == 0) m <- m[!row_idx, ]
+
+  return(m)
+}
+
