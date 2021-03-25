@@ -342,7 +342,7 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
   
   return (mtx)
 }
-  
+
 #' Remove loci that are uncovered across all samples
 #' @details Takes \code{\link{methrix}} object and removes loci that are uncovered across all samples
 #' @param m \code{\link{methrix}} object
@@ -370,3 +370,138 @@ remove_uncovered <- function(m) {
   return(m)
 }
 
+#--------------------------------------------------------------------------------------------------------------------------
+
+#' Masks too high or too low counts
+#' @details Takes \code{\link{methrix}} object and masks sites with too high or too low coverage
+#'  by putting NA for coverage and beta value. The sites will remain in the object.
+#' @param m \code{\link{methrix}} object
+#' @param low_count The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.
+#' @param high_quantile The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
+#' higher quantile than the defined will be masked. Default = 0.99.
+#' @param n_cores Number of parallel instances. Can only be used if \code{\link{methrix}} is in HDF5 format. Default = 1.
+#' @return An object of class \code{\link{methrix}}
+#' @examples
+#' data('methrix_data')
+#' mask_methrix(m = methrix_data, low_count = 5, high_quantile = 0.99 )
+#' @export
+mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
+  
+  start_proc_time <- proc.time()
+  if (!is(m, "scMethrix")){
+    stop("A valid methrix object needs to be supplied.")
+  }
+  
+  if (!is_h5(m) & n_cores != 1) {
+    stop("Parallel processing not supported for a non-HDF5 methrix object due to probable high memory usage. \nNumber of cores (n_cores) needs to be 1.")
+  }
+  
+  
+  if (!is.null(low_count)) {
+    
+    if(!is.numeric(low_count)){
+      stop("low_count must be a numeric value.")
+    }
+    
+    message("Masking count lower than ", low_count)
+
+    if(is_h5(m)) {
+      
+      m <- scm.h5
+      n <- nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA))
+      row_idx <- DelayedMatrixStats::rowCounts(get_matrix(m), value = as.integer(NA)) > low_count
+      row_idx <- matrix(rep(row_idx,ncol(m)),ncol = ncol(m))
+      row_idx <- DelayedArray(row_idx)
+      assays(m)[[1]][row_idx] <- as.integer(NA)
+      n <- n-(nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA)))
+      n
+      
+    } else {
+      
+      m <- scm.mem
+      n <- nrow(m) - colSums2(is.na(get_matrix(m)))
+      row_idx <- !(rowSums(is.na(get_matrix(m))) <= low_count)
+      assays(m)[[1]][!!row_idx,] <- as.integer(NA)
+      n <- n - (nrow(m) - colSums2(is.na(get_matrix(m))))
+      n
+    }
+      
+      
+    for (i in seq_along(colnames(m))) {
+      message(paste0("Masked ", n[i], " CpGs due to too low count in sample ",  colnames(m)[i], "."))
+    }
+    
+  }
+  # 
+  # 
+  # 
+  # if (!is.null(high_quantile)) {
+  #   if (high_quantile >= 1 | high_quantile <= 0) {
+  #     stop("High quantile should be between 0 and 1. ")
+  #   }
+  #   
+  #   message("\n\n-Masking coverage higher than ",
+  #           high_quantile * 100,
+  #           " percentile")
+  #   
+  #   
+  #   
+  #   if (is_h5(m)) {
+  #     if (n_cores == 1) {
+  #       quantiles <-
+  #         DelayedMatrixStats::colQuantiles(assays(m)[[2]],
+  #                                          probs = high_quantile,
+  #                                          na.rm = TRUE,
+  #                                          drop = F)
+  #     }
+  #     else {
+  #       quantiles <-
+  #         simplify2array(mclapply(mc.cores = n_cores, 1:ncol(assays(m)[[2]]),
+  #                                 function(i)
+  #                                   quantile(assays(m)[[2]][, i], probs = high_quantile, na.rm = TRUE)))
+  #     }
+  #     quantiles <- as.vector(quantiles)
+  #     names(quantiles) <- rownames(m@colData)
+  #   } else {
+  #     quantiles <-
+  #       matrixStats::colQuantiles(assays(m)[[2]], probs = high_quantile, na.rm = TRUE)
+  #     quantiles <- as.vector(quantiles)
+  #     names(quantiles) <- rownames(m@colData)
+  #   }
+  #   
+  #   
+  #   row_idx2 <- t(t((assays(m)[[2]])) > quantiles)
+  #   assays(m)[[1]][row_idx2] <- as.double(NA)
+  #   assays(m)[[2]][row_idx2] <- as.integer(NA)
+  #   
+  #   
+  #   if (is_h5(m)) {
+  #     if (n_cores == 1) {
+  #       n <- DelayedMatrixStats::colSums2(row_idx2, na.rm = T)
+  #     }
+  #     else {
+  #       n <- simplify2array(mclapply(mc.cores = n_cores, 1:ncol(row_idx2),
+  #                                    function(i)
+  #                                      sum(row_idx2[, i], na.rm = T)))
+  #     }
+  #   } else {
+  #     n <- colSums(row_idx2, na.rm = T)
+  #   }
+  #   
+  #   
+  #   for (i in seq_along(colnames(m))) {
+  #     message(paste0(
+  #       "-Masked ",
+  #       n[i],
+  #       " CpGs due to too high coverage in sample ",
+  #       colnames(row_idx2)[i],
+  #       "."
+  #     ))
+  #     
+  #   }
+  #   
+  #   
+  }
+  message("-Finished in:  ", data.table::timetaken(start_proc_time))
+  return(m)
+}
