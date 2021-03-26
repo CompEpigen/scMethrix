@@ -39,9 +39,11 @@ test_that("read_bed - HDF5", {
   scm1 <- read_beds(files,h5=TRUE,h5_dir=path)
   scm2 <- load_HDF5_scMethrix(dir=path)
     
-  expect_equivalent(class(scm1)[1],class(scm2)[1],"scMethrix")
-  expect_equivalent(class(get_matrix(scm1))[[1]],class(get_matrix(scm2))[[1]],"DelayedMatrix")
-  expect_equivalent(dim(scm1),dim(scm2),c(10,3))
+  expect_true(is_h5(scm1))
+  expect_equivalent(class(scm1)[1],"scMethrix")
+  expect_equivalent(class(get_matrix(scm1))[[1]],"DelayedMatrix")
+  expect_equivalent(dim(scm1),c(10,3))
+  expect_equivalent(scm1,scm2)
   
 })
 
@@ -56,7 +58,7 @@ test_that("read_bed - in-memory", {
 })
 
 test_that("read_bed - HDF5 and in-memory equivalence", {
-  
+
   scm.hdf <- read_beds(files,h5=TRUE)
   scm.mem <- read_beds(files,h5=FALSE)
   

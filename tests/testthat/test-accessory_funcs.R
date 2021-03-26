@@ -30,6 +30,39 @@ test_that("chunk_granges",{
   expect_true(all(rowRanges(scm.h5) == unlist(chunk_granges(rowRanges(scm.h5),factor=factor,percent=percent,num=num))))
 })
 
+test_that("start,split,stop_time",{
+  
+  expect_error(split_time())
+  expect_error(stop_time())
+  
+  start_time()
+  
+  Sys.sleep(1)
+  elapsed_time <- capture.output(cat(split_time()))[1]
+  elapsed_time <- as.numeric(strsplit(elapsed_time, "s")[[1]][1])
+  expect_equal(elapsed_time, 1, tolerance = 0.1)
+  
+  Sys.sleep(2)
+  
+  elapsed_time <- capture.output(cat(split_time()))[1]
+  elapsed_time <- as.numeric(strsplit(elapsed_time, "s")[[1]][1])
+  expect_equal(elapsed_time, 2, tolerance = 0.25)
+  
+  Sys.sleep(3)
+  
+  elapsed_time <- capture.output(cat(stop_time()))[1]
+  elapsed_time <- as.numeric(strsplit(elapsed_time, "s")[[1]][1])
+  expect_equal(elapsed_time, 6, tolerance = 0.5)
+  
+  expect_error(split_time())
+  expect_error(stop_time())
+  
+})
+
+
+
+
+
 test_that("cast_granges",{})
 
 test_that("order_by_sd",{})

@@ -114,12 +114,33 @@ test_that("get_matrix", {
 test_that("remove_uncovered", {
   
   expect_error(get_matrix("not scMethrix"))
+
+  h5 <- remove_uncovered(subset_scMethrix(scm.h5,samples="df1"))
+  expect_equivalent(dim(h5),c(5,1))
+
+  mem <- remove_uncovered(subset_scMethrix(scm.mem,samples="df1"))
+  expect_equivalent(dim(mem),c(5,1))
   
-  m <- subset_scMethrix(scm.h5,samples="df1")
-  expect_equivalent(dim(m),c(20,1))
+  expect_equivalent(h5,mem)
   
-  u <- remove_uncovered(m)
-  expect_equivalent(dim(u),c(5,1))
+  rm(h5,mem)
   
 })
+
+test_that("get_stats") {
+  
+  expect_error(get_matrix("not scMethrix"))
+  
+  h5 = get_stats(scm.h5)
+  mem = get_stats(scm.mem)
+
+  expect_equivalent(dim(h1),c(8,5))
+  expect_equivalent(dim(h2),c(4,4))
+  expect_equivalent(h1,get_stats(scm.h5,per_chr=FALSE))
+  expect_equivalent(h2,get_stats(scm.mem,per_chr=FALSE))
+  
+  
+  rm(h5,mem)
+}
+
 
