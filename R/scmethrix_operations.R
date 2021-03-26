@@ -249,7 +249,6 @@ region_filter <- function(m, regions=NULL, type = "any") {
 #' @return data.table of summary stats
 #' @export
 
-#TODO: remove the hardlink to the assay
 get_stats <- function(m, per_chr = TRUE) {
 
   if (!is(m, "scMethrix")) {
@@ -257,7 +256,6 @@ get_stats <- function(m, per_chr = TRUE) {
   }
   
   message("Getting descriptive statistics...",start_time())
-  
   
   ends <- seqnames(m)@lengths
   for (i in 1:length(ends))
@@ -268,7 +266,7 @@ get_stats <- function(m, per_chr = TRUE) {
     if (per_chr) {
       stats <- lapply(1:length(starts), function(x) {
         data.table::data.table(
-          Chr = levels(l@values)[x],
+          Chr = levels(seqnames(m))[x],
           Sample_Name = colnames(m),
           mean_meth = DelayedMatrixStats::colMeans2(get_matrix(m), rows = starts[x]:ends[x], na.rm = TRUE),
           median_meth = DelayedMatrixStats::colMedians(get_matrix(m), rows = starts[x]:ends[x], na.rm = TRUE),
@@ -291,7 +289,7 @@ get_stats <- function(m, per_chr = TRUE) {
     if (per_chr) {
       stats <- lapply(1:length(starts), function(x) {
         data.table::data.table(
-          Chr = levels(l@values)[x],
+          Chr = levels(seqnames(m))[x],
           Sample_Name = colnames(m),
           mean_meth = matrixStats::colMeans2(get_matrix(m),rows = starts[x]:ends[x],na.rm = TRUE),
           median_meth = matrixStats::colMedians(get_matrix(m), rows = starts[x]:ends[x], na.rm = TRUE),
@@ -312,7 +310,7 @@ get_stats <- function(m, per_chr = TRUE) {
   }
   
   gc()
-  message("Finished in", stop_time())
+  message("Finished in ", stop_time())
   
   return(stats)
 }
@@ -346,7 +344,7 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
             "the output will be a data.frame object. ")
   }
 
-  message("Getting matrix...",start_time())
+  #message("Getting matrix...",start_time())
   
   
   mtx <- SummarizedExperiment::assay(x = m, i = 1)
@@ -365,7 +363,7 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
       
   }
 
-  message("Retreived in ",stop_time())
+  #message("Retreived in ",stop_time())
   
   return (mtx)
 }
@@ -534,7 +532,7 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
   #   }
   #   
   #   
-  }
+  
   message("Masked in",stop_time())
 
   return(m)
