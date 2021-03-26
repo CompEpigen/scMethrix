@@ -27,8 +27,13 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
     stop("Please provide the target directory containing ")
   }
   
+  message("Loading HDF5 object", start_time())
+  
   m <- HDF5Array::loadHDF5SummarizedExperiment(dir = dir, ...)
   m <- as(m, "scMethrix")
+  
+  message("Loaded in ",stop_time())
+  
   return(m)
 }
 
@@ -51,9 +56,14 @@ convert_HDF5_methrix <- function(m = NULL) {
   if (!is_h5(m)) {
     stop("Input scMethrix must be in HDF5 format.")
   }
-
+  
+  message("Converting in-memory scMethrix to HDF5",start_time())
+  
   assays(m)[[1]] <- as.matrix(assays(m)[[1]])
   m@metadata$is_h5 <- FALSE
+
+  message("Converted in ",stop_time())
+  
   return(m)
 }
 
@@ -75,11 +85,16 @@ convert_methrix <- function(m = NULL, h5_dir = NULL) {
   if (is_h5(m)) {
     stop("Input scMethrix is already in HDF5 format.")
   }
+
+  message("Converting in-memory scMethrix to HDF5", start_time())
   
   m <- create_scMethrix(methyl_mat = assays(m)[[1]], h5_dir = h5_dir,
                       rowRanges = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
                       colData = m@colData, chrom_sizes = m@metadata$chrom_sizes, 
                       desc = m@metadata$descriptive_stats)
+  
+  message("Converted in ", stop_time())
+  
   return(m)
 }
 
@@ -150,8 +165,6 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 
 subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, verbose=TRUE) {
   
-  message("Subsetting scMethrix")
-  
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
@@ -161,6 +174,8 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
     return(m)
   }
     
+  message("Subsetting CpG sites...",start_time())
+  
   if (!is.null(regions)) {
     message("   Subsetting by regions")
     subset <- cast_granges(regions)
@@ -183,6 +198,8 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
       stop("Samples not present in the object", call. = FALSE)
   }
 
+  message("Subset in ",stop_time())
+  
   return(m)
   
 }
@@ -210,7 +227,12 @@ region_filter <- function(m, regions=NULL, type = "any") {
     return(m)
   }
 
+  message("Filtering by region...",start_time())
+  
   regions2 <- subsetByOverlaps(rowRanges(m), regions, invert = TRUE, type, maxgap=-1L, minoverlap=0L)
+  
+  message("Filtered in ",stop_time())
+  
   return(subset_scMethrix(m,regions=reduce(regions2)))
   
 }
@@ -229,12 +251,13 @@ region_filter <- function(m, regions=NULL, type = "any") {
 
 #TODO: remove the hardlink to the assay
 get_stats <- function(m, per_chr = TRUE) {
-  median <- . <- sd <- chr <- NULL
-  start_proc_time <- proc.time()
-  
+
   if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
+  
+  message("Getting descriptive statistics...",start_time())
+  
   
   ends <- seqnames(m)@lengths
   for (i in 1:length(ends))
@@ -289,7 +312,7 @@ get_stats <- function(m, per_chr = TRUE) {
   }
   
   gc()
-  message("-Finished in:  ", data.table::timetaken(start_proc_time))
+  message("Finished in", stop_time())
   
   return(stats)
 }
@@ -323,6 +346,9 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
             "the output will be a data.frame object. ")
   }
 
+  message("Getting matrix...",start_time())
+  
+  
   mtx <- SummarizedExperiment::assay(x = m, i = 1)
   
   if (add_loci) {
@@ -339,6 +365,7 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
       
   }
 
+  message("Retreived in ",stop_time())
   
   return (mtx)
 }
@@ -354,11 +381,15 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
 #'
 remove_uncovered <- function(m) {
   
-  start_time()
+  
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
 
+ 
+  
+  message("Removing uncovered CpGs...", start_time())
+  
   row_idx <- rowSums(!is.na(get_matrix(m)))==0
   
   message(paste0("Removed ", format(sum(row_idx), big.mark = ","),
@@ -386,8 +417,8 @@ remove_uncovered <- function(m) {
 #' mask_methrix(m = methrix_data, low_count = 5, high_quantile = 0.99 )
 #' @export
 mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
+
   
-  start_proc_time <- proc.time()
   if (!is(m, "scMethrix")){
     stop("A valid methrix object needs to be supplied.")
   }
@@ -396,6 +427,7 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
     stop("Parallel processing not supported for a non-HDF5 methrix object due to probable high memory usage. \nNumber of cores (n_cores) needs to be 1.")
   }
   
+  message("Masking CpG sites ( ",high_quintile," quintile and <= ",low_count, " count", start_time())
   
   if (!is.null(low_count)) {
     
@@ -430,6 +462,7 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
     for (i in seq_along(colnames(m))) {
       message(paste0("Masked ", n[i], " CpGs due to too low count in sample ",  colnames(m)[i], "."))
     }
+    
     
   }
   # 
@@ -502,6 +535,7 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
   #   
   #   
   }
-  message("-Finished in:  ", data.table::timetaken(start_proc_time))
+  message("Masked in",stop_time())
+
   return(m)
 }
