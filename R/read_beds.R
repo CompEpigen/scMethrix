@@ -33,7 +33,7 @@
 read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
                       zero_based = FALSE) {
-
+  
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
   }
@@ -44,11 +44,11 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   }
   
   if (h5) {
-
+    
     index <- read_index(files)
     
     if (zero_based) {index[,2:3] <- index[,2:3]+1}
-
+    
     M_sink <- write_HDF5(files, index, h5_temp, zero_based)
     
     message("Building scMethrix object")
@@ -59,29 +59,29 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     
     m_obj <- create_scMethrix(methyl_mat=as(M_sink, "HDF5Array"), rowRanges=index, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData)
- 
+    
     message("Object built!")
     
     return(m_obj)
- 
- } else {
     
-   if (verbose) message("Reading in BED files") 
-
-   # beds <- lapply(files, rtracklayer::import,format = "BED")
-  #  gr <- GRangesList(beds)
-  #  rtracklayer::export.bed(unlist(gr),con=file.path(tempdir(),'bed1.bed'))
-   
+  } else {
+    
+    message("Reading in BED files") 
+    
+    # beds <- lapply(files, rtracklayer::import,format = "BED")
+    #  gr <- GRangesList(beds)
+    #  rtracklayer::export.bed(unlist(gr),con=file.path(tempdir(),'bed1.bed'))
+    
     beds <- BRGenomics::import_bedGraph(files,ncores=1)
     gr <- GRangesList(beds)
     gr <- BRGenomics::makeGRangesBRG(gr,ncores=1)
-    if (verbose) message("Generating indexes")
+    message("Generating indexes")
     gr <- BRGenomics::mergeGRangesData(gr,ncores = 1,multiplex=TRUE)
     names(mcols(gr)) <- lapply(names(mcols(gr)),get_sample_name)
     
     rrng <- c(gr, NULL, ignore.mcols=TRUE) # Remove the metadata for rowRanges input
     
-    if (verbose) message("Creating scMethrix object")
+    message("Creating scMethrix object")
     m_obj <- create_scMethrix(methyl_mat=as.matrix(mcols(gr)), rowRanges=rrng, is_hdf5 = FALSE, 
                               genome_name = genome_name, desc = desc )
   }
@@ -119,7 +119,7 @@ read_index <- function(files, batch_size = 100, verbose = FALSE) {
     }
     cat(paste0(" (",split_time(),")\n"))
   }
- 
+  
   rrng <- data.table::rbindlist(rrng)
   colnames(rrng) <- c("chr","start")
   data.table::setkeyv(rrng, c("chr","start"))
@@ -127,7 +127,7 @@ read_index <- function(files, batch_size = 100, verbose = FALSE) {
   rrng$end <- rrng$start+1
   
   message(paste0("Index generated! (",stop_time(),")"))
-
+  
   return(rrng)
 }
 
@@ -195,7 +195,7 @@ write_HDF5 <- function(files, index, h5_temp = NULL, zero_based = FALSE) {
     DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
     rm(bed)
     if (i%%10==0) gc()
-    cat(paste0(" (",split_time(),"s)\n"))
+    cat(paste0(" (",split_time(),")\n"))
   }
   
   message(paste0("HDF5 data written! (",stop_time(),"s)\n"))
