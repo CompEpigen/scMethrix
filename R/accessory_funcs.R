@@ -130,7 +130,10 @@ start_time <- function() {
 #' @return Returns formatted elapsed time since start_time or last split_time
 #' @export
 split_time <- function() {
-  time <- proc.time()["elapsed"]-get("time.split", envir=baseenv())
+  
+  time <- get("time.split", envir=baseenv())
+  if (is.na(time)) stop("start_time() not set")
+  time <- proc.time()["elapsed"]-time
   assign("time.split", proc.time()["elapsed"], envir=baseenv())
   return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
 }
@@ -140,7 +143,12 @@ split_time <- function() {
 #' @return Returns formatted elapsed time since start_time
 #' @export
 stop_time <- function() {
+  
+  time <- get("time.all", envir=baseenv())
+  if (is.na(time)) stop("start_time() not set")
   time <- proc.time()["elapsed"]-get("time.all", envir=baseenv())
+  assign("time.split", NA, envir=baseenv())
+  assign("time.all", NA, envir=baseenv())
   return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
 }
 
