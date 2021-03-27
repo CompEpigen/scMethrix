@@ -49,7 +49,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     
     if (zero_based) {index[,2:3] <- index[,2:3]+1}
     
-    M_sink <- write_HDF5(files, index, h5_temp, zero_based)
+    M_sink <- read_data(files, index, h5_temp, zero_based)
     
     message("Building scMethrix object")
     
@@ -105,7 +105,7 @@ read_index <- function(files, batch_size = 100, verbose = FALSE) {
   rrng <- vector(mode = "list", length = batch_size+1)
   
   for (i in 1:length(files)) {
-    cat(paste0("   Parsing: ",get_sample_name(files[i])))
+   message("   Parsing: ",get_sample_name(files[i]),appendLF=FALSE)
     data <- data.table::fread(files[i], header=FALSE, select = c(1:2))
     
     if (i%%batch_size != 0) {
@@ -117,7 +117,7 @@ read_index <- function(files, batch_size = 100, verbose = FALSE) {
       rrng <- vector(mode = "list", length = batch_size)
       rrng[[batch_size+1]] <- data
     }
-    cat(paste0(" (",split_time(),")\n"))
+    message(" (",split_time(),")")
   }
   
   rrng <- data.table::rbindlist(rrng)
@@ -126,7 +126,7 @@ read_index <- function(files, batch_size = 100, verbose = FALSE) {
   rrng <- unique(rrng)
   rrng$end <- rrng$start+1
   
-  message(paste0("Index generated! (",stop_time(),")"))
+  message("Index generated! (",stop_time(),")")
   
   return(rrng)
 }
@@ -143,6 +143,7 @@ read_bed_by_index <- function(file,index,zero_based=FALSE) {
   data <- data.table::fread(file, header = FALSE, select = c(1:2,4))
   colnames(data) <- c("chr", "start", "value")
   if (zero_based) {data[,2] <- data[,2]+1}
+  data <- data.table::setkeyv(data, c("chr","start"))
   x <- index[.(data$chr, data$start), which = TRUE]
   sample <- rep(NA_integer_, nrow(index))
   sample[x] <- data[[3]]
@@ -161,9 +162,9 @@ read_bed_by_index <- function(file,index,zero_based=FALSE) {
 #' @return HDF5Array The methylation values for input BED files
 #' @import data.table DelayedArray HDF5Array
 #' @examples
-write_HDF5 <- function(files, index, h5_temp = NULL, zero_based = FALSE) {
+read_hdf5_data <- function(files, index, h5_temp = NULL, zero_based = FALSE, verbose = TRUE) {
   
-  message("Starting HDF5 object") 
+  if (verbose) message("Starting HDF5 object") 
   
   message("Reading data")
   
@@ -190,15 +191,15 @@ write_HDF5 <- function(files, index, h5_temp = NULL, zero_based = FALSE) {
   start_time()
   
   for (i in 1:length(files)) {
-    cat(paste0("   Parsing: ", get_sample_name(files[i])))
+    message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
     bed <- read_bed_by_index(files[i],index,zero_based)
     DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
     rm(bed)
     if (i%%10==0) gc()
-    cat(paste0(" (",split_time(),")\n"))
+    message(" (",split_time(),")")
   }
   
-  message(paste0("HDF5 data written! (",stop_time(),"s)\n"))
+  message("Data read! (",stop_time(),")")
   
   return(M_sink)
   

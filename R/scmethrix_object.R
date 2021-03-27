@@ -10,7 +10,7 @@
 #' @importFrom graphics axis legend lines mtext par plot title
 #' @importFrom stats complete.cases cov density median prcomp quantile sd
 #' @importFrom utils browseURL
-#' @importClassesFrom SummarizedExperiment SummarizedExperiment
+#' @importClassesFrom SummarizedExperiment
 #'
 scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 
@@ -40,10 +40,13 @@ create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL
       #TODO: Cannot save to same directory input files exist in
       
       if (!is.null(h5_dir)) {
+        message("Writing to disk...",start_time())
+        
         tryCatch(HDF5Array::saveHDF5SummarizedExperiment(x = sse, dir = h5_dir,
                                                          replace = FALSE, chunkdim = c(nrow(methyl_mat),1), verbose=TRUE), error = function(e)
                                                            message("The dataset is not saved. Please save manually, using the HDF5Array::saveSummarizedExperiment command. "))
-      }
+        message("Written in ",stop_time())
+        }
       
       
       

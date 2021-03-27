@@ -8,7 +8,7 @@ rm(list.of.packages,new.packages)
 
 setwd("D:\\Documents\\School\\Thesis\\scMethrix\\sample.data\\bedtools")
 
-setwd("D:/Documents/School/Thesis/scMethrix/sample.data/Yunhee/GSE97179")
+setwd("D:/Git/scMethrix/sample.data/Yunhee.GSE97179")
 
 setwd("D:/Documents/School/Thesis/scMethrix/sample.data/small/")
 
