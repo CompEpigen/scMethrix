@@ -32,7 +32,7 @@
 
 read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
-                      zero_based = FALSE) {
+                      zero_based = FALSE, index = NULL, reads = NULL) {
   
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
@@ -45,11 +45,11 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   
   if (h5) {
     
-    index <- read_index(files)
+    if (is.null(index)) index <- read_index(files)
     
     if (zero_based) {index[,2:3] <- index[,2:3]+1}
     
-    M_sink <- read_data(files, index, h5_temp, zero_based)
+    if (is.null(reads)) reads <- read_hdf5_data(files, index, h5_temp, zero_based)
     
     message("Building scMethrix object")
     
@@ -57,7 +57,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     
     colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
     
-    m_obj <- create_scMethrix(methyl_mat=as(M_sink, "HDF5Array"), rowRanges=index, is_hdf5 = TRUE, 
+    m_obj <- create_scMethrix(methyl_mat=as(reads, "HDF5Array"), rowRanges=index, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData)
     
     message("Object built!")
@@ -87,6 +87,30 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   }
 }
 
+
+read_parallel_index <- function(files, batch_size=30,verbose=TRUE,no_cores = 1) {
+  
+  #no_cores <- detectCores(logical = TRUE) 
+  cl <- makeCluster(no_cores)  
+  registerDoParallel(cl)  
+  
+  clusterEvalQ(cl, c(library(data.table)))
+  clusterExport(cl,list('read_index','start_time','split_time','stop_time','get_sample_name'))
+
+  chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/(no_cores-1))))
+  
+  rrng <- c(parLapply(cl,chunk_files,fun=read_index,batch_size=batch_size, verbose = verbose))
+  
+  stopCluster(cl)
+  
+  rrng <- data.table::rbindlist(rrng)
+  data.table::setkeyv(rrng, c("chr","start"))
+  rrng <- unique(rrng)
+
+  return(rrng)
+}
+
+
 #' Parse BED files for unique genomic coordinates
 #' @details Create list of unique genomic regions from input BED files. Populates a list of batch_size+1 with 
 #' the genomic coordinates from BED files, then runs unique() when the list is full and keeps the running
@@ -96,16 +120,14 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 #' @return data.table containing all unique genomic coordinates
 #' @import data.table
 #' @examples
-read_index <- function(files, batch_size = 100, verbose = FALSE) {
+read_index <- function(files, batch_size = 30, verbose = TRUE) {
   
-  message("Generating index")
-  
-  start_time()
+  if (verbose) message("Generating index",start_time())
   
   rrng <- vector(mode = "list", length = batch_size+1)
   
   for (i in 1:length(files)) {
-   message("   Parsing: ",get_sample_name(files[i]),appendLF=FALSE)
+    if (verbose) message("   Parsing: ",get_sample_name(files[i]),appendLF=FALSE)
     data <- data.table::fread(files[i], header=FALSE, select = c(1:2))
     
     if (i%%batch_size != 0) {
@@ -117,7 +139,7 @@ read_index <- function(files, batch_size = 100, verbose = FALSE) {
       rrng <- vector(mode = "list", length = batch_size)
       rrng[[batch_size+1]] <- data
     }
-    message(" (",split_time(),")")
+    if (verbose) message(" (",split_time(),")")
   }
   
   rrng <- data.table::rbindlist(rrng)
@@ -126,7 +148,7 @@ read_index <- function(files, batch_size = 100, verbose = FALSE) {
   rrng <- unique(rrng)
   rrng$end <- rrng$start+1
   
-  message("Index generated! (",stop_time(),")")
+  if (verbose) message("Index generated! (",stop_time(),")")#, Avg.", (stop_time()/length(files)),")")
   
   return(rrng)
 }
