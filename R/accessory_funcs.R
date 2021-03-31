@@ -38,6 +38,28 @@ get_sample_name = function(s) {
   return(tools::file_path_sans_ext(basename(s)))
 }
 
+split_vector = function(v,n, by = c("chunk","size")) {
+  
+  if (match.arg(by)=="size") {
+    
+    return (split(v, ceiling(seq_along(v)/n)))
+    
+  } else {
+  
+    x <- length(v)
+    
+    if (x/n < 2) stop("Length of input vector must be at least 2x greater than the number of chunks")
+    
+    e <- ceiling(x/n)*(1:(n-1))
+    s <- c(0,e+1)
+    e <- c(e,x)
+    
+    return(lapply(1:n, function(i) {
+      return(v[s[i]:e[i]])
+    }))
+  }
+}
+
 #' Chunks a Granges object by factor, percent or number
 #' @details Divides Granges into a list based on a chunking parameter
 #' @param gr The Granges object
