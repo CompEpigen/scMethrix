@@ -97,7 +97,7 @@ read_parallel_index <- function(files, batch_size=30,verbose=TRUE,no_cores = 1) 
   clusterEvalQ(cl, c(library(data.table)))
   clusterExport(cl,list('read_index','start_time','split_time','stop_time','get_sample_name'))
 
-  chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/(no_cores-1))))
+  chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/no_cores)))
   
   rrng <- c(parLapply(cl,chunk_files,fun=read_index,batch_size=batch_size, verbose = verbose))
   
