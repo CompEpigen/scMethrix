@@ -38,19 +38,26 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     stop("Missing input files.", call. = FALSE)
   }
   
-  
   if (!all(grepl("\\.(bed|bedgraph)", files))) {
     stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
   }
   
   if (h5) {
     
-    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files)
+    n_threads <- min(n_threads,length(files)/2) # since cannot have multiple 1 file threads
+    
+    if (is.null(ref_cpgs)) {ref_cpgs <- read_parallel_index(files,n_threads)}
     
     if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     
-    if (is.null(reads)) reads <- read_hdf5_data(files, ref_cpgs, h5_temp, zero_based)
+    if (is.null(reads)) {
+      
+      if (n_threads == 1) {reads <- read_hdf5_data(files, ref_cpgs, h5_temp, zero_based)
+      } else {reads <- read_parallel_hdf5_data(files, ref_cpgs, n_threads, h5_temp, zero_based)}
     
+    }
+      
+      
     message("Building scMethrix object")
     
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
@@ -88,7 +95,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 }
 
 
-read_parallel_index <- function(files, batch_size=30,verbose=TRUE,n_threads = 1) {
+read_parallel_index <- function(files, batch_size=200,verbose=TRUE,n_threads = 1) {
   
   #no_cores <- detectCores(logical = TRUE) 
   cl <- parallel::makeCluster(n_threads)  
@@ -275,17 +282,6 @@ read_bed_by_index2 <- function(file,zero_based=FALSE) {
   
   return(sample)
 }
-
-
-
-
-
-
-
-
-
-
-
 
 assignInNamespace(".multiplex_gr", ns = "BRGenomics",
                   function(data_in, field, ncores) {
