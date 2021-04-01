@@ -13,7 +13,8 @@ write.table(df3, file = files[3], row.names=FALSE, sep="\t",col.names=FALSE, quo
 test_that("read_index", {
 
   expect_equivalent(read_index(files),rbind(df1,df3)[,1:3])
-
+  expect_equivalent(read_index(files),read_index(files,n_threads=2))
+  
 })
 
 test_that("read_bed_by_index", {

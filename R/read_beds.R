@@ -89,9 +89,6 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   }
 }
 
-
-
-
 #' Parse BED files for unique genomic coordinates
 #' @details Create list of unique genomic regions from input BED files. Populates a list of batch_size+1 with 
 #' the genomic coordinates from BED files, then runs unique() when the list is full and keeps the running
@@ -103,8 +100,29 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 #' @examples
 read_index <- function(files, n_threads = 0, batch_size = 200, verbose = TRUE) {
   
-  if (n_threads != 0) return(read_parallel_index(files, batch_size = batch_size, verbose=verbose, n_threads=n_threads))
-  
+  if (n_threads != 0) {
+    
+    #no_cores <- detectCores(logical = TRUE) 
+    cl <- parallel::makeCluster(n_threads)  
+    registerDoParallel(cl)  
+    
+    parallel::clusterEvalQ(cl, c(library(data.table)))
+    parallel::clusterExport(cl,list('read_index','start_time','split_time','stop_time','get_sample_name'))
+    
+    chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
+    
+    rrng <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
+                                  batch_size=batch_size, n_threads = 0, verbose = verbose))
+    
+    parallel::stopCluster(cl)
+    
+    rrng <- data.table::rbindlist(rrng)
+    data.table::setkeyv(rrng, c("chr","start"))
+    rrng <- unique(rrng)
+    
+    return(rrng)
+  }
+    
   if (verbose) message("Generating index",start_time())
   
   rrng <- vector(mode = "list", length = batch_size+1)
@@ -136,41 +154,6 @@ read_index <- function(files, n_threads = 0, batch_size = 200, verbose = TRUE) {
   return(rrng)
 }
 
-#' Helper function for read_index. Allows parallel running of the function.
-#' @details Create list of unique genomic regions from input BED files. Populates a list of batch_size+1 with 
-#' the genomic coordinates from BED files, then runs unique() when the list is full and keeps the running
-#' results in the batch_size+1 position. Also indexes based on 'chr' and 'start' for later searching.
-#' @param files List of BED files
-#' @param batch_size Number of files to process before running unique. Default of 30.
-#' @param verbose Whether to display messages or not
-#' @param n_threads Number of threads to use
-#' @return data.table containing all unique genomic coordinates
-#' @import data.table
-#' @examples
-read_parallel_index <- function(files, batch_size=200,verbose=TRUE,n_threads = 1) {
-  
-  #no_cores <- detectCores(logical = TRUE) 
-  cl <- parallel::makeCluster(n_threads)  
-  registerDoParallel(cl)  
-  
-  parallel::clusterEvalQ(cl, c(library(data.table)))
-  parallel::clusterExport(cl,list('read_index','start_time','split_time','stop_time','get_sample_name'))
-  
-  chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
-  
-  rrng <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
-                                batch_size=batch_size, n_threads = 0, verbose = verbose))
-  
-  parallel::stopCluster(cl)
-  
-  rrng <- data.table::rbindlist(rrng)
-  data.table::setkeyv(rrng, c("chr","start"))
-  rrng <- unique(rrng)
-  
-  return(rrng)
-}
-
-
 #' Parses BED files for methylation values using previously generated index genomic coordinates
 #' @details Creates an NA-based vector populated with methlylation values from the input BED file in the
 #' respective indexed genomic coordinates
@@ -184,7 +167,7 @@ read_bed_by_index <- function(file,ref_cpgs,zero_based=FALSE) {
   colnames(data) <- c("chr", "start", "value")
   if (zero_based) {data[,2] <- data[,2]+1}
   data <- data.table::setkeyv(data, c("chr","start"))
-  x <- ref_cpgs[.(data$chr, data$start), which = TRUE]
+  x <- ref_cpgs[.(data$start, data$chr), which = TRUE]
   sample <- rep(NA_integer_, nrow(ref_cpgs))
   sample[x] <- data[[3]]
   sample <- as.matrix(sample)
