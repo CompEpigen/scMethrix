@@ -15,7 +15,7 @@
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
-#' @import SingleCellExperiment BRGenomics GenomicRanges dplyr tools
+#' @import SingleCellExperiment BRGenomics GenomicRanges dplyr tools parallel
 #' @examples
 #'\dontrun{
 #'bdg_files = list.files(path = system.file('extdata', package = 'methrix'),
@@ -32,7 +32,7 @@
 
 read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
-                      zero_based = FALSE, index = NULL, reads = NULL) {
+                      zero_based = FALSE, ref_cpgs = NULL, reads = NULL) {
   
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
@@ -45,19 +45,19 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   
   if (h5) {
     
-    if (is.null(index)) index <- read_index(files)
+    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files)
     
-    if (zero_based) {index[,2:3] <- index[,2:3]+1}
+    if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     
-    if (is.null(reads)) reads <- read_hdf5_data(files, index, h5_temp, zero_based)
+    if (is.null(reads)) reads <- read_hdf5_data(files, ref_cpgs, h5_temp, zero_based)
     
     message("Building scMethrix object")
     
-    index <- GenomicRanges::makeGRangesFromDataFrame(index)
+    ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     
     colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
     
-    m_obj <- create_scMethrix(methyl_mat=as(reads, "HDF5Array"), rowRanges=index, is_hdf5 = TRUE, 
+    m_obj <- create_scMethrix(methyl_mat=as(reads, "HDF5Array"), rowRanges=ref_cpgs, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData)
     
     message("Object built!")
@@ -88,20 +88,20 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 }
 
 
-read_parallel_index <- function(files, batch_size=30,verbose=TRUE,no_cores = 1) {
+read_parallel_index <- function(files, batch_size=30,verbose=TRUE,n_threads = 1) {
   
   #no_cores <- detectCores(logical = TRUE) 
-  cl <- makeCluster(no_cores)  
+  cl <- parallel::makeCluster(n_threads)  
   registerDoParallel(cl)  
   
-  clusterEvalQ(cl, c(library(data.table)))
-  clusterExport(cl,list('read_index','start_time','split_time','stop_time','get_sample_name'))
+  parallel::clusterEvalQ(cl, c(library(data.table)))
+  parallel::clusterExport(cl,list('read_index','start_time','split_time','stop_time','get_sample_name'))
 
-  chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/no_cores)))
+  chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
   
-  rrng <- c(parLapply(cl,chunk_files,fun=read_index,batch_size=batch_size, verbose = verbose))
+  rrng <- c(parallel::parLapply(cl,chunk_files,fun=read_index,batch_size=batch_size, verbose = verbose))
   
-  stopCluster(cl)
+  parallel::stopCluster(cl)
   
   rrng <- data.table::rbindlist(rrng)
   data.table::setkeyv(rrng, c("chr","start"))
@@ -188,8 +188,6 @@ read_hdf5_data <- function(files, index, h5_temp = NULL, zero_based = FALSE, ver
   
   if (verbose) message("Starting HDF5 object") 
   
-  message("Reading data")
-  
   if (is.null(h5_temp)) {
     h5_temp <- tempdir()
   }
@@ -199,33 +197,95 @@ read_hdf5_data <- function(files, index, h5_temp = NULL, zero_based = FALSE, ver
   grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
                                          spacings = c(dimension, 1L)) 
   
-  sink_counter <- 1
-  while (any(c(paste0("M_sink_", sink_counter, ".h5"), paste0("cov_sink_",
-                                                              sink_counter, ".h5")) %in% dir(h5_temp))) {
-    sink_counter <- sink_counter + 1
-    
-  }
-  
   M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
                                            dimnames = NULL, type = "integer",
-                                           filepath = file.path(h5_temp, paste0("M_sink_", sink_counter, ".h5")), name = "M", level = 6)
+                                           filepath = tempfile(pattern="M_sink_",tmpdir=h5_temp), name = "M", level = 6)
   
-  start_time()
+  if (verbose) message("Reading data",start_time())
   
   for (i in 1:length(files)) {
-    message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
+    if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
     bed <- read_bed_by_index(files[i],index,zero_based)
     DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
     rm(bed)
     if (i%%10==0) gc()
-    message(" (",split_time(),")")
+    if (verbose) message(" (",split_time(),")")
   }
   
-  message("Data read! (",stop_time(),")")
+  if (verbose) message("Data read! (",stop_time(),")")
   
   return(M_sink)
   
 }
+
+read_parallel_hdf5_data <- function(files, index, n_threads, h5_temp = NULL, zero_based = FALSE, verbose = TRUE) {
+  
+  if (verbose) message("Starting HDF5 object",start_time()) 
+  
+  if (is.null(h5_temp)) {
+    h5_temp <- tempdir()
+  }
+  
+  dimension <- as.integer(nrow(index))
+  
+  grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
+                                         spacings = c(dimension, n_threads)) 
+  
+  M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
+                                           dimnames = NULL, type = "integer",
+                                           filepath = tempfile(pattern="M_sink_",tmpdir=h5_temp), name = "M", level = 6)
+ 
+  cl <- parallel::makeCluster(n_threads)  
+  registerDoParallel(cl)  
+  
+  parallel::clusterEvalQ(cl, c(library(data.table)))
+  parallel::clusterExport(cl,list('read_bed_by_index2','get_sample_name',"index"))
+  
+  chunk_files <- split_vector(files,n_threads,by="size")
+
+  for (i in 1:length(chunk_files)) {
+    if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
+
+    beds <- parallel::parLapply(cl,unlist(chunk_files[i]),fun=read_bed_by_index2, zero_based = zero_based)
+    DelayedArray::write_block(block = do.call(cbind, beds), viewport = grid[[as.integer(i)]], sink = M_sink)
+    
+    rm(beds)
+    if (i%%10==0) gc()
+    if (verbose) message(" (",split_time(),")")
+  }
+    
+  parallel::stopCluster(cl)
+  
+  if (verbose) message("Object created in ",stop_time()) 
+  
+  return(M_sink)
+  
+}
+
+read_bed_by_index2 <- function(file,zero_based=FALSE) {
+  data <- data.table::fread(file, header = FALSE, select = c(1:2,4))
+  colnames(data) <- c("chr", "start", "value")
+  if (zero_based) {data[,2] <- data[,2]+1}
+  data <- data.table::setkeyv(data, c("chr","start"))
+  x <- index[.(data$chr, data$start), which = TRUE]
+  sample <- rep(NA_integer_, nrow(index))
+  sample[x] <- data[[3]]
+  sample <- as.matrix(sample)
+  colnames(sample) <- get_sample_name(file)
+  
+  return(sample)
+}
+
+
+
+
+
+
+
+
+
+
+
 
 assignInNamespace(".multiplex_gr", ns = "BRGenomics",
                   function(data_in, field, ncores) {
