@@ -1,10 +1,3 @@
-library(microbenchmark)
-library(measurements)
-library(magrittr)
-library(doParallel)
-library(parallel)
-library(Cairo)
-library(ggplot2)
 
 ### Benchmark the indexing #######################################
 
@@ -40,10 +33,10 @@ bench.index
 read.data <- microbenchmark(
   
   "read.h5" = {read_hdf5_data(files,index)},
-  "n.c = 1" = {read_parallel_hdf5_data(files,index,n_threads=1)},
-  "n.c = 2" = {read_parallel_hdf5_data(files,index,n_threads=2)},
-  "n.c = 4" = {read_parallel_hdf5_data(files,index,n_threads=4)},
-  "n.c = 8" = {read_parallel_hdf5_data(files,index,n_threads=8)},
+  "n.c = 1" = {read_hdf5_data(files,index,n_threads=1)},
+  "n.c = 2" = {read_hdf5_data(files,index,n_threads=2)},
+  "n.c = 4" = {read_hdf5_data(files,index,n_threads=4)},
+  "n.c = 8" = {read_hdf5_data(files,index,n_threads=8)},
   times = 1,unit = "s")
 read.data$name <- "read_parallel_bed_by_index (core test)"
 
@@ -56,13 +49,13 @@ saveRDS(data, file = "benchmark.rds")
 ### Benchmark object creation ########################################
 
 write.object <- microbenchmark(
-  
-  "read.bed" = {read_beds(files,h5 = TRUE,h5_dir=tempdir(),ref_cpgs=index,verbose=TRUE)},
-  "n.c = 1" = {read_beds(files,h5 = TRUE,h5_dir=tempdir(),n_threads=1,ref_cpgs=index,verbose=TRUE)},
-  "n.c = 2" = {read_beds(files,h5 = TRUE,h5_dir=tempdir(),n_threads=2,ref_cpgs=index,verbose=TRUE)},
-  "n.c = 4" = {read_beds(files,h5 = TRUE,h5_dir=tempdir(),n_threads=4,ref_cpgs=index,verbose=TRUE)},
-  "n.c = 8" = {read_beds(files,h5 = TRUE,h5_dir=tempdir(),n_threads=8,ref_cpgs=index,verbose=TRUE)},
-  times = 1,unit = "s")
+   "read.bed" = {read_beds(files,h5 = TRUE,h5_dir=dir,verbose=TRUE,replace=TRUE)},
+   "n.c = 1" = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=1,verbose=TRUE,replace=TRUE)},
+   "n.c = 2" = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=2,verbose=TRUE,replace=TRUE)},
+   "n.c = 4" = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=4,verbose=TRUE,replace=TRUE)},
+   "n.c = 8" = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=8,verbose=TRUE,replace=TRUE)},
+  times = 1,unit = "s",
+  setup = {dir <- paste0(tempdir(),"\\bench")})
 write.object$name <- "read_bed (core test)"
 
 bench.write <- graph_benchmark(write.object,xlabel="",unit="m")

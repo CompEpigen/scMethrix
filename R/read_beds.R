@@ -30,9 +30,9 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 1, 
+read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 0, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
-                      zero_based = FALSE, ref_cpgs = NULL, reads = NULL) {
+                      zero_based = FALSE, ref_cpgs = NULL, reads = NULL, replace = FALSE) {
   
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
@@ -46,17 +46,11 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     
     n_threads <- min(n_threads,length(files)/2) # since cannot have multiple 1 file threads
     
-    if (is.null(ref_cpgs)) {ref_cpgs <- read_parallel_index(files,n_threads)}
+    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads)
     
     if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     
-    if (is.null(reads)) {
-      
-      if (n_threads == 1) {reads <- read_hdf5_data(files, ref_cpgs, h5_temp, zero_based)
-      } else {reads <- read_parallel_hdf5_data(files, ref_cpgs, n_threads, h5_temp, zero_based)}
-    
-    }
-      
+    if (is.null(reads)) reads <- read_hdf5_data(files, ref_cpgs, n_threads, h5_temp, zero_based, verbose)
       
     message("Building scMethrix object")
     
@@ -65,7 +59,8 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
     
     m_obj <- create_scMethrix(methyl_mat=as(reads, "HDF5Array"), rowRanges=ref_cpgs, is_hdf5 = TRUE, 
-                              h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData)
+                              h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
+                              replace = replace)
     
     message("Object built!")
     
@@ -95,27 +90,6 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 }
 
 
-read_parallel_index <- function(files, batch_size=200,verbose=TRUE,n_threads = 1) {
-  
-  #no_cores <- detectCores(logical = TRUE) 
-  cl <- parallel::makeCluster(n_threads)  
-  registerDoParallel(cl)  
-  
-  parallel::clusterEvalQ(cl, c(library(data.table)))
-  parallel::clusterExport(cl,list('read_index','start_time','split_time','stop_time','get_sample_name'))
-
-  chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
-  
-  rrng <- c(parallel::parLapply(cl,chunk_files,fun=read_index,batch_size=batch_size, verbose = verbose))
-  
-  parallel::stopCluster(cl)
-  
-  rrng <- data.table::rbindlist(rrng)
-  data.table::setkeyv(rrng, c("chr","start"))
-  rrng <- unique(rrng)
-
-  return(rrng)
-}
 
 
 #' Parse BED files for unique genomic coordinates
@@ -127,7 +101,9 @@ read_parallel_index <- function(files, batch_size=200,verbose=TRUE,n_threads = 1
 #' @return data.table containing all unique genomic coordinates
 #' @import data.table
 #' @examples
-read_index <- function(files, batch_size = 30, verbose = TRUE) {
+read_index <- function(files, n_threads = 0, batch_size = 200, verbose = TRUE) {
+  
+  if (n_threads != 0) return(read_parallel_index(files, batch_size = batch_size, verbose=verbose, n_threads=n_threads))
   
   if (verbose) message("Generating index",start_time())
   
@@ -160,6 +136,41 @@ read_index <- function(files, batch_size = 30, verbose = TRUE) {
   return(rrng)
 }
 
+#' Helper function for read_index. Allows parallel running of the function.
+#' @details Create list of unique genomic regions from input BED files. Populates a list of batch_size+1 with 
+#' the genomic coordinates from BED files, then runs unique() when the list is full and keeps the running
+#' results in the batch_size+1 position. Also indexes based on 'chr' and 'start' for later searching.
+#' @param files List of BED files
+#' @param batch_size Number of files to process before running unique. Default of 30.
+#' @param verbose Whether to display messages or not
+#' @param n_threads Number of threads to use
+#' @return data.table containing all unique genomic coordinates
+#' @import data.table
+#' @examples
+read_parallel_index <- function(files, batch_size=200,verbose=TRUE,n_threads = 1) {
+  
+  #no_cores <- detectCores(logical = TRUE) 
+  cl <- parallel::makeCluster(n_threads)  
+  registerDoParallel(cl)  
+  
+  parallel::clusterEvalQ(cl, c(library(data.table)))
+  parallel::clusterExport(cl,list('read_index','start_time','split_time','stop_time','get_sample_name'))
+  
+  chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
+  
+  rrng <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
+                                batch_size=batch_size, n_threads = 0, verbose = verbose))
+  
+  parallel::stopCluster(cl)
+  
+  rrng <- data.table::rbindlist(rrng)
+  data.table::setkeyv(rrng, c("chr","start"))
+  rrng <- unique(rrng)
+  
+  return(rrng)
+}
+
+
 #' Parses BED files for methylation values using previously generated index genomic coordinates
 #' @details Creates an NA-based vector populated with methlylation values from the input BED file in the
 #' respective indexed genomic coordinates
@@ -168,13 +179,13 @@ read_index <- function(files, batch_size = 30, verbose = TRUE) {
 #' @return data.table containing vector of all indexed methylation values for the input BED
 #' @import data.table
 #' @examples
-read_bed_by_index <- function(file,index,zero_based=FALSE) {
+read_bed_by_index <- function(file,ref_cpgs,zero_based=FALSE) {
   data <- data.table::fread(file, header = FALSE, select = c(1:2,4))
   colnames(data) <- c("chr", "start", "value")
   if (zero_based) {data[,2] <- data[,2]+1}
   data <- data.table::setkeyv(data, c("chr","start"))
-  x <- index[.(data$chr, data$start), which = TRUE]
-  sample <- rep(NA_integer_, nrow(index))
+  x <- ref_cpgs[.(data$chr, data$start), which = TRUE]
+  sample <- rep(NA_integer_, nrow(ref_cpgs))
   sample[x] <- data[[3]]
   sample <- as.matrix(sample)
   colnames(sample) <- get_sample_name(file)
@@ -182,50 +193,23 @@ read_bed_by_index <- function(file,index,zero_based=FALSE) {
   return(sample)
 }
 
+read_bed_by_index2 <- function(file,zero_based=FALSE) {
+  return(read_bed_by_index(file,ref_cpgs,zero_based))
+}
+
 #' Writes methylation values from input BED files into an HDF5array
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.
 #' @param files The BED files to parse
-#' @param index The index of all unique coordinates from the input BED files
+#' @param ref_cpgs The index of all unique coordinates from the input BED files
+#' @param n_threads The number of threads to use. 0 is the default thread with no cluster built.
+#' @param zero_based
+#' @param verbose
 #' @param h5_temp The file location to store the RealizationSink object
 #' @return HDF5Array The methylation values for input BED files
 #' @import data.table DelayedArray HDF5Array
 #' @examples
-read_hdf5_data <- function(files, index, h5_temp = NULL, zero_based = FALSE, verbose = TRUE) {
-  
-  if (verbose) message("Starting HDF5 object") 
-  
-  if (is.null(h5_temp)) {
-    h5_temp <- tempdir()
-  }
-  
-  dimension <- as.integer(nrow(index))
-  
-  grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
-                                         spacings = c(dimension, 1L)) 
-  
-  M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
-                                           dimnames = NULL, type = "integer",
-                                           filepath = tempfile(pattern="M_sink_",tmpdir=h5_temp), name = "M", level = 6)
-  
-  if (verbose) message("Reading data",start_time())
-  
-  for (i in 1:length(files)) {
-    if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
-    bed <- read_bed_by_index(files[i],index,zero_based)
-    DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
-    rm(bed)
-    if (i%%10==0) gc()
-    if (verbose) message(" (",split_time(),")")
-  }
-  
-  if (verbose) message("Data read! (",stop_time(),")")
-  
-  return(M_sink)
-  
-}
-
-read_parallel_hdf5_data <- function(files, index, n_threads, h5_temp = NULL, zero_based = FALSE, verbose = TRUE) {
+read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_based = FALSE, verbose = TRUE) {
   
   if (verbose) message("Starting HDF5 object",start_time()) 
   
@@ -233,54 +217,57 @@ read_parallel_hdf5_data <- function(files, index, n_threads, h5_temp = NULL, zer
     h5_temp <- tempdir()
   }
   
-  dimension <- as.integer(nrow(index))
-  
-  grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
-                                         spacings = c(dimension, n_threads)) 
+  dimension <- as.integer(nrow(ref_cpgs))
   
   M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
                                            dimnames = NULL, type = "integer",
                                            filepath = tempfile(pattern="M_sink_",tmpdir=h5_temp), name = "M", level = 6)
- 
-  cl <- parallel::makeCluster(n_threads)  
-  registerDoParallel(cl)  
   
-  parallel::clusterEvalQ(cl, c(library(data.table)))
-  parallel::clusterExport(cl,list('read_bed_by_index2','get_sample_name',"index"))
-  
-  chunk_files <- split_vector(files,n_threads,by="size")
-
-  for (i in 1:length(chunk_files)) {
-    if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
-
-    beds <- parallel::parLapply(cl,unlist(chunk_files[i]),fun=read_bed_by_index2, zero_based = zero_based)
-    DelayedArray::write_block(block = do.call(cbind, beds), viewport = grid[[as.integer(i)]], sink = M_sink)
+  if (n_threads == 0) {
     
-    rm(beds)
-    if (i%%10==0) gc()
-    if (verbose) message(" (",split_time(),")")
+    grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
+                                           spacings = c(dimension, 1L)) 
+
+  } else {
+    
+    grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
+                                           spacings = c(dimension, n_threads)) 
+    
+    cl <- parallel::makeCluster(n_threads)  
+    registerDoParallel(cl)  
+    
+    ref_cpgs <<- ref_cpgs #TODO: Figure out why this is needed and whether read_bed_by_index2 is necessary
+    
+    parallel::clusterEvalQ(cl, c(library(data.table)))
+    parallel::clusterExport(cl,list('read_bed_by_index','read_bed_by_index2','get_sample_name',"ref_cpgs"))
+    
+    files <- split_vector(files,n_threads,by="size")
+    
   }
     
-  parallel::stopCluster(cl)
-  
+    for (i in 1:length(files)) {
+     
+      if (n_threads == 0) {
+        if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
+        bed <- read_bed_by_index(files[i],ref_cpgs,zero_based)
+        DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
+      } else {
+        if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
+        bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index2, zero_based = zero_based)
+        DelayedArray::write_block(block = do.call(cbind, bed), viewport = grid[[as.integer(i)]], sink = M_sink)
+      }
+      
+      rm(bed)
+      if (i%%10==0) gc()
+      if (verbose) message(" (",split_time(),")")
+    }
+    
+  if (n_threads != 0) parallel::stopCluster(cl)
+
   if (verbose) message("Object created in ",stop_time()) 
   
   return(M_sink)
   
-}
-
-read_bed_by_index2 <- function(file,zero_based=FALSE) {
-  data <- data.table::fread(file, header = FALSE, select = c(1:2,4))
-  colnames(data) <- c("chr", "start", "value")
-  if (zero_based) {data[,2] <- data[,2]+1}
-  data <- data.table::setkeyv(data, c("chr","start"))
-  x <- index[.(data$chr, data$start), which = TRUE]
-  sample <- rep(NA_integer_, nrow(index))
-  sample[x] <- data[[3]]
-  sample <- as.matrix(sample)
-  colnames(sample) <- get_sample_name(file)
-  
-  return(sample)
 }
 
 assignInNamespace(".multiplex_gr", ns = "BRGenomics",

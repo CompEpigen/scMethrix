@@ -26,7 +26,7 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
 
 # Create scMethrix obj
 create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, genome_name = "hg19",
-                           chrom_sizes = NULL, desc = NULL, h5_dir = NULL) {
+                           chrom_sizes = NULL, desc = NULL, h5_dir = NULL, replace = FALSE, verbose=TRUE) {
     if (is_hdf5) {
 
       sse <- SingleCellExperiment::SingleCellExperiment(assays = list(score = as(methyl_mat, "HDF5Array")),
@@ -43,7 +43,7 @@ create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL
         message("Writing to disk...",start_time())
         
         tryCatch(HDF5Array::saveHDF5SummarizedExperiment(x = sse, dir = h5_dir,
-                                                         replace = FALSE, chunkdim = c(nrow(methyl_mat),1), verbose=TRUE), error = function(e)
+                                                         replace = replace, chunkdim = c(nrow(methyl_mat),1), verbose=verbose), error = function(e)
                                                            message("The dataset is not saved. Please save manually, using the HDF5Array::saveSummarizedExperiment command. "))
         message("Written in ",stop_time())
         }
