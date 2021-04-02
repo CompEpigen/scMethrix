@@ -102,6 +102,8 @@ read_index <- function(files, n_threads = 0, batch_size = 200, verbose = TRUE) {
   
   if (n_threads != 0) {
     
+    if (verbose) message("Starting cluster with ",n_threads," threads.")
+    
     #no_cores <- detectCores(logical = TRUE) 
     cl <- parallel::makeCluster(n_threads)  
     registerDoParallel(cl)  
@@ -112,7 +114,7 @@ read_index <- function(files, n_threads = 0, batch_size = 200, verbose = TRUE) {
     chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
     
     rrng <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
-                                  batch_size=batch_size, n_threads = 0, verbose = verbose))
+                                  batch_size=round(batch_size/n_threads), n_threads = 0, verbose = verbose))
     
     parallel::stopCluster(cl)
     
@@ -167,7 +169,7 @@ read_bed_by_index <- function(file,ref_cpgs,zero_based=FALSE) {
   colnames(data) <- c("chr", "start", "value")
   if (zero_based) {data[,2] <- data[,2]+1}
   data <- data.table::setkeyv(data, c("chr","start"))
-  x <- ref_cpgs[.(data$start, data$chr), which = TRUE]
+  x <- ref_cpgs[.(data$chr, data$start), which = TRUE]
   sample <- rep(NA_integer_, nrow(ref_cpgs))
   sample[x] <- data[[3]]
   sample <- as.matrix(sample)
