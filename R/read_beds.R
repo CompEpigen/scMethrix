@@ -46,7 +46,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     
     n_threads <- min(n_threads,length(files)/2) # since cannot have multiple 1 file threads
     
-    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads)
+    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based = zero_based)
     
     if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     
@@ -98,7 +98,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 #' @return data.table containing all unique genomic coordinates
 #' @import data.table
 #' @examples
-read_index <- function(files, n_threads = 0, batch_size = 200, verbose = TRUE) {
+read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = TRUE, verbose = TRUE) {
   
   if (n_threads != 0) {
     
@@ -139,7 +139,7 @@ read_index <- function(files, n_threads = 0, batch_size = 200, verbose = TRUE) {
       rrng[[batch_size]] <- data
       data <- data.table::rbindlist(rrng)
       data <- unique(data) #data <- distinct(data)# #data <- data[!duplicated(data),]
-      rrng <- vector(mode = "list", length = batch_size)
+      rrng <- vector(mode = "list", length = batch_size+1)
       rrng[[batch_size+1]] <- data
     }
     if (verbose) message(" (",split_time(),")")
@@ -149,8 +149,19 @@ read_index <- function(files, n_threads = 0, batch_size = 200, verbose = TRUE) {
   colnames(rrng) <- c("chr","start")
   data.table::setkeyv(rrng, c("chr","start"))
   rrng <- unique(rrng)
-  rrng$end <- rrng$start+1
   
+  #This needs optimization
+  for (i in 2:nrow(rrng)) {
+    if (!is.na(rrng$start[i-1])) {
+      if (rrng$start[i] == rrng$start[i-1]+1) {rrng$start[i] <- NA_integer_}
+    }
+  }
+  
+  rrng <- rrng[!(is.na(rrng$start))]
+  
+  if (zero_based) rrng$start <- rrng$start+1
+  rrng$end <- rrng$start+1
+  rrng <- data.table::setkeyv(rrng, c("chr","start"))
   if (verbose) message("Index generated! (",stop_time(),")")#, Avg.", (stop_time()/length(files)),")")
   
   return(rrng)
@@ -235,11 +246,11 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
       if (n_threads == 0) {
         if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
         bed <- read_bed_by_index(files[i],ref_cpgs,zero_based)
-        DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
+        DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)s
       } else {
         if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
-        bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index2, zero_based = zero_based)
-        DelayedArray::write_block(block = do.call(cbind, bed), viewport = grid[[as.integer(i)]], sink = M_sink)
+        bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index, zero_based = zero_based)
+        DelayedArray::write_block(block = dplyr::bind_cols(bed), viewport = grid[[as.integer(i)]], sink = M_sink)
       }
       
       rm(bed)
