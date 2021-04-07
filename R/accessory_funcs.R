@@ -174,5 +174,22 @@ stop_time <- function() {
   return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
 }
 
-
+#' Subsets a given list of CpGs by another list of CpGs
+#' @details Typically used to reduce the number of potential CpG sites to include only those present 
+#' in the input files so as to maximize performance and minimize resources. Can also be used for quality
+#' control to see if there is excessive number of CpG sites that are not present in the reference genome.
+#' @param ref_cpgs A reference set of CpG sites (e.g. Hg19 or mm10) in bedgraph format
+#' @param gen_cpgs A subset of CpG sites. Usually obtained from read_index.
+#' @return Returns list of CpG sites in bedgraph format
+#' @export
+subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
+  keys <- join.keys(ref_cpgs, gen_cpgs, c("chr","start"))
+  sub_cpgs <- ref_cpgs[keys$x %in% keys$y, , drop = FALSE]
+  r <- nrow(ref_cpgs)
+  s <- nrow(sub_cpgs)
+  g <- nrow(gen_cpgs)
+  if (verbose) message("Dropped ",r-s,"/",r," CpGs (",round((r-s)/r*100,2),"%) from the reference set")
+  if (verbose) message(g-s,"/",g," subset CpGs (",round((g-s)/g*100,2),"%) were not present in the reference set")
+  return(sub_cpgs)
+}
 
