@@ -2,7 +2,7 @@
 #' @details Reads BED files and generates methylation matrices.
 #' Optionally arrays can be serialized as on-disk HDFS5 arrays.
 #' @param files BED files containing methylation d
-#' @param ref_cpgs BED files containing list of CpG sites.
+#' @param ref_cpgs BED files containing list of CpG sites. Must be zero-based genome.
 #' @param stranded Default c
 #' @param genome_name Name of genome. Default hg19
 #' @param n_threads number of threads to use. Default 1.
@@ -41,14 +41,14 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
   if (!all(grepl("\\.(bed|bedgraph)", files))) {
     stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
   }
-  
+
   if (h5) {
     
     n_threads <- min(n_threads,length(files)/2) # since cannot have multiple 1 file threads
     
     if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based = zero_based)
-    
-    if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
+
+    #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     
     if (is.null(reads)) reads <- read_hdf5_data(files, ref_cpgs, n_threads, h5_temp, zero_based, verbose)
       
@@ -100,6 +100,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 #' @examples
 read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = FALSE, verbose = TRUE) {
   
+  # Parallel functionality
   if (n_threads != 0) {
     
     if (verbose) message("Starting cluster with ",n_threads," threads.")
@@ -125,7 +126,9 @@ read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = FALS
     
     return(rrng)
   }
-    
+  
+  # Single thread functionality  
+  # Determine all unique CpG sites from input files
   if (verbose) message("Generating index",start_time())
   
   rrng <- vector(mode = "list", length = batch_size+1)
@@ -150,11 +153,9 @@ read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = FALS
   colnames(rrng) <- c("chr","start")
   data.table::setkeyv(rrng, c("chr","start"))
   rrng <- unique(rrng)
-  
+   
   # Remove the consecutive subsequent sites
-  i = data.table::rleid(rrng$start - seq_along(rrng$start))
-  i = unlist(lapply(split(i, i), seq_along))
-  rrng <- rrng[i %% 2 == 1]
+  rrng <- rrng[data.table::rowid(collapse::seqid(rrng$start)) %% 2 == 1]
   
   if (zero_based) rrng$start <- rrng$start+1
   rrng$end <- rrng$start+1
@@ -175,11 +176,19 @@ read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = FALS
 read_bed_by_index <- function(file,ref_cpgs,zero_based=FALSE) {
   data <- data.table::fread(file, header = FALSE, select = c(1:2,4))
   colnames(data) <- c("chr", "start", "value")
-  if (zero_based) {data[,2] <- data[,2]+1}
+
+  if (zero_based) data[,2] <- data[,2]+1L
   data <- data.table::setkeyv(data, c("chr","start"))
-  x <- ref_cpgs[.(data$chr, data$start), which = TRUE]
-  sample <- rep(NA_integer_, nrow(ref_cpgs))
-  sample[x] <- data[[3]]
+  sample <- rowMeans(cbind(
+    data[.(ref_cpgs$chr, ref_cpgs$start)]$value, 
+    data[.(ref_cpgs$chr, ref_cpgs$end)]$value), na.rm=TRUE) #TODO: Need to use coverage matrix for final value, not the mean
+  
+  s <- nrow(ref_cpgs)-sum(is.na(sample))
+  d <- nrow(data)
+  
+  if (s < 0.9*d) 
+    {warning(paste0("Only ",round(s/d*100,1) ,"% of CpG sites in '",basename(file),"' are present in ref_cpgs"))}
+  
   sample <- as.matrix(sample)
   colnames(sample) <- get_sample_name(file)
   
