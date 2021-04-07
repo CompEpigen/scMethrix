@@ -1,7 +1,7 @@
 
-df1 <- data.table(chr=rep("chr1",5),start=1:5,end=2:6,value=0)
-df2 <- data.table(chr=rep("chr1",5),start=3:7,end=4:8,value=0)
-df3 <- data.table(chr=rep("chr1",5),start=6:10,end=7:11,value=0)
+df1 <- data.table(chr=rep("chr1",5),start=(1:5)*2,end=(1:5)*2+1,value=0)
+df2 <- data.table(chr=rep("chr1",5),start=(3:7)*2,end=(3:7)*2+1,value=0)
+df3 <- data.table(chr=rep("chr1",5),start=(6:10)*2,end=(6:10)*2+1,value=0)
 
 files <- c("df1.bedgraph","df2.bedgraph","df3.bedgraph")
 files <- file.path(tempdir(),files)

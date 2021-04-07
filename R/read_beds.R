@@ -98,7 +98,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
 #' @return data.table containing all unique genomic coordinates
 #' @import data.table
 #' @examples
-read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = TRUE, verbose = TRUE) {
+read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = FALSE, verbose = TRUE) {
   
   if (n_threads != 0) {
     
@@ -114,7 +114,8 @@ read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = TRUE
     chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
     
     rrng <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
-                                  batch_size=round(batch_size/n_threads), n_threads = 0, verbose = verbose))
+                                  batch_size=round(batch_size/n_threads), 
+                                  n_threads = 0, zero_based = zero_based, verbose = verbose))
     
     parallel::stopCluster(cl)
     

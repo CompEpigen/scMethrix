@@ -8,22 +8,22 @@ read.index <- microbenchmark(
   #   }},
   # 
   "fread" = {for (i in 1:length(files)) {data.table::fread(files[i], header = FALSE, select = c(1:2))}},
-  "b = 10" = {read_index(files,batch_size=10,verbose = FALSE)},
-  "b = 25" = {read_index(files,batch_size=25,verbose = FALSE)},
-  "b = 50" = {read_index(files,batch_size=50,verbose = FALSE)},
-  "b = 100" = {read_index(files,batch_size=100,verbose = FALSE)},
-  "b = 200" = {index <<- read_index(files,batch_size=250,verbose = FALSE)}, 
+  "b = 10" = {read_index(files,batch_size=10)},
+  "b = 25" = {read_index(files,batch_size=25)},
+  "b = 50" = {read_index(files,batch_size=50)},
+  "b = 100" = {read_index(files,batch_size=100)},
+  "b = 200" = {index <<- read_index(files,batch_size=200,zero_based = TRUE)}, 
   times = 1,unit = "s")
 read.index$name <- "read_index (batch test)"
 
 # graph_benchmark(read.index,xlabel="",unit="s")
 
 read.parallel.index <- microbenchmark(
-  "read.index" = {read_index(files,batch_size=200,verbose = FALSE)},
-  "n.c = 1" = {read_index(files,batch_size=200,verbose = FALSE,n_threads = 1)},
-  "n.c = 2" = {read_index(files,batch_size=100,verbose = FALSE,n_threads = 2)},
-  "n.c = 4" = {read_index(files,batch_size=50,verbose = TRUE,n_threads = 4)},
-  "n.c = 8" = {read_index(files,batch_size=25,verbose = FALSE,n_threads = 8)},
+  "read.index" = {read_index(files,batch_size=200)},
+  "n.c = 1" = {read_index(files,batch_size=200,n_threads = 1)},
+  "n.c = 2" = {read_index(files,batch_size=100,n_threads = 2)},
+  "n.c = 4" = {index <<- read_index(files,batch_size=50,zero_based = TRUE,n_threads = 4)},
+  "n.c = 8" = {read_index(files,batch_size=25,n_threads = 8)},
   times = 1,unit = "s")
 read.parallel.index$name <- "read_parallel_index (core test)\nbatch = cores*files = 200"
 
@@ -52,15 +52,14 @@ bench.read
 ### Benchmark object creation ########################################
 
 write.object <- microbenchmark(
-   "read.bed" = {read_beds(files,h5 = TRUE,h5_dir=dir,verbose=TRUE,replace=TRUE)},
-    "n.c = 1" = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=1,verbose=TRUE,replace=TRUE)},
-    "n.c = 2" = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=2,verbose=TRUE,replace=TRUE)},
-    "n.c = 4" = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=4,verbose=TRUE,replace=TRUE)},
-    "n.c = 8" = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=8,verbose=TRUE,replace=TRUE)},
-   "n.c = 12" = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=12,verbose=TRUE,replace=TRUE)},
-   "n.c = 15" = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=15,verbose=TRUE,replace=TRUE)},
+  "read.bed" = {read_beds(files,h5 = TRUE,h5_dir=dir,             verbose=TRUE,replace=TRUE)},
+  "n.c = 1"  = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=1, verbose=TRUE,replace=TRUE)},
+  "n.c = 2"  = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=2, verbose=TRUE,replace=TRUE)},
+  "n.c = 4"  = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=4, verbose=TRUE,replace=TRUE)},
+  "n.c = 8"  = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=8, verbose=TRUE,replace=TRUE)},
   times = 1,unit = "s",
   setup = {dir <- paste0(tempdir(),"\\bench")})
+
 write.object$name <- "read_bed (core test)"
 
 bench.write <- graph_benchmark(write.object,xlabel="",unit="m")
