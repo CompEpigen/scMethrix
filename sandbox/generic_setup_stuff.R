@@ -1,7 +1,7 @@
 list.of.packages <- c("SingleCellExperiment","data.table","plyr","HDF5Array","tictoc","beepr",
                       "GenomicRanges","parallel","roxygen2","dplyr","rbenchmark","testthat","rtracklayer",
                       "BRGenomics","tools","microbenchmark","measurements","magrittr","doParallel","parallel",
-                      "Cairo","ggplot2")
+                      "Cairo","ggplot2","methrix","BSgenome","BSgenome.Hsapiens.UCSC.hg19","BSgenome.Mmusculus.UCSC.mm10")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 lapply(list.of.packages, require, character.only = TRUE)
@@ -9,8 +9,11 @@ rm(list.of.packages,new.packages)
 
 #setwd("D:/Documents/School/Thesis/scMethrix/sample.data/small/")
 
-setwd("D:/Git/scMethrix/sample.data/Yunhee.GSE97179")
 
+Hg19_cpgs <- methrix::extract_CPGs(ref_genome = "BSgenome.Hsapiens.UCSC.hg19")
+mm10_cpgs <- methrix::extract_CPGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10")
+
+setwd("D:/Git/scMethrix/sample.data/Yunhee.GSE97179")
 
 files <- list.files (getwd(),full.names = TRUE)
 

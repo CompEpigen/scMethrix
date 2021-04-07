@@ -150,14 +150,10 @@ read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = TRUE
   data.table::setkeyv(rrng, c("chr","start"))
   rrng <- unique(rrng)
   
-  #This needs optimization
-  for (i in 2:nrow(rrng)) {
-    if (!is.na(rrng$start[i-1])) {
-      if (rrng$start[i] == rrng$start[i-1]+1) {rrng$start[i] <- NA_integer_}
-    }
-  }
-  
-  rrng <- rrng[!(is.na(rrng$start))]
+  # Remove the consecutive subsequent sites
+  i = data.table::rleid(rrng$start - seq_along(rrng$start))
+  i = unlist(lapply(split(i, i), seq_along))
+  rrng <- rrng[i %% 2 == 1]
   
   if (zero_based) rrng$start <- rrng$start+1
   rrng$end <- rrng$start+1
