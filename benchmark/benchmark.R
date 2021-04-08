@@ -12,7 +12,7 @@ read.index <- microbenchmark(
   "b = 25" = {read_index(files,batch_size=25)},
   "b = 50" = {read_index(files,batch_size=50)},
   "b = 100" = {read_index(files,batch_size=100)},
-  "b = 200" = {index <<- read_index(files,batch_size=200,zero_based = TRUE)}, 
+  "b = 200" = {index <<- read_index(files,batch_size=200)}, 
   times = 1,unit = "s")
 read.index$name <- "read_index (batch test)"
 
@@ -22,28 +22,49 @@ read.parallel.index <- microbenchmark(
   "read.index" = {read_index(files,batch_size=200)},
   "n.c = 1" = {read_index(files,batch_size=200,n_threads = 1)},
   "n.c = 2" = {read_index(files,batch_size=100,n_threads = 2)},
-  "n.c = 4" = {index <<- read_index(files,batch_size=50,zero_based = TRUE,n_threads = 4)},
+  "n.c = 4" = {read_index(files,batch_size=50,zero_based = TRUE,n_threads = 4)},
   "n.c = 8" = {read_index(files,batch_size=25,n_threads = 8)},
   times = 1,unit = "s")
 read.parallel.index$name <- "read_parallel_index (core test)\nbatch = cores*files = 200"
 
+read.subset <- microbenchmark(
+  "subset" = {ref_cpgs <<- subset_ref_cpgs(mm10_cpgs,index)},
+  times = 1,unit = "s")
+read.subset$name <- "subset to mm10 genome"
+
 # graph_benchmark(read.parallel.index,xlabel="",unit="s")
 
-bench.index <- graph_benchmark(rbind(read.index,read.parallel.index),xlabel="",unit="s")
+bench.index <- graph_benchmark(rbind(read.index,read.parallel.index,read.subset),xlabel="",unit="s")
 bench.index
+
+beep()
+
+### Benchmark the genome vs subset ###############################
+
+read.compare <- microbenchmark(
+  "mm10" =      {read_hdf5_data(files,mm10_cpgs)},
+  "gen_cpgs" =  {read_hdf5_data(files,ref_cpgs)},
+  times = 1,unit = "s",
+  setup = {
+    #mm10_cpgs <- methrix::extract_CPGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10")
+    #mm10_cpgs <- mm10_cpgs$cpgs[,1:3]
+    #index <- read_index(files,batch_size=200)
+    #ref_cpgs <<- subset_ref_cpgs(mm10_cpgs,index)
+  })
+read.compare$name <- "mm10 vs subset"
 
 ### Benchmark the reading ########################################
 
 read.data <- microbenchmark(
-  "read.h5" = {read_hdf5_data(files,index)},
-  "n.c = 1" = {read_hdf5_data(files,index,n_threads=1)},
-  "n.c = 2" = {read_hdf5_data(files,index,n_threads=2)},
-  "n.c = 4" = {read_hdf5_data(files,index,n_threads=4)},
-  "n.c = 8" = {read_hdf5_data(files,index,n_threads=8)},
+  "read.h5" = {read_hdf5_data(files,ref_cpgs)},
+  "n.c = 1" = {read_hdf5_data(files,ref_cpgs,n_threads=1)},
+  "n.c = 2" = {read_hdf5_data(files,ref_cpgs,n_threads=2)},
+  "n.c = 4" = {read_hdf5_data(files,ref_cpgs,n_threads=4)},
+  "n.c = 8" = {reads <<- read_hdf5_data(files,ref_cpgs,n_threads=8)},
   times = 1,unit = "s")
 read.data$name <- "read_parallel_bed_by_index (core test)"
 
-bench.read <- graph_benchmark(read.data,xlabel="",unit="s")
+bench.read <- graph_benchmark(rbind(read.compare,read.data),xlabel="",unit="s")
 bench.read
 
 #data <- rbind(read.index,read.parallel.index,read.data)
@@ -52,11 +73,7 @@ bench.read
 ### Benchmark object creation ########################################
 
 write.object <- microbenchmark(
-  "read.bed" = {read_beds(files,h5 = TRUE,h5_dir=dir,             verbose=TRUE,replace=TRUE)},
-  "n.c = 1"  = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=1, verbose=TRUE,replace=TRUE)},
-  "n.c = 2"  = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=2, verbose=TRUE,replace=TRUE)},
-  "n.c = 4"  = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=4, verbose=TRUE,replace=TRUE)},
-  "n.c = 8"  = {read_beds(files,h5 = TRUE,h5_dir=dir,n_threads=8, verbose=TRUE,replace=TRUE)},
+  "read.bed" = {read_beds(files,ref_cpgs,reads = reads,h5 = TRUE,h5_dir=dir,verbose=TRUE,replace=TRUE)}
   times = 1,unit = "s",
   setup = {dir <- paste0(tempdir(),"\\bench")})
 

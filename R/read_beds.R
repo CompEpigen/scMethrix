@@ -30,9 +30,10 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_threads = 0, 
+read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", n_threads = 0, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
-                      zero_based = FALSE, ref_cpgs = NULL, reads = NULL, replace = FALSE) {
+                      zero_based = FALSE, reads = NULL, replace = FALSE,
+                      chr_idx = 1, start_idx = 2, end_idx = 3, meth_idx = 4, cov_idx = c(5,6)) {
   
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
@@ -46,7 +47,7 @@ read_beds <- function(files = NULL, colData = NULL, genome_name = "hg19", n_thre
     
     n_threads <- min(n_threads,length(files)/2) # since cannot have multiple 1 file threads
     
-    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based = zero_based)
+    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based,chr_idx,start_idx,end_idx,meth_idx)
 
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     
@@ -155,7 +156,7 @@ read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = FALS
   rrng <- unique(rrng)
    
   # Remove the consecutive subsequent sites
-  rrng <- rrng[data.table::rowid(collapse::seqid(rrng$start)) %% 2 == 1]
+  #rrng <- rrng[data.table::rowid(collapse::seqid(rrng$start)) %% 2 == 1]
   
   if (zero_based) rrng$start <- rrng$start+1
   rrng$end <- rrng$start+1
@@ -189,8 +190,8 @@ read_bed_by_index <- function(file,ref_cpgs,zero_based=FALSE) {
   if (s < 0.9*d) 
     {warning(paste0("Only ",round(s/d*100,1) ,"% of CpG sites in '",basename(file),"' are present in ref_cpgs"))}
   
-  sample <- as.matrix(sample)
-  colnames(sample) <- get_sample_name(file)
+  sample <- data.table(as.integer(sample))
+  names(sample) <- get_sample_name(file)
   
   return(sample)
 }
@@ -252,11 +253,11 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
       if (n_threads == 0) {
         if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
         bed <- read_bed_by_index(files[i],ref_cpgs,zero_based)
-        DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)s
+        DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
       } else {
         if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
-        bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index, zero_based = zero_based)
-        DelayedArray::write_block(block = dplyr::bind_cols(bed), viewport = grid[[as.integer(i)]], sink = M_sink)
+        bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index2, zero_based = zero_based)
+        DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(bed)), viewport = grid[[as.integer(i)]], sink = M_sink)
       }
       
       rm(bed)
