@@ -10,7 +10,7 @@
 #' @importFrom graphics axis legend lines mtext par plot title
 #' @importFrom stats complete.cases cov density median prcomp quantile sd
 #' @importFrom utils browseURL
-#' @importClassesFrom SummarizedExperiment
+#' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #'
 scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 

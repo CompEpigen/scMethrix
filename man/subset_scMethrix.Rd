@@ -33,8 +33,8 @@ Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statisti
 \examples{
 data('scMethrix_data')
 contigs <- c("chr1","chr3")
-regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,150)) 
-samples <- c("bed1","bed3")
+regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
+samples <- c("df1","df3")
 
 #Subset to chromosome 1
 subset_scMethrix(scMethrix_data, contigs = contigs)

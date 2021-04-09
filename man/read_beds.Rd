@@ -6,27 +6,41 @@
 \usage{
 read_beds(
   files = NULL,
+  ref_cpgs = NULL,
   colData = NULL,
-  stranded = FALSE,
   genome_name = "hg19",
-  n_threads = 1,
-  on_disk = FALSE,
-  verbose = TRUE
+  n_threads = 0,
+  h5 = FALSE,
+  h5_dir = NULL,
+  h5_temp = NULL,
+  desc = NULL,
+  verbose = FALSE,
+  zero_based = FALSE,
+  reads = NULL,
+  replace = FALSE
 )
 }
 \arguments{
-\item{files}{BED files.}
+\item{files}{BED files containing methylation d}
 
-\item{stranded}{Default c}
+\item{ref_cpgs}{BED files containing list of CpG sites. Must be zero-based genome.}
 
 \item{genome_name}{Name of genome. Default hg19}
 
 \item{n_threads}{number of threads to use. Default 1.
 Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.}
 
-\item{on_disk}{Input files are of the type TABIX}
+\item{h5}{Should the coverage and methylation matrices be stored as 'HDF5Array'}
+
+\item{h5_dir}{directory to store H5 based object}
+
+\item{desc}{Description of the experiment}
 
 \item{verbose}{Be little chatty ? Default TRUE.}
+
+\item{stranded}{Default c}
+
+\item{h5temp}{temporary directory to store hdf5}
 }
 \value{
 An object of class \code{\link{scMethrix}}

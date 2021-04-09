@@ -4,7 +4,6 @@
 #' @param x The value to return if true
 #' @param y The value to return if false
 #' @return The x or y value depending on boolean
-#' @import
 #' @examples
 `?` <- function(x, y)
   eval(
@@ -20,7 +19,6 @@
 #' @details Acts in the same way as ternary operators in other language. Must surround with brackets to use)
 #' @param m The scMethrix object
 #' @return boolean Whether the object is HDF5
-#' @import
 #' @examples
 is_h5 = function(m) {
   return(m@metadata$is_h5)

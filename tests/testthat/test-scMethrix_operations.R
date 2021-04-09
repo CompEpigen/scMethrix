@@ -1,3 +1,4 @@
+
 df1 <- data.table(chr=rep("chr1",5),start=1:5,end=2:6,value=0)
 df2 <- data.table(chr=rep("chr1",5),start=3:7,end=4:8,value=0)
 df3 <- data.table(chr=rep("chr1",5),start=6:10,end=7:11,value=0)
@@ -13,6 +14,7 @@ write.table(df4, file = files[4], row.names=FALSE, sep="\t",col.names=FALSE, quo
 
 scm.h5 <- read_beds(files,h5=TRUE)
 scm.mem <- read_beds(files,h5=FALSE)
+
 
 test_that("convert_HDF5_methrix", {
 
@@ -127,7 +129,7 @@ test_that("remove_uncovered", {
   
 })
 
-test_that("get_stats") {
+test_that("get_stats", {
   
   expect_error(get_matrix("not scMethrix"))
   
@@ -141,6 +143,6 @@ test_that("get_stats") {
   
   
   rm(h5,mem)
-}
+})
 
 

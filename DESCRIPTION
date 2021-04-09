@@ -9,11 +9,29 @@ License: `use_mit_license()`, `use_gpl3_license()` or friends to
 Encoding: UTF-8
 LazyData: false
 Depends: R (>= 3.6), data.table (>= 1.12.4), SingleCellExperiment
-Imports: rtracklayer, DelayedArray, HDF5Array, BSgenome, DelayedMatrixStats, parallel, methods, ggplot2, matrixStats, tools, graphics, stats, utils, GenomicRanges, IRanges
+Imports: 
+    rtracklayer,
+    DelayedArray,
+    HDF5Array,
+    BSgenome,
+    DelayedMatrixStats,
+    parallel,
+    methods,
+    ggplot2,
+    matrixStats,
+    tools,
+    graphics,
+    stats,
+    utils,
+    GenomicRanges,
+    IRanges,
+    plotly,
+    BRGenomics,
+    SummarizedExperiment,
+    doParallel
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: 
-    plotly,
     rmarkdown,
     testthat
 URL: https://github.com/CompEpigen/scMethrix

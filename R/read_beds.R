@@ -15,7 +15,7 @@
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
-#' @import SingleCellExperiment BRGenomics GenomicRanges dplyr tools parallel
+#' @import SingleCellExperiment BRGenomics GenomicRanges tools
 #' @examples
 #'\dontrun{
 #'bdg_files = list.files(path = system.file('extdata', package = 'methrix'),
@@ -32,8 +32,7 @@
 
 read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", n_threads = 0, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
-                      zero_based = FALSE, reads = NULL, replace = FALSE,
-                      chr_idx = 1, start_idx = 2, end_idx = 3, meth_idx = 4, cov_idx = c(5,6)) {
+                      zero_based = FALSE, reads = NULL, replace = FALSE) {
   
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
@@ -47,7 +46,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     n_threads <- min(n_threads,length(files)/2) # since cannot have multiple 1 file threads
     
-    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based,chr_idx,start_idx,end_idx,meth_idx)
+    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based)
 
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     
@@ -96,8 +95,9 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 #' results in the batch_size+1 position. Also indexes based on 'chr' and 'start' for later searching.
 #' @param files List of BED files
 #' @param batch_size Number of files to process before running unique. Default of 30.
+#' @export
 #' @return data.table containing all unique genomic coordinates
-#' @import data.table
+#' @import data.table parallel doParallel
 #' @examples
 read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = FALSE, verbose = TRUE) {
   
@@ -108,7 +108,7 @@ read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = FALS
     
     #no_cores <- detectCores(logical = TRUE) 
     cl <- parallel::makeCluster(n_threads)  
-    registerDoParallel(cl)  
+    doParallel::registerDoParallel(cl)  
     
     parallel::clusterEvalQ(cl, c(library(data.table)))
     parallel::clusterExport(cl,list('read_index','start_time','split_time','stop_time','get_sample_name'))
@@ -210,7 +210,7 @@ read_bed_by_index2 <- function(file,zero_based=FALSE) {
 #' @param verbose
 #' @param h5_temp The file location to store the RealizationSink object
 #' @return HDF5Array The methylation values for input BED files
-#' @import data.table DelayedArray HDF5Array
+#' @import data.table DelayedArray HDF5Array parallel doParallel
 #' @examples
 read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_based = FALSE, verbose = TRUE) {
   
@@ -237,7 +237,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
                                            spacings = c(dimension, n_threads)) 
     
     cl <- parallel::makeCluster(n_threads)  
-    registerDoParallel(cl)  
+    doParallel::registerDoParallel(cl)  
     
     ref_cpgs <<- ref_cpgs #TODO: Figure out why this is needed and whether read_bed_by_index2 is necessary
     
