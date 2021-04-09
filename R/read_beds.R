@@ -253,7 +253,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
       if (n_threads == 0) {
         if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
         bed <- read_bed_by_index(files[i],ref_cpgs,zero_based)
-        DelayedArray::write_block(block = bed, viewport = grid[[i]], sink = M_sink)
+        DelayedArray::write_block(block = as.matrix(bed), viewport = grid[[i]], sink = M_sink)
       } else {
         if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
         bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index2, zero_based = zero_based)

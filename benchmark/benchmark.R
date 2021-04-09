@@ -22,7 +22,7 @@ read.parallel.index <- microbenchmark(
   "read.index" = {read_index(files,batch_size=200)},
   "n.c = 1" = {read_index(files,batch_size=200,n_threads = 1)},
   "n.c = 2" = {read_index(files,batch_size=100,n_threads = 2)},
-  "n.c = 4" = {read_index(files,batch_size=50,zero_based = TRUE,n_threads = 4)},
+  "n.c = 4" = {read_index(files,batch_size=50,n_threads = 4)},
   "n.c = 8" = {read_index(files,batch_size=25,n_threads = 8)},
   times = 1,unit = "s")
 read.parallel.index$name <- "read_parallel_index (core test)\nbatch = cores*files = 200"
@@ -37,7 +37,6 @@ read.subset$name <- "subset to mm10 genome"
 bench.index <- graph_benchmark(rbind(read.index,read.parallel.index,read.subset),xlabel="",unit="s")
 bench.index
 
-beep()
 
 ### Benchmark the genome vs subset ###############################
 
@@ -64,7 +63,7 @@ read.data <- microbenchmark(
   times = 1,unit = "s")
 read.data$name <- "read_parallel_bed_by_index (core test)"
 
-bench.read <- graph_benchmark(rbind(read.compare,read.data),xlabel="",unit="s")
+bench.read <- graph_benchmark(rbind(read.data),xlabel="",unit="m")
 bench.read
 
 #data <- rbind(read.index,read.parallel.index,read.data)
@@ -73,16 +72,19 @@ bench.read
 ### Benchmark object creation ########################################
 
 write.object <- microbenchmark(
-  "read.bed" = {read_beds(files,ref_cpgs,reads = reads,h5 = TRUE,h5_dir=dir,verbose=TRUE,replace=TRUE)}
-  times = 1,unit = "s",
-  setup = {dir <- paste0(tempdir(),"\\bench")})
+  "read.bed" = {read_beds(files,ref_cpgs,reads = reads,h5 = TRUE,h5_dir=dir,verbose=TRUE,replace=TRUE)},
+  times = 1,unit = "s")
+# ,
+#   setup = {
+#     #dir <- paste0(tempdir(),"\\bench")
+#     })
 
 write.object$name <- "read_bed (core test)"
 
 bench.write <- graph_benchmark(write.object,xlabel="",unit="m")
 bench.write
 
-data <- rbind(read.index,read.parallel.index,read.data,write.object)
+data <- rbind(read.index,read.parallel.index,read.subset,read.data,write.object)
 saveRDS(data, file = "benchmark.rds")
 
 ### The graphing functions #######################################

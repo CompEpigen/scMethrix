@@ -6,8 +6,6 @@ get_region_summary = function (m) {
   
 }
 
-
-
 #--------------------------------------------------------------------------------------------------------------------------
 #' Loads HDF5 scMethrix object
 #' @details Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
