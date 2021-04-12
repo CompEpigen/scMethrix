@@ -60,7 +60,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     
-    colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
+    colData <- data.frame(colData=unlist(lapply(files,get_sample_name)))
     
     m_obj <- create_scMethrix(methyl_mat=as(reads, "HDF5Array"), rowRanges=ref_cpgs, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
@@ -80,7 +80,8 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     rrng <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     
-    colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
+    #colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
+    #colData <- t(unlist(lapply(files,get_sample_name)))
 
     message("Creating scMethrix object")
     m_obj <- create_scMethrix(methyl_mat=as.matrix(data), 
@@ -226,8 +227,10 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   
   dimension <- as.integer(nrow(ref_cpgs))
   
+  colData <- as.vector(unlist(lapply(files,get_sample_name)))
+  
   M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
-                                           dimnames = NULL, type = "integer",
+                                           dimnames = list(NULL,colData), type = "integer",
                                            filepath = tempfile(pattern="M_sink_",tmpdir=h5_temp), name = "M", level = 6)
   
   if (n_threads == 0) {
@@ -261,7 +264,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
       } else {
         if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
         bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index2, zero_based = zero_based)
-        DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(bed)), viewport = grid[[as.integer(i)]], sink = M_sink)
+        DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(bed)), viewport = grid[[i]], sink = M_sink)
       }
       
       rm(bed)

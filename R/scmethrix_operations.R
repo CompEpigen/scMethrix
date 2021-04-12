@@ -171,27 +171,27 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
     warning("At least 1 argument mandatory for subsetting. No subset generated")
     return(m)
   }
-    
+  
   message("Subsetting CpG sites...",start_time())
   
   if (!is.null(regions)) {
     message("   Subsetting by regions")
     subset <- cast_granges(regions)
-    m <- m[findOverlaps(rowRanges(m), regions)@from]
+    m <- m[GenomicRanges::findOverlaps(rowRanges(m), regions)@from]
     if (nrow(m) == 0)
       stop("Subsetting resulted in zero entries", call. = FALSE)
   }
-  
+
   if (!is.null(contigs)) {
     message("   Subsetting by contigs")
-    m <- m[seqnames(m) %in% contigs]
+    m <- subset(m, subset = as.vector(seqnames(m)) %in% contigs)
     if (nrow(m) == 0)
       stop("Subsetting resulted in zero entries", call. = FALSE)
   }
   
   if (!is.null(samples)) {
     message("   Subsetting by samples")
-    m <- subset(m, select = colData(m)[, 1] %in% samples)
+    m <- subset(m, select = row.names(colData(m)) %in% samples)
     if (length(m) == 0)
       stop("Samples not present in the object", call. = FALSE)
   }
@@ -342,14 +342,13 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
             "the output will be a data.frame object. ")
   }
 
-  #message("Getting matrix...",start_time())
-  
-  
   mtx <- SummarizedExperiment::assay(x = m, i = 1)
   
   if (add_loci) {
     
-    mtx <- as.data.frame(cbind(as.data.frame(rowRanges(m))[,1:3], (is_h5(m) ? as.data.frame(mtx) : mtx)))
+    if (is_h5(m)) mtx <- as.data.frame(mtx)
+
+    mtx <- as.data.frame(cbind(as.data.frame(rowRanges(m))[,1:3], mtx))
       
     if (in_granges) {
       mtx <- GenomicRanges::makeGRangesFromDataFrame(mtx, keep.extra.columns = TRUE)
@@ -361,8 +360,6 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
       
   }
 
-  #message("Retreived in ",stop_time())
-  
   return (mtx)
 }
 
@@ -382,8 +379,6 @@ remove_uncovered <- function(m) {
     stop("A valid scMethrix object needs to be supplied.")
   }
 
- 
-  
   message("Removing uncovered CpGs...", start_time())
   
   row_idx <- rowSums(!is.na(get_matrix(m)))==0

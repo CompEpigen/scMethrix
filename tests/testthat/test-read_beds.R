@@ -30,7 +30,7 @@ test_that("read_bed - HDF5", {
     
   expect_true(is_h5(scm1))
   expect_equivalent(class(scm1)[1],"scMethrix")
-  expect_equivalent(class(get_matrix(scm1))[[1]],"DelayedMatrix")
+  expect_equivalent(class(get_matrix(scm1))[[1]],"HDF5Matrix")
   expect_equivalent(dim(scm1),c(18,4))
   expect_equivalent(scm1,scm2)
   
