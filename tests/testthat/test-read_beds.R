@@ -1,18 +1,6 @@
-
-df1 <- data.table(chr=rep("chr1",5),start=(1:5)*2,end=(1:5)*2+1,value=0)
-df2 <- data.table(chr=rep("chr1",5),start=(3:7)*2,end=(3:7)*2+1,value=0)
-df3 <- data.table(chr=rep("chr1",5),start=(6:10)*2,end=(6:10)*2+1,value=0)
-
-files <- c("df1.bedgraph","df2.bedgraph","df3.bedgraph")
-files <- file.path(tempdir(),files)
-
-write.table(df1, file = files[1], row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
-write.table(df2, file = files[2], row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
-write.table(df3, file = files[3], row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
-
 test_that("read_index", {
 
-  expect_equivalent(read_index(files),rbind(df1,df3)[,1:3])
+  expect_equivalent(read_index(files),rbind(df1,df3,df4)[,1:3])
   expect_equivalent(read_index(files),read_index(files,n_threads=2))
   
 })
@@ -20,9 +8,7 @@ test_that("read_index", {
 test_that("read_bed_by_index", {
   
   index <- read_index(files)
-  
-  expect_equivalent(as.vector(read_bed_by_index(files[1],index)),c(rep(0,5),rep(NA,5)))
-  expect_equivalent(as.vector(read_bed_by_index(files[3],index)),c(rep(NA,5),rep(0,5)))
+  expect_equivalent(as.vector(read_bed_by_index(files[1],index)),c(rep(0,5),rep(NA,13)))
   
 })
 
@@ -35,16 +21,20 @@ test_that("read_bed - Input errors", {
 
 test_that("read_bed - HDF5", {
   
-  path <- file.path(tempdir(),paste0("sse-",sample.int(10000, 1)))
+  expect_error(read_beds(files,h5=TRUE,h5_dir=NULL))
   
-  scm1 <- read_beds(files,h5=TRUE,h5_dir=path)
+  path <- paste0(h5_dir,"HDF5mem")
+  
+  scm1 <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE)
   scm2 <- load_HDF5_scMethrix(dir=path)
     
   expect_true(is_h5(scm1))
   expect_equivalent(class(scm1)[1],"scMethrix")
   expect_equivalent(class(get_matrix(scm1))[[1]],"DelayedMatrix")
-  expect_equivalent(dim(scm1),c(10,3))
+  expect_equivalent(dim(scm1),c(18,4))
   expect_equivalent(scm1,scm2)
+  
+  unlink(path, recursive = TRUE)
   
 })
 
@@ -54,17 +44,21 @@ test_that("read_bed - in-memory", {
   
   expect_equivalent(class(scm)[1],"scMethrix")
   expect_equivalent(class(get_matrix(scm))[[1]],"matrix")
-  expect_equivalent(dim(scm),c(10,3))
+  expect_equivalent(dim(scm),c(18,4))
   
 })
 
 test_that("read_bed - HDF5 and in-memory equivalence", {
 
-  scm.hdf <- read_beds(files,h5=TRUE)
+  path <- paste0(h5_dir,"HDF5equiv")
+  
+  scm.hdf <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE)
   scm.mem <- read_beds(files,h5=FALSE)
   
   expect_equivalent(as.matrix(assays(scm.hdf)$score),assays(scm.mem)$score)
   expect_equivalent(rowRanges(scm.hdf),rowRanges(scm.mem))
+  
+  unlink(path, recursive = TRUE)
 })
 
 

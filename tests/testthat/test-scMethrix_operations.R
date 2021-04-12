@@ -1,21 +1,3 @@
-
-df1 <- data.table(chr=rep("chr1",5),start=1:5,end=2:6,value=0)
-df2 <- data.table(chr=rep("chr1",5),start=3:7,end=4:8,value=0)
-df3 <- data.table(chr=rep("chr1",5),start=6:10,end=7:11,value=0)
-df4 <- data.table(chr=rep("chr2",5),start=1:10,end=2:11,value=0)
-
-files <- c("df1.bedgraph","df2.bedgraph","df3.bedgraph","df4.bedgraph")
-files <- file.path(tempdir(),files)
-
-write.table(df1, file = files[1], row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
-write.table(df2, file = files[2], row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
-write.table(df3, file = files[3], row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
-write.table(df4, file = files[4], row.names=FALSE, sep="\t",col.names=FALSE, quote = FALSE)
-
-scm.h5 <- read_beds(files,h5=TRUE)
-scm.mem <- read_beds(files,h5=FALSE)
-
-
 test_that("convert_HDF5_methrix", {
 
   expect_error(convert_HDF5_methrix("not scMethrix"))
