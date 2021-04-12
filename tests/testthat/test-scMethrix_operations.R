@@ -3,7 +3,7 @@ test_that("convert_HDF5_methrix", {
   expect_error(convert_HDF5_methrix("not scMethrix"))
   
   expect_true(is_h5(scm.h5))
-  expect_equivalent(class(get_matrix(scm.h5))[1],"DelayedMatrix")
+  expect_equivalent(class(get_matrix(scm.h5))[1],"HDF5Matrix")
   
   scm <- convert_HDF5_methrix(scm.h5)
   
@@ -34,19 +34,35 @@ test_that("subset_scMethrix", {
   expect_warning(subset_scMethrix(scm.h5))
   
   samples <- c("df1","df3")
-  s <- subset_scMethrix(scm.h5, samples = samples)
-  expect_equivalent(dim(s),c(20,2))
-  
   contigs <- c("chr1")
+  regions <- GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,8)) 
+  
+  s <- subset_scMethrix(scm.h5, samples = samples)
+  expect_equivalent(dim(s),c(18,2))
+  expect_equivalent(samples,colData(s)$colData)
+
   s <- subset_scMethrix(scm.h5, contigs = contigs)
   expect_equivalent(dim(s),c(10,4))
+  expect_equivalent(contigs,as.character(seqnames(s)@values))
   
-  regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
   s <- subset_scMethrix(scm.h5, regions = regions)
-  expect_equivalent(dim(s),c(5,4))
-  
+  expect_equivalent(dim(s),c(6,4))
+
   s <- subset_scMethrix(scm.h5, samples = samples, contigs = contigs, regions = regions)
-  expect_equivalent(dim(s),c(5,2))
+  expect_equivalent(dim(s),c(4,2))
+
+  
+  s <- subset_scMethrix(scm.mem, samples = samples)
+  expect_equivalent(dim(s),c(18,2))
+
+  s <- subset_scMethrix(scm.mem, contigs = contigs)
+  expect_equivalent(dim(s),c(10,4))
+  
+  s <- subset_scMethrix(scm.mem, regions = regions)
+  expect_equivalent(dim(s),c(6,4))
+  
+  s <- subset_scMethrix(scm.mem, samples = samples, contigs = contigs, regions = regions)
+  expect_equivalent(dim(s),c(4,2))
   
 })
 
@@ -67,29 +83,31 @@ test_that("get_matrix", {
   expect_warning(get_matrix(scm.h5,add_loci=FALSE, in_granges = TRUE))
 
   m <- get_matrix(scm.h5)
-  expect_equivalent(dim(m),c(20,4))  
-  expect_equivalent(class(m)[1],"DelayedMatrix")
+  expect_equivalent(dim(m),c(18,4))  
+  expect_equivalent(class(m)[1],"HDF5Matrix")
   
-  m <- get_matrix(scm.h5,add_loci=TRUE)
-  expect_equivalent(dim(m),c(20,7))  
+  m <- get_matrix(m=scm.h5,add_loci=TRUE)
+  expect_equivalent(dim(m),c(18,7))  
   expect_equivalent(class(m)[1],"data.table")
   
   m <- get_matrix(scm.h5,add_loci=TRUE, in_granges = TRUE)
-  expect_equivalent(seqnames(m)@lengths,c(10,10))
-  expect_equivalent(dim(mcols(m)),c(20,4))
+  expect_equivalent(seqnames(m)@lengths,c(10,8))
+  expect_equivalent(dim(mcols(m)),c(18,4))
   expect_equivalent(class(m)[1],"GRanges")
 
+  
+  
   m <- get_matrix(scm.mem)
-  expect_equivalent(dim(m),c(20,4))  
+  expect_equivalent(dim(m),c(18,4))  
   expect_equivalent(class(m)[1],"matrix")
   
   m <- get_matrix(scm.mem,add_loci=TRUE)
-  expect_equivalent(dim(m),c(20,7))  
+  expect_equivalent(dim(m),c(18,7))  
   expect_equivalent(class(m)[1],"data.table")
   
   m <- get_matrix(scm.mem,add_loci=TRUE, in_granges = TRUE)
-  expect_equivalent(seqnames(m)@lengths,c(10,10))
-  expect_equivalent(dim(mcols(m)),c(20,4))
+  expect_equivalent(seqnames(m)@lengths,c(10,8))
+  expect_equivalent(dim(mcols(m)),c(18,4))
   expect_equivalent(class(m)[1],"GRanges")
   
 })
@@ -99,11 +117,13 @@ test_that("remove_uncovered", {
   
   expect_error(get_matrix("not scMethrix"))
 
-  h5 <- remove_uncovered(subset_scMethrix(scm.h5,samples="df1"))
-  expect_equivalent(dim(h5),c(5,1))
+  h5 <- subset_scMethrix(scm.h5,samples="df1")
+  expect_equivalent(dim(h5),c(18,1))
+  expect_equivalent(dim(remove_uncovered(h5)),c(5,1))
 
-  mem <- remove_uncovered(subset_scMethrix(scm.mem,samples="df1"))
-  expect_equivalent(dim(mem),c(5,1))
+  mem <- subset_scMethrix(scm.mem,samples="df1")
+  expect_equivalent(dim(h5),c(18,1))
+  expect_equivalent(dim(remove_uncovered(mem)),c(5,1))
   
   expect_equivalent(h5,mem)
   
@@ -114,17 +134,13 @@ test_that("remove_uncovered", {
 test_that("get_stats", {
   
   expect_error(get_matrix("not scMethrix"))
-  
-  h5 = get_stats(scm.h5)
-  mem = get_stats(scm.mem)
 
-  expect_equivalent(dim(h1),c(8,5))
-  expect_equivalent(dim(h2),c(4,4))
-  expect_equivalent(h1,get_stats(scm.h5,per_chr=FALSE))
-  expect_equivalent(h2,get_stats(scm.mem,per_chr=FALSE))
+  expect_equivalent(dim(get_stats(scm.h5)),c(8,5))
+  expect_equivalent(dim(get_stats(scm.h5,per_chr = FALSE)),c(4,4))
   
+  expect_equivalent(dim(get_stats(scm.mem)),c(8,5))
+  expect_equivalent(dim(get_stats(scm.mem,per_chr = FALSE)),c(4,4))
   
-  rm(h5,mem)
 })
 
 
