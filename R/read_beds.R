@@ -37,16 +37,20 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
   }
-  
+
   if (!all(grepl("\\.(bed|bedgraph)", files))) {
     stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
   }
 
+  n_threads <- min(n_threads,length(files)/2) # since cannot have multiple threads with a single file being input
+  
   if (h5) {
     
-    n_threads <- min(n_threads,length(files)/2) # since cannot have multiple 1 file threads
+    if (is.null(h5_dir)) {
+      stop("Output directory must be specified", call. = FALSE)
+    }
     
-    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based)
+    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based = zero_based)
 
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     
@@ -70,22 +74,18 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     message("Reading in BED files") 
     
-    # beds <- lapply(files, rtracklayer::import,format = "BED")
-    #  gr <- GRangesList(beds)
-    #  rtracklayer::export.bed(unlist(gr),con=file.path(tempdir(),'bed1.bed'))
+    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based = zero_based)
     
-    beds <- BRGenomics::import_bedGraph(files,ncores=1)
-    gr <- GRangesList(beds)
-    gr <- BRGenomics::makeGRangesBRG(gr,ncores=1)
-    message("Generating indexes")
-    gr <- BRGenomics::mergeGRangesData(gr,ncores = 1,multiplex=TRUE)
-    names(mcols(gr)) <- lapply(names(mcols(gr)),get_sample_name)
+    data <- read_mem_data(files, ref_cpgs, n_threads = n_threads,zero_based = zero_based,verbose = verbose)
     
-    rrng <- c(gr, NULL, ignore.mcols=TRUE) # Remove the metadata for rowRanges input
+    rrng <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     
+    colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
+
     message("Creating scMethrix object")
-    m_obj <- create_scMethrix(methyl_mat=as.matrix(mcols(gr)), rowRanges=rrng, is_hdf5 = FALSE, 
-                              genome_name = genome_name, desc = desc )
+    m_obj <- create_scMethrix(methyl_mat=as.matrix(data), 
+                              rowRanges=GenomicRanges::makeGRangesFromDataFrame(ref_cpgs),
+                              is_hdf5 = FALSE, genome_name = genome_name, desc = desc )
   }
 }
 
@@ -99,7 +99,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 #' @return data.table containing all unique genomic coordinates
 #' @import data.table parallel doParallel
 #' @examples
-read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = FALSE, verbose = TRUE) {
+read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 200, verbose = TRUE) {
   
   # Parallel functionality
   if (n_threads != 0) {
@@ -138,18 +138,21 @@ read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = FALS
     if (verbose) message("   Parsing: ",get_sample_name(files[i]),appendLF=FALSE)
     data <- data.table::fread(files[i], header=FALSE, select = c(1:2))
     
-    if (i%%batch_size != 0) {
-      rrng[[i%%batch_size]] <- data
-    } else {
+    # Concat the batch list if last element, otherwise save and iterate
+    if (i%%batch_size == 0) {
+      
       rrng[[batch_size]] <- data
       data <- data.table::rbindlist(rrng)
       data <- unique(data) #data <- distinct(data)# #data <- data[!duplicated(data),]
       rrng <- vector(mode = "list", length = batch_size+1)
       rrng[[batch_size+1]] <- data
+    } else {
+      rrng[[i%%batch_size]] <- data
     }
     if (verbose) message(" (",split_time(),")")
   }
   
+  #Concat the final list
   rrng <- data.table::rbindlist(rrng)
   colnames(rrng) <- c("chr","start")
   data.table::setkeyv(rrng, c("chr","start"))
@@ -158,6 +161,7 @@ read_index <- function(files, n_threads = 0, batch_size = 200, zero_based = FALS
   # Remove the consecutive subsequent sites
   #rrng <- rrng[data.table::rowid(collapse::seqid(rrng$start)) %% 2 == 1]
   
+  #Add the end position and offset if zero based
   if (zero_based) rrng$start <- rrng$start+1
   rrng$end <- rrng$start+1
   rrng <- data.table::setkeyv(rrng, c("chr","start"))
@@ -273,49 +277,36 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   
 }
 
-assignInNamespace(".multiplex_gr", ns = "BRGenomics",
-                  function(data_in, field, ncores) {
-                    # data must be *sorted*, base-pair resolution coverage data
-                    if (all(vapply(data_in, function(x)
-                      all(width(x) == 1L), logical(1L)))) {
-                      data_in <- mclapply(data_in, sort, mc.cores = ncores)
-                    } else {
-                      warning(
-                        .nicemsg(
-                          "One or more inputs are not 'basepair resolution
-                         GRanges' objects. Coercing them using
-                         makeGRangesBRG()..."
-                        ),
-                        immediate. = TRUE
-                      )
-                      data_in <-
-                        mclapply(data_in, makeGRangesBRG, mc.cores = ncores)
-                    }
-                    
-                    # merge ranges
-                    gr <- do.call(c, c(data_in, use.names = FALSE))
-                    mcols(gr) <- NULL
-                    gr <- unique(sort(gr))
-                    
-                    # (Fastest to keep these next steps separated, esp. for large datasets)
-                    
-                    # get dataframe of signal counts for each dataset in the output GRanges
-                    idx <-
-                      mclapply(data_in, function(x)
-                        which(gr %in% x), mc.cores = ncores)
-                    counts <- mcmapply(function(dat, idx, field) {
-                      out <- rep.int(NA, length(gr))   #### <---- This line modified in this script. Reps NA instead of 0
-                      out[idx] <- mcols(dat)[[field]]
-                      out
-                    },
-                    data_in,
-                    idx,
-                    field,
-                    mc.cores = ncores,
-                    SIMPLIFY = TRUE)
-                    
-                    mcols(gr)[names(data_in)] <- counts
-                    gr
-                  })
+read_mem_data <- function(files, ref_cpgs, n_threads = 0, zero_based = FALSE, verbose = TRUE) {
+  
+  if (verbose) message("Reading BED data...",start_time()) 
+  
+  if (n_threads != 0) {
+    
+    if (verbose) message("Starting cluster with ",n_threads," threads.")
+    
+    cl <- parallel::makeCluster(n_threads)  
+    doParallel::registerDoParallel(cl)  
+    
+    parallel::clusterEvalQ(cl, c(library(dplyr)))
+    parallel::clusterExport(cl,list('read_bed_by_index','start_time','split_time','stop_time','get_sample_name'))
+    
+    chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
+    
+    data <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
+                                  batch_size=round(batch_size/n_threads), 
+                                  n_threads = 0, zero_based = zero_based, verbose = verbose))
+    
+    parallel::stopCluster(cl)
 
+  } else {
+    if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
+    data <- dplyr::bind_cols(lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based))
+    if (verbose) message(" (",split_time(),")")
+  }
+  
+  if (verbose) message("Data read in ",stop_time()) 
+  
+  return (data)
+}
 
