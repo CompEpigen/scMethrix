@@ -10,6 +10,8 @@ test_that("get_sample_name", {
 test_that("chunk_granges",{
   
   expect_error(chunk_granges("not scMethrix"))
+  expect_error(chunk_granges(rowRanges(scm.h5)))
+  expect_error(chunk_granges(rowRanges(scm.h5),factor=2,num=3))
   
   factor = 2
   percent = 50 
@@ -48,10 +50,6 @@ test_that("start,split,stop_time",{
   expect_error(stop_time())
   
 })
-
-
-
-
 
 test_that("cast_granges",{})
 
