@@ -18,4 +18,7 @@ h5_dir <- paste0(tempdir(),"/sse")
 scm.h5 <- read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE)
 scm.mem <- read_beds(files,h5=FALSE)
 
+# scMethrix_data <- list(h5=scm.h5,mem=scm.mem)
+# use_data(scMethrix_data)
+
 message("Test setup completed")

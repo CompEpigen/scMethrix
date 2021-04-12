@@ -7,19 +7,15 @@
 convert_methrix(m = NULL, h5_dir = NULL)
 }
 \arguments{
-\item{m}{An object of class \code{\link{methrix}}}
+\item{m}{An object of class \code{\link{scMethrix}}}
 }
 \value{
-An object of class \code{\link{methrix}}, HDF5 format
+An object of class \code{\link{scMethrix}}, HDF5 format
 }
 \description{
 Converts an in-memory object to an on-disk HDF5 object.
 }
 \details{
-Takes a \code{\link{methrix}} object and returns with the same object with delayed array assay slots
+Takes a \code{\link{scMethrix}} object and returns with the same object with delayed array assay slots
 with HDF5 backend. Might take long time!
-}
-\examples{
-data(methrix_data)
-m2 <- convert_methrix(m=methrix_data)
 }

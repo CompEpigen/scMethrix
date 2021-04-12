@@ -9,7 +9,7 @@
 #' @exportClass scMethrix
 #' @importFrom graphics axis legend lines mtext par plot title
 #' @importFrom stats complete.cases cov density median prcomp quantile sd
-#' @importFrom utils browseURL
+#' @import utils methods
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #'
 scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")
@@ -21,7 +21,7 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   cat(paste0("   assays: ", assayNames(object),"\n"))
   cat(paste0("   is_h5: ", is_h5(object), "\n"))
   cat(paste0("   Reference: ", object@metadata$genome, "\n"))
-  cat(paste0("   Physical size: ", format(object.size(object), units = "auto"), "\n"))
+  cat(paste0("   Physical size: ", format(utils::object.size(object), units = "auto"), "\n"))
 })
 
 # Create scMethrix obj

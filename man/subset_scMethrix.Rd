@@ -20,6 +20,8 @@ subset_scMethrix(
 \item{contigs}{string of chromosome names to subset by}
 
 \item{samples}{string of sample names to subset by}
+
+\item{verbose}{flag to output messages or not}
 }
 \value{
 An object of class \code{\link{scMethrix}}
@@ -32,6 +34,7 @@ Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statisti
 }
 \examples{
 data('scMethrix_data')
+scMethrix_data <- scMethrix_data$h5
 contigs <- c("chr1","chr3")
 regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
 samples <- c("df1","df3")

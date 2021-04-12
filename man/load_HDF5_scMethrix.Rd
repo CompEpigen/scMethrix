@@ -12,18 +12,11 @@ load_HDF5_scMethrix(dir = NULL, ...)
 \item{...}{Parameters to pass to loadHDF5SummarizedExperiment}
 }
 \value{
-An object of class \code{\link{methrix}}
+An object of class \code{\link{scMethrix}}
 }
 \description{
 Loads HDF5 scMethrix object
 }
 \details{
 Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
-}
-\examples{
-data('scMethrix_data')
-methrix_data_h5 <- convert_methrix(m=methrix_data)
-target_dir = paste0(getwd(), '/temp1/')
-save_HDF5_methrix(methrix_data_h5, dir = target_dir, replace = TRUE)
-load_HDF5_methrix(target_dir)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{order_by_sd}
 \alias{order_by_sd}
-\title{Order methrix object by SD}
+\title{Order scMethrix object by SD}
 \usage{
 order_by_sd(m, zero.rm = FALSE, na.rm = FALSE)
 }
@@ -17,12 +17,8 @@ order_by_sd(m, zero.rm = FALSE, na.rm = FALSE)
 An object of class \code{\link{scMethrix}}
 }
 \description{
-Order methrix object by SD
+Order scMethrix object by SD
 }
 \details{
 Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
-}
-\examples{
-data('scMethrix_data')
-order_by_sd(m = scMethrix_data)
 }

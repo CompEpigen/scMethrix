@@ -7,18 +7,14 @@
 remove_uncovered(m)
 }
 \arguments{
-\item{m}{\code{\link{methrix}} object}
+\item{m}{\code{\link{scMethrix}} object}
 }
 \value{
-An object of class \code{\link{methrix}}
+An object of class \code{\link{scMethrix}}
 }
 \description{
 Remove loci that are uncovered across all samples
 }
 \details{
-Takes \code{\link{methrix}} object and removes loci that are uncovered across all samples
-}
-\examples{
-data('methrix_data')
-remove_uncovered(m = methrix_data)
+Takes \code{\link{scMethrix}} object and removes loci that are uncovered across all samples
 }

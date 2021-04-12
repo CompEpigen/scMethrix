@@ -15,16 +15,11 @@ region_filter(m, regions = NULL, type = "any")
 see the \code{foverlaps} function of the \code{\link{data.table}} package.}
 }
 \value{
-An object of class \code{\link{methrix}}
+An object of class \code{\link{scMthrix}}
 }
 \description{
 Filter matrices by region
 }
 \details{
 Takes \code{\link{scMethrix}} object and filters CpGs based on supplied regions in data.table or GRanges format
-}
-\examples{
-data('methrix_data')
-region_filter(m = methrix_data,
-regions = data.table(chr = 'chr21', start = 27867971, end =  27868103))
 }

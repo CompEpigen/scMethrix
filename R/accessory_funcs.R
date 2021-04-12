@@ -1,20 +1,3 @@
-
-#' Ternary operator
-#' @details Acts in the same way as ternary operators in other language. Must surround with brackets to use)
-#' @param x The value to return if true
-#' @param y The value to return if false
-#' @return The x or y value depending on boolean
-#' @examples
-`?` <- function(x, y)
-  eval(
-    sapply(
-      strsplit(
-        deparse(substitute(y)), 
-        ":"
-      ), 
-      function(e) parse(text = e)
-    )[[2 - as.logical(x)]])
-
 #' Checks if scMethrix object is an HDF5 object
 #' @details Acts in the same way as ternary operators in other language. Must surround with brackets to use)
 #' @param m The scMethrix object
@@ -30,7 +13,6 @@ is_h5 = function(m) {
 #' @return string containing the sample name
 #' @import tools
 #' @examples
-#' get_sample_name("c:/folder/folder/sample.name.ext")
 get_sample_name = function(s) {
   
   return(tools::file_path_sans_ext(basename(s)))
@@ -82,7 +64,7 @@ chunk_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, perce
     splits <- num*(0:(splits-1))+1
   }
   
-  grl <- List()
+  grl <- list()
   
   for (i in 1:length(splits)) {
     s <- splits[i]
@@ -179,7 +161,7 @@ stop_time <- function() {
 #' @return Returns list of CpG sites in bedgraph format
 #' @export
 subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
-  keys <- join.keys(ref_cpgs, gen_cpgs, c("chr","start"))
+  keys <- plyr::join.keys(ref_cpgs, gen_cpgs, c("chr","start"))
   sub_cpgs <- ref_cpgs[keys$x %in% keys$y, , drop = FALSE]
   r <- nrow(ref_cpgs)
   s <- nrow(sub_cpgs)

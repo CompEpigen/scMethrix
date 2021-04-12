@@ -36,7 +36,7 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 
 \item{desc}{Description of the experiment}
 
-\item{verbose}{Be little chatty ? Default TRUE.}
+\item{verbose}{flag to output messages or not.}
 
 \item{stranded}{Default c}
 
@@ -51,15 +51,4 @@ Versatile BedGraph reader.
 \details{
 Reads BED files and generates methylation matrices.
 Optionally arrays can be serialized as on-disk HDFS5 arrays.
-}
-\examples{
-\dontrun{
-bdg_files = list.files(path = system.file('extdata', package = 'methrix'),
-pattern = '*\\\\.bedGraph\\\\.gz$', full.names = TRUE)
-hg19_cpgs = methrix::extract_CPGs(ref_genome = 'BSgenome.Hsapiens.UCSC.hg19')
-meth = methrix::read_bedgraphs( files = bdg_files, ref_cpgs = hg19_cpgs,
-chr_idx = 1, start_idx = 2, M_idx = 3, U_idx = 4,
-stranded = FALSE, zero_based = FALSE, collapse_strands = FALSE)
-}
-
 }

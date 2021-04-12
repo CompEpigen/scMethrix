@@ -7,7 +7,7 @@
 get_stats(m, per_chr = TRUE)
 }
 \arguments{
-\item{m}{\code{\link{methrix}} object}
+\item{m}{\code{\link{scMethrix}} object}
 
 \item{per_chr}{Estimate stats per chromosome. Default TRUE}
 }
@@ -19,10 +19,6 @@ Estimate descriptive statistics
 }
 \details{
 Calculate descriptive statistics
-}
-\examples{
-data('methrix_data')
-get_stats(methrix_data)
 }
 \seealso{
 \code{\link{plot_stats}}

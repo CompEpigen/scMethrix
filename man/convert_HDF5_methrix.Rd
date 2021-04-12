@@ -2,24 +2,22 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{convert_HDF5_methrix}
 \alias{convert_HDF5_methrix}
-\title{Converts HDF5 methrix object to standard in-memory object.}
+\title{Converts HDF5 scMethrix object to standard in-memory object.}
 \usage{
 convert_HDF5_methrix(m = NULL)
 }
 \arguments{
-\item{m}{An object of class \code{\link{methrix}}, HDF5 format}
+\item{m}{An object of class \code{\link{scMethrix}}, HDF5 format}
 }
 \value{
-An object of class \code{\link{methrix}}
+An object of class \code{\link{scMethrix}}
 }
 \description{
-Converts HDF5 methrix object to standard in-memory object.
+Converts HDF5 scMethrix object to standard in-memory object.
 }
 \details{
-Takes a \code{\link{methrix}} object and returns with the same object with in-memory assay slots.
+Takes a \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
 }
 \examples{
-data(methrix_data)
-m2 <- convert_methrix(m=methrix_data)
-m <- convert_HDF5_methrix(m=m2)
+data(scMethrix_data)
 }

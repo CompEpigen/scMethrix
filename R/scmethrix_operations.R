@@ -11,13 +11,8 @@ get_region_summary = function (m) {
 #' @details Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
 #' @param dir The directory to read in from. Default NULL
 #' @param ... Parameters to pass to loadHDF5SummarizedExperiment
-#' @return An object of class \code{\link{methrix}}
+#' @return An object of class \code{\link{scMethrix}}
 #' @examples
-#' data('scMethrix_data')
-#' methrix_data_h5 <- convert_methrix(m=methrix_data)
-#' target_dir = paste0(getwd(), '/temp1/')
-#' save_HDF5_methrix(methrix_data_h5, dir = target_dir, replace = TRUE)
-#' load_HDF5_methrix(target_dir)
 #' @export
 load_HDF5_scMethrix <- function(dir = NULL, ...) {
   
@@ -37,14 +32,12 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Converts HDF5 methrix object to standard in-memory object.
-#' @details Takes a \code{\link{methrix}} object and returns with the same object with in-memory assay slots.
-#' @param m An object of class \code{\link{methrix}}, HDF5 format
-#' @return An object of class \code{\link{methrix}}
+#' Converts HDF5 scMethrix object to standard in-memory object.
+#' @details Takes a \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
+#' @param m An object of class \code{\link{scMethrix}}, HDF5 format
+#' @return An object of class \code{\link{scMethrix}}
 #' @examples
-#' data(methrix_data)
-#' m2 <- convert_methrix(m=methrix_data)
-#' m <- convert_HDF5_methrix(m=m2)
+#' data(scMethrix_data)
 #' @export
 convert_HDF5_methrix <- function(m = NULL) {
   
@@ -67,13 +60,11 @@ convert_HDF5_methrix <- function(m = NULL) {
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Converts an in-memory object to an on-disk HDF5 object.
-#' @details Takes a \code{\link{methrix}} object and returns with the same object with delayed array assay slots
+#' @details Takes a \code{\link{scMethrix}} object and returns with the same object with delayed array assay slots
 #' with HDF5 backend. Might take long time!
-#' @param m An object of class \code{\link{methrix}}
-#' @return An object of class \code{\link{methrix}}, HDF5 format
+#' @param m An object of class \code{\link{scMethrix}}
+#' @return An object of class \code{\link{scMethrix}}, HDF5 format
 #' @examples
-#' data(methrix_data)
-#' m2 <- convert_methrix(m=methrix_data)
 #' @export
 convert_methrix <- function(m = NULL, h5_dir = NULL) {
   
@@ -99,15 +90,13 @@ convert_methrix <- function(m = NULL, h5_dir = NULL) {
 
   
 #--------------------------------------------------------------------------------------------------------------------------
-#' Order methrix object by SD
+#' Order scMethrix object by SD
 #' @details Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
 #' @param m \code{\link{scMethrix}} object
 #' @param zero.rm Removes zero values from equations (the default empty value for sparse matrices)
 #' @param na.rm Removes the NA values from equations
 #' @return An object of class \code{\link{scMethrix}}
 #' @examples
-#' data('scMethrix_data')
-#' order_by_sd(m = scMethrix_data)
 #' @export
 order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
   
@@ -140,8 +129,10 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 #' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param contigs string of chromosome names to subset by
 #' @param samples string of sample names to subset by
+#' @param verbose flag to output messages or not
 #' @examples
 #' data('scMethrix_data')
+#' scMethrix_data <- scMethrix_data$h5
 #' contigs <- c("chr1","chr3")
 #' regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
 #' samples <- c("df1","df3")
@@ -208,11 +199,9 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
 #' @param regions genomic regions to filter-out. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param type defines the type of the overlap of the CpG sites with the target regions. Default value is `any`. For detailed description,
 #' see the \code{foverlaps} function of the \code{\link{data.table}} package.
-#' @return An object of class \code{\link{methrix}}
+#' @return An object of class \code{\link{scMthrix}}
+#' @import GenomicRanges
 #' @examples
-#' data('methrix_data')
-#' region_filter(m = methrix_data,
-#' regions = data.table(chr = 'chr21', start = 27867971, end =  27868103))
 #' @export
 region_filter <- function(m, regions=NULL, type = "any") {
 
@@ -227,23 +216,21 @@ region_filter <- function(m, regions=NULL, type = "any") {
 
   message("Filtering by region...",start_time())
   
-  regions2 <- subsetByOverlaps(rowRanges(m), regions, invert = TRUE, type, maxgap=-1L, minoverlap=0L)
+  regions <- subsetByOverlaps(rowRanges(m), regions, invert = TRUE, type, maxgap=-1L, minoverlap=0L)
   
   message("Filtered in ",stop_time())
   
-  return(subset_scMethrix(m,regions=reduce(regions2)))
+  return(subset_scMethrix(m,regions=reduce(regions)))
   
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Estimate descriptive statistics
 #' @details Calculate descriptive statistics
-#' @param m \code{\link{methrix}} object
+#' @param m \code{\link{scMethrix}} object
 #' @param per_chr Estimate stats per chromosome. Default TRUE
 #' @seealso \code{\link{plot_stats}}
 #' @examples
-#' data('methrix_data')
-#' get_stats(methrix_data)
 #' @return data.table of summary stats
 #' @export
 
@@ -316,20 +303,13 @@ get_stats <- function(m, per_chr = TRUE) {
 #--------------------------------------------------------------------------------------------------------------------------
 
 #' Extract methylation or coverage matrices
-#' @details Takes \code{\link{methrix}} object and returns user specified \code{methylation} or \code{coverage} matrix
-#' @param m \code{\link{methrix}} object
+#' @details Takes \code{\link{scMethrix}} object and returns user specified \code{methylation} or \code{coverage} matrix
+#' @param m \code{\link{scMethrix}} object
 #' @param type can be \code{M} or \code{C}. Default 'M'
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
 #' @param in_granges Do you want the outcome in \code{GRanges}?
 #' @return Coverage or Methylation matrix
 #' @examples
-#' data('methrix_data')
-#' #Get methylation matrix
-#' get_matrix(m = methrix_data, type = 'M')
-#' #Get methylation matrix along with loci
-#' get_matrix(m = methrix_data, type = 'M', add_loci = TRUE)
-#' #' #Get methylation data as a GRanges object
-#' get_matrix(m = methrix_data, type = 'M', add_loci = TRUE, in_granges=TRUE)
 #' @export
 get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
   
@@ -364,12 +344,10 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
 }
 
 #' Remove loci that are uncovered across all samples
-#' @details Takes \code{\link{methrix}} object and removes loci that are uncovered across all samples
-#' @param m \code{\link{methrix}} object
-#' @return An object of class \code{\link{methrix}}
+#' @details Takes \code{\link{scMethrix}} object and removes loci that are uncovered across all samples
+#' @param m \code{\link{scMethrix}} object
+#' @return An object of class \code{\link{scMethrix}}
 #' @examples
-#' data('methrix_data')
-#' remove_uncovered(m = methrix_data)
 #' @export
 #'
 remove_uncovered <- function(m) {
@@ -395,27 +373,25 @@ remove_uncovered <- function(m) {
 #--------------------------------------------------------------------------------------------------------------------------
 
 #' Masks too high or too low counts
-#' @details Takes \code{\link{methrix}} object and masks sites with too high or too low coverage
+#' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
 #'  by putting NA for coverage and beta value. The sites will remain in the object.
-#' @param m \code{\link{methrix}} object
+#' @param m \code{\link{scMethrix}} object
 #' @param low_count The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.
 #' @param high_quantile The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
 #' higher quantile than the defined will be masked. Default = 0.99.
-#' @param n_cores Number of parallel instances. Can only be used if \code{\link{methrix}} is in HDF5 format. Default = 1.
-#' @return An object of class \code{\link{methrix}}
+#' @param n_cores Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
+#' @return An object of class \code{\link{scMethrix}}
 #' @examples
-#' data('methrix_data')
-#' mask_methrix(m = methrix_data, low_count = 5, high_quantile = 0.99 )
 #' @export
 mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
 
   
   if (!is(m, "scMethrix")){
-    stop("A valid methrix object needs to be supplied.")
+    stop("A valid scMethrix object needs to be supplied.")
   }
   
   if (!is_h5(m) & n_cores != 1) {
-    stop("Parallel processing not supported for a non-HDF5 methrix object due to probable high memory usage. \nNumber of cores (n_cores) needs to be 1.")
+    stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_cores) needs to be 1.")
   }
   
   message("Masking CpG sites ( ",high_quintile," quintile and <= ",low_count, " count", start_time())
@@ -429,26 +405,18 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
     message("Masking count lower than ", low_count)
 
     if(is_h5(m)) {
-      
-      m <- scm.h5
       n <- nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA))
       row_idx <- DelayedMatrixStats::rowCounts(get_matrix(m), value = as.integer(NA)) > low_count
       row_idx <- matrix(rep(row_idx,ncol(m)),ncol = ncol(m))
       row_idx <- DelayedArray(row_idx)
       assays(m)[[1]][row_idx] <- as.integer(NA)
       n <- n-(nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA)))
-      n
-      
     } else {
-      
-      m <- scm.mem
-      n <- nrow(m) - colSums2(is.na(get_matrix(m)))
-      row_idx <- !(rowSums(is.na(get_matrix(m))) <= low_count)
+      n <- nrow(m) - MatrixStats::colSums2(is.na(get_matrix(m)))
+      row_idx <- !(MatrixStats::rowSums(is.na(get_matrix(m))) <= low_count)
       assays(m)[[1]][!!row_idx,] <- as.integer(NA)
-      n <- n - (nrow(m) - colSums2(is.na(get_matrix(m))))
-      n
+      n <- n - (nrow(m) - MatrixStats::colSums2(is.na(get_matrix(m))))
     }
-      
       
     for (i in seq_along(colnames(m))) {
       message(paste0("Masked ", n[i], " CpGs due to too low count in sample ",  colnames(m)[i], "."))
