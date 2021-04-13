@@ -4,7 +4,7 @@
 \alias{convert_methrix}
 \title{Converts an in-memory object to an on-disk HDF5 object.}
 \usage{
-convert_methrix(m = NULL, h5_dir = NULL)
+convert_methrix(m = NULL, h5_dir = NULL, verbose = TRUE)
 }
 \arguments{
 \item{m}{An object of class \code{\link{scMethrix}}}
@@ -18,4 +18,8 @@ Converts an in-memory object to an on-disk HDF5 object.
 \details{
 Takes a \code{\link{scMethrix}} object and returns with the same object with delayed array assay slots
 with HDF5 backend. Might take long time!
+}
+\examples{
+data('scMethrix_data')
+convert_methrix(scMethrix_data$mem, h5_dir=paste0(tempdir(),"/h5"))
 }

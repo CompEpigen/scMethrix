@@ -20,3 +20,10 @@ Loads HDF5 scMethrix object
 \details{
 Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
 }
+\examples{
+data('scMethrix_data')
+dir <- paste0(tempdir(),"/h5")
+m <- convert_methrix(scMethrix_data$mem, h5_dir=dir)
+save_HDF5_scMethrix(m, h5_dir = dir, replace = TRUE)
+n <- load_HDF5_scMethrix(dir)
+}

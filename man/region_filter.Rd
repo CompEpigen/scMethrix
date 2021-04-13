@@ -23,3 +23,9 @@ Filter matrices by region
 \details{
 Takes \code{\link{scMethrix}} object and filters CpGs based on supplied regions in data.table or GRanges format
 }
+\examples{
+data('scMethrix_data')
+# Filter methylation data to chr1:1:5
+regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
+region_filter(scMethrix_data$mem, regions)
+}

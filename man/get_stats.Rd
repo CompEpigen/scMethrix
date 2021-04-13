@@ -20,6 +20,15 @@ Estimate descriptive statistics
 \details{
 Calculate descriptive statistics
 }
+\examples{
+data('scMethrix_data')
+
+#Get stats for each sample and chromosome
+get_stats(scMethrix_data$mem)
+
+#Get stats for each sample
+get_stats(scMethrix_data$mem,per_chr = FALSE)
+}
 \seealso{
 \code{\link{plot_stats}}
 }

@@ -44,6 +44,11 @@ save_HDF5_scMethrix <- function(m, h5_dir = NULL, replace = FALSE, ...) {
 #' @param ... Parameters to pass to loadHDF5SummarizedExperiment
 #' @return An object of class \code{\link{scMethrix}}
 #' @examples
+#' data('scMethrix_data')
+#' dir <- paste0(tempdir(),"/h5")
+#' m <- convert_methrix(scMethrix_data$mem, h5_dir=dir)
+#' save_HDF5_scMethrix(m, h5_dir = dir, replace = TRUE)
+#' n <- load_HDF5_scMethrix(dir)
 #' @export
 load_HDF5_scMethrix <- function(dir = NULL, ...) {
   
@@ -68,7 +73,10 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 #' @param m An object of class \code{\link{scMethrix}}, HDF5 format
 #' @return An object of class \code{\link{scMethrix}}
 #' @examples
-#' data(scMethrix_data)
+#' data('scMethrix_data')
+#' dir <- paste0(tempdir(),"/h5")
+#' m <- convert_methrix(scMethrix_data$mem, h5_dir=dir)
+#' convert_HDF5_methrix(m)
 #' @export
 convert_HDF5_methrix <- function(m = NULL) {
   
@@ -79,12 +87,12 @@ convert_HDF5_methrix <- function(m = NULL) {
     stop("Input scMethrix must be in HDF5 format.")
   }
   
-  message("Converting in-memory scMethrix to HDF5",start_time())
+  message("Converting in-memory scMethrix to HDF5")#,start_time())
   
   assays(m)[[1]] <- as.matrix(assays(m)[[1]])
   m@metadata$is_h5 <- FALSE
 
-  message("Converted in ",stop_time())
+ # message("Converted in ",stop_time())
   
   return(m)
 }
@@ -96,8 +104,10 @@ convert_HDF5_methrix <- function(m = NULL) {
 #' @param m An object of class \code{\link{scMethrix}}
 #' @return An object of class \code{\link{scMethrix}}, HDF5 format
 #' @examples
+#' data('scMethrix_data')
+#' convert_methrix(scMethrix_data$mem, h5_dir=paste0(tempdir(),"/h5"))
 #' @export
-convert_methrix <- function(m = NULL, h5_dir = NULL) {
+convert_methrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
   
   if (is.null(m) | !is(m, "scMethrix")) {
     stop("Input must be of type scMethrix.")
@@ -106,14 +116,14 @@ convert_methrix <- function(m = NULL, h5_dir = NULL) {
     stop("Input scMethrix is already in HDF5 format.")
   }
 
-  message("Converting in-memory scMethrix to HDF5", start_time())
-  
+  if (verbose) message("Converting in-memory scMethrix to HDF5")#, start_time())
+
   m <- create_scMethrix(methyl_mat = assays(m)[[1]], h5_dir = h5_dir,
                       rowRanges = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
                       colData = m@colData, chrom_sizes = m@metadata$chrom_sizes, 
-                      desc = m@metadata$descriptive_stats)
+                      desc = m@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
   
-  message("Converted in ", stop_time())
+  #if (verbose) message("Converted in ", stop_time())
   
   return(m)
 }
@@ -134,21 +144,21 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 #  if (!is(m, "scMethrix")){
 #    stop("A valid scMethrix object needs to be supplied.")
  # }
-
-  if (zero.rm) {
-    sds <- numeric(nrow(m))
-    for (i in 1:length(sds)) {
-      sds[i] <- sd(as.numeric(m[i,][m[i,]!=0]), na.rm)
-      print(paste(i,": ", sds[i]))
-      }
-  } else {
-    sds <- sparseMatrixStats::rowSds(m,na.rm)
-  }
-  
-  row_order <- order(sds, na.last = TRUE, decreasing = TRUE)
-  m <- m[row_order, ]
-  
-  return (m)
+# 
+#   if (zero.rm) {
+#     sds <- numeric(nrow(m))
+#     for (i in 1:length(sds)) {
+#       sds[i] <- sd(as.numeric(m[i,][m[i,]!=0]), na.rm)
+#       print(paste(i,": ", sds[i]))
+#       }
+#   } else {
+#     sds <- sparseMatrixStats::rowSds(m,na.rm)
+#   }
+#   
+#   row_order <- order(sds, na.last = TRUE, decreasing = TRUE)
+#   m <- m[row_order, ]
+#   
+#   return (m)
   
 }
 
@@ -163,22 +173,21 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 #' @param verbose flag to output messages or not
 #' @examples
 #' data('scMethrix_data')
-#' scMethrix_data <- scMethrix_data$h5
 #' contigs <- c("chr1","chr3")
-#' regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
+#' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
 #' samples <- c("df1","df3")
 #' 
 #' #Subset to chromosome 1
-#' subset_scMethrix(scMethrix_data, contigs = contigs)
+#' subset_scMethrix(scMethrix_data$mem, contigs = contigs)
 #' 
 #' #Subset to samples bed1 and bed3
-#' subset_scMethrix(scMethrix_data, samples = samples)
+#' subset_scMethrix(scMethrix_data$mem, samples = samples)
 #' 
 #' #Subset to samples bed1 and bed3, and chromosome 1
-#' subset_scMethrix(scMethrix_data, samples = samples, contigs = contigs)
+#' subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs)
 #' 
-#' #Subset to region "chr1:1-150"
-#' subset_scMethrix(scMethrix_data, regions = regions)
+#' #Subset to region "chr1:1-5"
+#' subset_scMethrix(scMethrix_data$mem, regions = regions)
 
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
@@ -227,8 +236,9 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
 
 #--------------------------------------------------------------------------------------------------------------------------
 
-#' Subsets \code{\link{scMethrix}} object based on given conditions.
-#' @details Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
+#' Filters an \code{\link{scMethrix}} object based on given conditions.
+#' @details Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can 
+#' either subset to or filter out the input parameters.
 #' @param m \code{\link{scMethrix}} object
 #' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param contigs string of chromosome names to subset by
@@ -236,22 +246,34 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
 #' @param verbose flag to output messages or not
 #' @examples
 #' data('scMethrix_data')
+#' 
 #' contigs <- c("chr1","chr3")
 #' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
 #' samples <- c("df1","df3")
 #' 
-#' #Subset to chromosome 1
-#' subset_scMethrix(scMethrix_data$mem, contigs = contigs)
+#' #Subset to only chromosome 1
+#' filter_scMethrix(scMethrix_data$mem, contigs = contigs)
 #' 
-#' #Subset to samples bed1 and bed3
-#' subset_scMethrix(scMethrix_data$mem, samples = samples)
+#' #Subset to only samples bed1 and bed3
+#' filter_scMethrix(scMethrix_data$mem, samples = samples)
 #' 
-#' #Subset to samples bed1 and bed3, and chromosome 1
-#' subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs)
+#' #Subset to only samples bed1 and bed3, and chromosome 1
+#' filter_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs)
 #' 
-#' #Subset to region "chr1:1-5"
-#' subset_scMethrix(scMethrix_data$mem, regions = regions)
-
+#' #Subset to only region "chr1:1-5"
+#' filter_scMethrix(scMethrix_data$mem, regions = regions)
+#' 
+#' #Filter to exclude chromosome 1
+#' filter_scMethrix(scMethrix_data$mem, contigs = contigs, by = "exclude")
+#' 
+#' #Filter to exclude samples bed1 and bed3
+#' filter_scMethrix(scMethrix_data$mem, samples = samples, by = "exclude")
+#' 
+#' #Filter to exclude samples bed1 and bed3, and chromosome 1
+#' filter_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "exclude")
+#' 
+#' #Filter to exclude region "chr1:1-5"
+#' filter_scMethrix(scMethrix_data$mem, regions = regions, by = "exclude")
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
 
@@ -329,6 +351,10 @@ filter_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
 #' @return An object of class \code{\link{scMthrix}}
 #' @import GenomicRanges
 #' @examples
+#' data('scMethrix_data')
+#' # Filter methylation data to chr1:1:5
+#' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
+#' region_filter(scMethrix_data$mem, regions)
 #' @export
 region_filter <- function(m, regions=NULL, type = "any") {
 
@@ -343,11 +369,11 @@ region_filter <- function(m, regions=NULL, type = "any") {
 
   message("Filtering by region...",start_time())
   
-  regions <- subsetByOverlaps(rowRanges(m), regions, invert = TRUE, type, maxgap=-1L, minoverlap=0L)
+  
   
   message("Filtered in ",stop_time())
   
-  return(subset_scMethrix(m,regions=reduce(regions)))
+  return()
   
 }
 
@@ -358,6 +384,13 @@ region_filter <- function(m, regions=NULL, type = "any") {
 #' @param per_chr Estimate stats per chromosome. Default TRUE
 #' @seealso \code{\link{plot_stats}}
 #' @examples
+#' data('scMethrix_data')
+#' 
+#' #Get stats for each sample and chromosome
+#' get_stats(scMethrix_data$mem)
+#' 
+#' #Get stats for each sample
+#' get_stats(scMethrix_data$mem,per_chr = FALSE)
 #' @return data.table of summary stats
 #' @export
 
@@ -437,6 +470,16 @@ get_stats <- function(m, per_chr = TRUE) {
 #' @param in_granges Do you want the outcome in \code{GRanges}?
 #' @return Coverage or Methylation matrix
 #' @examples
+#' data('scMethrix_data')
+#' 
+#' # Get methylation data
+#' get_matrix(scMethrix_data$mem)
+#' 
+#' # Get methylation data with loci
+#' get_matrix(scMethrix_data$mem, add_loci=TRUE)
+#' 
+#' # Get methylation data with loci inside a Granges object 
+#' get_matrix(scMethrix_data$mem, add_loci=TRUE, in_granges=TRUE)
 #' @export
 get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
   
@@ -475,8 +518,10 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
 #' @param m \code{\link{scMethrix}} object
 #' @return An object of class \code{\link{scMethrix}}
 #' @examples
+#' data('scMethrix_data')
+#' # Remove uncovered CpGs after subsetting to a single sample
+#' remove_uncovered(subset_scMethrix(scMethrix_data$mem, samples = "df1"))
 #' @export
-#'
 remove_uncovered <- function(m) {
   
   

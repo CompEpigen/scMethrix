@@ -19,5 +19,8 @@ Converts HDF5 scMethrix object to standard in-memory object.
 Takes a \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
 }
 \examples{
-data(scMethrix_data)
+data('scMethrix_data')
+dir <- paste0(tempdir(),"/h5")
+m <- convert_methrix(scMethrix_data$mem, h5_dir=dir)
+convert_HDF5_methrix(m)
 }

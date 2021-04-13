@@ -3,6 +3,8 @@
 #' @param m The scMethrix object
 #' @return boolean Whether the object is HDF5
 #' @examples
+#' data('scMethrix_data')
+#' is_h5(scMethrix_data$mem)
 is_h5 = function(m) {
   return(m@metadata$is_h5)
 }
@@ -13,11 +15,24 @@ is_h5 = function(m) {
 #' @return string containing the sample name
 #' @import tools
 #' @examples
+#' get_sample_name("C:/dir/dir/filename.ext")
 get_sample_name = function(s) {
   
   return(tools::file_path_sans_ext(basename(s)))
 }
 
+#' Splits a vector into subvectors
+#' @details Splits a vector into n chunks or chunks of n size.
+#' @param v The vector to split
+#' @param n The number to split by
+#' @param by Whether to split by chunk or by size
+#' @return vector
+#' @examples
+#' # Split vector into 4 sub vectors
+#' split_vector(c(1,2,3,4,5,6,7,8),4,by="chunk")
+#' 
+#' # Split vector into sub-vectors with a size of 2
+#' split_vector(c(1,2,3,4,5,6,7,8),2,by="size")
 split_vector = function(v,n, by = c("chunk","size")) {
   
   if (match.arg(by)=="size") {
@@ -118,7 +133,6 @@ cast_granges <- function(regions) {
 #' Starts an internal stopwatch
 #' @details Save the current time to later use for split/lap and overall times
 #' @return NULL
-#' @export
 start_time <- function() {
   assign("time.all", proc.time()["elapsed"], envir=baseenv())
   assign("time.split", proc.time()["elapsed"], envir=baseenv())
@@ -128,11 +142,10 @@ start_time <- function() {
 #' Outputs the split/lap/iteration time 
 #' @details Gets the stored elapsed proc.time() from either the initial start_time or the previous split_time
 #' @return Returns formatted elapsed time since start_time or last split_time
-#' @export
 split_time <- function() {
   
   time <- get("time.split", envir=baseenv())
-  if (is.na(time)) stop("start_time() not set")
+  if (!is.numeric(time)) stop("start_time() not set")
   time <- proc.time()["elapsed"]-time
   assign("time.split", proc.time()["elapsed"], envir=baseenv())
   return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
@@ -141,11 +154,10 @@ split_time <- function() {
 #' Stops an internal stopwatch and outputs overall time
 #' @details Gets the stored elapsed proc.time() from initial start_time() to calculate overall runtime
 #' @return Returns formatted elapsed time since start_time
-#' @export
 stop_time <- function() {
   
   time <- get("time.all", envir=baseenv())
-  if (is.na(time)) stop("start_time() not set")
+  if (!is.numeric(time)) stop("start_time() not set")
   time <- proc.time()["elapsed"]-get("time.all", envir=baseenv())
   assign("time.split", NA, envir=baseenv())
   assign("time.all", NA, envir=baseenv())
@@ -159,7 +171,6 @@ stop_time <- function() {
 #' @param ref_cpgs A reference set of CpG sites (e.g. Hg19 or mm10) in bedgraph format
 #' @param gen_cpgs A subset of CpG sites. Usually obtained from read_index.
 #' @return Returns list of CpG sites in bedgraph format
-#' @export
 subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   keys <- plyr::join.keys(ref_cpgs, gen_cpgs, c("chr","start"))
   sub_cpgs <- ref_cpgs[keys$x %in% keys$y, , drop = FALSE]

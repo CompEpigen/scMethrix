@@ -18,3 +18,8 @@ Remove loci that are uncovered across all samples
 \details{
 Takes \code{\link{scMethrix}} object and removes loci that are uncovered across all samples
 }
+\examples{
+data('scMethrix_data')
+# Remove uncovered CpGs after subsetting to a single sample
+remove_uncovered(subset_scMethrix(scMethrix_data$mem, samples = "df1"))
+}

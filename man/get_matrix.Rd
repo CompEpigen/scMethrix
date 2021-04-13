@@ -24,3 +24,15 @@ Extract methylation or coverage matrices
 \details{
 Takes \code{\link{scMethrix}} object and returns user specified \code{methylation} or \code{coverage} matrix
 }
+\examples{
+data('scMethrix_data')
+
+# Get methylation data
+get_matrix(scMethrix_data$mem)
+
+# Get methylation data with loci
+get_matrix(scMethrix_data$mem, add_loci=TRUE)
+
+# Get methylation data with loci inside a Granges object 
+get_matrix(scMethrix_data$mem, add_loci=TRUE, in_granges=TRUE)
+}
