@@ -2,13 +2,14 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{subset_scMethrix}
 \alias{subset_scMethrix}
-\title{Subsets \code{\link{scMethrix}} object based on given conditions.}
+\title{Filters an \code{\link{scMethrix}} object based on given conditions.}
 \usage{
 subset_scMethrix(
   m,
   regions = NULL,
   contigs = NULL,
   samples = NULL,
+  by = c("include", "exclude"),
   verbose = TRUE
 )
 }
@@ -27,26 +28,40 @@ subset_scMethrix(
 An object of class \code{\link{scMethrix}}
 }
 \description{
-Subsets \code{\link{scMethrix}} object based on given conditions.
+Filters an \code{\link{scMethrix}} object based on given conditions.
 }
 \details{
-Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
+Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can
+either subset to or filter out the input parameters.
 }
 \examples{
 data('scMethrix_data')
+
 contigs <- c("chr1","chr3")
 regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
 samples <- c("df1","df3")
 
-#Subset to chromosome 1
-subset_scMethrix(scMethrix_data$mem, contigs = contigs)
+#Subset to only chromosome 1
+subset_scMethrix(scMethrix_data$mem, contigs = contigs, by = "include")
 
-#Subset to samples bed1 and bed3
-subset_scMethrix(scMethrix_data$mem, samples = samples)
+#Subset to only samples bed1 and bed3
+subset_scMethrix(scMethrix_data$mem, samples = samples, by = "include")
 
-#Subset to samples bed1 and bed3, and chromosome 1
-subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs)
+#Subset to only samples bed1 and bed3, and chromosome 1
+subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "include")
 
-#Subset to region "chr1:1-5"
-subset_scMethrix(scMethrix_data$mem, regions = regions)
+#Subset to only region "chr1:1-5"
+subset_scMethrix(scMethrix_data$mem, regions = regions, by = "include")
+
+#Subset to exclude chromosome 1
+subset_scMethrix(scMethrix_data$mem, contigs = contigs, by = "exclude")
+
+#Subset to exclude samples bed1 and bed3
+subset_scMethrix(scMethrix_data$mem, samples = samples, by = "exclude")
+
+#Subset to exclude samples bed1 and bed3, and chromosome 1
+subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "exclude")
+
+#Subset to exclude region "chr1:1-5"
+subset_scMethrix(scMethrix_data$mem, regions = regions, by = "exclude")
 }

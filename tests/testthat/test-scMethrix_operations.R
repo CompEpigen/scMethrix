@@ -37,43 +37,66 @@ test_that("subset_scMethrix", {
   contigs <- c("chr1")
   regions <- GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,8)) 
   
-  s <- subset_scMethrix(scm.h5, samples = samples)
+  # Subset H5 by include
+  
+  s <- subset_scMethrix(scm.h5, samples = samples, by="include")
   expect_equivalent(dim(s),c(18,2))
   expect_equivalent(samples,colData(s)$colData)
 
-  s <- subset_scMethrix(scm.h5, contigs = contigs)
+  s <- subset_scMethrix(scm.h5, contigs = contigs, by="include")
   expect_equivalent(dim(s),c(10,4))
   expect_equivalent(contigs,as.character(seqnames(s)@values))
   
-  s <- subset_scMethrix(scm.h5, regions = regions)
+  s <- subset_scMethrix(scm.h5, regions = regions, by="include")
   expect_equivalent(dim(s),c(6,4))
 
-  s <- subset_scMethrix(scm.h5, samples = samples, contigs = contigs, regions = regions)
+  s <- subset_scMethrix(scm.h5, samples = samples, contigs = contigs, regions = regions, by="include")
   expect_equivalent(dim(s),c(4,2))
 
+  # Subset mem by include
   
-  s <- subset_scMethrix(scm.mem, samples = samples)
+  s <- subset_scMethrix(scm.mem, samples = samples, by="include")
   expect_equivalent(dim(s),c(18,2))
 
-  s <- subset_scMethrix(scm.mem, contigs = contigs)
+  s <- subset_scMethrix(scm.mem, contigs = contigs, by="include")
   expect_equivalent(dim(s),c(10,4))
   
-  s <- subset_scMethrix(scm.mem, regions = regions)
+  s <- subset_scMethrix(scm.mem, regions = regions, by="include")
   expect_equivalent(dim(s),c(6,4))
   
-  s <- subset_scMethrix(scm.mem, samples = samples, contigs = contigs, regions = regions)
+  s <- subset_scMethrix(scm.mem, samples = samples, contigs = contigs, regions = regions, by="include")
   expect_equivalent(dim(s),c(4,2))
   
-})
-
-test_that("region_filter", {
+  # Subset H5 by exclude
   
-  expect_error(region_filter("not scMethrix"))
-  expect_warning(region_filter(scm.h5))
+  s <- subset_scMethrix(scm.h5, samples = samples, by = "exclude")
+  expect_equivalent(dim(s),c(18,2))
+  expect_equivalent(length(intersect(colData(s)$colData,samples)),0)
   
-  regions <- GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
-  s <- region_filter(scm.h5, regions = regions)
-  expect_equivalent(dim(s),c(16,4))
+  s <- subset_scMethrix(scm.h5, contigs = contigs, by = "exclude")
+  expect_equivalent(dim(s),c(8,4))
+  #expect_equivalent(contigs,as.character(seqnames(s)@values))
+  
+  s <- subset_scMethrix(scm.h5, regions = regions, by = "exclude")
+  expect_equivalent(dim(s),c(12,4))
+  
+  s <- subset_scMethrix(scm.h5, samples = samples, contigs = contigs, regions = regions, by = "exclude")
+  expect_equivalent(dim(s),c(6,2))
+  
+  # Subset mem by exclude
+  
+  s <- subset_scMethrix(scm.mem, samples = samples, by = "exclude")
+  expect_equivalent(dim(s),c(18,2))
+  
+  s <- subset_scMethrix(scm.mem, contigs = contigs, by = "exclude")
+  expect_equivalent(dim(s),c(8,4))
+  
+  s <- subset_scMethrix(scm.mem, regions = regions, by = "exclude")
+  expect_equivalent(dim(s),c(12,4))
+  
+  s <- subset_scMethrix(scm.mem, samples = samples, contigs = contigs, regions = regions, by = "exclude")
+  expect_equivalent(dim(s),c(6,2))
+  
   
 })
 
@@ -95,8 +118,6 @@ test_that("get_matrix", {
   expect_equivalent(dim(mcols(m)),c(18,4))
   expect_equivalent(class(m)[1],"GRanges")
 
-  
-  
   m <- get_matrix(scm.mem)
   expect_equivalent(dim(m),c(18,4))  
   expect_equivalent(class(m)[1],"matrix")
@@ -117,11 +138,11 @@ test_that("remove_uncovered", {
   
   expect_error(get_matrix("not scMethrix"))
 
-  h5 <- subset_scMethrix(scm.h5,samples="df1")
+  h5 <- subset_scMethrix(scm.h5,samples="df1",by = "include")
   expect_equivalent(dim(h5),c(18,1))
   expect_equivalent(dim(remove_uncovered(h5)),c(5,1))
 
-  mem <- subset_scMethrix(scm.mem,samples="df1")
+  mem <- subset_scMethrix(scm.mem,samples="df1",by = "include")
   expect_equivalent(dim(h5),c(18,1))
   expect_equivalent(dim(remove_uncovered(mem)),c(5,1))
   

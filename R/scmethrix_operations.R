@@ -164,78 +164,6 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 
 #--------------------------------------------------------------------------------------------------------------------------
 
-#' Subsets \code{\link{scMethrix}} object based on given conditions.
-#' @details Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
-#' @param m \code{\link{scMethrix}} object
-#' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param contigs string of chromosome names to subset by
-#' @param samples string of sample names to subset by
-#' @param verbose flag to output messages or not
-#' @examples
-#' data('scMethrix_data')
-#' contigs <- c("chr1","chr3")
-#' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
-#' samples <- c("df1","df3")
-#' 
-#' #Subset to chromosome 1
-#' subset_scMethrix(scMethrix_data$mem, contigs = contigs)
-#' 
-#' #Subset to samples bed1 and bed3
-#' subset_scMethrix(scMethrix_data$mem, samples = samples)
-#' 
-#' #Subset to samples bed1 and bed3, and chromosome 1
-#' subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs)
-#' 
-#' #Subset to region "chr1:1-5"
-#' subset_scMethrix(scMethrix_data$mem, regions = regions)
-
-#' @return An object of class \code{\link{scMethrix}}
-#' @export
-
-subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, verbose=TRUE) {
-  
-  if (!is(m, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (is.null(regions) & is.null(contigs) & is.null(samples)) {
-    warning("At least 1 argument mandatory for subsetting. No subset generated")
-    return(m)
-  }
-  
-  message("Subsetting CpG sites...",start_time())
-  
-  if (!is.null(regions)) {
-    message("   Subsetting by regions")
-    subset <- cast_granges(regions)
-    m <- m[GenomicRanges::findOverlaps(rowRanges(m), regions)@from]
-    if (nrow(m) == 0)
-      stop("Subsetting resulted in zero entries", call. = FALSE)
-  }
-
-  if (!is.null(contigs)) {
-    message("   Subsetting by contigs")
-    m <- subset(m, subset = as.vector(seqnames(m)) %in% contigs)
-    if (nrow(m) == 0)
-      stop("Subsetting resulted in zero entries", call. = FALSE)
-  }
-  
-  if (!is.null(samples)) {
-    message("   Subsetting by samples")
-    m <- subset(m, select = row.names(colData(m)) %in% samples)
-    if (length(m) == 0)
-      stop("Samples not present in the object", call. = FALSE)
-  }
-
-  message("Subset in ",stop_time())
-  
-  return(m)
-  
-}
-
-
-#--------------------------------------------------------------------------------------------------------------------------
-
 #' Filters an \code{\link{scMethrix}} object based on given conditions.
 #' @details Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can 
 #' either subset to or filter out the input parameters.
@@ -252,32 +180,32 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
 #' samples <- c("df1","df3")
 #' 
 #' #Subset to only chromosome 1
-#' filter_scMethrix(scMethrix_data$mem, contigs = contigs)
+#' subset_scMethrix(scMethrix_data$mem, contigs = contigs, by = "include")
 #' 
 #' #Subset to only samples bed1 and bed3
-#' filter_scMethrix(scMethrix_data$mem, samples = samples)
+#' subset_scMethrix(scMethrix_data$mem, samples = samples, by = "include")
 #' 
 #' #Subset to only samples bed1 and bed3, and chromosome 1
-#' filter_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs)
+#' subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "include")
 #' 
 #' #Subset to only region "chr1:1-5"
-#' filter_scMethrix(scMethrix_data$mem, regions = regions)
+#' subset_scMethrix(scMethrix_data$mem, regions = regions, by = "include")
 #' 
-#' #Filter to exclude chromosome 1
-#' filter_scMethrix(scMethrix_data$mem, contigs = contigs, by = "exclude")
+#' #Subset to exclude chromosome 1
+#' subset_scMethrix(scMethrix_data$mem, contigs = contigs, by = "exclude")
 #' 
-#' #Filter to exclude samples bed1 and bed3
-#' filter_scMethrix(scMethrix_data$mem, samples = samples, by = "exclude")
+#' #Subset to exclude samples bed1 and bed3
+#' subset_scMethrix(scMethrix_data$mem, samples = samples, by = "exclude")
 #' 
-#' #Filter to exclude samples bed1 and bed3, and chromosome 1
-#' filter_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "exclude")
+#' #Subset to exclude samples bed1 and bed3, and chromosome 1
+#' subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "exclude")
 #' 
-#' #Filter to exclude region "chr1:1-5"
-#' filter_scMethrix(scMethrix_data$mem, regions = regions, by = "exclude")
+#' #Subset to exclude region "chr1:1-5"
+#' subset_scMethrix(scMethrix_data$mem, regions = regions, by = "exclude")
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
 
-filter_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), verbose=TRUE) {
+subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), verbose=TRUE) {
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -288,33 +216,26 @@ filter_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
     return(m)
   }
   
-  if (verbose) message("Subsetting CpG sites...",start_time())
-  
   if (by == "exclude") {
     
     if (!is.null(regions)) {
-      if (verbose) message("   Subsetting by regions")
-      regions <- subsetByOverlaps(rowRanges(m), regions, invert = TRUE, type, maxgap=-1L, minoverlap=0L)
-      m <- subset_scMethrix(m,regions=reduce(regions))
-      if (nrow(m) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
+      reg <- subsetByOverlaps(rowRanges(m), regions, invert = TRUE, type="any", maxgap=-1L, minoverlap=0L)
+      m <- subset_scMethrix(m,regions=reduce(reg),by="include")
     }
     
     if (!is.null(contigs)) {
-      if (verbose) message("   Subsetting by contigs")
       c <- as.character(seqnames(m)@values)
-      m <- subset_scMethrix(m,contigs = c[!c %in% contigs])
-      if (nrow(m) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
+      m <- subset_scMethrix(m,contigs = c[!c %in% contigs],by="include")
     }
     
     if (!is.null(samples)) {
-      if (verbose) message("   Subsetting by samples")
       s <- row.names(colData(m))
-      m <- subset_scMethrix(m,samples = s[!s %in% samples])
-      if (length(m) == 0) stop("Samples not present in the object", call. = FALSE)
+      m <- subset_scMethrix(m,samples = s[!s %in% samples],by="include")
     }
-    
   
   } else {
+    
+    if (verbose) message("Subsetting CpG sites...",start_time())
     
     if (!is.null(regions)) {
       if (verbose) message("   Subsetting by regions")
@@ -334,46 +255,11 @@ filter_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
       m <- subset(m, select = row.names(colData(m)) %in% samples)
       if (length(m) == 0) stop("Samples not present in the object", call. = FALSE)
     }
-  }
     
-  if (verbose) message("Subset in ",stop_time())
+    if (verbose) message("Subset in ",stop_time())
+  }
   
   return(m)
-  
-}
-
-#' Filter matrices by region
-#' @details Takes \code{\link{scMethrix}} object and filters CpGs based on supplied regions in data.table or GRanges format
-#' @param m \code{\link{scMethrix}} object
-#' @param regions genomic regions to filter-out. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param type defines the type of the overlap of the CpG sites with the target regions. Default value is `any`. For detailed description,
-#' see the \code{foverlaps} function of the \code{\link{data.table}} package.
-#' @return An object of class \code{\link{scMthrix}}
-#' @import GenomicRanges
-#' @examples
-#' data('scMethrix_data')
-#' # Filter methylation data to chr1:1:5
-#' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
-#' region_filter(scMethrix_data$mem, regions)
-#' @export
-region_filter <- function(m, regions=NULL, type = "any") {
-
-  if (!is(m, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (is.null(regions)) {
-    warning("No region specified. No filtering performed")
-    return(m)
-  }
-
-  message("Filtering by region...",start_time())
-  
-  
-  
-  message("Filtered in ",stop_time())
-  
-  return()
   
 }
 
@@ -520,7 +406,7 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
 #' @examples
 #' data('scMethrix_data')
 #' # Remove uncovered CpGs after subsetting to a single sample
-#' remove_uncovered(subset_scMethrix(scMethrix_data$mem, samples = "df1"))
+#' remove_uncovered(subset_scMethrix(scMethrix_data$mem, samples = "df1", by="include"))
 #' @export
 remove_uncovered <- function(m) {
   

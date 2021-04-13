@@ -5,6 +5,7 @@
 #' @examples
 #' data('scMethrix_data')
 #' is_h5(scMethrix_data$mem)
+#' @export
 is_h5 = function(m) {
   return(m@metadata$is_h5)
 }
@@ -15,7 +16,8 @@ is_h5 = function(m) {
 #' @return string containing the sample name
 #' @import tools
 #' @examples
-#' get_sample_name("C:/dir/dir/filename.ext")
+#' #get_sample_name("C:/dir/dir/filename.ext")
+ #' @export
 get_sample_name = function(s) {
   
   return(tools::file_path_sans_ext(basename(s)))
@@ -33,6 +35,7 @@ get_sample_name = function(s) {
 #' 
 #' # Split vector into sub-vectors with a size of 2
 #' split_vector(c(1,2,3,4,5,6,7,8),2,by="size")
+#' @export
 split_vector = function(v,n, by = c("chunk","size")) {
   
   if (match.arg(by)=="size") {
@@ -64,6 +67,7 @@ split_vector = function(v,n, by = c("chunk","size")) {
 #' @return GRangesList containing all the chunked Granges
 #' @import GenomicRanges
 #' @examples
+#' @export
 chunk_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, percent = NULL
   
   if (sum(is.na(c(factor,percent,num))) != 2) stop("Max 1 argument for chunking.")
