@@ -13,6 +13,7 @@ get_region_summary = function (m) {
 #' @param h5_dir The directory to use. Created, if not existing. Default NULL
 #' @param replace Should it overwrite the pre-existing data? FALSE by default.
 #' @param ... Parameters to pass to saveHDF5SummarizedExperiment
+#' @importFrom SummarizedExperiment assays
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
@@ -72,6 +73,7 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 #' @details Takes a \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
 #' @param m An object of class \code{\link{scMethrix}}, HDF5 format
 #' @return An object of class \code{\link{scMethrix}}
+#' @importFrom SummarizedExperiment assays assays<-
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
@@ -105,6 +107,7 @@ convert_HDF5_methrix <- function(m = NULL) {
 #' @param h5_dir Directory for the HDF5 object to be stored
 #' @param verbose flag to output messages or not
 #' @return An object of class \code{\link{scMethrix}}, HDF5 format
+#' @importFrom SummarizedExperiment assays
 #' @examples
 #' data('scMethrix_data')
 #' convert_methrix(scMethrix_data$mem, h5_dir=paste0(tempdir(),"/h5"))
@@ -175,6 +178,7 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 #' @param samples string of sample names to subset by
 #' @param by string to decide whether to "include" or "exclude" the given criteria from the subset
 #' @param verbose flag to output messages or not
+#' @importFrom IRanges subsetByOverlaps
 #' @examples
 #' data('scMethrix_data')
 #' 
@@ -440,6 +444,7 @@ remove_uncovered <- function(m) {
 #' higher quantile than the defined will be masked. Default = 0.99.
 #' @param n_cores Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
 #' @return An object of class \code{\link{scMethrix}}
+#' @importFrom SummarizedExperiment assays assays<-
 #' @examples
 #' @export
 mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
@@ -453,7 +458,7 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_cores) needs to be 1.")
   }
   
-  message("Masking CpG sites ( ",high_quintile," quintile and <= ",low_count, " count", start_time())
+  message("Masking CpG sites ( ",high_quantile," quintile and <= ",low_count, " count", start_time())
   
   if (!is.null(low_count)) {
     
@@ -472,7 +477,7 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
       n <- n-(nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA)))
     } else {
       n <- nrow(m) - matrixStats::colSums2(is.na(get_matrix(m)))
-      row_idx <- !(matrixStats::rowSums(is.na(get_matrix(m))) <= low_count)
+      row_idx <- !(matrixStats::rowSums2(is.na(get_matrix(m))) <= low_count)
       assays(m)[[1]][!!row_idx,] <- as.integer(NA)
       n <- n - (nrow(m) - matrixStats::colSums2(is.na(get_matrix(m))))
     }

@@ -6,6 +6,7 @@
 #' @param colData vector of input sample names
 #' @param stranded Default c
 #' @param genome_name Name of genome. Default hg19
+#' @param batch_size Max number of files to hold in memory at once
 #' @param n_threads number of threads to use. Default 1.
 #' Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.
 #' @param h5 Should the coverage and methylation matrices be stored as 'HDF5Array'
@@ -25,7 +26,7 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", n_threads = 0, 
+read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = 200, n_threads = 0, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
                       zero_based = FALSE, reads = NULL, replace = FALSE, stranded = FALSE) {
   
@@ -45,7 +46,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
       stop("Output directory must be specified", call. = FALSE)
     }
     
-    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based = zero_based)
+    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,batch_size = batch_size, zero_based = zero_based)
 
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     
@@ -71,7 +72,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based = zero_based)
     
-    data <- read_mem_data(files, ref_cpgs, n_threads = n_threads,zero_based = zero_based,verbose = verbose)
+    data <- read_mem_data(files, ref_cpgs, batch_size = batch_size, n_threads = n_threads,zero_based = zero_based,verbose = verbose)
     
     rrng <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     
@@ -176,7 +177,7 @@ read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 20
 #' @param ref_cpgs The index of all unique coordinates from the input BED files
 #' @param zero_based Whether the input data is 0 or 1 based
 #' @return data.table containing vector of all indexed methylation values for the input BED
-#' @import data.table
+#' @importFrom plyr .
 #' @examples
 read_bed_by_index <- function(file,ref_cpgs,zero_based=FALSE) {
   data <- data.table::fread(file, header = FALSE, select = c(1:2,4))
@@ -201,7 +202,7 @@ read_bed_by_index <- function(file,ref_cpgs,zero_based=FALSE) {
 }
 
 read_bed_by_index2 <- function(file,zero_based=FALSE) {
-  return(read_bed_by_index(file,ref_cpgs,zero_based))
+  return(read_bed_by_index(file,get("ref_cpgs", envir=globalenv()),zero_based))
 }
 
 #' Writes methylation values from input BED files into an HDF5array
@@ -279,7 +280,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   
 }
 
-read_mem_data <- function(files, ref_cpgs, n_threads = 0, zero_based = FALSE, verbose = TRUE) {
+read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero_based = FALSE, verbose = TRUE) {
   
   if (verbose) message("Reading BED data...",start_time()) 
   
@@ -302,9 +303,9 @@ read_mem_data <- function(files, ref_cpgs, n_threads = 0, zero_based = FALSE, ve
     parallel::stopCluster(cl)
 
   } else {
-    if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
+   # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
     data <- dplyr::bind_cols(lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based))
-    if (verbose) message(" (",split_time(),")")
+   # if (verbose) message(" (",split_time(),")")
   }
   
   if (verbose) message("Data read in ",stop_time()) 

@@ -9,6 +9,7 @@ read_beds(
   ref_cpgs = NULL,
   colData = NULL,
   genome_name = "hg19",
+  batch_size = 200,
   n_threads = 0,
   h5 = FALSE,
   h5_dir = NULL,
@@ -29,6 +30,8 @@ read_beds(
 \item{colData}{vector of input sample names}
 
 \item{genome_name}{Name of genome. Default hg19}
+
+\item{batch_size}{Max number of files to hold in memory at once}
 
 \item{n_threads}{number of threads to use. Default 1.
 Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.}
