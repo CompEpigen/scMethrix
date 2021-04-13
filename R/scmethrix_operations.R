@@ -7,6 +7,37 @@ get_region_summary = function (m) {
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
+#' Saves an HDF5 \code{\link{scMethrix}} object
+#' @details Takes \code{\link{methrix}} object and saves it in the specified directory
+#' @param m \code{\link{methrix}} object
+#' @param h5_dir The directory to use. Created, if not existing. Default NULL
+#' @param replace Should it overwrite the pre-existing data? FALSE by default.
+#' @param ... Parameters to pass to saveHDF5SummarizedExperiment
+#' @examples
+#' data('scMethrix_data')
+#' dir <- paste0(tempdir(),"/h5")
+#' m <- convert_methrix(scMethrix_data$mem, h5_dir=dir)
+#' save_HDF5_scMethrix(m, h5_dir = dir, replace = TRUE)
+#' @return Nothing
+#' @export
+save_HDF5_scMethrix <- function(m, h5_dir = NULL, replace = FALSE, ...) {
+  
+  if (!is(m, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (is.null(dir)) {
+    stop("Please provide the target directory containing ")
+  }
+  
+  if (is_h5(m)) {
+    HDF5Array::saveHDF5SummarizedExperiment(x = m, dir = h5_dir, replace = replace, ...)
+  } else {
+    stop("The object is not a methrix object or not in an HDF5 format. ")
+  }
+}
+
+#--------------------------------------------------------------------------------------------------------------------------
 #' Loads HDF5 scMethrix object
 #' @details Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
 #' @param dir The directory to read in from. Default NULL
