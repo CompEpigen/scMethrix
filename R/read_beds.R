@@ -3,15 +3,19 @@
 #' Optionally arrays can be serialized as on-disk HDFS5 arrays.
 #' @param files BED files containing methylation d
 #' @param ref_cpgs BED files containing list of CpG sites. Must be zero-based genome.
+#' @param colData vector of input sample names
 #' @param stranded Default c
 #' @param genome_name Name of genome. Default hg19
 #' @param n_threads number of threads to use. Default 1.
 #' Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.
 #' @param h5 Should the coverage and methylation matrices be stored as 'HDF5Array'
 #' @param h5_dir directory to store H5 based object
-#' @param h5temp temporary directory to store hdf5
+#' @param h5_temp temporary directory to store hdf5
 #' @param desc Description of the experiment
 #' @param verbose flag to output messages or not.
+#' @param zero_based Boolean flag for whether the input data is zero-based or not
+#' @param reads Manual input of reads. Typically used for testing.
+#' @param replace Boolean flag for whether to delete the contents of h5_dir before saving
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
@@ -23,7 +27,7 @@
 
 read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", n_threads = 0, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
-                      zero_based = FALSE, reads = NULL, replace = FALSE) {
+                      zero_based = FALSE, reads = NULL, replace = FALSE, stranded = FALSE) {
   
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
@@ -86,11 +90,14 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 #' the genomic coordinates from BED files, then runs unique() when the list is full and keeps the running
 #' results in the batch_size+1 position. Also indexes based on 'chr' and 'start' for later searching.
 #' @param files List of BED files
+#' @param n_threads integer for number of threads to use
 #' @param batch_size Number of files to process before running unique. Default of 30.
-#' @export
+#' @param zero_based Whether the input data is 0 or 1 based
+#' @param verbose flag to output messages or not.
 #' @return data.table containing all unique genomic coordinates
 #' @import data.table parallel doParallel
 #' @examples
+#' @export
 read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 200, verbose = TRUE) {
   
   # Parallel functionality
@@ -166,7 +173,8 @@ read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 20
 #' @details Creates an NA-based vector populated with methlylation values from the input BED file in the
 #' respective indexed genomic coordinates
 #' @param file The BED file to parse
-#' @param index The index of all unique coordinates from the input BED files
+#' @param ref_cpgs The index of all unique coordinates from the input BED files
+#' @param zero_based Whether the input data is 0 or 1 based
 #' @return data.table containing vector of all indexed methylation values for the input BED
 #' @import data.table
 #' @examples
@@ -202,9 +210,9 @@ read_bed_by_index2 <- function(file,zero_based=FALSE) {
 #' @param files The BED files to parse
 #' @param ref_cpgs The index of all unique coordinates from the input BED files
 #' @param n_threads The number of threads to use. 0 is the default thread with no cluster built.
-#' @param zero_based
-#' @param verbose
 #' @param h5_temp The file location to store the RealizationSink object
+#' @param zero_based Boolean flag for whether the input data is zero-based or not
+#' @param verbose flag to output messages or not.
 #' @return HDF5Array The methylation values for input BED files
 #' @import data.table DelayedArray HDF5Array parallel doParallel
 #' @examples

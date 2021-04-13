@@ -15,7 +15,13 @@ read_index(
 \arguments{
 \item{files}{List of BED files}
 
+\item{n_threads}{integer for number of threads to use}
+
+\item{zero_based}{Whether the input data is 0 or 1 based}
+
 \item{batch_size}{Number of files to process before running unique. Default of 30.}
+
+\item{verbose}{flag to output messages or not.}
 }
 \value{
 data.table containing all unique genomic coordinates

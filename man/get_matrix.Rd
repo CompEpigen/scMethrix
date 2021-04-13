@@ -12,8 +12,6 @@ get_matrix(m, add_loci = FALSE, in_granges = FALSE)
 \item{add_loci}{Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table}
 
 \item{in_granges}{Do you want the outcome in \code{GRanges}?}
-
-\item{type}{can be \code{M} or \code{C}. Default 'M'}
 }
 \value{
 Coverage or Methylation matrix
@@ -22,7 +20,7 @@ Coverage or Methylation matrix
 Extract methylation or coverage matrices
 }
 \details{
-Takes \code{\link{scMethrix}} object and returns user specified \code{methylation} or \code{coverage} matrix
+Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
 }
 \examples{
 data('scMethrix_data')

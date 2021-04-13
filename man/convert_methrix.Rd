@@ -8,6 +8,10 @@ convert_methrix(m = NULL, h5_dir = NULL, verbose = TRUE)
 }
 \arguments{
 \item{m}{An object of class \code{\link{scMethrix}}}
+
+\item{h5_dir}{Directory for the HDF5 object to be stored}
+
+\item{verbose}{flag to output messages or not}
 }
 \value{
 An object of class \code{\link{scMethrix}}, HDF5 format

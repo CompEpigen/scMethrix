@@ -174,6 +174,7 @@ stop_time <- function() {
 #' control to see if there is excessive number of CpG sites that are not present in the reference genome.
 #' @param ref_cpgs A reference set of CpG sites (e.g. Hg19 or mm10) in bedgraph format
 #' @param gen_cpgs A subset of CpG sites. Usually obtained from read_index.
+#' @param verbose flag to output messages or not
 #' @return Returns list of CpG sites in bedgraph format
 subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   keys <- plyr::join.keys(ref_cpgs, gen_cpgs, c("chr","start"))

@@ -17,13 +17,16 @@ read_beds(
   verbose = FALSE,
   zero_based = FALSE,
   reads = NULL,
-  replace = FALSE
+  replace = FALSE,
+  stranded = FALSE
 )
 }
 \arguments{
 \item{files}{BED files containing methylation d}
 
 \item{ref_cpgs}{BED files containing list of CpG sites. Must be zero-based genome.}
+
+\item{colData}{vector of input sample names}
 
 \item{genome_name}{Name of genome. Default hg19}
 
@@ -34,13 +37,19 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 
 \item{h5_dir}{directory to store H5 based object}
 
+\item{h5_temp}{temporary directory to store hdf5}
+
 \item{desc}{Description of the experiment}
 
 \item{verbose}{flag to output messages or not.}
 
-\item{stranded}{Default c}
+\item{zero_based}{Boolean flag for whether the input data is zero-based or not}
 
-\item{h5temp}{temporary directory to store hdf5}
+\item{reads}{Manual input of reads. Typically used for testing.}
+
+\item{replace}{Boolean flag for whether to delete the contents of h5_dir before saving}
+
+\item{stranded}{Default c}
 }
 \value{
 An object of class \code{\link{scMethrix}}

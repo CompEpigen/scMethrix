@@ -102,6 +102,8 @@ convert_HDF5_methrix <- function(m = NULL) {
 #' @details Takes a \code{\link{scMethrix}} object and returns with the same object with delayed array assay slots
 #' with HDF5 backend. Might take long time!
 #' @param m An object of class \code{\link{scMethrix}}
+#' @param h5_dir Directory for the HDF5 object to be stored
+#' @param verbose flag to output messages or not
 #' @return An object of class \code{\link{scMethrix}}, HDF5 format
 #' @examples
 #' data('scMethrix_data')
@@ -164,13 +166,14 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 
 #--------------------------------------------------------------------------------------------------------------------------
 
-#' Filters an \code{\link{scMethrix}} object based on given conditions.
+#' Subsets an \code{\link{scMethrix}} object based on given conditions.
 #' @details Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can 
 #' either subset to or filter out the input parameters.
 #' @param m \code{\link{scMethrix}} object
 #' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param contigs string of chromosome names to subset by
 #' @param samples string of sample names to subset by
+#' @param by string to decide whether to "include" or "exclude" the given criteria from the subset
 #' @param verbose flag to output messages or not
 #' @examples
 #' data('scMethrix_data')
@@ -349,9 +352,8 @@ get_stats <- function(m, per_chr = TRUE) {
 #--------------------------------------------------------------------------------------------------------------------------
 
 #' Extract methylation or coverage matrices
-#' @details Takes \code{\link{scMethrix}} object and returns user specified \code{methylation} or \code{coverage} matrix
+#' @details Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
 #' @param m \code{\link{scMethrix}} object
-#' @param type can be \code{M} or \code{C}. Default 'M'
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
 #' @param in_granges Do you want the outcome in \code{GRanges}?
 #' @return Coverage or Methylation matrix

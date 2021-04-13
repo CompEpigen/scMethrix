@@ -9,7 +9,9 @@ read_bed_by_index(file, ref_cpgs, zero_based = FALSE)
 \arguments{
 \item{file}{The BED file to parse}
 
-\item{index}{The index of all unique coordinates from the input BED files}
+\item{ref_cpgs}{The index of all unique coordinates from the input BED files}
+
+\item{zero_based}{Whether the input data is 0 or 1 based}
 }
 \value{
 data.table containing vector of all indexed methylation values for the input BED

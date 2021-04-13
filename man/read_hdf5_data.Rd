@@ -21,6 +21,10 @@ read_hdf5_data(
 \item{n_threads}{The number of threads to use. 0 is the default thread with no cluster built.}
 
 \item{h5_temp}{The file location to store the RealizationSink object}
+
+\item{zero_based}{Boolean flag for whether the input data is zero-based or not}
+
+\item{verbose}{flag to output messages or not.}
 }
 \value{
 HDF5Array The methylation values for input BED files

@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{subset_scMethrix}
 \alias{subset_scMethrix}
-\title{Filters an \code{\link{scMethrix}} object based on given conditions.}
+\title{Subsets an \code{\link{scMethrix}} object based on given conditions.}
 \usage{
 subset_scMethrix(
   m,
@@ -22,13 +22,15 @@ subset_scMethrix(
 
 \item{samples}{string of sample names to subset by}
 
+\item{by}{string to decide whether to "include" or "exclude" the given criteria from the subset}
+
 \item{verbose}{flag to output messages or not}
 }
 \value{
 An object of class \code{\link{scMethrix}}
 }
 \description{
-Filters an \code{\link{scMethrix}} object based on given conditions.
+Subsets an \code{\link{scMethrix}} object based on given conditions.
 }
 \details{
 Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can
