@@ -471,10 +471,10 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
       assays(m)[[1]][row_idx] <- as.integer(NA)
       n <- n-(nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA)))
     } else {
-      n <- nrow(m) - MatrixStats::colSums2(is.na(get_matrix(m)))
-      row_idx <- !(MatrixStats::rowSums(is.na(get_matrix(m))) <= low_count)
+      n <- nrow(m) - matrixStats::colSums2(is.na(get_matrix(m)))
+      row_idx <- !(matrixStats::rowSums(is.na(get_matrix(m))) <= low_count)
       assays(m)[[1]][!!row_idx,] <- as.integer(NA)
-      n <- n - (nrow(m) - MatrixStats::colSums2(is.na(get_matrix(m))))
+      n <- n - (nrow(m) - matrixStats::colSums2(is.na(get_matrix(m))))
     }
       
     for (i in seq_along(colnames(m))) {
