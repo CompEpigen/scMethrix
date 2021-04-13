@@ -11,9 +11,8 @@ S4 class scMethrix
 \section{Slots}{
 
 \describe{
-\item{\code{assays}}{A list of two matrices containing 'Methylation' and 'Coverage' information}
-
-\item{\code{bins}}{A list of matricies for different size of binning for methylation data}
+\item{\code{assays}}{A list of two matrices containing 'Methylation' and 'Coverage' information
+#slot bins A list of matricies for different size of binning for methylation data}
 
 \item{\code{elementMetadata}}{A DataFrame describing rows in correspoding assay matrices.}
 
@@ -21,6 +20,14 @@ S4 class scMethrix
 
 \item{\code{metadata}}{a list of meta data associated with the assays}
 
+\item{\code{rowRanges}}{A Granges of the genomic coordinates of CpG sites}
+
 \item{\code{NAMES}}{NULL}
+
+\item{\code{int_colData}}{NULL}
+
+\item{\code{int_metadata}}{NULL}
+
+\item{\code{int_elementMetadata}}{NULL}
 }}
 

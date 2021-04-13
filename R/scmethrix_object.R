@@ -1,11 +1,15 @@
 #' Class scMethrix
 #' @description S4 class scMethrix
 #' @slot assays A list of two matrices containing 'Methylation' and 'Coverage' information
-#' @slot bins A list of matricies for different size of binning for methylation data
+#' #slot bins A list of matricies for different size of binning for methylation data
 #' @slot elementMetadata A DataFrame describing rows in correspoding assay matrices.
 #' @slot colData genome: the name of the BSgenome that was used to extract CpGs, isHDF5: is it stored in HDF5 Array format
 #' @slot metadata a list of meta data associated with the assays
+#' @slot rowRanges A Granges of the genomic coordinates of CpG sites
 #' @slot NAMES NULL
+#' @slot int_colData NULL 
+#' @slot int_metadata NULL
+#' @slot int_elementMetadata NULL 
 #' @exportClass scMethrix
 #' @importFrom graphics axis legend lines mtext par plot title
 #' @importFrom stats complete.cases cov density median prcomp quantile sd
