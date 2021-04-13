@@ -4,8 +4,7 @@ Version: 0.0.0.0001
 Authors@R: 
     person("Lindsay","Andrew", role = c("aut", "cre"), email = "a.lindsay@dkfz.de") 
 Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+License: Apache License (>= 2)
 Encoding: UTF-8
 LazyData: false
 Depends: R (>= 3.6), data.table (>= 1.12.4), SingleCellExperiment
