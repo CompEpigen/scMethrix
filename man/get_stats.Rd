@@ -29,6 +29,3 @@ get_stats(scMethrix_data$mem)
 #Get stats for each sample
 get_stats(scMethrix_data$mem,per_chr = FALSE)
 }
-\seealso{
-\code{\link{plot_stats}}
-}

@@ -8,8 +8,8 @@ get_region_summary = function (m) {
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Saves an HDF5 \code{\link{scMethrix}} object
-#' @details Takes \code{\link{methrix}} object and saves it in the specified directory
-#' @param m \code{\link{methrix}} object
+#' @details Takes \code{\link{scMethrix}} object and saves it in the specified directory
+#' @param m \code{\link{scMethrix}} object
 #' @param h5_dir The directory to use. Created, if not existing. Default NULL
 #' @param replace Should it overwrite the pre-existing data? FALSE by default.
 #' @param ... Parameters to pass to saveHDF5SummarizedExperiment
@@ -271,7 +271,6 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
 #' @details Calculate descriptive statistics
 #' @param m \code{\link{scMethrix}} object
 #' @param per_chr Estimate stats per chromosome. Default TRUE
-#' @seealso \code{\link{plot_stats}}
 #' @examples
 #' data('scMethrix_data')
 #' 

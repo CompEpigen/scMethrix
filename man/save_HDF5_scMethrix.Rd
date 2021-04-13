@@ -7,7 +7,7 @@
 save_HDF5_scMethrix(m, h5_dir = NULL, replace = FALSE, ...)
 }
 \arguments{
-\item{m}{\code{\link{methrix}} object}
+\item{m}{\code{\link{scMethrix}} object}
 
 \item{h5_dir}{The directory to use. Created, if not existing. Default NULL}
 
@@ -22,7 +22,7 @@ Nothing
 Saves an HDF5 \code{\link{scMethrix}} object
 }
 \details{
-Takes \code{\link{methrix}} object and saves it in the specified directory
+Takes \code{\link{scMethrix}} object and saves it in the specified directory
 }
 \examples{
 data('scMethrix_data')
