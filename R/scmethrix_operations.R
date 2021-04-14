@@ -226,6 +226,7 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
   if (by == "exclude") {
     
     if (!is.null(regions)) {
+      regions <- cast_granges(regions)
       reg <- subsetByOverlaps(rowRanges(m), regions, invert = TRUE, type="any", maxgap=-1L, minoverlap=0L)
       m <- subset_scMethrix(m,regions=reduce(reg),by="include")
     }
@@ -245,6 +246,7 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
     if (verbose) message("Subsetting CpG sites...",start_time())
     
     if (!is.null(regions)) {
+      regions <- cast_granges(regions)
       if (verbose) message("   Subsetting by regions")
       subset <- cast_granges(regions)
       m <- m[GenomicRanges::findOverlaps(rowRanges(m), regions)@from]

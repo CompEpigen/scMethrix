@@ -4,23 +4,24 @@
 \alias{split_vector}
 \title{Splits a vector into subvectors}
 \usage{
-split_vector(v, n, by = c("chunk", "size"))
+split_vector(vec, num, by = c("chunk", "size"))
 }
 \arguments{
-\item{v}{The vector to split}
+\item{vec}{The vector to split}
 
-\item{n}{The number to split by}
+\item{num}{The number to split by}
 
 \item{by}{Whether to split by chunk or by size}
 }
 \value{
-vector
+A vector of vectors
 }
 \description{
 Splits a vector into subvectors
 }
 \details{
-Splits a vector into n chunks or chunks of n size.
+Splits a vector into \code{num} vectors or vectors of \code{n} size. If \code{len(vec)\%\%num != 0},
+then the last vector will have a length of less than size \code{num}
 }
 \examples{
 # Split vector into 4 sub vectors

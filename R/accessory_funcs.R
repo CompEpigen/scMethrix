@@ -24,11 +24,12 @@ get_sample_name = function(s) {
 }
 
 #' Splits a vector into subvectors
-#' @details Splits a vector into n chunks or chunks of n size.
-#' @param v The vector to split
-#' @param n The number to split by
+#' @details Splits a vector into \code{num} vectors or vectors of \code{n} size. If \code{len(vec)%%num != 0},
+#' then the last vector will have a length of less than size \code{num}
+#' @param vec The vector to split
+#' @param num The number to split by
 #' @param by Whether to split by chunk or by size
-#' @return vector
+#' @return A vector of vectors
 #' @examples
 #' # Split vector into 4 sub vectors
 #' split_vector(c(1,2,3,4,5,6,7,8),4,by="chunk")
@@ -36,24 +37,25 @@ get_sample_name = function(s) {
 #' # Split vector into sub-vectors with a size of 2
 #' split_vector(c(1,2,3,4,5,6,7,8),2,by="size")
 #' @export
-split_vector = function(v,n, by = c("chunk","size")) {
+split_vector = function(vec,num, by = c("chunk","size")) {
   
   if (match.arg(by)=="size") {
     
-    return (split(v, ceiling(seq_along(v)/n)))
+    vec <- split(vec, ceiling(seq_along(vec)/num))
+    return (unname(vec))
     
   } else {
-  
-    x <- length(v)
     
-    if (x/n < 2) stop("Length of input vector must be at least 2x greater than the number of chunks")
+    len <- length(vec)
     
-    e <- ceiling(x/n)*(1:(n-1))
-    s <- c(0,e+1)
-    e <- c(e,x)
+    if (len/num < 2) stop("Length of input vector must be at least 2x greater than the number of chunks")
     
-    return(lapply(1:n, function(i) {
-      return(v[s[i]:e[i]])
+    chunks <- ceiling(len/num)*(1:(num-1))
+    idx <- c(0,chunks+1)
+    chunks <- c(chunks,len)
+    
+    return(lapply(1:num, function(i) {
+      return(vec[idx[i]:chunks[i]])
     }))
   }
 }
@@ -68,7 +70,7 @@ split_vector = function(v,n, by = c("chunk","size")) {
 #' @import GenomicRanges
 #' @examples
 #' @export
-chunk_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, percent = NULL
+split_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, percent = NULL
   
   if (sum(is.na(c(factor,percent,num))) != 2) stop("Max 1 argument for chunking.")
   
@@ -95,48 +97,28 @@ chunk_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, perce
   return (GenomicRanges::GRangesList(grl))
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
-# Parse genomic regions and convert them to key'd data.table
-cast_ranges <- function(regions, set.key = TRUE) {
-  chr <- . <- NULL
-  if (is(regions, "GRanges")) {
-    target_regions <- data.table::as.data.table(x = regions)
-    target_regions[, `:=`(seqnames, as.character(seqnames))]
-    colnames(target_regions)[seq_len(3)] <- c("chr", "start", "end")
-    if (set.key){
-      data.table::setDT(x = target_regions, key = c("chr", "start", "end"))}
-    target_regions <- target_regions[, .(chr, start, end)]
-  } else if (is(regions, "data.frame")) {
-    if (all(c("chr", "start", "end") %in% colnames(regions))){
-      regions <- regions[,c("chr", "start", "end")]
-    } else {
-      warning("Columns with names chr, start and end are not found. Assuming that the first three columns are chr, start and end.")
-    }
-    target_regions <- data.table::as.data.table(x = regions)
-    colnames(target_regions)[seq_len(3)] <- c("chr", "start", "end")
-    target_regions <- target_regions[, .(chr, start, end)]
-    target_regions[, `:=`(chr, as.character(chr))]
-    target_regions[, `:=`(start, as.numeric(as.character(start)))]
-    target_regions[, `:=`(end, as.numeric(as.character(end)))]
-    if (set.key){
-      data.table::setDT(x = target_regions, key = c("chr", "start", "end"))}
-  } else {
-    stop("Invalid input class for regions. Must be a data.table or GRanges object")
-  }
-  
-  target_regions
-}
-
-#------------------------------------------------------------------------
-# Replace region (text or otherwise) with Granges object
+#--- cast_granges -------------------------------------------------------------------------------------------
+#' Casts regions into Granges format
+#' @details Casts the input as a GRanges object. Input can be GRange or a data.frame-compatible class that
+#' can be cast through as.data.frame(). Input format must be chr-start-end for data.frame objects.
+#' @param regions The input regions
+#' @return GRanges object with the input regions
+#' @import GenomicRanges
+#' @examples
+#' regions = data.table(chr = 'chr1', start = 1, end = 100)
+#' cast_granges(regions) 
+#' @export
 cast_granges <- function(regions) {
-  if (is(regions, "GRanges")) return (regions)
-  
+  if (is(regions, "GRanges")) {return (regions)
+  } else if (is(regions,"data.frame")) {return (GenomicRanges::makeGRangesFromDataFrame(regions))
+  } else {stop("Invalid input class for regions. Must be a GRanges or data.frame-like")}
+  return(regions)
 }
 
 #' Starts an internal stopwatch
 #' @details Save the current time to later use for split/lap and overall times
 #' @return NULL
+#' @export
 start_time <- function() {
   assign("time.all", proc.time()["elapsed"], envir=baseenv())
   assign("time.split", proc.time()["elapsed"], envir=baseenv())
@@ -146,6 +128,7 @@ start_time <- function() {
 #' Outputs the split/lap/iteration time 
 #' @details Gets the stored elapsed proc.time() from either the initial start_time or the previous split_time
 #' @return Returns formatted elapsed time since start_time or last split_time
+#' @export
 split_time <- function() {
   
   time <- get("time.split", envir=baseenv())
@@ -158,6 +141,7 @@ split_time <- function() {
 #' Stops an internal stopwatch and outputs overall time
 #' @details Gets the stored elapsed proc.time() from initial start_time() to calculate overall runtime
 #' @return Returns formatted elapsed time since start_time
+#' @export
 stop_time <- function() {
   
   time <- get("time.all", envir=baseenv())
@@ -176,6 +160,7 @@ stop_time <- function() {
 #' @param gen_cpgs A subset of CpG sites. Usually obtained from read_index.
 #' @param verbose flag to output messages or not
 #' @return Returns list of CpG sites in bedgraph format
+#' @export
 subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   keys <- plyr::join.keys(ref_cpgs, gen_cpgs, c("chr","start"))
   sub_cpgs <- ref_cpgs[keys$x %in% keys$y, , drop = FALSE]

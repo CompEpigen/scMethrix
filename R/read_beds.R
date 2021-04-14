@@ -20,7 +20,7 @@
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
-#' @import SingleCellExperiment BRGenomics GenomicRanges tools
+#' @import SingleCellExperiment GenomicRanges tools
 #' @examples
 
 # Must generate an index CpG file first:
@@ -280,6 +280,19 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   
 }
 
+#--- read_mem_data ------------------------------------------------------------------------------------------
+#' Writes methylation values from input BED files into an in-memory SummarizedExperiment
+#' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
+#' values for each BED file/sample. Each column contains the meth. values for a single sample.
+#' @param files The BED files to parse
+#' @param ref_cpgs The index of all unique coordinates from the input BED files
+#' @param batch_size The number of files to hold in memory at once
+#' @param n_threads The number of threads to use. 0 is the default thread with no cluster built.
+#' @param zero_based Boolean flag for whether the input data is zero-based or not
+#' @param verbose flag to output messages or not.
+#' @return matrix of the methylation values for input BED files
+#' @import dplyr parallel doParallel
+#' @examples
 read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero_based = FALSE, verbose = TRUE) {
   
   if (verbose) message("Reading BED data...",start_time()) 

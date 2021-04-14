@@ -7,19 +7,19 @@ test_that("get_sample_name", {
   expect_equal("file.name",get_sample_name("c:/dir/dir.dir/file.name.extension"))
 })
 
-test_that("chunk_granges",{
+test_that("split_granges",{
   
-  expect_error(chunk_granges("not scMethrix"))
-  expect_error(chunk_granges(rowRanges(scm.h5)))
-  expect_error(chunk_granges(rowRanges(scm.h5),factor=2,num=3))
+  expect_error(split_granges("not scMethrix"))
+  expect_error(split_granges(rowRanges(scm.h5)))
+  expect_error(split_granges(rowRanges(scm.h5),factor=2,num=3))
   
   factor = 2
   percent = 50 
   num = 2
   
-  expect_true(all(rowRanges(scm.h5) == unlist(chunk_granges(rowRanges(scm.h5),factor=factor))))
-  expect_true(all(rowRanges(scm.h5) == unlist(chunk_granges(rowRanges(scm.h5),percent=percent))))
-  expect_true(all(rowRanges(scm.h5) == unlist(chunk_granges(rowRanges(scm.h5),num=num))))
+  expect_true(all(rowRanges(scm.h5) == unlist(split_granges(rowRanges(scm.h5),factor=factor))))
+  expect_true(all(rowRanges(scm.h5) == unlist(split_granges(rowRanges(scm.h5),percent=percent))))
+  expect_true(all(rowRanges(scm.h5) == unlist(split_granges(rowRanges(scm.h5),num=num))))
 })
 
 test_that("start,split,stop_time",{
@@ -51,10 +51,15 @@ test_that("start,split,stop_time",{
   
 })
 
+test_that("split_vector",{
+  
+  vec <- c(1,2,3,4,5,6,7,8)
+  expect_equivalent(split_vector(vec,4,by="size"),split_vector(vec,2,by="chunk"))
+  
+})
+
 test_that("cast_granges",{})
 
 test_that("order_by_sd",{})
-
-test_that("subset_scMethrix",{})
 
 test_that("get_stats",{})
