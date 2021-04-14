@@ -17,6 +17,7 @@
 #' @param zero_based Boolean flag for whether the input data is zero-based or not
 #' @param reads Manual input of reads. Typically used for testing.
 #' @param replace Boolean flag for whether to delete the contents of h5_dir before saving
+#' @param coverage flag for including a coverage matrix in the experiment
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
@@ -28,7 +29,8 @@
 
 read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = 200, n_threads = 0, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
-                      zero_based = FALSE, reads = NULL, replace = FALSE, stranded = FALSE) {
+                      zero_based = FALSE, reads = NULL, replace = FALSE, stranded = FALSE, coverage = FALSE,
+                      meth_idx = 4, cov_idx = NULL) {
   
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
@@ -179,24 +181,50 @@ read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 20
 #' @return data.table containing vector of all indexed methylation values for the input BED
 #' @importFrom plyr .
 #' @examples
-read_bed_by_index <- function(file,ref_cpgs,zero_based=FALSE) {
-  data <- data.table::fread(file, header = FALSE, select = c(1:2,4))
-  colnames(data) <- c("chr", "start", "value")
-
-  if (zero_based) data[,2] <- data[,2]+1L
-  data <- data.table::setkeyv(data, c("chr","start"))
-  sample <- rowMeans(cbind(
-    data[.(ref_cpgs$chr, ref_cpgs$start)]$value, 
-    data[.(ref_cpgs$chr, ref_cpgs$end)]$value), na.rm=TRUE) #TODO: Need to use coverage matrix for final value, not the mean
+read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero_based=FALSE) {
+  data <- data.table::fread(file, header = FALSE, select = c(1:2,meth_idx,cov_idx))
   
-  s <- nrow(ref_cpgs)-sum(is.na(sample))
+  if (zero_based) data[,2] <- data[,2]+1L
+  colnames(data) <- c("chr", "start", rep("x",length(data)-2))
+  data <- data.table::setkeyv(data, c("chr","start"))
+
+  if (!is.null(cov_idx)) {
+    if (length(cov_idx) > 1) data[,4] <- rowSums(data[, ..cov_idx-1])
+    data <- data[,1:4]
+
+    sample <- cbind(
+      data[.(ref_cpgs$chr, ref_cpgs$start)][,3:4], 
+      data[.(ref_cpgs$chr, ref_cpgs$end)][,3:4]) 
+    
+    sample[,1] <- (rowSums(sample[,c(1,3)],na.rm=TRUE) * NA ^ (rowSums(!is.na(sample)) == 0))
+    sample[,2] <- (rowSums(sample[,c(2,4)],na.rm=TRUE) * NA ^ (rowSums(!is.na(sample)) == 0))
+    sample[,1] <- sample[,1]/sample[,2]
+    sample <- sample[,1:2]
+    
+    s <- nrow(ref_cpgs)-sum(is.na(sample[,1]))
+  } else {
+    colnames(data) <- c("chr", "start", "value")
+    sample <- rowMeans(cbind(
+      data[.(ref_cpgs$chr, ref_cpgs$start)][,3], 
+      data[.(ref_cpgs$chr, ref_cpgs$end)][,3]), na.rm=TRUE)
+    s <- nrow(ref_cpgs)-sum(is.na(sample))
+  }
+
   d <- nrow(data)
   
   if (s < 0.9*d) 
     {warning(paste0("Only ",round(s/d*100,1) ,"% of CpG sites in '",basename(file),"' are present in ref_cpgs"))}
   
-  sample <- data.table(as.integer(sample))
-  names(sample) <- get_sample_name(file)
+  if (!is.null(cov_idx)) {
+    sample <- data.table(sapply(sample, as.numeric))
+    sample <- list(sample[,1],sample[,2])
+    names(sample[[1]]) <- get_sample_name(file)
+    names(sample[[2]]) <- get_sample_name(file)
+  } else {
+    sample <- data.table(as.numeric(sample))
+    names(sample) <- get_sample_name(file)
+    sample <- list(sample)
+  }
   
   return(sample)
 }
