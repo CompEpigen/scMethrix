@@ -46,25 +46,17 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   
   if (h5) {
     
-    if (is.null(h5_dir)) {
-      stop("Output directory must be specified", call. = FALSE)
-    }
+    if (is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
     
     if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,batch_size = batch_size, zero_based = zero_based)
     
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
-    
     if (is.null(reads)) reads <- read_hdf5_data(files, ref_cpgs, n_threads, h5_temp, zero_based, verbose,
                                                  meth_idx = meth_idx, cov_idx = cov_idx)
-
-    read <<- reads
-        
     message("Building scMethrix object")
     
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
-    
     colData <- data.frame(colData=unlist(lapply(files,get_sample_name)))
-
     m_obj <- create_scMethrix(methyl_mat=reads$meth, cov_mat=reads$cov, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
                                 h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
                                 replace = replace)
@@ -78,18 +70,18 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     message("Reading in BED files") 
     
     if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based = zero_based)
-    
-    data <- read_mem_data(files, ref_cpgs, batch_size = batch_size, n_threads = n_threads,zero_based = zero_based,verbose = verbose)
-    
-    rrng <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
+    reads <- read_mem_data(files, ref_cpgs, batch_size = batch_size, n_threads = n_threads,
+                           zero_based = zero_based,verbose = verbose,
+                           meth_idx = meth_idx, cov_idx = cov_idx)
+    ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     
     #colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
     #colData <- t(unlist(lapply(files,get_sample_name)))
     
     message("Creating scMethrix object")
-    m_obj <- create_scMethrix(methyl_mat=as.matrix(data), 
-                              rowRanges=GenomicRanges::makeGRangesFromDataFrame(ref_cpgs),
-                              is_hdf5 = FALSE, genome_name = genome_name, desc = desc )
+    m_obj <- create_scMethrix(methyl_mat=reads$meth, cov_mat=reads$cov, 
+                              rowRanges=ref_cpgs, is_hdf5 = FALSE, genome_name = genome_name, 
+                              desc = desc, colData = colData )
   }
 }
 
@@ -199,12 +191,16 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
     if (length(cov_idx) > 1) {
       data[,4] <- rowSums(data[,c(cov_idx-1), with=FALSE])
     }
-    data <- data[,1:4]
+    data <- data[,1:4] #Collapse to 4 cols (str-end-val-cov)
     
+    #Do the search
     sample <- cbind(
       data[.(ref_cpgs$chr, ref_cpgs$start)][,3:4], 
       data[.(ref_cpgs$chr, ref_cpgs$end)][,3:4]) 
     
+    #Get the meth values from start and end CpG (meth*cov for both reads)
+    sample[,1] <- sample[,1]*sample[,2]
+    sample[,3] <- sample[,3]*sample[,4]
     sample[,1] <- (rowSums(sample[,c(1,3)],na.rm=TRUE) * NA ^ (rowSums(!is.na(sample)) == 0))
     sample[,2] <- (rowSums(sample[,c(2,4)],na.rm=TRUE) * NA ^ (rowSums(!is.na(sample)) == 0))
     sample[,1] <- sample[,1]/sample[,2]
@@ -226,9 +222,9 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
   
   if (!is.null(cov_idx)) {
     sample <- data.table(sapply(sample, as.integer))
-    sample <- list(sample[,1],sample[,2])
-    names(sample[[1]]) <- get_sample_name(file)
-    names(sample[[2]]) <- get_sample_name(file)
+    sample <- list(meth = sample[,1], cov = sample[,2])
+    names(sample$meth) <- get_sample_name(file)
+    names(sample$cov) <- get_sample_name(file)
   } else {
     sample <- data.table(as.integer(sample))
     names(sample) <- get_sample_name(file)
@@ -331,11 +327,14 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
 #' @param batch_size The number of files to hold in memory at once
 #' @param n_threads The number of threads to use. 0 is the default thread with no cluster built.
 #' @param zero_based Boolean flag for whether the input data is zero-based or not
+#' @param meth_idx The column index of the methylation value for the read
+#' @param cov_idx The column index(es) of the read count
 #' @param verbose flag to output messages or not.
 #' @return matrix of the methylation values for input BED files
 #' @import dplyr parallel doParallel
 #' @examples
-read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero_based = FALSE, verbose = TRUE) {
+read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero_based = FALSE, 
+                          meth_idx = 4, cov_idx = NULL, verbose = TRUE) {
   
   if (verbose) message("Reading BED data...",start_time()) 
   
@@ -359,7 +358,17 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
     
   } else {
     # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
-    data <- dplyr::bind_cols(lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based))
+    data <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based,
+                                    meth_idx = meth_idx, cov_idx = cov_idx)
+
+    if (!is.null(cov_idx)) {
+      data <- list(meth = dplyr::bind_cols(lapply(data, `[[`, 1)),
+                 cov = dplyr::bind_cols(lapply(data, `[[`, 2)))
+    } else {
+      data <- list(meth = dplyr::bind_cols(lapply(data, `[[`, 1)),
+                   NULL)
+    }
+    
     # if (verbose) message(" (",split_time(),")")
   }
   

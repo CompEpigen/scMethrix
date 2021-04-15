@@ -82,3 +82,14 @@ test_that("read_bed - HDF5, with coverage", {
   unlink(path, recursive = TRUE)
   
 })
+
+test_that("read_bed - in-memory, with coverage", {
+  
+  scm <- read_beds(files,h5=FALSE,cov_idx=5)
+  
+  expect_equivalent(class(scm)[1],"scMethrix")
+  expect_equivalent(class(get_matrix(scm))[[1]],"matrix")
+  expect_equivalent(class(get_matrix(scm,type="c"))[[1]],"matrix")
+  expect_equivalent(dim(scm),c(18,4))
+  
+})

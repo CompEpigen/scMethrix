@@ -185,24 +185,12 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 #' contigs <- c("chr1","chr3")
 #' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
 #' samples <- c("df1","df3")
-#' 
-#' #Subset to only chromosome 1
-#' subset_scMethrix(scMethrix_data$mem, contigs = contigs, by = "include")
-#' 
-#' #Subset to only samples bed1 and bed3
-#' subset_scMethrix(scMethrix_data$mem, samples = samples, by = "include")
-#' 
+
 #' #Subset to only samples bed1 and bed3, and chromosome 1
 #' subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "include")
 #' 
 #' #Subset to only region "chr1:1-5"
 #' subset_scMethrix(scMethrix_data$mem, regions = regions, by = "include")
-#' 
-#' #Subset to exclude chromosome 1
-#' subset_scMethrix(scMethrix_data$mem, contigs = contigs, by = "exclude")
-#' 
-#' #Subset to exclude samples bed1 and bed3
-#' subset_scMethrix(scMethrix_data$mem, samples = samples, by = "exclude")
 #' 
 #' #Subset to exclude samples bed1 and bed3, and chromosome 1
 #' subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "exclude")
@@ -361,6 +349,7 @@ get_stats <- function(m, per_chr = TRUE) {
 #' @param m \code{\link{scMethrix}} object
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
 #' @param in_granges Do you want the outcome in \code{GRanges}?
+#' @param type Which matrix to get, "m": methlation, "c": coverage
 #' @return Coverage or Methylation matrix
 #' @examples
 #' data('scMethrix_data')
