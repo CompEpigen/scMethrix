@@ -245,7 +245,8 @@ read_bed_by_index2 <- function(file,zero_based=FALSE) {
 #' @return HDF5Array The methylation values for input BED files
 #' @import data.table DelayedArray HDF5Array parallel doParallel
 #' @examples
-read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_based = FALSE, verbose = TRUE) {
+read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_based = FALSE, verbose = TRUE,
+                           meth_idx = 4, cov_idx = NULL) {
   
   if (verbose) message("Starting HDF5 object",start_time()) 
   
@@ -260,6 +261,10 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
                                            dimnames = list(NULL,colData), type = "integer",
                                            filepath = tempfile(pattern="M_sink_",tmpdir=h5_temp), name = "M", level = 6)
+  
+  if (!is.null(cov_idx)) cov_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
+                                           dimnames = list(NULL,colData), type = "integer",
+                                           filepath = tempfile(pattern="cov_sink_",tmpdir=h5_temp), name = "M", level = 6)
   
   if (n_threads == 0) {
     
@@ -287,12 +292,16 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
      
       if (n_threads == 0) {
         if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
-        bed <- read_bed_by_index(files[i],ref_cpgs,zero_based)
-        DelayedArray::write_block(block = as.matrix(bed), viewport = grid[[i]], sink = M_sink)
+        
+        bed <- read_bed_by_index(files[i],m_idx <- meth_idx, c_idx <- cov_idxref_cpgs = ref_cpgs,zero_based=zero_based)
+        DelayedArray::write_block(block = as.matrix(bed[1]), viewport = grid[[i]], sink = M_sink)
+        if (!is.null(cov_idx)) DelayedArray::write_block(block = as.matrix(bed[2]),
+                                                         viewport = grid[[i]], sink = cov_sink)
       } else {
         if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
         bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index2, zero_based = zero_based)
-        DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(bed)), viewport = grid[[i]], sink = M_sink)
+        DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(bed[1])), viewport = grid[[i]], sink = M_sink)
+        if (!is.null(cov_idx)) DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(bed[2])), viewport = grid[[i]], sink = cov_sink)
       }
       
       rm(bed)
@@ -304,8 +313,9 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
 
   if (verbose) message("Object created in ",stop_time()) 
   
-  return(M_sink)
-  
+  if (!is.null(cov_idx)) {
+    return(list(M_sink,cov_sink))
+  } else {return(list(M_sink))}
 }
 
 #--- read_mem_data ------------------------------------------------------------------------------------------
