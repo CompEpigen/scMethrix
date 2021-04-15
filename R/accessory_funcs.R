@@ -1,5 +1,4 @@
 #' Checks if scMethrix object is an HDF5 object
-#' @details Acts in the same way as ternary operators in other language. Must surround with brackets to use)
 #' @param m The scMethrix object
 #' @return boolean Whether the object is HDF5
 #' @examples
@@ -8,6 +7,17 @@
 #' @export
 is_h5 = function(m) {
   return(m@metadata$is_h5)
+}
+
+#' Checks if scMethrix object has a coverage matrix
+#' @param m The scMethrix object
+#' @return boolean Whether the object has a coverage matrix
+#' @examples
+#' data('scMethrix_data')
+#' has_cov(scMethrix_data$mem)
+#' @export
+has_cov = function(m) {
+  return(m@metadata$has_cov)
 }
 
 #' Returns file name minus the extension from a file.path to represent the sample name

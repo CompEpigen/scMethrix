@@ -1,9 +1,9 @@
 message("Test setup starting...")
 
-df1 <- data.table(chr=rep("chr1",5),start=(1:5)*2,end=(1:5)*2+1,value=0)
-df2 <- data.table(chr=rep("chr1",5),start=(3:7)*2,end=(3:7)*2+1,value=25)
-df3 <- data.table(chr=rep("chr1",5),start=(6:10)*2,end=(6:10)*2+1,value=50)
-df4 <- data.table(chr=rep("chr2",8),start=(3:10)*2,end=(3:10)*2+1,value=100)
+df1 <- data.table(chr=rep("chr1",5),start=(1:5)*2,end=(1:5)*2+1,value=0,cov=1)
+df2 <- data.table(chr=rep("chr1",5),start=(3:7)*2,end=(3:7)*2+1,value=25,cov=2)
+df3 <- data.table(chr=rep("chr1",5),start=(6:10)*2,end=(6:10)*2+1,value=50,cov=3)
+df4 <- data.table(chr=rep("chr2",8),start=(3:10)*2,end=(3:10)*2+1,value=100,cov=4)
 
 files <- c("df1.bedgraph","df2.bedgraph","df3.bedgraph","df4.bedgraph")
 files <- file.path(tempdir(),files)

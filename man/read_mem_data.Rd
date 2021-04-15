@@ -10,6 +10,8 @@ read_mem_data(
   batch_size = 200,
   n_threads = 0,
   zero_based = FALSE,
+  meth_idx = 4,
+  cov_idx = NULL,
   verbose = TRUE
 )
 }
@@ -23,6 +25,10 @@ read_mem_data(
 \item{n_threads}{The number of threads to use. 0 is the default thread with no cluster built.}
 
 \item{zero_based}{Boolean flag for whether the input data is zero-based or not}
+
+\item{meth_idx}{The column index of the methylation value for the read}
+
+\item{cov_idx}{The column index(es) of the read count}
 
 \item{verbose}{flag to output messages or not.}
 }
