@@ -451,6 +451,7 @@ remove_uncovered <- function(m) {
 #' @export
 mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
 
+  
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
