@@ -1,6 +1,7 @@
 
-### Benchmark the indexing #######################################
+save_dir <- "D:/Git/sampleData/benchmark/"
 
+### Benchmark the indexing #######################################
 read.index <- microbenchmark(
   # "base" = {
   #   for (i in 1:length(files)) {
@@ -15,6 +16,8 @@ read.index <- microbenchmark(
   "b = 200" = {index <<- read_index(files,batch_size=200)}, 
   times = 1,unit = "s")
 read.index$name <- "read_index (batch test)"
+saveRDS(read.index, file = paste0(save_dir,"read.index.rds"))
+saveRDS(index, file = "index.rds")
 
 # graph_benchmark(read.index,xlabel="",unit="s")
 
@@ -26,17 +29,19 @@ read.parallel.index <- microbenchmark(
   "n.c = 8" = {read_index(files,batch_size=25,n_threads = 8)},
   times = 1,unit = "s")
 read.parallel.index$name <- "read_parallel_index (core test)\nbatch = cores*files = 200"
+saveRDS(read.parallel.index, file = paste0(save_dir,"read.parallel.index"))
 
 read.subset <- microbenchmark(
   "subset" = {ref_cpgs <<- subset_ref_cpgs(mm10_cpgs,index)},
   times = 1,unit = "s")
 read.subset$name <- "subset to mm10 genome"
+saveRDS(read.subset, file = "read.subset.rds")
+saveRDS(ref_cpgs, file = paste0(save_dir,"ref_cpgs.rds"))
 
 # graph_benchmark(read.parallel.index,xlabel="",unit="s")
 
-bench.index <- graph_benchmark(rbind(read.index,read.parallel.index,read.subset),xlabel="",unit="s")
+bench.index <- graph_benchmark(rbind(read.index,read.parallel.index,read.subset),xlabel="",unit="m")
 bench.index
-
 
 ### Benchmark the genome vs subset ###############################
 
@@ -51,6 +56,7 @@ read.compare <- microbenchmark(
     #ref_cpgs <<- subset_ref_cpgs(mm10_cpgs,index)
   })
 read.compare$name <- "mm10 vs subset"
+saveRDS(read.compare, file = paste0(save_dir,"read.compare.rds"))
 
 ### Benchmark the reading ########################################
 
@@ -62,6 +68,8 @@ read.data <- microbenchmark(
   "n.c = 8" = {reads <<- read_hdf5_data(files,ref_cpgs,n_threads=8)},
   times = 1,unit = "s")
 read.data$name <- "read_parallel_bed_by_index (core test)"
+saveRDS(read.data, file = paste0(save_dir,"read.data.rds"))
+saveRDS(reads, file = paste0(save_dir,"reads.rds"))
 
 bench.read <- graph_benchmark(rbind(read.data),xlabel="",unit="m")
 bench.read
@@ -73,19 +81,19 @@ bench.read
 
 write.object <- microbenchmark(
   "read.bed" = {read_beds(files,ref_cpgs,reads = reads,h5 = TRUE,h5_dir=dir,verbose=TRUE,replace=TRUE)},
-  times = 1,unit = "s")
-# ,
+  times = 1,unit = "s")#,
 #   setup = {
-#     #dir <- paste0(tempdir(),"\\bench")
-#     })
+#     dir <- paste0(tempdir(),"\\bench")
+# })
 
 write.object$name <- "read_bed (core test)"
+saveRDS(write.object, file = paste0(save_dir,"benchmark - write.rds"))
 
 bench.write <- graph_benchmark(write.object,xlabel="",unit="m")
 bench.write
 
 data <- rbind(read.index,read.parallel.index,read.subset,read.data,write.object)
-saveRDS(data, file = "benchmark.rds")
+saveRDS(data, file = paste0(save_dir,"benchmark.rds"))
 
 ### The graphing functions #######################################
 
