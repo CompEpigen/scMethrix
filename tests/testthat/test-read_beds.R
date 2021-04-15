@@ -75,7 +75,7 @@ test_that("read_bed - HDF5, with coverage", {
   expect_true(has_cov(scm1))
   expect_equivalent(class(scm1)[1],"scMethrix")
   expect_equivalent(class(get_matrix(scm1))[[1]],"HDF5Matrix")
-  expect_equivalent(class(get_matrix(scm1,type="c"))[[1]],"HDF5Matrix")
+  expect_equivalent(class(get_matrix(scm1,type="C"))[[1]],"HDF5Matrix")
   expect_equivalent(dim(scm1),c(18,4))
   expect_equivalent(scm1,scm2)
   
@@ -89,7 +89,7 @@ test_that("read_bed - in-memory, with coverage", {
   
   expect_equivalent(class(scm)[1],"scMethrix")
   expect_equivalent(class(get_matrix(scm))[[1]],"matrix")
-  expect_equivalent(class(get_matrix(scm,type="c"))[[1]],"matrix")
+  expect_equivalent(class(get_matrix(scm,type="C"))[[1]],"matrix")
   expect_equivalent(dim(scm),c(18,4))
   
 })

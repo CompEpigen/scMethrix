@@ -4,7 +4,7 @@
 \alias{get_matrix}
 \title{Extract methylation or coverage matrices}
 \usage{
-get_matrix(m, add_loci = FALSE, in_granges = FALSE, type = "m")
+get_matrix(m, add_loci = FALSE, in_granges = FALSE, type = "M")
 }
 \arguments{
 \item{m}{\code{\link{scMethrix}} object}

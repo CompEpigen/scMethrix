@@ -1,9 +1,132 @@
-get_region_summary = function (m) {
+#' Extract and summarize methylation or coverage info by regions of interest
+#' @details Takes \code{\link{scMethrix}} object and summarizes regions
+#' @param m \code{\link{scMethrix}} object
+#' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
+#' @param type matrix which needs to be summarized. Coule be `M`, `C`. Default 'M'
+#' @param how mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'
+#' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description,
+#' see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
+#' #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.
+#' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
+#' #param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
+#' @param verbose Default TRUE
+#' @return table of summary statistic for the given region
+#' @examples
+#' data('scMethrix_data')
+#' get_region_summary(m = scMethrix_data$mem,
+#' regions = data.table(chr = c('chr1','chr2'), start = c(1,5), end =  c(5,10)),
+#' type = 'M', how = 'mean')
+#' @export
+get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "mean", overlap_type = "within",
+                               verbose= TRUE) {
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
+  if(verbose) message("Generating region summary...",start_time())
+  
+  type = match.arg(arg = type, choices = c('M', 'C'))
+  how = match.arg(arg = how, choices = c('mean', 'median', 'max', 'min', 'sum', 'sd'))
+  yid  <- NULL
+  
+  regions = data.table(chr = c('chr1','chr2'), start = c(1,1), end =  c(5,10))
+  regions = cast_granges(regions)
+  regions$rid <- paste0("rid_", 1:length(regions))
+  
+  overlap_indices <- as.data.table(GenomicRanges::findOverlaps(m, regions, type = overlap_type)) #GenomicRanges::findOverlaps(rowRanges(m), regions)@from
+  
+  if(nrow(overlap_indices) == 0){
+    stop("No overlaps detected")
+  }
+  
+  if(nrow(overlap_indices) == 0){
+    stop("No overlaps detected")
+  }
+  
+  colnames(overlap_indices) <- c("xid", "yid")
+  overlap_indices[,yid := paste0("rid_", yid)]
+  n_overlap_cpgs = overlap_indices[, .N, yid]
+  colnames(n_overlap_cpgs) = c('rid', 'n_overlap_CpGs')
+  
+  if(n_chunks==1){
+    if (type == "M") {
+      dat = get_matrix(m = m[overlap_indices$xid,], type = "M", add_loci = TRUE)
+    } else if (type == "C") {
+      dat = get_matrix(m = m[overlap_indices$xid,], type = "C", add_loci = TRUE)
+    }
+  } else {
+    stop("Only supports 1 chunk for now")
+    #----
+    #To handle the situation where the number of overlapping sites are lower than the n_chunks
+    # if(nrow(overlap_indices) < n_chunks){
+    #   n_chunks <- nrow(overlap_indices)
+    #   if (n_cores > n_chunks){
+    #     n_cores <- n_chunks 
+    #     #message("n_cores should be set to be less than or equal to n_chunks.","\n","n_chunks has been set to be equal to n_cores = ", n_cores)
+    #   }
+    # }
+    # 
+    # if (type == "M") {
+    #   dat = tryCatch(do.call("rbind",mclapply(mc.cores=n_cores, 
+    #                                           split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid)/ceiling(length(overlap_indices$xid)/n_chunks))), 
+    #                                           function(i) {
+    #                                             get_matrix(m[i,], type = "M", add_loci = TRUE)
+    #                                           })), 
+    #                  error = function(e){
+    #                    message( e, "\n Try to use less cores. ")
+    #                  })
+    # } else if (type == "C") {
+    #   dat = tryCatch(do.call("rbind",mclapply(mc.cores=n_cores, split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid)/ceiling(length(overlap_indices$xid)/n_chunks))), function(i) {
+    #     get_matrix(m[i,], type = "C", add_loci = TRUE)
+    #   })), 
+    #   error = function(e){
+    #     message( e, "\n Try to use less cores. ")
+    #   })
+    # }
+    
+  }
+  
+  if(nrow(overlap_indices) != nrow(dat)){
+    stop("Something went wrong")
+  }
+  
+  dat = cbind(overlap_indices, dat)
+  
+  #message("-Summarizing overlaps..\n")
+  if(how == "mean") {
+    message("Summarizing by average")
+    output = dat[, lapply(.SD, mean, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(m)))]
+  } else if (how == "median") {
+    message("Summarizing by median")
+    output = dat[, lapply(.SD, median, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(m)))]
+  } else if (how == "max") {
+    message("Summarizing by maximum")
+    output = suppressWarnings(
+      dat[, lapply(.SD, max, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(m)))])
+    for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
+  } else if (how == "min") {
+    message("Summarizing by minimum")
+    output = suppressWarnings(
+      dat[, lapply(.SD, min, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(m)))])
+    for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
+  } else if (how == "sum") {
+    message("Summarizing by sum")
+    output = dat[, lapply(.SD, sum, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(m)))]
+  }
+  
+  output = merge(regions, output, by.x = 'rid', by.y = 'yid', all.x = TRUE)
+  output = merge(n_overlap_cpgs, output, by = 'rid')
+  output$rid <- as.numeric(gsub("rid_","",output$rid))
+  
+  output <- output[order(output$rid),]
+  setnames(output, "seqnames", "chr")
+  keep <- c("chr", "start", "end", "n_overlap_CpGs", "rid", colnames(m))
+  output <- output[, keep, with=FALSE]
+  
+  if(verbose) message("Region summary generating in ",stop_time())
+  
+  return(output)
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
@@ -93,8 +216,8 @@ convert_HDF5_methrix <- function(m = NULL) {
   
   assays(m)[[1]] <- as.matrix(assays(m)[[1]])
   m@metadata$is_h5 <- FALSE
-
- # message("Converted in ",stop_time())
+  
+  # message("Converted in ",stop_time())
   
   return(m)
 }
@@ -120,13 +243,13 @@ convert_methrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
   if (is_h5(m)) {
     stop("Input scMethrix is already in HDF5 format.")
   }
-
+  
   if (verbose) message("Converting in-memory scMethrix to HDF5")#, start_time())
-
+  
   m <- create_scMethrix(methyl_mat = assays(m)[[1]], h5_dir = h5_dir,
-                      rowRanges = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
-                      colData = m@colData, chrom_sizes = m@metadata$chrom_sizes, 
-                      desc = m@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
+                        rowRanges = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
+                        colData = m@colData, chrom_sizes = m@metadata$chrom_sizes, 
+                        desc = m@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
   
   #if (verbose) message("Converted in ", stop_time())
   
@@ -134,7 +257,7 @@ convert_methrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
 }
 
 
-  
+
 #--------------------------------------------------------------------------------------------------------------------------
 #' Order scMethrix object by SD
 #' @details Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
@@ -145,25 +268,14 @@ convert_methrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
 #' @examples
 #' @export
 order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
-  
-#  if (!is(m, "scMethrix")){
-#    stop("A valid scMethrix object needs to be supplied.")
- # }
-# 
-#   if (zero.rm) {
-#     sds <- numeric(nrow(m))
-#     for (i in 1:length(sds)) {
-#       sds[i] <- sd(as.numeric(m[i,][m[i,]!=0]), na.rm)
-#       print(paste(i,": ", sds[i]))
-#       }
-#   } else {
-#     sds <- sparseMatrixStats::rowSds(m,na.rm)
-#   }
-#   
-#   row_order <- order(sds, na.last = TRUE, decreasing = TRUE)
-#   m <- m[row_order, ]
-#   
-#   return (m)
+  # 
+  # if (!is(m, "scMethrix")){
+  #   stop("A valid scMethrix object needs to be supplied.")
+  # }
+  # 
+  # sds <- DelayedMatrixStats::rowSds(x = get_matrix(m),na.rm=TRUE)
+  # 
+  # m$sd <- sds
   
 }
 
@@ -228,7 +340,7 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
       s <- row.names(colData(m))
       m <- subset_scMethrix(m,samples = s[!s %in% samples],by="include")
     }
-  
+    
   } else {
     
     if (verbose) message("Subsetting CpG sites...",start_time())
@@ -277,7 +389,7 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
 #' @export
 
 get_stats <- function(m, per_chr = TRUE) {
-
+  
   if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
@@ -363,7 +475,7 @@ get_stats <- function(m, per_chr = TRUE) {
 #' # Get methylation data with loci inside a Granges object 
 #' get_matrix(scMethrix_data$mem, add_loci=TRUE, in_granges=TRUE)
 #' @export
-get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE, type = "m") {
+get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE, type = "M") {
   
   if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -373,27 +485,29 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE, type = "m") {
     warning("Without genomic locations (add_loci= FALSE), it is not possible to convert the results to GRanges, ", 
             "the output will be a data.frame object. ")
   }
-
-  type <- if (type == "m") 1 else 2
+  
+  type = match.arg(arg = type, choices = c('M', 'C'))
+  
+  type <- if (type == "M") 1 else 2
   
   mtx <- SummarizedExperiment::assay(x = m, i = type)
   
   if (add_loci) {
     
     if (is_h5(m)) mtx <- as.data.frame(mtx)
-
+    
     mtx <- as.data.frame(cbind(as.data.frame(rowRanges(m))[,1:3], mtx))
-      
+    
     if (in_granges) {
       mtx <- GenomicRanges::makeGRangesFromDataFrame(mtx, keep.extra.columns = TRUE)
-
+      
     } else {
       data.table::setDT(x = mtx)
       colnames(mtx)[1] <- "chr" #TODO: figure out why seqnames is used instead of chr
     }
-      
+    
   }
-
+  
   return (mtx)
 }
 
@@ -412,7 +526,7 @@ remove_uncovered <- function(m) {
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
-
+  
   message("Removing uncovered CpGs...", start_time())
   
   row_idx <- rowSums(!is.na(get_matrix(m)))==0
@@ -422,7 +536,7 @@ remove_uncovered <- function(m) {
                  format(nrow(m), big.mark = ","), " sites (",stop_time(),")"))
   
   if (!sum(row_idx) == 0) m <- m[!row_idx, ]
-
+  
   return(m)
 }
 
@@ -441,7 +555,7 @@ remove_uncovered <- function(m) {
 #' @examples
 #' @export
 mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
-
+  
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
@@ -460,7 +574,7 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
     }
     
     message("Masking count lower than ", low_count)
-
+    
     if(is_h5(m)) {
       n <- nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA))
       row_idx <- DelayedMatrixStats::rowCounts(get_matrix(m), value = as.integer(NA)) > low_count
@@ -474,7 +588,7 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
       assays(m)[[1]][!!row_idx,] <- as.integer(NA)
       n <- n - (nrow(m) - matrixStats::colSums2(is.na(get_matrix(m))))
     }
-      
+    
     for (i in seq_along(colnames(m))) {
       message(paste0("Masked ", n[i], " CpGs due to too low count in sample ",  colnames(m)[i], "."))
     }
@@ -552,6 +666,6 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
   #   
   
   message("Masked in",stop_time())
-
+  
   return(m)
 }
