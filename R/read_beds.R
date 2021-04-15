@@ -18,6 +18,8 @@
 #' @param reads Manual input of reads. Typically used for testing.
 #' @param replace Boolean flag for whether to delete the contents of h5_dir before saving
 #' @param coverage flag for including a coverage matrix in the experiment
+#' @param meth_idx The column index of the methylation value for the read
+#' @param cov_idx The column index(es) of the read count
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
@@ -35,11 +37,11 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
   }
-
+  
   if (!all(grepl("\\.(bed|bedgraph)", files))) {
     stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
   }
-
+  
   n_threads <- min(n_threads,length(files)/2) # since cannot have multiple threads with a single file being input
   
   if (h5) {
@@ -49,20 +51,31 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     }
     
     if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,batch_size = batch_size, zero_based = zero_based)
-
+    
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     
     if (is.null(reads)) reads <- read_hdf5_data(files, ref_cpgs, n_threads, h5_temp, zero_based, verbose)
-      
+    
     message("Building scMethrix object")
     
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     
     colData <- data.frame(colData=unlist(lapply(files,get_sample_name)))
     
-    m_obj <- create_scMethrix(methyl_mat=as(reads, "HDF5Array"), rowRanges=ref_cpgs, is_hdf5 = TRUE, 
+    if (!is.null(cov_idx)) {
+      m_obj <- create_scMethrix(methyl_mat=as(reads[[1]], "HDF5Array"), cov_mat=as(reads[[2]], "HDF5Array"), rowRanges=ref_cpgs, is_hdf5 = TRUE, 
+                                h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
+                                replace = replace)
+      
+      
+    } else {
+    
+    
+      m_obj <- create_scMethrix(methyl_mat=as(reads[[1]], "HDF5Array"), rowRanges=ref_cpgs, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
                               replace = replace)
+    
+    }
     
     message("Object built!")
     
@@ -80,7 +93,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     #colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
     #colData <- t(unlist(lapply(files,get_sample_name)))
-
+    
     message("Creating scMethrix object")
     m_obj <- create_scMethrix(methyl_mat=as.matrix(data), 
                               rowRanges=GenomicRanges::makeGRangesFromDataFrame(ref_cpgs),
@@ -159,7 +172,7 @@ read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 20
   colnames(rrng) <- c("chr","start")
   data.table::setkeyv(rrng, c("chr","start"))
   rrng <- unique(rrng)
-   
+  
   # Remove the consecutive subsequent sites
   #rrng <- rrng[data.table::rowid(collapse::seqid(rrng$start)) %% 2 == 1]
   
@@ -178,6 +191,8 @@ read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 20
 #' @param file The BED file to parse
 #' @param ref_cpgs The index of all unique coordinates from the input BED files
 #' @param zero_based Whether the input data is 0 or 1 based
+#' @param meth_idx The column index of the methylation value for the read
+#' @param cov_idx The column index(es) of the read count
 #' @return data.table containing vector of all indexed methylation values for the input BED
 #' @importFrom plyr .
 #' @examples
@@ -187,11 +202,13 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
   if (zero_based) data[,2] <- data[,2]+1L
   colnames(data) <- c("chr", "start", rep("x",length(data)-2))
   data <- data.table::setkeyv(data, c("chr","start"))
-
+  
   if (!is.null(cov_idx)) {
-    if (length(cov_idx) > 1) data[,4] <- rowSums(data[, ..cov_idx-1])
+    if (length(cov_idx) > 1) {
+      data[,4] <- rowSums(data[,c(cov_idx-1), with=FALSE])
+    }
     data <- data[,1:4]
-
+    
     sample <- cbind(
       data[.(ref_cpgs$chr, ref_cpgs$start)][,3:4], 
       data[.(ref_cpgs$chr, ref_cpgs$end)][,3:4]) 
@@ -209,19 +226,19 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
       data[.(ref_cpgs$chr, ref_cpgs$end)][,3]), na.rm=TRUE)
     s <- nrow(ref_cpgs)-sum(is.na(sample))
   }
-
+  
   d <- nrow(data)
   
   if (s < 0.9*d) 
-    {warning(paste0("Only ",round(s/d*100,1) ,"% of CpG sites in '",basename(file),"' are present in ref_cpgs"))}
+  {warning(paste0("Only ",round(s/d*100,1) ,"% of CpG sites in '",basename(file),"' are present in ref_cpgs"))}
   
   if (!is.null(cov_idx)) {
-    sample <- data.table(sapply(sample, as.numeric))
+    sample <- data.table(sapply(sample, as.integer))
     sample <- list(sample[,1],sample[,2])
     names(sample[[1]]) <- get_sample_name(file)
     names(sample[[2]]) <- get_sample_name(file)
   } else {
-    sample <- data.table(as.numeric(sample))
+    sample <- data.table(as.integer(sample))
     names(sample) <- get_sample_name(file)
     sample <- list(sample)
   }
@@ -241,71 +258,76 @@ read_bed_by_index2 <- function(file,zero_based=FALSE) {
 #' @param n_threads The number of threads to use. 0 is the default thread with no cluster built.
 #' @param h5_temp The file location to store the RealizationSink object
 #' @param zero_based Boolean flag for whether the input data is zero-based or not
+#' @param meth_idx The column index of the methylation value for the read
+#' @param cov_idx The column index(es) of the read count
 #' @param verbose flag to output messages or not.
-#' @return HDF5Array The methylation values for input BED files
+#' @return List of HDF5Arrays. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
 #' @import data.table DelayedArray HDF5Array parallel doParallel
 #' @examples
-read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_based = FALSE, verbose = TRUE) {
+read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_based = FALSE, verbose = TRUE,
+                           meth_idx = 4, cov_idx = NULL) {
   
   if (verbose) message("Starting HDF5 object",start_time()) 
   
-  if (is.null(h5_temp)) {
-    h5_temp <- tempdir()
-  }
+  if (is.null(h5_temp)) {h5_temp <- tempdir()}
   
   dimension <- as.integer(nrow(ref_cpgs))
-  
   colData <- as.vector(unlist(lapply(files,get_sample_name)))
   
   M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
                                            dimnames = list(NULL,colData), type = "integer",
-                                           filepath = tempfile(pattern="M_sink_",tmpdir=h5_temp), name = "M", level = 6)
+                                           filepath = tempfile(pattern="M_sink_",tmpdir=h5_temp),
+                                           name = "M", level = 6)
+  
+  
+  cov_sink <- if(is.null(cov_idx)) NULL else 
+              HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
+                                             dimnames = list(NULL,colData), type = "integer",
+                                             filepath = tempfile(pattern="cov_sink_",tmpdir=h5_temp),
+                                             name = "M", level = 6)
   
   if (n_threads == 0) {
-    
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
                                            spacings = c(dimension, 1L)) 
-
   } else {
-    
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
                                            spacings = c(dimension, n_threads)) 
-    
     cl <- parallel::makeCluster(n_threads)  
     doParallel::registerDoParallel(cl)  
     
-    ref_cpgs <<- ref_cpgs #TODO: Figure out why this is needed and whether read_bed_by_index2 is necessary
-    
     parallel::clusterEvalQ(cl, c(library(data.table)))
-    parallel::clusterExport(cl,list('read_bed_by_index','read_bed_by_index2','get_sample_name',"ref_cpgs"))
+    parallel::clusterExport(cl,list('read_bed_by_index','read_bed_by_index2','get_sample_name'))
     
     files <- split_vector(files,n_threads,by="size")
-    
   }
+  
+  for (i in 1:length(files)) {
     
-    for (i in 1:length(files)) {
-     
-      if (n_threads == 0) {
-        if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
-        bed <- read_bed_by_index(files[i],ref_cpgs,zero_based)
-        DelayedArray::write_block(block = as.matrix(bed), viewport = grid[[i]], sink = M_sink)
-      } else {
-        if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
-        bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index2, zero_based = zero_based)
-        DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(bed)), viewport = grid[[i]], sink = M_sink)
-      }
+    if (n_threads == 0) {
+      if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
       
-      rm(bed)
-      if (i%%10==0) gc()
-      if (verbose) message(" (",split_time(),")")
+      bed <- read_bed_by_index(files[i], ref_cpgs, meth_idx = meth_idx, cov_idx = cov_idx, 
+                               zero_based = zero_based)
+      DelayedArray::write_block(block = as.matrix(bed[[1]]), viewport = grid[[i]], sink = M_sink)
+      
+      if (!is.null(cov_idx)) DelayedArray::write_block(block = as.matrix(bed[[2]]),
+                                                       viewport = grid[[i]], sink = cov_sink)
+    } else {
+      if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
+      bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index2, zero_based = zero_based)
+      DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(bed[[1]])), viewport = grid[[i]], sink = M_sink)
+      if (!is.null(cov_idx)) DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(bed[[2]])), viewport = grid[[i]], sink = cov_sink)
     }
     
+    rm(bed)
+    if (i%%5==0) gc()
+    if (verbose) message(" (",split_time(),")")
+  }
+  
   if (n_threads != 0) parallel::stopCluster(cl)
-
   if (verbose) message("Object created in ",stop_time()) 
   
-  return(M_sink)
-  
+  return(list(M_sink,cov_sink))
 }
 
 #--- read_mem_data ------------------------------------------------------------------------------------------
@@ -342,11 +364,11 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
                                   n_threads = 0, zero_based = zero_based, verbose = verbose))
     
     parallel::stopCluster(cl)
-
+    
   } else {
-   # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
+    # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
     data <- dplyr::bind_cols(lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based))
-   # if (verbose) message(" (",split_time(),")")
+    # if (verbose) message(" (",split_time(),")")
   }
   
   if (verbose) message("Data read in ",stop_time()) 

@@ -4,12 +4,22 @@
 \alias{read_bed_by_index}
 \title{Parses BED files for methylation values using previously generated index genomic coordinates}
 \usage{
-read_bed_by_index(file, ref_cpgs, zero_based = FALSE)
+read_bed_by_index(
+  file,
+  ref_cpgs,
+  meth_idx = 4,
+  cov_idx = NULL,
+  zero_based = FALSE
+)
 }
 \arguments{
 \item{file}{The BED file to parse}
 
 \item{ref_cpgs}{The index of all unique coordinates from the input BED files}
+
+\item{meth_idx}{The column index of the methylation value for the read}
+
+\item{cov_idx}{The column index(es) of the read count}
 
 \item{zero_based}{Whether the input data is 0 or 1 based}
 }
