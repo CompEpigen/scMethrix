@@ -8,7 +8,7 @@ test_that("read_index", {
 test_that("read_bed_by_index", {
   
   index <- read_index(files)
-  expect_equivalent(as.vector(read_bed_by_index(files[1],index)),c(rep(0,5),rep(NA,13)))
+  expect_equivalent(as.vector(unlist(read_bed_by_index(files[1],index)[1])),c(rep(0,5),rep(NA,13)))
   
 })
 

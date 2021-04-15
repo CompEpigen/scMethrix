@@ -10,7 +10,9 @@ read_hdf5_data(
   n_threads = 0,
   h5_temp = NULL,
   zero_based = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  meth_idx = 4,
+  cov_idx = NULL
 )
 }
 \arguments{
@@ -25,6 +27,10 @@ read_hdf5_data(
 \item{zero_based}{Boolean flag for whether the input data is zero-based or not}
 
 \item{verbose}{flag to output messages or not.}
+
+\item{meth_idx}{The column index of the methylation value for the read}
+
+\item{cov_idx}{The column index(es) of the read count}
 }
 \value{
 HDF5Array The methylation values for input BED files
