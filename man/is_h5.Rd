@@ -15,9 +15,6 @@ boolean Whether the object is HDF5
 \description{
 Checks if scMethrix object is an HDF5 object
 }
-\details{
-Acts in the same way as ternary operators in other language. Must surround with brackets to use)
-}
 \examples{
 data('scMethrix_data')
 is_h5(scMethrix_data$mem)
