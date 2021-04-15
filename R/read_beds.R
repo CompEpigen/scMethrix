@@ -19,7 +19,7 @@
 #' @param replace Boolean flag for whether to delete the contents of h5_dir before saving
 #' @param coverage flag for including a coverage matrix in the experiment
 #' @param meth_idx The column index of the methylation value for the read
-#' @param cov_idx The column index(es) of the read count
+#' @param cov_idx The column index(es) of the read count. If not present, no coverage matrix is built
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
@@ -54,28 +54,20 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     
-    if (is.null(reads)) reads <- read_hdf5_data(files, ref_cpgs, n_threads, h5_temp, zero_based, verbose)
-    
+    if (is.null(reads)) reads <- read_hdf5_data(files, ref_cpgs, n_threads, h5_temp, zero_based, verbose,
+                                                 meth_idx = meth_idx, cov_idx = cov_idx)
+
+    read <<- reads
+        
     message("Building scMethrix object")
     
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     
     colData <- data.frame(colData=unlist(lapply(files,get_sample_name)))
-    
-    if (!is.null(cov_idx)) {
-      m_obj <- create_scMethrix(methyl_mat=as(reads[[1]], "HDF5Array"), cov_mat=as(reads[[2]], "HDF5Array"), rowRanges=ref_cpgs, is_hdf5 = TRUE, 
+
+    m_obj <- create_scMethrix(methyl_mat=reads$meth, cov_mat=reads$cov, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
                                 h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
                                 replace = replace)
-      
-      
-    } else {
-    
-    
-      m_obj <- create_scMethrix(methyl_mat=as(reads[[1]], "HDF5Array"), rowRanges=ref_cpgs, is_hdf5 = TRUE, 
-                              h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
-                              replace = replace)
-    
-    }
     
     message("Object built!")
     
@@ -327,7 +319,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   if (n_threads != 0) parallel::stopCluster(cl)
   if (verbose) message("Object created in ",stop_time()) 
   
-  return(list(M_sink,cov_sink))
+  return(list(meth = M_sink, cov = cov_sink))
 }
 
 #--- read_mem_data ------------------------------------------------------------------------------------------
@@ -375,4 +367,3 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
   
   return (data)
 }
-

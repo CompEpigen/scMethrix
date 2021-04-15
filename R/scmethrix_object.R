@@ -29,18 +29,22 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
 })
 
 # Create scMethrix obj
-create_scMethrix <- function(methyl_mat = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, 
+create_scMethrix <- function(methyl_mat = NULL, cov_mat = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, 
                              genome_name = "hg19", chrom_sizes = NULL, desc = NULL, h5_dir = NULL, 
                              replace = FALSE, verbose=TRUE) {
     if (is_hdf5) {
+      
+      assays <- if (!is.null(cov_mat)) {list(score = as(methyl_mat, "HDF5Array"),
+                                            coverage = as(cov_mat, "HDF5Array"))
+               } else {list(score = as(methyl_mat, "HDF5Array"))}
 
-      sse <- SingleCellExperiment::SingleCellExperiment(assays = list(score = as(methyl_mat, "HDF5Array")),
-                                                        colData = colData,
+      sse <- SingleCellExperiment::SingleCellExperiment(assays = assays, colData = colData, 
                                                         rowRanges = rowRanges,
                                                         metadata = list(genome = genome_name,
                                                                         chrom_sizes = chrom_sizes,
                                                                         descriptive_stats = desc,
-                                                                        is_h5 = TRUE))
+                                                                        is_h5 = TRUE, 
+                                                                        has_cov = !is.null(cov_mat)))
       
       #TODO: Cannot save to same directory input files exist in
       

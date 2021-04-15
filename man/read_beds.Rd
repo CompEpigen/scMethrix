@@ -61,7 +61,7 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 
 \item{meth_idx}{The column index of the methylation value for the read}
 
-\item{cov_idx}{The column index(es) of the read count}
+\item{cov_idx}{The column index(es) of the read count. If not present, no coverage matrix is built}
 }
 \value{
 An object of class \code{\link{scMethrix}}

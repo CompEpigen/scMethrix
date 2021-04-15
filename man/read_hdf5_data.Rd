@@ -33,7 +33,7 @@ read_hdf5_data(
 \item{cov_idx}{The column index(es) of the read count}
 }
 \value{
-HDF5Array The methylation values for input BED files
+List of HDF5Arrays. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
 }
 \description{
 Writes methylation values from input BED files into an HDF5array

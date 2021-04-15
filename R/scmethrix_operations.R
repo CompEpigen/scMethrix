@@ -374,7 +374,7 @@ get_stats <- function(m, per_chr = TRUE) {
 #' # Get methylation data with loci inside a Granges object 
 #' get_matrix(scMethrix_data$mem, add_loci=TRUE, in_granges=TRUE)
 #' @export
-get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
+get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE, type = "m") {
   
   if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -385,7 +385,9 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE) {
             "the output will be a data.frame object. ")
   }
 
-  mtx <- SummarizedExperiment::assay(x = m, i = 1)
+  type <- if (type == "m") 1 else 2
+  
+  mtx <- SummarizedExperiment::assay(x = m, i = type)
   
   if (add_loci) {
     
