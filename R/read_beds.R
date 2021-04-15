@@ -52,14 +52,14 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     if (is.null(reads)) reads <- read_hdf5_data(files, ref_cpgs, n_threads, h5_temp, zero_based, verbose,
-                                                 meth_idx = meth_idx, cov_idx = cov_idx)
+                                                meth_idx = meth_idx, cov_idx = cov_idx)
     message("Building scMethrix object")
     
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     colData <- data.frame(colData=unlist(lapply(files,get_sample_name)))
     m_obj <- create_scMethrix(methyl_mat=reads$meth, cov_mat=reads$cov, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
-                                h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
-                                replace = replace)
+                              h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
+                              replace = replace)
     
     message("Object built!")
     
@@ -269,10 +269,10 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   
   
   cov_sink <- if(is.null(cov_idx)) NULL else 
-              HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
-                                             dimnames = list(NULL,colData), type = "integer",
-                                             filepath = tempfile(pattern="cov_sink_",tmpdir=h5_temp),
-                                             name = "M", level = 6)
+    HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
+                                   dimnames = list(NULL,colData), type = "integer",
+                                   filepath = tempfile(pattern="cov_sink_",tmpdir=h5_temp),
+                                   name = "M", level = 6)
   
   if (n_threads == 0) {
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
@@ -359,11 +359,11 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
   } else {
     # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
     data <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based,
-                                    meth_idx = meth_idx, cov_idx = cov_idx)
-
+                   meth_idx = meth_idx, cov_idx = cov_idx)
+    
     if (!is.null(cov_idx)) {
       data <- list(meth = dplyr::bind_cols(lapply(data, `[[`, 1)),
-                 cov = dplyr::bind_cols(lapply(data, `[[`, 2)))
+                   cov = dplyr::bind_cols(lapply(data, `[[`, 2)))
     } else {
       data <- list(meth = dplyr::bind_cols(lapply(data, `[[`, 1)),
                    NULL)
