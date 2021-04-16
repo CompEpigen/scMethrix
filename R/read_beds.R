@@ -195,7 +195,7 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
     
     #Do the search
     sample <- cbind(
-      data[.(ref_cpgs$chr, ref_cpgs$start)][,3:4], 
+      data[.(ref_cpgs$chr, ref_cpgs$start)][,3:4],   
       data[.(ref_cpgs$chr, ref_cpgs$end)][,3:4]) 
     
     #Get the meth values from start and end CpG (meth*cov for both reads)
@@ -302,9 +302,13 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
                                                        viewport = grid[[i]], sink = cov_sink)
     } else {
       if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
-      bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index2, zero_based = zero_based)
-      DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(bed[[1]])), viewport = grid[[i]], sink = M_sink)
-      if (!is.null(cov_idx)) DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(bed[[2]])), viewport = grid[[i]], sink = cov_sink)
+      bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index, ref_cpgs = ref_cpgs, zero_based = zero_based)
+
+      DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(lapply(bed, `[[`, 1))), 
+                                viewport = grid[[i]], sink = M_sink)
+      if (!is.null(cov_idx)) 
+        DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(lapply(data, `[[`, 2))), 
+                                                    viewport = grid[[i]], sink = cov_sink)
     }
     
     rm(bed)

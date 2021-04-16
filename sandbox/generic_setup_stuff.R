@@ -29,5 +29,3 @@ scm <- read_beds(files=files,h5=FALSE)
 devtools::test()
 
 dir <- tempdir()
-
-
