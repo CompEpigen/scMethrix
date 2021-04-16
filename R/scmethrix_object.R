@@ -22,7 +22,7 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   cat(paste0("An object of class ", class(object), "\n"))
   cat(paste0("   n_CpGs: ", format(nrow(object), big.mark = ","), "\n"))
   cat(paste0("   n_samples: ", ncol(object), "\n"))
-  cat(paste0("   assays: ", SummarizedExperiment::assayNames(object),"\n"))
+  cat(paste0("   assays: ", paste(SummarizedExperiment::assayNames(object),collapse=", "),"\n"))
   cat(paste0("   is_h5: ", is_h5(object), "\n"))
   cat(paste0("   Reference: ", object@metadata$genome, "\n"))
   cat(paste0("   Physical size: ", format(utils::object.size(object), units = "auto"), "\n"))

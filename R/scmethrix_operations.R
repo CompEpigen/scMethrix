@@ -544,17 +544,54 @@ remove_uncovered <- function(m) {
   return(m)
 }
 
+
+#--------------------------------------------------------------------------------------------------------------------------
+
+#' Filter matrices by coverage
+#' @details Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
+#' @param m \code{\link{scMethrix}} object
+#' @param cov_thr minimum coverage required to call a loci covered
+#' @param min_samples Minimum number of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
+#' @param prop_samples Minimum proportion of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
+#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
+#' tested group-wise.
+#' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
+#' @param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
+#' @importFrom methods is as new
+#' @examples
+#' data('scMethrix_data')
+#' #keep only CpGs which are covered by at-least 1 read across 3 samples
+#' coverage_filter(m = methrix_data, cov_thr = 1, min_samples = 3)
+#' @return An object of class \code{\link{methrix}}
+#' @export
+coverage_filter <- function(m, cov_thr = NULL, min_samples = 1, prop_samples=0, group = NULL, n_chunks=1, n_cores=1,type="M") {
+  
+  if (!is(m, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.")
+  }
+  
+  type = match.arg(arg = type, choices = c('M', 'C'))
+  
+
+  
+  
+  
+  
+  
+}
+
+
 #--------------------------------------------------------------------------------------------------------------------------
 
 #' Masks too high or too low counts
 #' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
-#'  by putting NA for coverage and beta value. The sites will remain in the object.
+#'  by putting NA for coverage and beta value. The sites will remain in the object. 
 #' @param m \code{\link{scMethrix}} object
 #' @param low_count The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.
 #' @param high_quantile The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
 #' higher quantile than the defined will be masked. Default = 0.99.
 #' @param n_cores Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
-#' @param type Whether to use "coverage" matrix or sample "count" when masking
+#' @param type Whether to use the "coverage" matrix or sample "count" when masking
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
@@ -562,19 +599,19 @@ remove_uncovered <- function(m) {
 
 mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=0 ,type="count") {
   
-  if (!is(m, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
-  }
+  if (!is(m, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
-   if (!is_h5(m) & n_cores != 1) {
+  if (!is_h5(m) & n_cores != 1) 
      stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_cores) needs to be 1.")
-   }
-  
+   
   type = match.arg(arg = type, choices = c('count', 'coverage'))
   
-  if (!has_cov(m) && type == "coverage") {
-    warning("No coverage matrix is present in the object. Switching to count.")
-    type <- "count"
+  if (!has_cov(m) && type == "coverage") stop("No coverage matrix is present in the object. 
+                                              Retry with type='count'")
+  
+  if (!is.null(high_quantile)) {
+    if (type == 'count') stop("high_quantile cannot be used with 'count' ")
+    if (high_quantile >= 1 | high_quantile <= 0) stop("High quantile should be between 0 and 1. ")
   }
   
   message("Masking CpG sites in ",high_quantile," quintile and ",type, " < ",low_count, start_time())
@@ -594,10 +631,7 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=0 ,t
       row_idx <- DelayedMatrixStats::rowSums2(get_matrix(m,type="C"),na.rm=TRUE) < low_count
     }
     
-    if (sum(row_idx) == 0) {
-      warning("No CpGs were masked")
-      return(m)
-    }
+    if (sum(row_idx) == 0) stop("No CpGs found with low_count")
     
     row_idx <- which(row_idx)  
     emp <- array(as.integer(NA),c(length(row_idx), nrow(colData(m))))
@@ -613,75 +647,30 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=0 ,t
     }
   }
 
-  # 
-  # 
-  # 
-  # if (!is.null(high_quantile)) {
-  #   if (high_quantile >= 1 | high_quantile <= 0) {
-  #     stop("High quantile should be between 0 and 1. ")
-  #   }
-  #   
-  #   message("\n\n-Masking coverage higher than ",
-  #           high_quantile * 100,
-  #           " percentile")
-  #   
-  #   
-  #   
-  #   if (is_h5(m)) {
-  #     if (n_cores == 1) {
-  #       quantiles <-
-  #         DelayedMatrixStats::colQuantiles(assays(m)[[2]],
-  #                                          probs = high_quantile,
-  #                                          na.rm = TRUE,
-  #                                          drop = F)
-  #     }
-  #     else {
-  #       quantiles <-
-  #         simplify2array(mclapply(mc.cores = n_cores, 1:ncol(assays(m)[[2]]),
-  #                                 function(i)
-  #                                   quantile(assays(m)[[2]][, i], probs = high_quantile, na.rm = TRUE)))
-  #     }
-  #     quantiles <- as.vector(quantiles)
-  #     names(quantiles) <- rownames(m@colData)
-  #   } else {
-  #     quantiles <-
-  #       matrixStats::colQuantiles(assays(m)[[2]], probs = high_quantile, na.rm = TRUE)
-  #     quantiles <- as.vector(quantiles)
-  #     names(quantiles) <- rownames(m@colData)
-  #   }
-  #   
-  #   
-  #   row_idx2 <- t(t((assays(m)[[2]])) > quantiles)
-  #   assays(m)[[1]][row_idx2] <- as.double(NA)
-  #   assays(m)[[2]][row_idx2] <- as.integer(NA)
-  #   
-  #   
-  #   if (is_h5(m)) {
-  #     if (n_cores == 1) {
-  #       n <- DelayedMatrixStats::colSums2(row_idx2, na.rm = T)
-  #     }
-  #     else {
-  #       n <- simplify2array(mclapply(mc.cores = n_cores, 1:ncol(row_idx2),
-  #                                    function(i)
-  #                                      sum(row_idx2[, i], na.rm = T)))
-  #     }
-  #   } else {
-  #     n <- colSums(row_idx2, na.rm = T)
-  #   }
-  #   
-  #   
-  #   for (i in seq_along(colnames(m))) {
-  #     message(paste0(
-  #       "-Masked ",
-  #       n[i],
-  #       " CpGs due to too high coverage in sample ",
-  #       colnames(row_idx2)[i],
-  #       "."
-  #     ))
-  #     
-  #   }
-  #   
-  #   
+  if (!is.null(high_quantile)) {
+
+    message("Masking coverage higher than ",high_quantile * 100," percentile")
+
+    quantiles <- DelayedMatrixStats::colQuantiles(assays(m)[[2]], probs = high_quantile,
+                                               na.rm = TRUE, drop = F)
+    quantiles <- as.vector(quantiles)
+    names(quantiles) <- rownames(m@colData)
+    
+    row_idx2 <- t(t(assays(m)[[2]]) > quantiles)
+    
+    if (sum(row_idx2, na.rm = TRUE) == 0) stop("No samples found within in the quantile")
+    
+    assays(m)[[1]][row_idx2] <- as.integer(NA)
+    assays(m)[[2]][row_idx2] <- as.integer(NA)
+    
+    n <- DelayedMatrixStats::colSums2(row_idx2, na.rm = T)
+    
+    for (i in seq_along(colnames(m))) {
+      if (n[i]==0) next
+      message(paste0("Masked ", n[i], " CpGs due to too high coverage in sample ",
+                     colnames(row_idx2)[i], "."))
+    }
+  }
   
   message("Masked in ",stop_time())
   
