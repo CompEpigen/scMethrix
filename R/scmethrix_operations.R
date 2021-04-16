@@ -554,51 +554,65 @@ remove_uncovered <- function(m) {
 #' @param high_quantile The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
 #' higher quantile than the defined will be masked. Default = 0.99.
 #' @param n_cores Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
+#' @param type Whether to use "coverage" matrix or sample "count" when masking
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
 #' @export
-mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
-  
+
+mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=0 ,type="count") {
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
   
-  if (!is_h5(m) & n_cores != 1) {
-    stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_cores) needs to be 1.")
+   if (!is_h5(m) & n_cores != 1) {
+     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_cores) needs to be 1.")
+   }
+  
+  type = match.arg(arg = type, choices = c('count', 'coverage'))
+  
+  if (!has_cov(m) && type == "coverage") {
+    warning("No coverage matrix is present in the object. Switching to count.")
+    type <- "count"
   }
   
-  message("Masking CpG sites ( ",high_quantile," quintile and <= ",low_count, " count", start_time())
+  message("Masking CpG sites in ",high_quantile," quintile and ",type, " < ",low_count, start_time())
   
   if (!is.null(low_count)) {
     
     if(!is.numeric(low_count)){
       stop("low_count must be a numeric value.")
     }
+  
+    n <- nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA))
     
-    message("Masking count lower than ", low_count)
-    
-    if(is_h5(m)) {
-      n <- nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA))
-      row_idx <- DelayedMatrixStats::rowCounts(get_matrix(m), value = as.integer(NA)) > low_count
-      row_idx <- matrix(rep(row_idx,ncol(m)),ncol = ncol(m))
-      row_idx <- DelayedArray(row_idx)
-      assays(m)[[1]][row_idx] <- as.integer(NA)
-      n <- n-(nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA)))
+    if (type == "count") {
+      row_idx <- DelayedMatrixStats::rowCounts(get_matrix(m), 
+                                               value = as.integer(NA)) > (nrow(colData(m))-low_count)
     } else {
-      n <- nrow(m) - matrixStats::colSums2(is.na(get_matrix(m)))
-      row_idx <- !(matrixStats::rowSums2(is.na(get_matrix(m))) <= low_count)
-      assays(m)[[1]][!!row_idx,] <- as.integer(NA)
-      n <- n - (nrow(m) - matrixStats::colSums2(is.na(get_matrix(m))))
+      row_idx <- DelayedMatrixStats::rowSums2(get_matrix(m,type="C"),na.rm=TRUE) < low_count
     }
+    
+    if (sum(row_idx) == 0) {
+      warning("No CpGs were masked")
+      return(m)
+    }
+    
+    row_idx <- which(row_idx)  
+    emp <- array(as.integer(NA),c(length(row_idx), nrow(colData(m))))
+
+    assays(m)[[1]][row_idx,] <- emp
+    if (type == "coverage") assays(m)[[2]][row_idx,] <- emp 
+    
+    n <- n-(nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA)))
     
     for (i in seq_along(colnames(m))) {
-      message(paste0("Masked ", n[i], " CpGs due to too low count in sample ",  colnames(m)[i], "."))
+      if (n[i]==0) next
+      message(paste0("   Masked ", n[i], " CpGs due to too low count in sample ",  colnames(m)[i], "."))
     }
-    
-    
   }
+
   # 
   # 
   # 
@@ -669,7 +683,7 @@ mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
   #   
   #   
   
-  message("Masked in",stop_time())
+  message("Masked in ",stop_time())
   
   return(m)
 }
