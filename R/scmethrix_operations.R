@@ -19,7 +19,7 @@
 #' @export
 get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "mean", overlap_type = "within",
                                verbose= TRUE) {
-  
+
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
@@ -30,10 +30,9 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "m
   how = match.arg(arg = how, choices = c('mean', 'median', 'max', 'min', 'sum', 'sd'))
   yid  <- NULL
   
-  regions = data.table(chr = c('chr1','chr2'), start = c(1,1), end =  c(5,10))
   regions = cast_granges(regions)
   regions$rid <- paste0("rid_", 1:length(regions))
-  
+
   overlap_indices <- as.data.table(GenomicRanges::findOverlaps(m, regions, type = overlap_type)) #GenomicRanges::findOverlaps(rowRanges(m), regions)@from
   
   if(nrow(overlap_indices) == 0){
@@ -96,6 +95,7 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "m
   #message("-Summarizing overlaps..\n")
   if(how == "mean") {
     message("Summarizing by average")
+
     output = dat[, lapply(.SD, mean, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(m)))]
   } else if (how == "median") {
     message("Summarizing by median")
@@ -104,10 +104,12 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "m
     message("Summarizing by maximum")
     output = suppressWarnings(
       dat[, lapply(.SD, max, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(m)))])
+
     for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
   } else if (how == "min") {
     message("Summarizing by minimum")
     output = suppressWarnings(
+
       dat[, lapply(.SD, min, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(m)))])
     for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
   } else if (how == "sum") {
@@ -116,11 +118,13 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "m
   }
   
   output = merge(regions, output, by.x = 'rid', by.y = 'yid', all.x = TRUE)
+
   output = merge(n_overlap_cpgs, output, by = 'rid')
   output$rid <- as.numeric(gsub("rid_","",output$rid))
   
   output <- output[order(output$rid),]
   setnames(output, "seqnames", "chr")
+  
   keep <- c("chr", "start", "end", "n_overlap_CpGs", "rid", colnames(m))
   output <- output[, keep, with=FALSE]
   
@@ -489,7 +493,7 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE, type = "M") {
   type = match.arg(arg = type, choices = c('M', 'C'))
   
   type <- if (type == "M") 1 else 2
-  
+
   mtx <- SummarizedExperiment::assay(x = m, i = type)
   
   if (add_loci) {
