@@ -13,6 +13,7 @@ rm(list.of.packages,new.packages)
 Hg19_cpgs <- methrix::extract_CPGs(ref_genome = "BSgenome.Hsapiens.UCSC.hg19")
 mm10_cpgs <- methrix::extract_CPGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10")
 mm10_cpgs <- mm10_cpgs$cpgs[,1:3]
+ref_cpgs <- mm10_cpgs
 
 setwd("D:/Git/sampleData/Yunhee.GSE97179")
 
@@ -20,7 +21,7 @@ files <- list.files (getwd(),full.names = TRUE)
 
 files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
 
-files <- files[1:18]
+files <- files[1:20]
 
 scm <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"))
 

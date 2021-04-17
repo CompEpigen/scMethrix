@@ -296,14 +296,18 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
       
       bed <- read_bed_by_index(files[i], ref_cpgs, meth_idx = meth_idx, cov_idx = cov_idx, 
                                zero_based = zero_based)
+      
       DelayedArray::write_block(block = as.matrix(bed[[1]]), viewport = grid[[i]], sink = M_sink)
       
       if (!is.null(cov_idx)) DelayedArray::write_block(block = as.matrix(bed[[2]]),
                                                        viewport = grid[[i]], sink = cov_sink)
     } else {
       if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
-      bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index, ref_cpgs = ref_cpgs, zero_based = zero_based)
+      bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index, ref_cpgs = ref_cpgs,
+                                 meth_idx = meth_idx, cov_idx = cov_idx, zero_based = zero_based)
 
+      browser()
+      
       DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(lapply(bed, `[[`, 1))), 
                                 viewport = grid[[i]], sink = M_sink)
       if (!is.null(cov_idx)) 

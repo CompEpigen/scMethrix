@@ -80,6 +80,22 @@ bench.read
 #data <- rbind(read.index,read.parallel.index,read.data)
 #saveRDS(data, file = "benchmark.rds")
 
+### Benchmark the reading coverage ########################################
+
+read.coverage <- microbenchmark(
+  "w/o coverage" = {read_hdf5_data(files,ref_cpgs,n_threads=8)},
+  "with coverage" = {read_hdf5_data(files,ref_cpgs,n_threads=8,cov_idx = c(5,6))},
+  times = 1,unit = "s")
+read.coverage$name <- "read_parallel_bed_by_index (core test)"
+saveRDS(read.coverage, file = paste0(save_dir,"read.coverage"))
+
+bench.coverage <- graph_benchmark(read.coverage,xlabel="",unit="m")
+bench.coverage
+
+#data <- rbind(read.index,read.parallel.index,read.data)
+#saveRDS(data, file = "benchmark.rds")
+
+
 ### Benchmark object creation ########################################
 
 write.object <- microbenchmark(
