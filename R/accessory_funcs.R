@@ -38,7 +38,7 @@ get_sample_name = function(s) {
 #' then the last vector will have a length of less than size \code{num}
 #' @param vec The vector to split
 #' @param num The number to split by
-#' @param by Whether to split by chunk or by size
+#' @param by Whether to split by \code{'chunks'} or by \code{'size'}
 #' @return A vector of vectors
 #' @examples
 #' # Split vector into 4 sub vectors
@@ -47,9 +47,15 @@ get_sample_name = function(s) {
 #' # Split vector into sub-vectors with a size of 2
 #' split_vector(c(1,2,3,4,5,6,7,8),2,by="size")
 #' @export
-split_vector = function(vec,num, by = c("chunk","size")) {
+split_vector = function(vec, num = 1, by = "chunks") {
   
-  if (match.arg(by)=="size") {
+  if (!is.numeric(num)) {
+    stop("num must be numeric")
+  }
+  
+  type = match.arg(arg = by, choices = c('chunks', 'size'))
+  
+  if (type=="size") {
     
     vec <- split(vec, ceiling(seq_along(vec)/num))
     return (unname(vec))

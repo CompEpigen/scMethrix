@@ -564,18 +564,31 @@ remove_uncovered <- function(m) {
 #' coverage_filter(m = methrix_data, cov_thr = 1, min_samples = 3)
 #' @return An object of class \code{\link{methrix}}
 #' @export
-coverage_filter <- function(m, cov_thr = NULL, min_samples = 1, prop_samples=0, group = NULL, n_chunks=1, n_cores=1,type="M") {
+coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NULL, group = NULL, n_chunks=1, n_cores=1,type="M") {
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
   
-  type = match.arg(arg = type, choices = c('M', 'C'))
+  if (!is.null(min_samples) && !is.null(prop_samples)) {
+    warning("Both min_samples and prop_samples set. Defaulting to min_samples")
+    prop_samples <- NULL
+  }
   
-
+  if (!is.numeric(cov_thr)) stop("cov_thr is not numeric") 
   
+  if (!(is.numeric(min_samples) | is.numeric(prop_samples))){
+    stop("min_samples and prop_samples variables must be numeric or NULL")
+  }
   
+  if (!is.null(group) && !(group %in% colnames(m@colData))){
+    stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
+  }
   
+  if (n_cores > n_chunks){
+    n_chunks <- n_cores
+    message("n_cores should be set to be less than or equal to n_chunks.", "\n", "n_chunks has been set to be equal to n_cores = ", n_cores)
+  }
   
   
 }

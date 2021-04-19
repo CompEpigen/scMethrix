@@ -42,7 +42,13 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
   }
   
-  n_threads <- min(n_threads,length(files)/2) # since cannot have multiple threads with a single file being input
+  if (n_threads > length(files)/2){
+    n_threads <- min(n_threads,length(files)/2) # since cannot have multiple threads with a single file being input
+    warning("Too many threads specified. Each thread must have at least 2 files to process. Defaulting to n_thread = ", n_cores)
+  } else if (n_threads < 0) {
+    n_threads <- 0
+    warning("n_threads < 0. Defaulting to 0")
+  }
   
   if (h5) {
     
