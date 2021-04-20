@@ -1,15 +1,15 @@
 #' Extract and summarize methylation or coverage info by regions of interest
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
 #' @param m \code{\link{scMethrix}} object
-#' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param type matrix which needs to be summarized. Coule be `M`, `C`. Default 'M'
+#' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object
+#' @param type matrix which needs to be summarized. Could be `M`, `C`. Default 'M'
 #' @param how mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'
 #' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description,
 #' see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #' #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.
 #' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
 #' #param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
-#' @param verbose Default TRUE
+#' @param verbose Boolean to output progress messages. Default TRUE
 #' @return table of summary statistic for the given region
 #' @examples
 #' data('scMethrix_data')
@@ -18,10 +18,23 @@
 #' type = 'M', how = 'mean')
 #' @export
 get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "mean", overlap_type = "within",
-                               verbose= TRUE) {
+                               verbose = TRUE, group = NULL) {
 
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (!is.null(group) && !(group %in% colnames(m@colData))){
+    stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
+  }
+  
+  if (n_chunks > n_row(m)) {
+    n_chucks <- n_row(m)
+    warning("n_chunks exceeds number of files. Defaulting to n_chunks = ",n_chunks)
+  }
+  
+  if (!is.null(group) && !(group %in% colnames(m@colData))){
+    stop(paste("The column name ", group, " can't be found in colData. Please provide a valid group column."))
   }
   
   if(verbose) message("Generating region summary...",start_time())
@@ -133,6 +146,115 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "m
   return(output)
 }
 
+
+#--------------------------------------------------------------------------------------------------------------------------
+
+#' Filter matrices by coverage
+#' @details Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
+#' @param m \code{\link{scMethrix}} object
+#' @param cov_thr minimum coverage required to call a loci covered
+#' @param min_samples Minimum number of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
+#' @param prop_samples Minimum proportion of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
+#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
+#' tested group-wise.
+#' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
+#' @param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
+#' @importFrom methods is as new
+#' @examples
+#' data('scMethrix_data')
+#' #keep only CpGs which are covered by at-least 1 read across 3 samples
+#' coverage_filter(m = methrix_data, cov_thr = 1, min_samples = 3)
+#' @return An object of class \code{\link{scMethrix}}
+#' @export
+coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NULL, group = NULL, n_chunks=1, n_cores=1) {
+  
+  if (!is(m, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.")
+  }
+  
+  if (!is.null(min_samples) && !is.null(prop_samples)) {
+    warning("Both min_samples and prop_samples set. Defaulting to min_samples")
+    prop_samples <- NULL
+  }
+  
+  if (!is.numeric(cov_thr)) stop("cov_thr is not numeric") 
+  
+  if (!(is.numeric(min_samples) | is.numeric(prop_samples))){
+    stop("min_samples and prop_samples variables must be numeric or NULL")
+  }
+  
+  if (!is.null(group) && !(group %in% colnames(m@colData))){
+    stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
+  }
+  
+  if (n_cores > n_chunks){
+    n_chunks <- n_cores
+    message("n_cores should be set to be less than or equal to n_chunks.", "\n", "n_chunks has been set to be equal to n_cores = ", n_cores)
+  }
+  
+  if (is_h5(m)) {
+    if (n_chunks == 1) {
+      cov_dat = get_matrix(m = m, type = "C")
+      if (!is.null(group)) {
+        row_idx <- sapply(unique(m@colData[, group]), function(c) {
+          res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[, 
+                                                                  group] == c] >= cov_thr, na.rm = TRUE)
+          row_idx <- (res >= max(min_samples, ceiling(prop_samples * 
+                                                        sum(m@colData[, group] == c))))
+        })
+        row_idx <- DelayedMatrixStats::rowAlls(row_idx)
+      } else {
+        res <- DelayedMatrixStats::rowSums2(cov_dat >= cov_thr, na.rm = TRUE)
+        row_idx <- (res >= max(min_samples, ceiling(prop_samples * 
+                                                      ncol(cov_dat))))
+      }
+    } else {
+      if (!is.null(group)) {
+        row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
+                                   function(i) {
+                                     cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
+                                                          type = "C")
+                                     row_idx <- sapply(unique(m@colData[, group]), function(c) {
+                                       res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[,group] == c] >= cov_thr, na.rm = TRUE)
+                                       row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
+                                     })
+                                     row_idx <- DelayedMatrixStats::rowAlls(row_idx)
+                                   }))
+      } else {
+        row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
+                                   function(i) {
+                                     cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
+                                                          type = "C")
+                                     res <- DelayedMatrixStats::rowSums2(cov_dat >= cov_thr, na.rm = TRUE)
+                                     row_idx <- (res >= max(min_samples, ceiling(prop_samples * ncol(cov_dat))))
+                                   }))
+      }
+    }
+  } else {
+    cov_dat = get_matrix(m = m, type = "C")
+    if (!is.null(group)) {
+      row_idx <- sapply(unique(m@colData[, group]), function(c) {
+        res <- matrixStats::rowSums2(cov_dat[, m@colData[, group] == 
+                                               c] >= cov_thr, na.rm = TRUE)
+        row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
+      })
+      row_idx <- matrixStats::rowAlls(row_idx)
+    } else {
+      res <- matrixStats::rowSums2(cov_dat >= cov_thr, na.rm = T)
+      row_idx <- (res >= max(min_samples, ceiling(prop_samples * ncol(cov_dat))))
+    }
+  }
+  
+  gc()
+  message(paste0("-Retained ", format(sum(row_idx), big.mark = ","),
+                 " of ", format(nrow(m), big.mark = ","), " sites"))
+  message("-Finished in:  ", data.table::timetaken(start_proc_time))
+  
+  
+  return(m[row_idx, ])
+  
+}
+
 #--------------------------------------------------------------------------------------------------------------------------
 #' Saves an HDF5 \code{\link{scMethrix}} object
 #' @details Takes \code{\link{scMethrix}} object and saves it in the specified directory
@@ -169,7 +291,7 @@ save_HDF5_scMethrix <- function(m, h5_dir = NULL, replace = FALSE, ...) {
 #' Loads HDF5 scMethrix object
 #' @details Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
 #' @param dir The directory to read in from. Default NULL
-#' @param ... Parameters to pass to loadHDF5SummarizedExperiment
+#' @param ... Parameters to pass to \code{\link{loadHDF5SummarizedExperiment}}
 #' @return An object of class \code{\link{scMethrix}}
 #' @examples
 #' data('scMethrix_data')
@@ -196,7 +318,7 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Converts HDF5 scMethrix object to standard in-memory object.
+#' Converts HDF5 \code{\link{scMethrix}} object to standard in-memory object.
 #' @details Takes a \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
 #' @param m An object of class \code{\link{scMethrix}}, HDF5 format
 #' @return An object of class \code{\link{scMethrix}}
@@ -294,7 +416,7 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 #' @param samples string of sample names to subset by
 #' @param by string to decide whether to "include" or "exclude" the given criteria from the subset
 #' @param verbose flag to output messages or not
-#' @importFrom IRanges subsetByOverlaps
+#' @importFrom IRanges subsetByOverlapss
 #' @examples
 #' data('scMethrix_data')
 #' 
@@ -464,7 +586,7 @@ get_stats <- function(m, per_chr = TRUE) {
 #' @details Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
 #' @param m \code{\link{scMethrix}} object
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
-#' @param in_granges Do you want the outcome in \code{GRanges}?
+#' @param in_granges Do you want the outcome in \code{\link{GRanges}}?
 #' @param type Which matrix to get, "m": methlation, "c": coverage
 #' @return Coverage or Methylation matrix
 #' @examples
@@ -544,114 +666,6 @@ remove_uncovered <- function(m) {
   return(m)
 }
 
-
-#--------------------------------------------------------------------------------------------------------------------------
-
-#' Filter matrices by coverage
-#' @details Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
-#' @param m \code{\link{scMethrix}} object
-#' @param cov_thr minimum coverage required to call a loci covered
-#' @param min_samples Minimum number of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
-#' @param prop_samples Minimum proportion of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
-#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
-#' tested group-wise.
-#' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
-#' @param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
-#' @importFrom methods is as new
-#' @examples
-#' data('scMethrix_data')
-#' #keep only CpGs which are covered by at-least 1 read across 3 samples
-#' coverage_filter(m = methrix_data, cov_thr = 1, min_samples = 3)
-#' @return An object of class \code{\link{methrix}}
-#' @export
-coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NULL, group = NULL, n_chunks=1, n_cores=1) {
-  
-  if (!is(m, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
-  }
-  
-  if (!is.null(min_samples) && !is.null(prop_samples)) {
-    warning("Both min_samples and prop_samples set. Defaulting to min_samples")
-    prop_samples <- NULL
-  }
-  
-  if (!is.numeric(cov_thr)) stop("cov_thr is not numeric") 
-  
-  if (!(is.numeric(min_samples) | is.numeric(prop_samples))){
-    stop("min_samples and prop_samples variables must be numeric or NULL")
-  }
-  
-  if (!is.null(group) && !(group %in% colnames(m@colData))){
-    stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
-  }
-  
-  if (n_cores > n_chunks){
-    n_chunks <- n_cores
-    message("n_cores should be set to be less than or equal to n_chunks.", "\n", "n_chunks has been set to be equal to n_cores = ", n_cores)
-  }
-  
-  if (is_h5(m)) {
-    if (n_chunks == 1) {
-      cov_dat = get_matrix(m = m, type = "C")
-      if (!is.null(group)) {
-        row_idx <- sapply(unique(m@colData[, group]), function(c) {
-          res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[, 
-                                                                  group] == c] >= cov_thr, na.rm = TRUE)
-          row_idx <- (res >= max(min_samples, ceiling(prop_samples * 
-                                                        sum(m@colData[, group] == c))))
-        })
-        row_idx <- DelayedMatrixStats::rowAlls(row_idx)
-      } else {
-        res <- DelayedMatrixStats::rowSums2(cov_dat >= cov_thr, na.rm = TRUE)
-        row_idx <- (res >= max(min_samples, ceiling(prop_samples * 
-                                                      ncol(cov_dat))))
-      }
-    } else {
-      if (!is.null(group)) {
-        row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
-                                   function(i) {
-                                     cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
-                                                          type = "C")
-                                     row_idx <- sapply(unique(m@colData[, group]), function(c) {
-                                       res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[,group] == c] >= cov_thr, na.rm = TRUE)
-                                       row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
-                                     })
-                                     row_idx <- DelayedMatrixStats::rowAlls(row_idx)
-                                   }))
-      } else {
-        row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
-                                   function(i) {
-                                     cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
-                                                          type = "C")
-                                     res <- DelayedMatrixStats::rowSums2(cov_dat >= cov_thr, na.rm = TRUE)
-                                     row_idx <- (res >= max(min_samples, ceiling(prop_samples * ncol(cov_dat))))
-                                   }))
-      }
-    }
-  } else {
-    cov_dat = get_matrix(m = m, type = "C")
-    if (!is.null(group)) {
-      row_idx <- sapply(unique(m@colData[, group]), function(c) {
-        res <- matrixStats::rowSums2(cov_dat[, m@colData[, group] == 
-                                               c] >= cov_thr, na.rm = TRUE)
-        row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
-      })
-      row_idx <- matrixStats::rowAlls(row_idx)
-    } else {
-      res <- matrixStats::rowSums2(cov_dat >= cov_thr, na.rm = T)
-      row_idx <- (res >= max(min_samples, ceiling(prop_samples * ncol(cov_dat))))
-    }
-  }
-  
-  gc()
-  message(paste0("-Retained ", format(sum(row_idx), big.mark = ","),
-                 " of ", format(nrow(m), big.mark = ","), " sites"))
-  message("-Finished in:  ", data.table::timetaken(start_proc_time))
-  
-  
-  return(m[row_idx, ])
-  
-}
 
 
 #--------------------------------------------------------------------------------------------------------------------------

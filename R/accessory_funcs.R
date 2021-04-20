@@ -1,5 +1,5 @@
-#' Checks if scMethrix object is an HDF5 object
-#' @param m The scMethrix object
+#' Checks if \code{\link{scMethrix}} object is an HDF5 object
+#' @param m The \code{\link{scMethrix}} object
 #' @return boolean Whether the object is HDF5
 #' @examples
 #' data('scMethrix_data')
@@ -9,8 +9,8 @@ is_h5 = function(m) {
   return(m@metadata$is_h5)
 }
 
-#' Checks if scMethrix object has a coverage matrix
-#' @param m The scMethrix object
+#' Checks if \code{\link{scMethrix}} object has a coverage matrix
+#' @param m The \code{\link{scMethrix}} object
 #' @return boolean Whether the object has a coverage matrix
 #' @examples
 #' data('scMethrix_data')
@@ -21,7 +21,6 @@ has_cov = function(m) {
 }
 
 #' Returns file name minus the extension from a file.path to represent the sample name
-#' @details Acts in the same way as ternary operators in other language. Must surround with brackets to use)
 #' @param s A file.path
 #' @return string containing the sample name
 #' @import tools
@@ -29,7 +28,6 @@ has_cov = function(m) {
 #' #get_sample_name("C:/dir/dir/filename.ext")
  #' @export
 get_sample_name = function(s) {
-  
   return(tools::file_path_sans_ext(basename(s)))
 }
 
@@ -38,7 +36,7 @@ get_sample_name = function(s) {
 #' then the last vector will have a length of less than size \code{num}
 #' @param vec The vector to split
 #' @param num The number to split by
-#' @param by Whether to split by \code{'chunks'} or by \code{'size'}
+#' @param by Whether to split by '\code{chunks}' or by '\code{size}'
 #' @return A vector of vectors
 #' @examples
 #' # Split vector into 4 sub vectors
@@ -76,13 +74,13 @@ split_vector = function(vec, num = 1, by = "chunks") {
   }
 }
 
-#' Chunks a Granges object by factor, percent or number
-#' @details Divides Granges into a list based on a chunking parameter
-#' @param gr The Granges object
+#' Chunks a \code{\link{GRanges}} object by \code{factor}, \code{percent} or \code{number}
+#' @details Divides \code{\link{GRanges}} into a list based on a chunking parameter
+#' @param gr The \code{\link{GRanges}} object
 #' @param factor The factor to which divide the chunks into
-#' @param percent The percentage of the Granges to chunk
-#' @param num The number of regions to include in each chunk
-#' @return GRangesList containing all the chunked Granges
+#' @param percent The size in percentage of CpGs in each chunk
+#' @param num The number of CpGs to include in each chunk
+#' @return \code{\link{GRangesList}} containing all the chunked \code{\link{Granges}}
 #' @import GenomicRanges
 #' @examples
 #' @export
@@ -114,11 +112,12 @@ split_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, perce
 }
 
 #--- cast_granges -------------------------------------------------------------------------------------------
-#' Casts regions into Granges format
-#' @details Casts the input as a GRanges object. Input can be GRange or a data.frame-compatible class that
-#' can be cast through as.data.frame(). Input format must be chr-start-end for data.frame objects.
+#' Casts regions into \code{\link{GRanges}} format
+#' @details Casts the input as a \code{\link{GRanges}} object. Input can be \code{\link{GRanges}} or a 
+#' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input format
+#'  must be \code{chr-start-end} for \code{\link{data.frame}} objects.
 #' @param regions The input regions
-#' @return GRanges object with the input regions
+#' @return \code{\link{GRanges}} object with the input regions
 #' @import GenomicRanges
 #' @examples
 #' regions = data.table(chr = 'chr1', start = 1, end = 100)
@@ -142,11 +141,11 @@ start_time <- function() {
 }
 
 #' Outputs the split/lap/iteration time 
-#' @details Gets the stored elapsed proc.time() from either the initial start_time or the previous split_time
-#' @return Returns formatted elapsed time since start_time or last split_time
+#' @details Gets the stored elapsed \\code{\link{proc.time()}} from either the initial 
+#' \code{\link{start_time()}} or the previous \code{split_time}
+#' @return Returns formatted elapsed time since \code{\link{start_time}} or last \code{\link{split_time}}
 #' @export
 split_time <- function() {
-  
   time <- get("time.split", envir=baseenv())
   if (!is.numeric(time)) stop("start_time() not set")
   time <- proc.time()["elapsed"]-time
@@ -155,11 +154,11 @@ split_time <- function() {
 }
 
 #' Stops an internal stopwatch and outputs overall time
-#' @details Gets the stored elapsed proc.time() from initial start_time() to calculate overall runtime
-#' @return Returns formatted elapsed time since start_time
+#' @details Gets the stored elapsed \code{proc.time()} from initial \code{\link{start_time}} to calculate 
+#' overall runtime
+#' @return Returns formatted elapsed time since \code{\link{start_time}}
 #' @export
 stop_time <- function() {
-  
   time <- get("time.all", envir=baseenv())
   if (!is.numeric(time)) stop("start_time() not set")
   time <- proc.time()["elapsed"]-get("time.all", envir=baseenv())
@@ -173,7 +172,7 @@ stop_time <- function() {
 #' in the input files so as to maximize performance and minimize resources. Can also be used for quality
 #' control to see if there is excessive number of CpG sites that are not present in the reference genome.
 #' @param ref_cpgs A reference set of CpG sites (e.g. Hg19 or mm10) in bedgraph format
-#' @param gen_cpgs A subset of CpG sites. Usually obtained from read_index.
+#' @param gen_cpgs A subset of CpG sites. Usually obtained from \code{\link{read_index}}.
 #' @param verbose flag to output messages or not
 #' @return Returns list of CpG sites in bedgraph format
 #' @export

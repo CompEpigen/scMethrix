@@ -9,7 +9,7 @@
 #' @param batch_size Max number of files to hold in memory at once
 #' @param n_threads number of threads to use. Default 1.
 #' Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.
-#' @param h5 Should the coverage and methylation matrices be stored as 'HDF5Array'
+#' @param h5 Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}
 #' @param h5_dir directory to store H5 based object
 #' @param h5_temp temporary directory to store hdf5
 #' @param desc Description of the experiment
@@ -93,7 +93,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 
 #' Parse BED files for unique genomic coordinates
 #' @details Create list of unique genomic regions from input BED files. Populates a list of batch_size+1 with 
-#' the genomic coordinates from BED files, then runs unique() when the list is full and keeps the running
+#' the genomic coordinates from BED files, then runs \code{\link{unique}} when the list is full and keeps the running
 #' results in the batch_size+1 position. Also indexes based on 'chr' and 'start' for later searching.
 #' @param files List of BED files
 #' @param n_threads integer for number of threads to use
@@ -250,12 +250,12 @@ read_bed_by_index2 <- function(file,zero_based=FALSE) {
 #' @param files The BED files to parse
 #' @param ref_cpgs The index of all unique coordinates from the input BED files
 #' @param n_threads The number of threads to use. 0 is the default thread with no cluster built.
-#' @param h5_temp The file location to store the RealizationSink object
+#' @param h5_temp The file location to store the \code{\link{RealizationSink}} object
 #' @param zero_based Boolean flag for whether the input data is zero-based or not
 #' @param meth_idx The column index of the methylation value for the read
 #' @param cov_idx The column index(es) of the read count
 #' @param verbose flag to output messages or not.
-#' @return List of HDF5Arrays. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
+#' @return List of \code{\link{HDF5Arrays}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
 #' @import data.table DelayedArray HDF5Array parallel doParallel
 #' @examples
 read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_based = FALSE, verbose = TRUE,
@@ -333,7 +333,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
 }
 
 #--- read_mem_data ------------------------------------------------------------------------------------------
-#' Writes methylation values from input BED files into an in-memory SummarizedExperiment
+#' Writes methylation values from input BED files into an in-memory \code{\link{RangedSummarizedExperiment}}
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.
 #' @param files The BED files to parse
