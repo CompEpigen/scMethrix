@@ -204,7 +204,7 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
       data[.(ref_cpgs$chr, ref_cpgs$start)][,3:4],   
       data[.(ref_cpgs$chr, ref_cpgs$end)][,3:4]) 
     
-    #Get the meth values from start and end CpG (meth*cov for both reads)
+    #Get the meth values from start and end CpG by weighted mean for both reads (meth*cov)
     sample[,1] <- sample[,1]*sample[,2]
     sample[,3] <- sample[,3]*sample[,4]
     sample[,1] <- (rowSums(sample[,c(1,3)],na.rm=TRUE) * NA ^ (rowSums(!is.na(sample)) == 0))
@@ -226,6 +226,7 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
   if (s < 0.9*d) 
   {warning(paste0("Only ",round(s/d*100,1) ,"% of CpG sites in '",basename(file),"' are present in ref_cpgs"))}
   
+  # Save the sample name data
   if (!is.null(cov_idx)) {
     sample <- data.table(sapply(sample, as.integer))
     sample <- list(meth = sample[,1], cov = sample[,2])
@@ -265,6 +266,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   
   if (is.null(h5_temp)) {h5_temp <- tempdir()}
   
+  # Generate the realization sinks
   dimension <- as.integer(nrow(ref_cpgs))
   colData <- as.vector(unlist(lapply(files,get_sample_name)))
   
@@ -273,13 +275,13 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
                                            filepath = tempfile(pattern="M_sink_",tmpdir=h5_temp),
                                            name = "M", level = 6)
   
-  
   cov_sink <- if(is.null(cov_idx)) NULL else 
-    HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
-                                   dimnames = list(NULL,colData), type = "integer",
-                                   filepath = tempfile(pattern="cov_sink_",tmpdir=h5_temp),
-                                   name = "M", level = 6)
+              HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
+                                             dimnames = list(NULL, colData), type = "integer",
+                                             filepath = tempfile(pattern = "cov_sink_", tmpdir = h5_temp),
+                                             name = "M", level = 6)
   
+  # Determine the grids for the sinks
   if (n_threads == 0) {
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
                                            spacings = c(dimension, 1L)) 
@@ -295,6 +297,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
     files <- split_vector(files,n_threads,by="size")
   }
   
+  # Read data to the sinks
   for (i in 1:length(files)) {
     
     if (n_threads == 0) {
@@ -312,8 +315,6 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
       bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index, ref_cpgs = ref_cpgs,
                                  meth_idx = meth_idx, cov_idx = cov_idx, zero_based = zero_based)
 
-      browser()
-      
       DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(lapply(bed, `[[`, 1))), 
                                 viewport = grid[[i]], sink = M_sink)
       if (!is.null(cov_idx)) 
@@ -332,7 +333,6 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   return(list(meth = M_sink, cov = cov_sink))
 }
 
-#--- read_mem_data ------------------------------------------------------------------------------------------
 #' Writes methylation values from input BED files into an in-memory \code{\link{RangedSummarizedExperiment}}
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.
@@ -353,7 +353,7 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
   if (verbose) message("Reading BED data...",start_time()) 
   
   if (n_threads != 0) {
-    
+    # Parallel functionality
     if (verbose) message("Starting cluster with ",n_threads," threads.")
     
     cl <- parallel::makeCluster(n_threads)  
@@ -369,8 +369,9 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
                                   n_threads = 0, zero_based = zero_based, verbose = verbose))
     
     parallel::stopCluster(cl)
-    
+  
   } else {
+    # Single thread functionality
     # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
     data <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based,
                    meth_idx = meth_idx, cov_idx = cov_idx)

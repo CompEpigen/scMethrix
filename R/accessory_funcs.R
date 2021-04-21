@@ -114,7 +114,7 @@ split_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, perce
 #--- cast_granges -------------------------------------------------------------------------------------------
 #' Casts regions into \code{\link{GRanges}} format
 #' @details Casts the input as a \code{\link{GRanges}} object. Input can be \code{\link{GRanges}} or a 
-#' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input format
+#' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input BED format
 #'  must be \code{chr-start-end} for \code{\link{data.frame}} objects.
 #' @param regions The input regions
 #' @return \code{\link{GRanges}} object with the input regions
