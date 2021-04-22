@@ -190,34 +190,38 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
   data <- data.table::fread(file, header = FALSE, select = c(1:2,meth_idx,cov_idx))
   
   if (zero_based) data[,2] <- data[,2]+1L
-  colnames(data) <- c("chr", "start", rep("x",length(data)-2))
+  colnames(data) <- c("chr", "start", "meth",rep("cov",length(data)-3))
   data <- data.table::setkeyv(data, c("chr","start"))
   
   if (!is.null(cov_idx)) {
+    
+    #Collapse the coverage values
     if (length(cov_idx) > 1) {
       data[,4] <- rowSums(data[,c(cov_idx-1), with=FALSE])
     }
-    data <- data[,1:4] #Collapse to 4 cols (str-end-val-cov)
+    data <- data[,.(chr,start,meth,cov)]
     
     #Do the search
-    sample <- cbind(
-      data[.(ref_cpgs$chr, ref_cpgs$start)][,3:4],   
-      data[.(ref_cpgs$chr, ref_cpgs$end)][,3:4]) 
+    sample <- cbind(data[.(ref_cpgs$chr, ref_cpgs$start)][,.(meth,cov)],
+                    data[.(ref_cpgs$chr, ref_cpgs$end)][,.(meth,cov)])
+    
+    colnames(sample) <- c("meth1", "cov1", "meth2","cov2")
     
     #Get the meth values from start and end CpG by weighted mean for both reads (meth*cov)
-    sample[,1] <- sample[,1]*sample[,2]
-    sample[,3] <- sample[,3]*sample[,4]
-    sample[,1] <- (rowSums(sample[,c(1,3)],na.rm=TRUE) * NA ^ (rowSums(!is.na(sample)) == 0))
-    sample[,2] <- (rowSums(sample[,c(2,4)],na.rm=TRUE) * NA ^ (rowSums(!is.na(sample)) == 0))
-    sample[,1] <- sample[,1]/sample[,2]
-    sample <- sample[,1:2]
+    sample[,meth1 := meth1 * cov1]
+    sample[,meth2 := meth2 * cov2]
+    sample[,meth := rowSums(.SD, na.rm = TRUE), .SDcols = c("meth1", "meth2")]
+    sample[,cov := rowSums(.SD, na.rm = TRUE), .SDcols = c("cov1", "cov2")]
+    sample[cov == 0, cov := NA] #since above with eval NA+NA as 0
+    sample[,meth := meth / cov]
+    sample <- sample[,.(meth,cov)]
     
-    s <- nrow(ref_cpgs)-sum(is.na(sample[,1]))
+    s <- nrow(ref_cpgs)-sum(is.na(sample[,(meth)]))
   } else {
-    colnames(data) <- c("chr", "start", "value")
+    #Get the methylation value as the mean of start and end site
     sample <- rowMeans(cbind(
-      data[.(ref_cpgs$chr, ref_cpgs$start)][,3], 
-      data[.(ref_cpgs$chr, ref_cpgs$end)][,3]), na.rm=TRUE)
+      data[.(ref_cpgs$chr, ref_cpgs$start)][,(meth)], 
+      data[.(ref_cpgs$chr, ref_cpgs$end)][,(meth)]), na.rm=TRUE)
     s <- nrow(ref_cpgs)-sum(is.na(sample))
   }
   
@@ -229,7 +233,7 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
   # Save the sample name data
   if (!is.null(cov_idx)) {
     sample <- data.table(sapply(sample, as.integer))
-    sample <- list(meth = sample[,1], cov = sample[,2])
+    sample <- list(meth = sample[,.(meth)], cov = sample[,.(cov)])
     names(sample$meth) <- get_sample_name(file)
     names(sample$cov) <- get_sample_name(file)
   } else {
