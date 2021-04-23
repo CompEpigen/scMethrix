@@ -22,7 +22,7 @@ read_hdf5_data(
 
 \item{n_threads}{The number of threads to use. 0 is the default thread with no cluster built.}
 
-\item{h5_temp}{The file location to store the RealizationSink object}
+\item{h5_temp}{The file location to store the \code{\link{RealizationSink}} object}
 
 \item{zero_based}{Boolean flag for whether the input data is zero-based or not}
 
@@ -33,7 +33,7 @@ read_hdf5_data(
 \item{cov_idx}{The column index(es) of the read count}
 }
 \value{
-List of HDF5Arrays. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
+List of \code{\link{HDF5Array}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
 }
 \description{
 Writes methylation values from input BED files into an HDF5array

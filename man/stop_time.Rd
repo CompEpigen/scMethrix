@@ -7,11 +7,12 @@
 stop_time()
 }
 \value{
-Returns formatted elapsed time since start_time
+Returns formatted elapsed time since \code{\link{start_time}}
 }
 \description{
 Stops an internal stopwatch and outputs overall time
 }
 \details{
-Gets the stored elapsed proc.time() from initial start_time() to calculate overall runtime
+Gets the stored elapsed \code{proc.time()} from initial \code{\link{start_time}} to calculate
+overall runtime
 }

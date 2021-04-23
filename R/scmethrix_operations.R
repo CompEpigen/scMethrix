@@ -10,6 +10,8 @@
 #' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
 #' #param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
 #' @param verbose Boolean to output progress messages. Default TRUE
+#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
+#' tested group-wise.
 #' @return table of summary statistic for the given region
 #' @examples
 #' data('scMethrix_data')
@@ -28,8 +30,8 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "m
     stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
   }
   
-  if (n_chunks > n_row(m)) {
-    n_chucks <- n_row(m)
+  if (n_chunks > nrow(m)) {
+    n_chucks <- nrow(m)
     warning("n_chunks exceeds number of files. Defaulting to n_chunks = ",n_chunks)
   }
   
@@ -161,9 +163,6 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "m
 #' @param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
 #' @importFrom methods is as new
 #' @examples
-#' data('scMethrix_data')
-#' #keep only CpGs which are covered by at-least 1 read across 3 samples
-#' coverage_filter(m = methrix_data, cov_thr = 1, min_samples = 3)
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
 coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NULL, group = NULL, n_chunks=1, n_cores=1) {
@@ -416,7 +415,7 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 #' @param samples string of sample names to subset by
 #' @param by string to decide whether to "include" or "exclude" the given criteria from the subset
 #' @param verbose flag to output messages or not
-#' @importFrom IRanges subsetByOverlapss
+#' @importFrom IRanges subsetByOverlaps
 #' @examples
 #' data('scMethrix_data')
 #' 

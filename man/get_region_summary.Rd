@@ -11,18 +11,19 @@ get_region_summary(
   type = "M",
   how = "mean",
   overlap_type = "within",
-  verbose = TRUE
+  verbose = TRUE,
+  group = NULL
 )
 }
 \arguments{
 \item{m}{\code{\link{scMethrix}} object}
 
-\item{regions}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
+\item{regions}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object}
 
 \item{n_chunks}{Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
 #param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.}
 
-\item{type}{matrix which needs to be summarized. Coule be \code{M}, \code{C}. Default 'M'}
+\item{type}{matrix which needs to be summarized. Could be \code{M}, \code{C}. Default 'M'}
 
 \item{how}{mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'}
 
@@ -30,7 +31,10 @@ get_region_summary(
 see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.}
 
-\item{verbose}{Default TRUE}
+\item{verbose}{Boolean to output progress messages. Default TRUE}
+
+\item{group}{a column name from sample annotation that defines groups. In this case, the number of min_samples will be
+tested group-wise.}
 }
 \value{
 table of summary statistic for the given region

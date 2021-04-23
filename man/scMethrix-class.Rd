@@ -20,8 +20,6 @@ S4 class scMethrix
 
 \item{\code{metadata}}{a list of meta data associated with the assays}
 
-\item{\code{rowRanges}}{A Granges of the genomic coordinates of CpG sites}
-
 \item{\code{NAMES}}{NULL}
 
 \item{\code{int_colData}}{NULL}

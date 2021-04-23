@@ -43,8 +43,9 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   }
   
   if (n_threads > length(files)/2){
-    n_threads <- min(n_threads,length(files)/2) # since cannot have multiple threads with a single file being input
-    warning("Too many threads specified. Each thread must have at least 2 files to process. Defaulting to n_thread = ", n_cores)
+    n_threads <- min(n_threads,length(files)/2) # cannot have multiple threads with a single file being input
+    warning("Too many threads specified. Each thread must have at least 2 files to process. 
+            Defaulting to n_thread = ", n_threads)
   } else if (n_threads < 0) {
     n_threads <- 0
     warning("n_threads < 0. Defaulting to 0")
@@ -187,6 +188,7 @@ read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 20
 #' @importFrom plyr .
 #' @examples
 read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero_based=FALSE) {
+  chr <- start <- meth <- meth1 <- meth2 <- cov <- cov1 <- cov2 <- NULL
   data <- data.table::fread(file, header = FALSE, select = c(1:2,meth_idx,cov_idx))
   
   if (zero_based) data[,2] <- data[,2]+1L
@@ -204,7 +206,6 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
     #Do the search
     sample <- cbind(data[.(ref_cpgs$chr, ref_cpgs$start)][,.(meth,cov)],
                     data[.(ref_cpgs$chr, ref_cpgs$end)][,.(meth,cov)])
-    
     colnames(sample) <- c("meth1", "cov1", "meth2","cov2")
     
     #Get the meth values from start and end CpG by weighted mean for both reads (meth*cov)
@@ -212,7 +213,7 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
     sample[,meth2 := meth2 * cov2]
     sample[,meth := rowSums(.SD, na.rm = TRUE), .SDcols = c("meth1", "meth2")]
     sample[,cov := rowSums(.SD, na.rm = TRUE), .SDcols = c("cov1", "cov2")]
-    sample[cov == 0, cov := NA] #since above with eval NA+NA as 0
+    sample[cov == 0, cov := NA] #since above line evals NA+NA as 0
     sample[,meth := meth / cov]
     sample <- sample[,.(meth,cov)]
     
@@ -260,7 +261,7 @@ read_bed_by_index2 <- function(file,zero_based=FALSE) {
 #' @param meth_idx The column index of the methylation value for the read
 #' @param cov_idx The column index(es) of the read count
 #' @param verbose flag to output messages or not.
-#' @return List of \code{\link{HDF5Arrays}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
+#' @return List of \code{\link{HDF5Array}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
 #' @import data.table DelayedArray HDF5Array parallel doParallel
 #' @examples
 read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_based = FALSE, verbose = TRUE,

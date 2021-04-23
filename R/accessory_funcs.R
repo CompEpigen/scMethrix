@@ -80,7 +80,7 @@ split_vector = function(vec, num = 1, by = "chunks") {
 #' @param factor The factor to which divide the chunks into
 #' @param percent The size in percentage of CpGs in each chunk
 #' @param num The number of CpGs to include in each chunk
-#' @return \code{\link{GRangesList}} containing all the chunked \code{\link{Granges}}
+#' @return \code{\link{GRangesList}} containing all the chunked \code{\link{GRanges}}
 #' @import GenomicRanges
 #' @examples
 #' @export
@@ -141,8 +141,8 @@ start_time <- function() {
 }
 
 #' Outputs the split/lap/iteration time 
-#' @details Gets the stored elapsed \\code{\link{proc.time()}} from either the initial 
-#' \code{\link{start_time()}} or the previous \code{split_time}
+#' @details Gets the stored elapsed \\code{\link{proc.time}} from either the initial 
+#' \code{\link{start_time}} or the previous \code{split_time}
 #' @return Returns formatted elapsed time since \code{\link{start_time}} or last \code{\link{split_time}}
 #' @export
 split_time <- function() {

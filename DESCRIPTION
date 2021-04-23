@@ -25,7 +25,6 @@ Imports:
     GenomicRanges,
     IRanges,
     plotly,
-    BRGenomics,
     SummarizedExperiment,
     doParallel,
     dplyr,

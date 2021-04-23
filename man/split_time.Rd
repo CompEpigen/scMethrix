@@ -7,11 +7,12 @@
 split_time()
 }
 \value{
-Returns formatted elapsed time since start_time or last split_time
+Returns formatted elapsed time since \code{\link{start_time}} or last \code{\link{split_time}}
 }
 \description{
 Outputs the split/lap/iteration time
 }
 \details{
-Gets the stored elapsed proc.time() from either the initial start_time or the previous split_time
+Gets the stored elapsed \\code{\link{proc.time}} from either the initial
+\code{\link{start_time}} or the previous \code{split_time}
 }

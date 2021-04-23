@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{convert_HDF5_methrix}
 \alias{convert_HDF5_methrix}
-\title{Converts HDF5 scMethrix object to standard in-memory object.}
+\title{Converts HDF5 \code{\link{scMethrix}} object to standard in-memory object.}
 \usage{
 convert_HDF5_methrix(m = NULL)
 }
@@ -13,7 +13,7 @@ convert_HDF5_methrix(m = NULL)
 An object of class \code{\link{scMethrix}}
 }
 \description{
-Converts HDF5 scMethrix object to standard in-memory object.
+Converts HDF5 \code{\link{scMethrix}} object to standard in-memory object.
 }
 \details{
 Takes a \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
