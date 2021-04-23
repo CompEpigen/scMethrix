@@ -68,7 +68,7 @@ create_scMethrix <- function(methyl_mat = NULL, cov_mat = NULL, colData = NULL, 
       } else {list(score = as.matrix(methyl_mat))}
       
       sse <- SingleCellExperiment::SingleCellExperiment(assays = assays,
-                                                      #colData = colData,
+                                                      colData = colData,
                                                       rowRanges = rowRanges,
                                                       metadata = list(genome = genome_name,
                                                                       chrom_sizes = chrom_sizes,

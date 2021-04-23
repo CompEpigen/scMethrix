@@ -61,9 +61,10 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     if (is.null(reads)) reads <- read_hdf5_data(files, ref_cpgs, n_threads, h5_temp, zero_based, verbose,
                                                 meth_idx = meth_idx, cov_idx = cov_idx)
     message("Building scMethrix object")
-    
+
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
-    colData <- data.frame(colData=unlist(lapply(files,get_sample_name)))
+    colData <- data.frame()[1:(length(files)), ]
+    row.names(colData) <- unlist(lapply(files,get_sample_name))
     m_obj <- create_scMethrix(methyl_mat=reads$meth, cov_mat=reads$cov, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
                               replace = replace)
@@ -73,7 +74,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     return(m_obj)
     
   } else {
-    
+
     message("Reading in BED files") 
     
     if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,zero_based = zero_based)
@@ -86,6 +87,8 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     #colData <- t(unlist(lapply(files,get_sample_name)))
     
     message("Creating scMethrix object")
+    colData <- data.frame()[1:(length(files)), ]
+    row.names(colData) <- unlist(lapply(files,get_sample_name))
     m_obj <- create_scMethrix(methyl_mat=reads$meth, cov_mat=reads$cov, 
                               rowRanges=ref_cpgs, is_hdf5 = FALSE, genome_name = genome_name, 
                               desc = desc, colData = colData )
