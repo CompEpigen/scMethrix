@@ -160,12 +160,12 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "m
 #' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
 #' tested group-wise.
 #' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
-#' @param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
+#' @param n_threads Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. If \code{n_threads} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_threads}. Default = 1.
 #' @importFrom methods is as new
 #' @examples
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
-coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NULL, group = NULL, n_chunks=1, n_cores=1) {
+coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NULL, group = NULL, n_chunks=1, n_threads=1) {
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
@@ -174,6 +174,8 @@ coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NUL
   if (!is.null(min_samples) && !is.null(prop_samples)) {
     warning("Both min_samples and prop_samples set. Defaulting to min_samples")
     prop_samples <- NULL
+  } else if (is.null(min_samples) && is.null(prop_samples)) {
+    stop("Neither min_samples and prop_samples is defined")
   }
   
   if (!is.numeric(cov_thr)) stop("cov_thr is not numeric") 
@@ -186,58 +188,68 @@ coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NUL
     stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
   }
   
-  if (n_cores > n_chunks){
-    n_chunks <- n_cores
-    message("n_cores should be set to be less than or equal to n_chunks.", "\n", "n_chunks has been set to be equal to n_cores = ", n_cores)
+  if (n_threads > n_chunks){
+    n_chunks <- n_threads
+    message("n_threads should be set to be less than or equal to n_chunks.", "\n", "n_chunks has been set 
+            to be equal to n_threads = ", n_threads)
   }
+  
+  message("Filtering by coverage...",start_time())
   
   if (is_h5(m)) {
     if (n_chunks == 1) {
       cov_dat = get_matrix(m = m, type = "C")
       if (!is.null(group)) {
-        row_idx <- sapply(unique(m@colData[, group]), function(c) {
-          res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[, 
-                                                                  group] == c] >= cov_thr, na.rm = TRUE)
-          row_idx <- (res >= max(min_samples, ceiling(prop_samples * 
-                                                        sum(m@colData[, group] == c))))
-        })
-        row_idx <- DelayedMatrixStats::rowAlls(row_idx)
+        stop("Groups not implemented yet")
+        # row_idx <- sapply(unique(m@colData[, group]), function(c) {
+        #   res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[, 
+        #                                                           group] == c] >= cov_thr, na.rm = TRUE)
+        #   row_idx <- (res >= max(min_samples, ceiling(prop_samples * 
+        #                                                 sum(m@colData[, group] == c))))
+        # })
+        # row_idx <- DelayedMatrixStats::rowAlls(row_idx)
       } else {
         res <- DelayedMatrixStats::rowSums2(cov_dat >= cov_thr, na.rm = TRUE)
         row_idx <- (res >= max(min_samples, ceiling(prop_samples * 
                                                       ncol(cov_dat))))
+        # row_idx <- (res >= (if (is.null(min_samples)) min_samples else ceiling(prop_samples * 
+        #  
       }
     } else {
-      if (!is.null(group)) {
-        row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
-                                   function(i) {
-                                     cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
-                                                          type = "C")
-                                     row_idx <- sapply(unique(m@colData[, group]), function(c) {
-                                       res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[,group] == c] >= cov_thr, na.rm = TRUE)
-                                       row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
-                                     })
-                                     row_idx <- DelayedMatrixStats::rowAlls(row_idx)
-                                   }))
-      } else {
-        row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
-                                   function(i) {
-                                     cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
-                                                          type = "C")
-                                     res <- DelayedMatrixStats::rowSums2(cov_dat >= cov_thr, na.rm = TRUE)
-                                     row_idx <- (res >= max(min_samples, ceiling(prop_samples * ncol(cov_dat))))
-                                   }))
-      }
+      message("Only 1 chunk supported for now")
+      # 
+      # 
+      # if (!is.null(group)) {
+      #   row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
+      #                              function(i) {
+      #                                cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
+      #                                                     type = "C")
+      #                                row_idx <- sapply(unique(m@colData[, group]), function(c) {
+      #                                  res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[,group] == c] >= cov_thr, na.rm = TRUE)
+      #                                  row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
+      #                                })
+      #                                row_idx <- DelayedMatrixStats::rowAlls(row_idx)
+      #                              }))
+      # } else {
+      #   row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
+      #                              function(i) {
+      #                                cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
+      #                                                     type = "C")
+      #                                res <- DelayedMatrixStats::rowSums2(cov_dat >= cov_thr, na.rm = TRUE)
+      #                                row_idx <- (res >= max(min_samples, ceiling(prop_samples * ncol(cov_dat))))
+      #                              }))
+      # }
     }
   } else {
     cov_dat = get_matrix(m = m, type = "C")
     if (!is.null(group)) {
-      row_idx <- sapply(unique(m@colData[, group]), function(c) {
-        res <- matrixStats::rowSums2(cov_dat[, m@colData[, group] == 
-                                               c] >= cov_thr, na.rm = TRUE)
-        row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
-      })
-      row_idx <- matrixStats::rowAlls(row_idx)
+      stop("Groups not implemented yet")
+      # row_idx <- sapply(unique(m@colData[, group]), function(c) {
+      #   res <- matrixStats::rowSums2(cov_dat[, m@colData[, group] == 
+      #                                          c] >= cov_thr, na.rm = TRUE)
+      #   row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
+      # })
+      # row_idx <- matrixStats::rowAlls(row_idx)
     } else {
       res <- matrixStats::rowSums2(cov_dat >= cov_thr, na.rm = T)
       row_idx <- (res >= max(min_samples, ceiling(prop_samples * ncol(cov_dat))))
@@ -245,10 +257,10 @@ coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NUL
   }
   
   gc()
-  message(paste0("-Retained ", format(sum(row_idx), big.mark = ","),
+  message(paste0("Retained ", format(sum(row_idx), big.mark = ","),
                  " of ", format(nrow(m), big.mark = ","), " sites"))
-  message("-Finished in:  ", data.table::timetaken(start_proc_time))
   
+  message("Filtered in ",stop_time())
   
   return(m[row_idx, ])
   

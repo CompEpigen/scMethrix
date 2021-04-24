@@ -12,11 +12,9 @@ Imports:
     rtracklayer,
     DelayedArray,
     HDF5Array,
-    BSgenome,
     DelayedMatrixStats,
     parallel,
     methods,
-    ggplot2,
     matrixStats,
     tools,
     graphics,
@@ -24,10 +22,8 @@ Imports:
     utils,
     GenomicRanges,
     IRanges,
-    plotly,
     SummarizedExperiment,
     doParallel,
-    dplyr,
     plyr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1

@@ -22,7 +22,7 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   cat(paste0("An object of class ", class(object), "\n"))
   cat(paste0("   n_CpGs: ", format(nrow(object), big.mark = ","), "\n"))
   cat(paste0("   n_samples: ", ncol(object), "\n"))
-  cat(paste0("   assays: ", paste(SummarizedExperiment::assayNames(object),collapse=", "),"\n"))
+  cat(paste0("   assays: ", (paste(SummarizedExperiment::assayNames(object),collapse=", ")),"\n"))
   cat(paste0("   is_h5: ", is_h5(object), "\n"))
   cat(paste0("   Reference: ", object@metadata$genome, "\n"))
   cat(paste0("   Physical size: ", format(utils::object.size(object), units = "auto"), "\n"))
@@ -45,9 +45,7 @@ create_scMethrix <- function(methyl_mat = NULL, cov_mat = NULL, colData = NULL, 
                                                                         descriptive_stats = desc,
                                                                         is_h5 = TRUE, 
                                                                         has_cov = !is.null(cov_mat)))
-      
       #TODO: Cannot save to same directory input files exist in
-      
       if (!is.null(h5_dir)) {
         message("Writing to disk...",start_time())
         

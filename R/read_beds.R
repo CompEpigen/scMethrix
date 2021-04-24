@@ -323,11 +323,21 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
       bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index, ref_cpgs = ref_cpgs,
                                  meth_idx = meth_idx, cov_idx = cov_idx, zero_based = zero_based)
 
-      DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(lapply(bed, `[[`, 1))), 
-                                viewport = grid[[i]], sink = M_sink)
+      
+      DelayedArray::write_block(block = as.matrix(cbind(lapply(bed, `[[`, 1))), 
+                                viewport = grid[[i]], sink = M_sink)      
+      
+      
+      # DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(lapply(bed, `[[`, 1))), 
+      #                           viewport = grid[[i]], sink = M_sink)
       if (!is.null(cov_idx)) 
-        DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(lapply(data, `[[`, 2))), 
-                                                    viewport = grid[[i]], sink = cov_sink)
+        
+        
+        DelayedArray::write_block(block = as.matrix(cbind(lapply(data, `[[`, 2))), 
+                                  viewport = grid[[i]], sink = cov_sink)
+        
+        # DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(lapply(data, `[[`, 2))), 
+        #                                             viewport = grid[[i]], sink = cov_sink)
     }
     
     rm(bed)
@@ -353,7 +363,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
 #' @param cov_idx The column index(es) of the read count
 #' @param verbose flag to output messages or not.
 #' @return matrix of the methylation values for input BED files
-#' @import dplyr parallel doParallel
+#' @import parallel doParallel
 #' @examples
 read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero_based = FALSE, 
                           meth_idx = 4, cov_idx = NULL, verbose = TRUE) {
@@ -367,7 +377,7 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
     cl <- parallel::makeCluster(n_threads)  
     doParallel::registerDoParallel(cl)  
     
-    parallel::clusterEvalQ(cl, c(library(dplyr)))
+    parallel::clusterEvalQ(cl) #, c(library(dplyr)))
     parallel::clusterExport(cl,list('read_bed_by_index','start_time','split_time','stop_time','get_sample_name'))
     
     chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
@@ -385,11 +395,16 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
                    meth_idx = meth_idx, cov_idx = cov_idx)
     
     if (!is.null(cov_idx)) {
-      data <- list(meth = dplyr::bind_cols(lapply(data, `[[`, 1)),
-                   cov = dplyr::bind_cols(lapply(data, `[[`, 2)))
+      
+      data <- list(meth = cbind(lapply(data, `[[`, 1)),
+                   cov = cbind(lapply(data, `[[`, 2)))
+      
+      # data <- list(meth = dplyr::bind_cols(lapply(data, `[[`, 1)),
+      #              cov = dplyr::bind_cols(lapply(data, `[[`, 2)))
     } else {
-      data <- list(meth = dplyr::bind_cols(lapply(data, `[[`, 1)),
-                   NULL)
+      data <- list(meth = cbind(lapply(data, `[[`, 1)),NULL)
+      
+      # data <- list(meth = dplyr::bind_cols(lapply(data, `[[`, 1)),NULL)
     }
     
     # if (verbose) message(" (",split_time(),")")

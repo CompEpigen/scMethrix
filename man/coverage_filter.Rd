@@ -11,7 +11,7 @@ coverage_filter(
   prop_samples = NULL,
   group = NULL,
   n_chunks = 1,
-  n_cores = 1
+  n_threads = 1
 )
 }
 \arguments{
@@ -28,7 +28,7 @@ tested group-wise.}
 
 \item{n_chunks}{Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.}
 
-\item{n_cores}{Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.}
+\item{n_threads}{Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. If \code{n_threads} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_threads}. Default = 1.}
 }
 \value{
 An object of class \code{\link{scMethrix}}
