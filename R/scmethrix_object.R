@@ -71,7 +71,8 @@ create_scMethrix <- function(methyl_mat = NULL, cov_mat = NULL, colData = NULL, 
                                                       metadata = list(genome = genome_name,
                                                                       chrom_sizes = chrom_sizes,
                                                                       descriptive_stats = desc,
-                                                                      is_h5 = FALSE))
+                                                                      is_h5 = FALSE, 
+                                                                      has_cov = !is.null(cov_mat)))
     }
 
     return(scMethrix(sse))

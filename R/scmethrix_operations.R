@@ -35,10 +35,6 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, n_threads = 1, typ
     warning("n_chunks exceeds number of files. Defaulting to n_chunks = ",n_chunks)
   }
   
-  if (!is.null(group) && !(group %in% colnames(m@colData))){
-    stop(paste("The column name ", group, " can't be found in colData. Please provide a valid group column."))
-  }
-  
   if(verbose) message("Generating region summary...",start_time())
   
   type = match.arg(arg = type, choices = c('M', 'C'))
@@ -695,19 +691,19 @@ remove_uncovered <- function(m) {
 #' @param low_count The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.
 #' @param high_quantile The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
 #' higher quantile than the defined will be masked. Default = 0.99.
-#' @param n_cores Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
+#' @param n_threads Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
 #' @param type Whether to use the "coverage" matrix or sample "count" when masking
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
 #' @export
 
-mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=0 ,type="count") {
+mask_methrix <- function(m, low_count = 0, high_quantile = NULL, n_threads=1 ,type="count") {
   
   if (!is(m, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
-  if (!is_h5(m) & n_cores != 1) 
-     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_cores) needs to be 1.")
+  if (!is_h5(m) & n_threads != 1) 
+     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
    
   type = match.arg(arg = type, choices = c('count', 'coverage'))
   
