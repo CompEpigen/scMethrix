@@ -19,7 +19,7 @@
 #' regions = data.table(chr = c('chr1','chr2'), start = c(1,5), end =  c(5,10)),
 #' type = 'M', how = 'mean')
 #' @export
-get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "mean", overlap_type = "within",
+get_region_summary = function (m, regions = NULL, n_chunks=1, n_threads = 1, type="M", how = "mean", overlap_type = "within",
                                verbose = TRUE, group = NULL) {
 
   if (!is(m, "scMethrix")){
@@ -70,35 +70,42 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "m
       dat = get_matrix(m = m[overlap_indices$xid,], type = "C", add_loci = TRUE)
     }
   } else {
-    stop("Only supports 1 chunk for now")
-    #----
-    #To handle the situation where the number of overlapping sites are lower than the n_chunks
+    
+    stop("Chunking not enabled")
+    
     # if(nrow(overlap_indices) < n_chunks){
     #   n_chunks <- nrow(overlap_indices)
-    #   if (n_cores > n_chunks){
-    #     n_cores <- n_chunks 
-    #     #message("n_cores should be set to be less than or equal to n_chunks.","\n","n_chunks has been set to be equal to n_cores = ", n_cores)
-    #   }
+    #   warning("Fewer overlaps indicies than n_chunks. Defaulting to n_chunks = ",n_chunks)
     # }
     # 
-    # if (type == "M") {
-    #   dat = tryCatch(do.call("rbind",mclapply(mc.cores=n_cores, 
-    #                                           split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid)/ceiling(length(overlap_indices$xid)/n_chunks))), 
-    #                                           function(i) {
-    #                                             get_matrix(m[i,], type = "M", add_loci = TRUE)
-    #                                           })), 
-    #                  error = function(e){
-    #                    message( e, "\n Try to use less cores. ")
-    #                  })
-    # } else if (type == "C") {
-    #   dat = tryCatch(do.call("rbind",mclapply(mc.cores=n_cores, split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid)/ceiling(length(overlap_indices$xid)/n_chunks))), function(i) {
-    #     get_matrix(m[i,], type = "C", add_loci = TRUE)
-    #   })), 
-    #   error = function(e){
-    #     message( e, "\n Try to use less cores. ")
-    #   })
+    # if (n_chunks < n_threads) {
+    #   n_threads <- n_chunks
+    #   warning("n_threads < n_chunks. Defaulting to n_threads = ",n_threads)
     # }
-    
+    # 
+    # cl <- parallel::makeCluster(n_threads)  
+    # doParallel::registerDoParallel(cl)  
+    # 
+    # parallel::clusterEvalQ(cl, c(library(data.table), sink(paste0("D:/Git/scMethrix/", Sys.getpid(), ".txt"))))
+    # parallel::clusterExport(cl,list('m','scMethrix','type', 'get_matrix','start_time','split_time','stop_time'))
+    # 
+    # chunk_overlaps <- split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid) /
+    #                                                     ceiling(length(overlap_indices$xid)/n_chunks)))
+    # 
+    # data = c(parallel::parLapply(cl,chunk_overlaps,fun=function(i) {
+    #   cat("Looking for i =",i,typeof(i))
+    #   get_matrix(m[i,], type = type, add_loci = TRUE) # TODO: object of type 'S4' is not subsettable
+    # }))
+    # 
+    # # data = lapply(chunk_overlaps,FUN=function(i) {
+    # #   cat("Looking for i =",toString(i))
+    # #   get_matrix(m[i,], type = type, add_loci = TRUE)
+    # # })
+    # 
+    # parallel::stopCluster(cl)
+    # 
+    # data <- rbindlist(data)
+     
   }
   
   if(nrow(overlap_indices) != nrow(dat)){

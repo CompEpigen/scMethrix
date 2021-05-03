@@ -113,9 +113,13 @@ read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 20
   # Parallel functionality
   if (n_threads != 0) {
     
+    if (n_threads > detectCores(logical = TRUE)) {
+      n_threads <- detectCores(logical = TRUE)-1
+      warning("Too many threads. Defaulting to n_threads =",n_threads)
+    }
+    
     if (verbose) message("Starting cluster with ",n_threads," threads.")
     
-    #no_cores <- detectCores(logical = TRUE) 
     cl <- parallel::makeCluster(n_threads)  
     doParallel::registerDoParallel(cl)  
     
