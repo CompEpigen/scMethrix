@@ -22,3 +22,24 @@ scm.mem <- read_beds(files,h5=FALSE,cov_idx=5)
 # use_data(scMethrix_data)
 
 message("Test setup completed")
+
+#files <- list.files(system.file('extdata', package = 'scMethrix'))
+files <- c("D:/Git/scMethrix/inst/extdata/C0.bedgraph",
+           "D:/Git/scMethrix/inst/extdata/C1.bedgraph",
+           "D:/Git/scMethrix/inst/extdata/C2.bedgraph",
+           "D:/Git/scMethrix/inst/extdata/C3.bedgraph",
+           "D:/Git/scMethrix/inst/extdata/C4.bedgraph",
+           "D:/Git/scMethrix/inst/extdata/C5.bedgraph",
+           "D:/Git/scMethrix/inst/extdata/C6.bedgraph",
+           "D:/Git/scMethrix/inst/extdata/C7.bedgraph")
+
+h5_dir <- paste0(tempdir(),"/sse")
+
+scm.h5.cov <- read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE,cov_idx=c(5,6))
+scm.mem.cov <- read_beds(files,h5=FALSE,cov_idx=c(5,6))
+
+scm.h5 <- read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE)
+scm.h5 <- read_beds(files,h5=FALSE)
+
+
+
