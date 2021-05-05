@@ -1,3 +1,34 @@
+#' Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
+#' @param m \code{\link{scMethrix}} object
+#' @param path the \code{\link{file.path}} of the directory to save the files
+#' @return nothing
+#' @examples
+#' data('scMethrix_data')
+#' # export_bed(m=scMethrix_data$mem,path=tempdir())
+#' @export
+export_bed <- function(m, path) {
+  
+  files <- row.names(m@colData)
+  rrng <- as.data.table(rowRanges(m))
+  rrng[,c("width","strand"):=NULL]
+  
+  for (file in files) {
+    
+    val <- as.data.table(get_matrix(m=m,type="M"))[, file, with=FALSE] #TODO: get_matrix should output data.table
+    rrng[,val:= val]
+    
+    if (has_cov(m)) {
+      cov <- as.data.table(get_matrix(m=m,type="C"))[, file, with=FALSE] #TODO: get_matrix should output data.table
+      rrng[,cov:= cov]
+    }
+    
+    write.table(rrng[!is.na(val),], paste0(path,"/",file,".bedgraph"), append = FALSE, sep = "\t",
+                row.names = FALSE, col.names = FALSE, quote = FALSE)
+  }
+}
+
+
+
 #' Extract and summarize methylation or coverage info by regions of interest
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
 #' @param m \code{\link{scMethrix}} object
