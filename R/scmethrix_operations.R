@@ -1,3 +1,48 @@
+#' Merges two \code{\link{scMethrix}} objects.
+#' @detail Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot
+#' data is not supported at this time
+#' @param m \code{\link{scMethrix}} object
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' # export_bed(m=scMethrix_data$mem,path=tempdir())
+#' @export
+merge_scmethrix < function(m1 = NULL,m2 = NULL) {
+  
+  if (!is(m1, "scMethrix") || !is(m2, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (xor(has_cov(m1),has_cov(m2))) {
+    warning("One scMethrix object is missing coverage data. All coverage data will be discarded")
+    keep_cov = FALSE
+  } 
+  
+  rrng <- unlist(GRangesList("m1" = rowRanges(m1), "m2" = rowRanges(m2)))
+  
+  rrng <- unlist(GRangesList("m1" = rowRanges(m1), "m2" = rowRanges(m1)))
+  rrng <- unique(rrng)
+  rrng <- sortSeqlevels(rrng)
+  rrng <- sort(rrng)
+  
+  
+  
+  
+}
+
+#' Converts an \code{\link{scMethrix}} object to methrix object
+#' @details Removes extra slot data and changes structure to match \code{\link{methrix}} format
+#' @param m \code{\link{scMethrix}} object
+#' @return a methrix object
+#' @examples
+#' data('scMethrix_data')
+#' # convert_to_methrix(m=scMethrix_data$mem)
+#' @export
+convert_to_methrix <- function(m = NULL) {
+  
+  
+}
+
 #' Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
 #' @param m \code{\link{scMethrix}} object
 #' @param path the \code{\link{file.path}} of the directory to save the files
@@ -6,7 +51,11 @@
 #' data('scMethrix_data')
 #' # export_bed(m=scMethrix_data$mem,path=tempdir())
 #' @export
-export_bed <- function(m, path) {
+export_bed <- function(m = NULL, path = NULL) {
+  
+  if (!is(m, "scMethrix") || !is.null(path)){
+    stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
+  }
   
   files <- row.names(m@colData)
   rrng <- as.data.table(rowRanges(m))
@@ -26,8 +75,6 @@ export_bed <- function(m, path) {
                 row.names = FALSE, col.names = FALSE, quote = FALSE)
   }
 }
-
-
 
 #' Extract and summarize methylation or coverage info by regions of interest
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
@@ -50,8 +97,8 @@ export_bed <- function(m, path) {
 #' regions = data.table(chr = c('chr1','chr2'), start = c(1,5), end =  c(5,10)),
 #' type = 'M', how = 'mean')
 #' @export
-get_region_summary = function (m, regions = NULL, n_chunks=1, n_threads = 1, type="M", how = "mean", overlap_type = "within",
-                               verbose = TRUE, group = NULL) {
+get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads = 1, type="M", how = "mean", 
+                               overlap_type = "within", verbose = TRUE, group = NULL) {
 
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -199,7 +246,7 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, n_threads = 1, typ
 #' @examples
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
-coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NULL, group = NULL, n_chunks=1, n_threads=1) {
+coverage_filter <- function(m = NULL, cov_thr = 1, min_samples = NULL, prop_samples=NULL, group = NULL, n_chunks=1, n_threads=1) {
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
@@ -315,7 +362,7 @@ coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NUL
 #' save_HDF5_scMethrix(m, h5_dir = dir, replace = TRUE)
 #' @return Nothing
 #' @export
-save_HDF5_scMethrix <- function(m, h5_dir = NULL, replace = FALSE, ...) {
+save_HDF5_scMethrix <- function(m = NULL, h5_dir = NULL, replace = FALSE, ...) {
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -376,9 +423,10 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 #' @export
 convert_HDF5_methrix <- function(m = NULL) {
   
-  if (is.null(m) | !is(m, "scMethrix")) {
-    stop("Input must be of type scMethrix.")
+  if (!is(m, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
+  
   if (!is_h5(m)) {
     stop("Input scMethrix must be in HDF5 format.")
   }
@@ -408,21 +456,22 @@ convert_HDF5_methrix <- function(m = NULL) {
 #' @export
 convert_methrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
   
-  if (is.null(m) | !is(m, "scMethrix")) {
-    stop("Input must be of type scMethrix.")
+  if (!is(m, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
+  
   if (is_h5(m)) {
     stop("Input scMethrix is already in HDF5 format.")
   }
   
-  if (verbose) message("Converting in-memory scMethrix to HDF5")#, start_time())
+  if (verbose) message("Converting in-memory scMethrix to HDF5"), start_time())
   
   m <- create_scMethrix(methyl_mat = assays(m)[[1]], h5_dir = h5_dir,
                         rowRanges = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
                         colData = m@colData, chrom_sizes = m@metadata$chrom_sizes, 
                         desc = m@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
   
-  #if (verbose) message("Converted in ", stop_time())
+  if (verbose) message("Converted in ", stop_time())
   
   return(m)
 }
@@ -483,7 +532,7 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
 
-subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), verbose=TRUE) {
+subset_scMethrix <- function(m = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), verbose=TRUE) {
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -559,7 +608,7 @@ subset_scMethrix <- function(m, regions = NULL, contigs = NULL, samples = NULL, 
 #' @return data.table of summary stats
 #' @export
 
-get_stats <- function(m, per_chr = TRUE) {
+get_stats <- function(m = NULL, per_chr = TRUE) {
   
   if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -646,7 +695,7 @@ get_stats <- function(m, per_chr = TRUE) {
 #' # Get methylation data with loci inside a Granges object 
 #' get_matrix(scMethrix_data$mem, add_loci=TRUE, in_granges=TRUE)
 #' @export
-get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE, type = "M") {
+get_matrix <- function(m = NULL, add_loci = FALSE, in_granges=FALSE, type = "M") {
   
   if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -691,7 +740,7 @@ get_matrix <- function(m, add_loci = FALSE, in_granges=FALSE, type = "M") {
 #' # Remove uncovered CpGs after subsetting to a single sample
 #' remove_uncovered(subset_scMethrix(scMethrix_data$mem, samples = "df1", by="include"))
 #' @export
-remove_uncovered <- function(m) {
+remove_uncovered <- function(m = NULL) {
   
   
   if (!is(m, "scMethrix")){
@@ -729,7 +778,7 @@ remove_uncovered <- function(m) {
 #' @examples
 #' @export
 
-mask_methrix <- function(m, low_count = 0, high_quantile = NULL, n_threads=1 ,type="count") {
+mask_methrix <- function(m = NULL, low_count = 0, high_quantile = NULL, n_threads=1 ,type="count") {
   
   if (!is(m, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
