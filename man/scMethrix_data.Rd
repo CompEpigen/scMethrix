@@ -3,7 +3,7 @@
 \docType{data}
 \name{scMethrix_data}
 \alias{scMethrix_data}
-\title{Simulated WGBS data}
+\title{WGBS for single cell methylome of murine neuronal cells}
 \format{
 A list containing two objects of class \code{'scMethrix'}, one in mem and one in H5 format.
 }
@@ -11,10 +11,13 @@ A list containing two objects of class \code{'scMethrix'}, one in mem and one in
 data('scMethrix_data')
 }
 \description{
-This is a temporary small set of data representing CpGs on chr1 and chr2 in regions 1:20
+This is a subset of the original converted to \code{scMethrix} format
 }
 \examples{
 data('scMethrix_data')
 scMethrix_data
+}
+\references{
+Luo, C. et al. (2017). Single-cell methylomes identify neuronal subtypes and regulatory
 }
 \keyword{datasets}

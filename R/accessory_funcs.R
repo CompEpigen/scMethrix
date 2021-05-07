@@ -20,6 +20,8 @@ has_cov = function(m) {
   return(m@metadata$has_cov)
 }
 
+
+
 #' Returns file name minus the extension from a file.path to represent the sample name
 #' @param s A file.path
 #' @return string containing the sample name

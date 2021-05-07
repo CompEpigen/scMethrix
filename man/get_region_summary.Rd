@@ -8,6 +8,7 @@ get_region_summary(
   m,
   regions = NULL,
   n_chunks = 1,
+  n_threads = 1,
   type = "M",
   how = "mean",
   overlap_type = "within",
