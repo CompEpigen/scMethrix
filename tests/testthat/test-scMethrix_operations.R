@@ -164,4 +164,33 @@ test_that("get_stats", {
   
 })
 
+test_that("get_region_summary", {
+  
+  expect_error(get_region_summary("not scMethrix"))
+  expect_error(get_region_summary(scm.mem,group="not a group"))
+  expect_warning(get_region_summary(scm.mem,n_chunks=1000))
+  expect_error(get_region_summary(scm.mem,type="not a type"))
+  expect_error(get_region_summary(scm.mem,how="not a how"))
+  
+  region <- GRanges(seqnames = c("chr3"), ranges = IRanges(1,10)) 
+  expect_error(get_region_summary(scm.mem,region=region))
+  
+  region <- GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,8)) 
+  expect_equivalent(dim(get_region_summary(scm.mem,region=region)),c(2,9))
 
+})
+
+test_that("mask_methrix", {
+  
+  expect_error(mask_methrix("not scMethrix"))
+  expect_error(mask_methrix(scm.mem))
+  expect_error(mask_methrix(scm.mem,n_threads=2))
+  expect_error(mask_methrix(scm.mem,high_quantile=1,type="count"))
+  expect_error(mask_methrix(scm.mem,high_quantile=5,type="coverage"))
+  
+  expect_error(get_region_summary(scm.mem,type="not a type"))
+  expect_error(get_region_summary(scm.mem,how="not a how"))
+  
+  expect_equivalent(dim(mask_methrix(scm.mem,low_count=10)),c(18,4))
+  
+})

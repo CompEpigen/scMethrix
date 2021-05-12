@@ -6,9 +6,9 @@
 \usage{
 mask_methrix(
   m,
-  low_count = NULL,
-  high_quantile = 0.99,
-  n_cores = 0,
+  low_count = 0,
+  high_quantile = NULL,
+  n_threads = 1,
   type = "count"
 )
 }
@@ -20,7 +20,7 @@ mask_methrix(
 \item{high_quantile}{The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
 higher quantile than the defined will be masked. Default = 0.99.}
 
-\item{n_cores}{Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.}
+\item{n_threads}{Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.}
 
 \item{type}{Whether to use the "coverage" matrix or sample "count" when masking}
 }
