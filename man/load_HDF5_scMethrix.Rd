@@ -9,7 +9,7 @@ load_HDF5_scMethrix(dir = NULL, ...)
 \arguments{
 \item{dir}{The directory to read in from. Default NULL}
 
-\item{...}{Parameters to pass to loadHDF5SummarizedExperiment}
+\item{...}{Parameters to pass to \code{\link{loadHDF5SummarizedExperiment}}}
 }
 \value{
 An object of class \code{\link{scMethrix}}

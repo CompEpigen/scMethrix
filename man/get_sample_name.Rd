@@ -15,9 +15,6 @@ string containing the sample name
 \description{
 Returns file name minus the extension from a file.path to represent the sample name
 }
-\details{
-Acts in the same way as ternary operators in other language. Must surround with brackets to use)
-}
 \examples{
 #get_sample_name("C:/dir/dir/filename.ext")
 }

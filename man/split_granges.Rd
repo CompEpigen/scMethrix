@@ -2,25 +2,25 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{split_granges}
 \alias{split_granges}
-\title{Chunks a Granges object by factor, percent or number}
+\title{Chunks a \code{\link{GRanges}} object by \code{factor}, \code{percent} or \code{number}}
 \usage{
 split_granges(gr, factor = NA, percent = NA, num = NA)
 }
 \arguments{
-\item{gr}{The Granges object}
+\item{gr}{The \code{\link{GRanges}} object}
 
 \item{factor}{The factor to which divide the chunks into}
 
-\item{percent}{The percentage of the Granges to chunk}
+\item{percent}{The size in percentage of CpGs in each chunk}
 
-\item{num}{The number of regions to include in each chunk}
+\item{num}{The number of CpGs to include in each chunk}
 }
 \value{
-GRangesList containing all the chunked Granges
+\code{\link{GRangesList}} containing all the chunked \code{\link{GRanges}}
 }
 \description{
-Chunks a Granges object by factor, percent or number
+Chunks a \code{\link{GRanges}} object by \code{factor}, \code{percent} or \code{number}
 }
 \details{
-Divides Granges into a list based on a chunking parameter
+Divides \code{\link{GRanges}} into a list based on a chunking parameter
 }

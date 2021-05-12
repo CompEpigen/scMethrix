@@ -1,15 +1,17 @@
 #' Extract and summarize methylation or coverage info by regions of interest
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
 #' @param m \code{\link{scMethrix}} object
-#' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param type matrix which needs to be summarized. Coule be `M`, `C`. Default 'M'
+#' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object
+#' @param type matrix which needs to be summarized. Could be `M`, `C`. Default 'M'
 #' @param how mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'
 #' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description,
 #' see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #' #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.
 #' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
 #' #param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
-#' @param verbose Default TRUE
+#' @param verbose Boolean to output progress messages. Default TRUE
+#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
+#' tested group-wise.
 #' @return table of summary statistic for the given region
 #' @examples
 #' data('scMethrix_data')
@@ -17,11 +19,24 @@
 #' regions = data.table(chr = c('chr1','chr2'), start = c(1,5), end =  c(5,10)),
 #' type = 'M', how = 'mean')
 #' @export
-get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "mean", overlap_type = "within",
-                               verbose= TRUE) {
+get_region_summary = function (m, regions = NULL, n_chunks=1, n_threads = 1, type="M", how = "mean", overlap_type = "within",
+                               verbose = TRUE, group = NULL) {
 
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (!is.null(group) && !(group %in% colnames(m@colData))){
+    stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
+  }
+  
+  if (n_chunks > nrow(m)) {
+    n_chucks <- nrow(m)
+    warning("n_chunks exceeds number of files. Defaulting to n_chunks = ",n_chunks)
+  }
+  
+  if (!is.null(group) && !(group %in% colnames(m@colData))){
+    stop(paste("The column name ", group, " can't be found in colData. Please provide a valid group column."))
   }
   
   if(verbose) message("Generating region summary...",start_time())
@@ -55,35 +70,42 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "m
       dat = get_matrix(m = m[overlap_indices$xid,], type = "C", add_loci = TRUE)
     }
   } else {
-    stop("Only supports 1 chunk for now")
-    #----
-    #To handle the situation where the number of overlapping sites are lower than the n_chunks
+    
+    stop("Chunking not enabled")
+    
     # if(nrow(overlap_indices) < n_chunks){
     #   n_chunks <- nrow(overlap_indices)
-    #   if (n_cores > n_chunks){
-    #     n_cores <- n_chunks 
-    #     #message("n_cores should be set to be less than or equal to n_chunks.","\n","n_chunks has been set to be equal to n_cores = ", n_cores)
-    #   }
+    #   warning("Fewer overlaps indicies than n_chunks. Defaulting to n_chunks = ",n_chunks)
     # }
     # 
-    # if (type == "M") {
-    #   dat = tryCatch(do.call("rbind",mclapply(mc.cores=n_cores, 
-    #                                           split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid)/ceiling(length(overlap_indices$xid)/n_chunks))), 
-    #                                           function(i) {
-    #                                             get_matrix(m[i,], type = "M", add_loci = TRUE)
-    #                                           })), 
-    #                  error = function(e){
-    #                    message( e, "\n Try to use less cores. ")
-    #                  })
-    # } else if (type == "C") {
-    #   dat = tryCatch(do.call("rbind",mclapply(mc.cores=n_cores, split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid)/ceiling(length(overlap_indices$xid)/n_chunks))), function(i) {
-    #     get_matrix(m[i,], type = "C", add_loci = TRUE)
-    #   })), 
-    #   error = function(e){
-    #     message( e, "\n Try to use less cores. ")
-    #   })
+    # if (n_chunks < n_threads) {
+    #   n_threads <- n_chunks
+    #   warning("n_threads < n_chunks. Defaulting to n_threads = ",n_threads)
     # }
-    
+    # 
+    # cl <- parallel::makeCluster(n_threads)  
+    # doParallel::registerDoParallel(cl)  
+    # 
+    # parallel::clusterEvalQ(cl, c(library(data.table), sink(paste0("D:/Git/scMethrix/", Sys.getpid(), ".txt"))))
+    # parallel::clusterExport(cl,list('m','scMethrix','type', 'get_matrix','start_time','split_time','stop_time'))
+    # 
+    # chunk_overlaps <- split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid) /
+    #                                                     ceiling(length(overlap_indices$xid)/n_chunks)))
+    # 
+    # data = c(parallel::parLapply(cl,chunk_overlaps,fun=function(i) {
+    #   cat("Looking for i =",i,typeof(i))
+    #   get_matrix(m[i,], type = type, add_loci = TRUE) # TODO: object of type 'S4' is not subsettable
+    # }))
+    # 
+    # # data = lapply(chunk_overlaps,FUN=function(i) {
+    # #   cat("Looking for i =",toString(i))
+    # #   get_matrix(m[i,], type = type, add_loci = TRUE)
+    # # })
+    # 
+    # parallel::stopCluster(cl)
+    # 
+    # data <- rbindlist(data)
+     
   }
   
   if(nrow(overlap_indices) != nrow(dat)){
@@ -133,6 +155,124 @@ get_region_summary = function (m, regions = NULL, n_chunks=1, type="M", how = "m
   return(output)
 }
 
+
+#--------------------------------------------------------------------------------------------------------------------------
+
+#' Filter matrices by coverage
+#' @details Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
+#' @param m \code{\link{scMethrix}} object
+#' @param cov_thr minimum coverage required to call a loci covered
+#' @param min_samples Minimum number of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
+#' @param prop_samples Minimum proportion of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
+#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
+#' tested group-wise.
+#' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
+#' @param n_threads Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. If \code{n_threads} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_threads}. Default = 1.
+#' @importFrom methods is as new
+#' @examples
+#' @return An object of class \code{\link{scMethrix}}
+#' @export
+coverage_filter <- function(m, cov_thr = 1, min_samples = NULL, prop_samples=NULL, group = NULL, n_chunks=1, n_threads=1) {
+  
+  if (!is(m, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.")
+  }
+  
+  if (!is.null(min_samples) && !is.null(prop_samples)) {
+    warning("Both min_samples and prop_samples set. Defaulting to min_samples")
+    prop_samples <- NULL
+  } else if (is.null(min_samples) && is.null(prop_samples)) {
+    stop("Neither min_samples and prop_samples is defined")
+  }
+  
+  if (!is.numeric(cov_thr)) stop("cov_thr is not numeric") 
+  
+  if (!(is.numeric(min_samples) | is.numeric(prop_samples))){
+    stop("min_samples and prop_samples variables must be numeric or NULL")
+  }
+  
+  if (!is.null(group) && !(group %in% colnames(m@colData))){
+    stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
+  }
+  
+  if (n_threads > n_chunks){
+    n_chunks <- n_threads
+    message("n_threads should be set to be less than or equal to n_chunks.", "\n", "n_chunks has been set 
+            to be equal to n_threads = ", n_threads)
+  }
+  
+  message("Filtering by coverage...",start_time())
+  
+  if (is_h5(m)) {
+    if (n_chunks == 1) {
+      cov_dat = get_matrix(m = m, type = "C")
+      if (!is.null(group)) {
+        stop("Groups not implemented yet")
+        # row_idx <- sapply(unique(m@colData[, group]), function(c) {
+        #   res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[, 
+        #                                                           group] == c] >= cov_thr, na.rm = TRUE)
+        #   row_idx <- (res >= max(min_samples, ceiling(prop_samples * 
+        #                                                 sum(m@colData[, group] == c))))
+        # })
+        # row_idx <- DelayedMatrixStats::rowAlls(row_idx)
+      } else {
+        res <- DelayedMatrixStats::rowSums2(cov_dat >= cov_thr, na.rm = TRUE)
+        row_idx <- (res >= max(min_samples, ceiling(prop_samples * 
+                                                      ncol(cov_dat))))
+        # row_idx <- (res >= (if (is.null(min_samples)) min_samples else ceiling(prop_samples * 
+        #  
+      }
+    } else {
+      message("Only 1 chunk supported for now")
+      # 
+      # 
+      # if (!is.null(group)) {
+      #   row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
+      #                              function(i) {
+      #                                cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
+      #                                                     type = "C")
+      #                                row_idx <- sapply(unique(m@colData[, group]), function(c) {
+      #                                  res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[,group] == c] >= cov_thr, na.rm = TRUE)
+      #                                  row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
+      #                                })
+      #                                row_idx <- DelayedMatrixStats::rowAlls(row_idx)
+      #                              }))
+      # } else {
+      #   row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
+      #                              function(i) {
+      #                                cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
+      #                                                     type = "C")
+      #                                res <- DelayedMatrixStats::rowSums2(cov_dat >= cov_thr, na.rm = TRUE)
+      #                                row_idx <- (res >= max(min_samples, ceiling(prop_samples * ncol(cov_dat))))
+      #                              }))
+      # }
+    }
+  } else {
+    cov_dat = get_matrix(m = m, type = "C")
+    if (!is.null(group)) {
+      stop("Groups not implemented yet")
+      # row_idx <- sapply(unique(m@colData[, group]), function(c) {
+      #   res <- matrixStats::rowSums2(cov_dat[, m@colData[, group] == 
+      #                                          c] >= cov_thr, na.rm = TRUE)
+      #   row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
+      # })
+      # row_idx <- matrixStats::rowAlls(row_idx)
+    } else {
+      res <- matrixStats::rowSums2(cov_dat >= cov_thr, na.rm = T)
+      row_idx <- (res >= max(min_samples, ceiling(prop_samples * ncol(cov_dat))))
+    }
+  }
+  
+  gc()
+  message(paste0("Retained ", format(sum(row_idx), big.mark = ","),
+                 " of ", format(nrow(m), big.mark = ","), " sites"))
+  
+  message("Filtered in ",stop_time())
+  
+  return(m[row_idx, ])
+  
+}
+
 #--------------------------------------------------------------------------------------------------------------------------
 #' Saves an HDF5 \code{\link{scMethrix}} object
 #' @details Takes \code{\link{scMethrix}} object and saves it in the specified directory
@@ -169,7 +309,7 @@ save_HDF5_scMethrix <- function(m, h5_dir = NULL, replace = FALSE, ...) {
 #' Loads HDF5 scMethrix object
 #' @details Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
 #' @param dir The directory to read in from. Default NULL
-#' @param ... Parameters to pass to loadHDF5SummarizedExperiment
+#' @param ... Parameters to pass to \code{\link{loadHDF5SummarizedExperiment}}
 #' @return An object of class \code{\link{scMethrix}}
 #' @examples
 #' data('scMethrix_data')
@@ -196,7 +336,7 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Converts HDF5 scMethrix object to standard in-memory object.
+#' Converts HDF5 \code{\link{scMethrix}} object to standard in-memory object.
 #' @details Takes a \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
 #' @param m An object of class \code{\link{scMethrix}}, HDF5 format
 #' @return An object of class \code{\link{scMethrix}}
@@ -464,7 +604,7 @@ get_stats <- function(m, per_chr = TRUE) {
 #' @details Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
 #' @param m \code{\link{scMethrix}} object
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
-#' @param in_granges Do you want the outcome in \code{GRanges}?
+#' @param in_granges Do you want the outcome in \code{\link{GRanges}}?
 #' @param type Which matrix to get, "m": methlation, "c": coverage
 #' @return Coverage or Methylation matrix
 #' @examples
@@ -544,132 +684,100 @@ remove_uncovered <- function(m) {
   return(m)
 }
 
+
+
 #--------------------------------------------------------------------------------------------------------------------------
 
 #' Masks too high or too low counts
 #' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
-#'  by putting NA for coverage and beta value. The sites will remain in the object.
+#'  by putting NA for coverage and beta value. The sites will remain in the object. 
 #' @param m \code{\link{scMethrix}} object
 #' @param low_count The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.
 #' @param high_quantile The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
 #' higher quantile than the defined will be masked. Default = 0.99.
 #' @param n_cores Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
+#' @param type Whether to use the "coverage" matrix or sample "count" when masking
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
 #' @export
-mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=1) {
+
+mask_methrix <- function(m, low_count = NULL, high_quantile = 0.99, n_cores=0 ,type="count") {
   
+  if (!is(m, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
-  if (!is(m, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
+  if (!is_h5(m) & n_cores != 1) 
+     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_cores) needs to be 1.")
+   
+  type = match.arg(arg = type, choices = c('count', 'coverage'))
+  
+  if (!has_cov(m) && type == "coverage") stop("No coverage matrix is present in the object. 
+                                              Retry with type='count'")
+  
+  if (!is.null(high_quantile)) {
+    if (type == 'count') stop("high_quantile cannot be used with 'count' ")
+    if (high_quantile >= 1 | high_quantile <= 0) stop("High quantile should be between 0 and 1. ")
   }
   
-  if (!is_h5(m) & n_cores != 1) {
-    stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_cores) needs to be 1.")
-  }
-  
-  message("Masking CpG sites ( ",high_quantile," quintile and <= ",low_count, " count", start_time())
+  message("Masking CpG sites in ",high_quantile," quintile and ",type, " < ",low_count, start_time())
   
   if (!is.null(low_count)) {
     
     if(!is.numeric(low_count)){
       stop("low_count must be a numeric value.")
     }
+  
+    n <- nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA))
     
-    message("Masking count lower than ", low_count)
-    
-    if(is_h5(m)) {
-      n <- nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA))
-      row_idx <- DelayedMatrixStats::rowCounts(get_matrix(m), value = as.integer(NA)) > low_count
-      row_idx <- matrix(rep(row_idx,ncol(m)),ncol = ncol(m))
-      row_idx <- DelayedArray(row_idx)
-      assays(m)[[1]][row_idx] <- as.integer(NA)
-      n <- n-(nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA)))
+    if (type == "count") {
+      row_idx <- DelayedMatrixStats::rowCounts(get_matrix(m), 
+                                               value = as.integer(NA)) > (nrow(colData(m))-low_count)
     } else {
-      n <- nrow(m) - matrixStats::colSums2(is.na(get_matrix(m)))
-      row_idx <- !(matrixStats::rowSums2(is.na(get_matrix(m))) <= low_count)
-      assays(m)[[1]][!!row_idx,] <- as.integer(NA)
-      n <- n - (nrow(m) - matrixStats::colSums2(is.na(get_matrix(m))))
+      row_idx <- DelayedMatrixStats::rowSums2(get_matrix(m,type="C"),na.rm=TRUE) < low_count
     }
+    
+    if (sum(row_idx) == 0) stop("No CpGs found with low_count")
+    
+    row_idx <- which(row_idx)  
+    emp <- array(as.integer(NA),c(length(row_idx), nrow(colData(m))))
+
+    assays(m)[[1]][row_idx,] <- emp
+    if (type == "coverage") assays(m)[[2]][row_idx,] <- emp 
+    
+    n <- n-(nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA)))
     
     for (i in seq_along(colnames(m))) {
-      message(paste0("Masked ", n[i], " CpGs due to too low count in sample ",  colnames(m)[i], "."))
+      if (n[i]==0) next
+      message(paste0("   Masked ", n[i], " CpGs due to too low count in sample ",  colnames(m)[i], "."))
     }
-    
-    
   }
-  # 
-  # 
-  # 
-  # if (!is.null(high_quantile)) {
-  #   if (high_quantile >= 1 | high_quantile <= 0) {
-  #     stop("High quantile should be between 0 and 1. ")
-  #   }
-  #   
-  #   message("\n\n-Masking coverage higher than ",
-  #           high_quantile * 100,
-  #           " percentile")
-  #   
-  #   
-  #   
-  #   if (is_h5(m)) {
-  #     if (n_cores == 1) {
-  #       quantiles <-
-  #         DelayedMatrixStats::colQuantiles(assays(m)[[2]],
-  #                                          probs = high_quantile,
-  #                                          na.rm = TRUE,
-  #                                          drop = F)
-  #     }
-  #     else {
-  #       quantiles <-
-  #         simplify2array(mclapply(mc.cores = n_cores, 1:ncol(assays(m)[[2]]),
-  #                                 function(i)
-  #                                   quantile(assays(m)[[2]][, i], probs = high_quantile, na.rm = TRUE)))
-  #     }
-  #     quantiles <- as.vector(quantiles)
-  #     names(quantiles) <- rownames(m@colData)
-  #   } else {
-  #     quantiles <-
-  #       matrixStats::colQuantiles(assays(m)[[2]], probs = high_quantile, na.rm = TRUE)
-  #     quantiles <- as.vector(quantiles)
-  #     names(quantiles) <- rownames(m@colData)
-  #   }
-  #   
-  #   
-  #   row_idx2 <- t(t((assays(m)[[2]])) > quantiles)
-  #   assays(m)[[1]][row_idx2] <- as.double(NA)
-  #   assays(m)[[2]][row_idx2] <- as.integer(NA)
-  #   
-  #   
-  #   if (is_h5(m)) {
-  #     if (n_cores == 1) {
-  #       n <- DelayedMatrixStats::colSums2(row_idx2, na.rm = T)
-  #     }
-  #     else {
-  #       n <- simplify2array(mclapply(mc.cores = n_cores, 1:ncol(row_idx2),
-  #                                    function(i)
-  #                                      sum(row_idx2[, i], na.rm = T)))
-  #     }
-  #   } else {
-  #     n <- colSums(row_idx2, na.rm = T)
-  #   }
-  #   
-  #   
-  #   for (i in seq_along(colnames(m))) {
-  #     message(paste0(
-  #       "-Masked ",
-  #       n[i],
-  #       " CpGs due to too high coverage in sample ",
-  #       colnames(row_idx2)[i],
-  #       "."
-  #     ))
-  #     
-  #   }
-  #   
-  #   
+
+  if (!is.null(high_quantile)) {
+
+    message("Masking coverage higher than ",high_quantile * 100," percentile")
+
+    quantiles <- DelayedMatrixStats::colQuantiles(assays(m)[[2]], probs = high_quantile,
+                                               na.rm = TRUE, drop = F)
+    quantiles <- as.vector(quantiles)
+    names(quantiles) <- rownames(m@colData)
+    
+    row_idx2 <- t(t(assays(m)[[2]]) > quantiles)
+    
+    if (sum(row_idx2, na.rm = TRUE) == 0) stop("No samples found within in the quantile")
+    
+    assays(m)[[1]][row_idx2] <- as.integer(NA)
+    assays(m)[[2]][row_idx2] <- as.integer(NA)
+    
+    n <- DelayedMatrixStats::colSums2(row_idx2, na.rm = T)
+    
+    for (i in seq_along(colnames(m))) {
+      if (n[i]==0) next
+      message(paste0("Masked ", n[i], " CpGs due to too high coverage in sample ",
+                     colnames(row_idx2)[i], "."))
+    }
+  }
   
-  message("Masked in",stop_time())
+  message("Masked in ",stop_time())
   
   return(m)
 }

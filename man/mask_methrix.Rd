@@ -4,7 +4,13 @@
 \alias{mask_methrix}
 \title{Masks too high or too low counts}
 \usage{
-mask_methrix(m, low_count = NULL, high_quantile = 0.99, n_cores = 1)
+mask_methrix(
+  m,
+  low_count = NULL,
+  high_quantile = 0.99,
+  n_cores = 0,
+  type = "count"
+)
 }
 \arguments{
 \item{m}{\code{\link{scMethrix}} object}
@@ -15,6 +21,8 @@ mask_methrix(m, low_count = NULL, high_quantile = 0.99, n_cores = 1)
 higher quantile than the defined will be masked. Default = 0.99.}
 
 \item{n_cores}{Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.}
+
+\item{type}{Whether to use the "coverage" matrix or sample "count" when masking}
 }
 \value{
 An object of class \code{\link{scMethrix}}

@@ -9,7 +9,7 @@ subset_ref_cpgs(ref_cpgs, gen_cpgs, verbose = TRUE)
 \arguments{
 \item{ref_cpgs}{A reference set of CpG sites (e.g. Hg19 or mm10) in bedgraph format}
 
-\item{gen_cpgs}{A subset of CpG sites. Usually obtained from read_index.}
+\item{gen_cpgs}{A subset of CpG sites. Usually obtained from \code{\link{read_index}}.}
 
 \item{verbose}{flag to output messages or not}
 }

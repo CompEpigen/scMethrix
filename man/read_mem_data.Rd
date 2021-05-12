@@ -2,7 +2,7 @@
 % Please edit documentation in R/read_beds.R
 \name{read_mem_data}
 \alias{read_mem_data}
-\title{Writes methylation values from input BED files into an in-memory SummarizedExperiment}
+\title{Writes methylation values from input BED files into an in-memory \code{\link{RangedSummarizedExperiment}}}
 \usage{
 read_mem_data(
   files,
@@ -36,7 +36,7 @@ read_mem_data(
 matrix of the methylation values for input BED files
 }
 \description{
-Writes methylation values from input BED files into an in-memory SummarizedExperiment
+Writes methylation values from input BED files into an in-memory \code{\link{RangedSummarizedExperiment}}
 }
 \details{
 Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation

@@ -5,7 +5,7 @@
 #' @slot elementMetadata A DataFrame describing rows in correspoding assay matrices.
 #' @slot colData genome: the name of the BSgenome that was used to extract CpGs, isHDF5: is it stored in HDF5 Array format
 #' @slot metadata a list of meta data associated with the assays
-#' @slot rowRanges A Granges of the genomic coordinates of CpG sites
+#' @slot rowRanges A \code{\link{GRanges) object of the genomic coordinates of CpG sites
 #' @slot NAMES NULL
 #' @slot int_colData NULL 
 #' @slot int_metadata NULL
@@ -22,7 +22,7 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   cat(paste0("An object of class ", class(object), "\n"))
   cat(paste0("   n_CpGs: ", format(nrow(object), big.mark = ","), "\n"))
   cat(paste0("   n_samples: ", ncol(object), "\n"))
-  cat(paste0("   assays: ", SummarizedExperiment::assayNames(object),"\n"))
+  cat(paste0("   assays: ", (paste(SummarizedExperiment::assayNames(object),collapse=", ")),"\n"))
   cat(paste0("   is_h5: ", is_h5(object), "\n"))
   cat(paste0("   Reference: ", object@metadata$genome, "\n"))
   cat(paste0("   Physical size: ", format(utils::object.size(object), units = "auto"), "\n"))
@@ -45,9 +45,7 @@ create_scMethrix <- function(methyl_mat = NULL, cov_mat = NULL, colData = NULL, 
                                                                         descriptive_stats = desc,
                                                                         is_h5 = TRUE, 
                                                                         has_cov = !is.null(cov_mat)))
-      
       #TODO: Cannot save to same directory input files exist in
-      
       if (!is.null(h5_dir)) {
         message("Writing to disk...",start_time())
         
@@ -68,7 +66,7 @@ create_scMethrix <- function(methyl_mat = NULL, cov_mat = NULL, colData = NULL, 
       } else {list(score = as.matrix(methyl_mat))}
       
       sse <- SingleCellExperiment::SingleCellExperiment(assays = assays,
-                                                      #colData = colData,
+                                                      colData = colData,
                                                       rowRanges = rowRanges,
                                                       metadata = list(genome = genome_name,
                                                                       chrom_sizes = chrom_sizes,

@@ -4,14 +4,14 @@
 \alias{split_vector}
 \title{Splits a vector into subvectors}
 \usage{
-split_vector(vec, num, by = c("chunk", "size"))
+split_vector(vec, num = 1, by = "chunks")
 }
 \arguments{
 \item{vec}{The vector to split}
 
 \item{num}{The number to split by}
 
-\item{by}{Whether to split by chunk or by size}
+\item{by}{Whether to split by '\code{chunks}' or by '\code{size}'}
 }
 \value{
 A vector of vectors

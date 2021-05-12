@@ -2,18 +2,18 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{has_cov}
 \alias{has_cov}
-\title{Checks if scMethrix object has a coverage matrix}
+\title{Checks if \code{\link{scMethrix}} object has a coverage matrix}
 \usage{
 has_cov(m)
 }
 \arguments{
-\item{m}{The scMethrix object}
+\item{m}{The \code{\link{scMethrix}} object}
 }
 \value{
 boolean Whether the object has a coverage matrix
 }
 \description{
-Checks if scMethrix object has a coverage matrix
+Checks if \code{\link{scMethrix}} object has a coverage matrix
 }
 \examples{
 data('scMethrix_data')

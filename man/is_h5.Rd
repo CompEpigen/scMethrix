@@ -2,18 +2,18 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{is_h5}
 \alias{is_h5}
-\title{Checks if scMethrix object is an HDF5 object}
+\title{Checks if \code{\link{scMethrix}} object is an HDF5 object}
 \usage{
 is_h5(m)
 }
 \arguments{
-\item{m}{The scMethrix object}
+\item{m}{The \code{\link{scMethrix}} object}
 }
 \value{
 boolean Whether the object is HDF5
 }
 \description{
-Checks if scMethrix object is an HDF5 object
+Checks if \code{\link{scMethrix}} object is an HDF5 object
 }
 \examples{
 data('scMethrix_data')

@@ -39,7 +39,7 @@ read_beds(
 \item{n_threads}{number of threads to use. Default 1.
 Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.}
 
-\item{h5}{Should the coverage and methylation matrices be stored as 'HDF5Array'}
+\item{h5}{Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}}
 
 \item{h5_dir}{directory to store H5 based object}
 

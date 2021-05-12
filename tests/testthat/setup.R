@@ -15,8 +15,8 @@ write.table(df4, file = files[4], row.names=FALSE, sep="\t",col.names=FALSE, quo
 
 h5_dir <- paste0(tempdir(),"/sse")
 
-scm.h5 <- read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE)
-scm.mem <- read_beds(files,h5=FALSE)
+scm.h5 <- read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE,cov_idx=5)
+scm.mem <- read_beds(files,h5=FALSE,cov_idx=5)
 
 # scMethrix_data <- list(h5=scm.h5,mem=scm.mem)
 # use_data(scMethrix_data)

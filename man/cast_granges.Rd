@@ -2,7 +2,7 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{cast_granges}
 \alias{cast_granges}
-\title{Casts regions into Granges format}
+\title{Casts regions into \code{\link{GRanges}} format}
 \usage{
 cast_granges(regions)
 }
@@ -10,14 +10,15 @@ cast_granges(regions)
 \item{regions}{The input regions}
 }
 \value{
-GRanges object with the input regions
+\code{\link{GRanges}} object with the input regions
 }
 \description{
-Casts regions into Granges format
+Casts regions into \code{\link{GRanges}} format
 }
 \details{
-Casts the input as a GRanges object. Input can be GRange or a data.frame-compatible class that
-can be cast through as.data.frame(). Input format must be chr-start-end for data.frame objects.
+Casts the input as a \code{\link{GRanges}} object. Input can be \code{\link{GRanges}} or a
+\code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input BED format
+must be \code{chr-start-end} for \code{\link{data.frame}} objects.
 }
 \examples{
 regions = data.table(chr = 'chr1', start = 1, end = 100)

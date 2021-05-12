@@ -11,7 +11,7 @@ get_matrix(m, add_loci = FALSE, in_granges = FALSE, type = "M")
 
 \item{add_loci}{Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table}
 
-\item{in_granges}{Do you want the outcome in \code{GRanges}?}
+\item{in_granges}{Do you want the outcome in \code{\link{GRanges}}?}
 
 \item{type}{Which matrix to get, "m": methlation, "c": coverage}
 }
