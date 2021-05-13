@@ -25,9 +25,6 @@ merge_scmethrix < function(m1 = NULL,m2 = NULL) {
   rrng <- sortSeqlevels(rrng)
   rrng <- sort(rrng)
   
-  
-  
-  
 }
 
 #' Converts an \code{\link{scMethrix}} object to methrix object
@@ -38,9 +35,32 @@ merge_scmethrix < function(m1 = NULL,m2 = NULL) {
 #' data('scMethrix_data')
 #' # convert_to_methrix(m=scMethrix_data$mem)
 #' @export
-convert_to_methrix <- function(m = NULL) {
+convert_to_methrix <- function(m = NULL, h5_dir = NULL) {
   
+  rrng <- as.data.table(rowRanges(m))
+  rrng[,c("width","end") := NULL]
+  names(rrng) <- c("chr","start","strand")
   
+  chrom_sizes <- data.frame(chr=seqlevels(rrng),N=width(range(rrng)))
+  
+  if (!has_cov(m)) {
+    stop("scMethrix does not contain coverage data. Cannot convert to methrix object")
+  }
+  
+  #TODO: Need to export create_methrix function in the methrix package to use this
+  if (is_h5(m)) {
+    m_obj <- methrix::create_methrix(beta_mat = get_matrix(m,type="M"), cov_mat = get_matrix(m,type="C"),
+                                     cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = TRUE, genome_name = m@metadata$genome,
+                                     col_data = m@colData, h5_dir = h5_dir, ref_cpg_dt = ref_cpgs_chr,
+                                     chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
+  } else {
+    m_obj <- methrix::create_methrix(beta_mat = get_matrix(m,type="M"), cov_mat = get_matrix(m,type="C"),
+                                     cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = FALSE, 
+                                     genome_name = m@metadata$genome, col_data = m@colData, 
+                                     ref_cpg_dt = ref_cpgs_chr, chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
+  }
+  
+  return(m_obj) 
 }
 
 #' Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
@@ -99,7 +119,7 @@ export_bed <- function(m = NULL, path = NULL) {
 #' @export
 get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads = 1, type="M", how = "mean", 
                                overlap_type = "within", verbose = TRUE, group = NULL) {
-
+  
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
@@ -121,7 +141,7 @@ get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads =
   
   regions = cast_granges(regions)
   regions$rid <- paste0("rid_", 1:length(regions))
-
+  
   overlap_indices <- as.data.table(GenomicRanges::findOverlaps(m, regions, type = overlap_type)) #GenomicRanges::findOverlaps(rowRanges(m), regions)@from
   
   if(nrow(overlap_indices) == 0){
@@ -179,7 +199,7 @@ get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads =
     # parallel::stopCluster(cl)
     # 
     # data <- rbindlist(data)
-     
+    
   }
   
   if(nrow(overlap_indices) != nrow(dat)){
@@ -191,7 +211,7 @@ get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads =
   #message("-Summarizing overlaps..\n")
   if(how == "mean") {
     message("Summarizing by average")
-
+    
     output = dat[, lapply(.SD, mean, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(m)))]
   } else if (how == "median") {
     message("Summarizing by median")
@@ -200,12 +220,12 @@ get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads =
     message("Summarizing by maximum")
     output = suppressWarnings(
       dat[, lapply(.SD, max, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(m)))])
-
+    
     for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
   } else if (how == "min") {
     message("Summarizing by minimum")
     output = suppressWarnings(
-
+      
       dat[, lapply(.SD, min, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(m)))])
     for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
   } else if (how == "sum") {
@@ -214,7 +234,7 @@ get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads =
   }
   
   output = merge(regions, output, by.x = 'rid', by.y = 'yid', all.x = TRUE)
-
+  
   output = merge(n_overlap_cpgs, output, by = 'rid')
   output$rid <- as.numeric(gsub("rid_","",output$rid))
   
@@ -465,15 +485,15 @@ convert_methrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
   }
   
   if (verbose) message("Converting in-memory scMethrix to HDF5"), start_time())
-  
-  m <- create_scMethrix(methyl_mat = assays(m)[[1]], h5_dir = h5_dir,
-                        rowRanges = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
-                        colData = m@colData, chrom_sizes = m@metadata$chrom_sizes, 
-                        desc = m@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
-  
-  if (verbose) message("Converted in ", stop_time())
-  
-  return(m)
+
+m <- create_scMethrix(methyl_mat = assays(m)[[1]], h5_dir = h5_dir,
+                      rowRanges = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
+                      colData = m@colData, chrom_sizes = m@metadata$chrom_sizes, 
+                      desc = m@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
+
+if (verbose) message("Converted in ", stop_time())
+
+return(m)
 }
 
 
@@ -709,7 +729,7 @@ get_matrix <- function(m = NULL, add_loci = FALSE, in_granges=FALSE, type = "M")
   type = match.arg(arg = type, choices = c('M', 'C'))
   
   type <- if (type == "M") 1 else 2
-
+  
   mtx <- SummarizedExperiment::assay(x = m, i = type)
   
   if (add_loci) {
@@ -783,8 +803,8 @@ mask_methrix <- function(m = NULL, low_count = 0, high_quantile = NULL, n_thread
   if (!is(m, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
   if (!is_h5(m) & n_threads != 1) 
-     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
-   
+    stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
+  
   type = match.arg(arg = type, choices = c('count', 'coverage'))
   
   if (!has_cov(m) && type == "coverage") stop("No coverage matrix is present in the object. 
@@ -802,7 +822,7 @@ mask_methrix <- function(m = NULL, low_count = 0, high_quantile = NULL, n_thread
     if(!is.numeric(low_count)){
       stop("low_count must be a numeric value.")
     }
-  
+    
     n <- nrow(m) - DelayedMatrixStats::colCounts(get_matrix(m), value = as.integer(NA))
     
     if (type == "count") {
@@ -816,7 +836,7 @@ mask_methrix <- function(m = NULL, low_count = 0, high_quantile = NULL, n_thread
     
     row_idx <- which(row_idx)  
     emp <- array(as.integer(NA),c(length(row_idx), nrow(colData(m))))
-
+    
     assays(m)[[1]][row_idx,] <- emp
     if (type == "coverage") assays(m)[[2]][row_idx,] <- emp 
     
@@ -827,13 +847,13 @@ mask_methrix <- function(m = NULL, low_count = 0, high_quantile = NULL, n_thread
       message(paste0("   Masked ", n[i], " CpGs due to too low count in sample ",  colnames(m)[i], "."))
     }
   }
-
+  
   if (!is.null(high_quantile)) {
-
+    
     message("Masking coverage higher than ",high_quantile * 100," percentile")
-
+    
     quantiles <- DelayedMatrixStats::colQuantiles(assays(m)[[2]], probs = high_quantile,
-                                               na.rm = TRUE, drop = F)
+                                                  na.rm = TRUE, drop = F)
     quantiles <- as.vector(quantiles)
     names(quantiles) <- rownames(m@colData)
     
