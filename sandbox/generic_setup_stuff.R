@@ -29,7 +29,7 @@ files <- files[1:4]
 
 scm <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"))
 
-scm <- read_beds(files=files,h5=FALSE,coverage=TRUE)
+scm <- read_beds(files=files,h5=FALSE)
 
 devtools::test()
 

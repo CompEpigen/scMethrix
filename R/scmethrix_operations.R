@@ -84,14 +84,14 @@ export_bed <- function(m = NULL, path = NULL, suffix = NULL) {
   for (file in files) {
     
     val <- as.data.table(get_matrix(m=m,type="M"))[, file, with=FALSE] #TODO: get_matrix should output data.table
-    rrng[,val:= val]
+    rrng[,meth := val]
     
     if (has_cov(m)) {
-      cov <- as.data.table(get_matrix(m=m,type="C"))[, file, with=FALSE] #TODO: get_matrix should output data.table
-      rrng[,cov:= cov]
+      val <- as.data.table(get_matrix(m=m,type="C"))[, file, with=FALSE] #TODO: get_matrix should output data.table
+      rrng[,cov := val]
     }
     
-    write.table(rrng[!is.na(val),], paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t",
+    write.table(rrng[which(!is.na(val)),], paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t",
                 row.names = FALSE, col.names = FALSE, quote = FALSE)
   }
 }

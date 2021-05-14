@@ -17,7 +17,6 @@
 #' @param zero_based Boolean flag for whether the input data is zero-based or not
 #' @param reads Manual input of reads. Typically used for testing.
 #' @param replace Boolean flag for whether to delete the contents of h5_dir before saving
-#' @param coverage flag for including a coverage matrix in the experiment
 #' @param meth_idx The column index of the methylation value for the read
 #' @param cov_idx The column index(es) of the read count. If not present, no coverage matrix is built
 #' @export
@@ -31,7 +30,7 @@
 
 read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = 200, n_threads = 0, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE,
-                      zero_based = FALSE, reads = NULL, replace = FALSE, stranded = FALSE, coverage = FALSE,
+                      zero_based = FALSE, reads = NULL, replace = FALSE, stranded = FALSE,
                       meth_idx = 4, cov_idx = NULL) {
   
   if (is.null(files)) {
