@@ -30,7 +30,7 @@
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
 read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = 200, n_threads = 0, 
-                      h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = FALSE,
+                      h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE,
                       zero_based = FALSE, reads = NULL, replace = FALSE, stranded = FALSE, coverage = FALSE,
                       meth_idx = 4, cov_idx = NULL) {
   

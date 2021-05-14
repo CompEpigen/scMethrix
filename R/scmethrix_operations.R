@@ -7,7 +7,7 @@
 #' data('scMethrix_data')
 #' # export_bed(m=scMethrix_data$mem,path=tempdir())
 #' @export
-merge_scmethrix < function(m1 = NULL,m2 = NULL) {
+merge_scmethrix < function(m1 = NULL, m2 = NULL) {
   
   if (!is(m1, "scMethrix") || !is(m2, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -19,8 +19,6 @@ merge_scmethrix < function(m1 = NULL,m2 = NULL) {
   } 
   
   rrng <- unlist(GRangesList("m1" = rowRanges(m1), "m2" = rowRanges(m2)))
-  
-  rrng <- unlist(GRangesList("m1" = rowRanges(m1), "m2" = rowRanges(m1)))
   rrng <- unique(rrng)
   rrng <- sortSeqlevels(rrng)
   rrng <- sort(rrng)
@@ -71,15 +69,17 @@ convert_to_methrix <- function(m = NULL, h5_dir = NULL) {
 #' data('scMethrix_data')
 #' # export_bed(m=scMethrix_data$mem,path=tempdir())
 #' @export
-export_bed <- function(m = NULL, path = NULL) {
+export_bed <- function(m = NULL, path = NULL, suffix = NULL) {
   
-  if (!is(m, "scMethrix") || !is.null(path)){
+  if (!is(m, "scMethrix") || is.null(path)){
     stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
   }
   
   files <- row.names(m@colData)
   rrng <- as.data.table(rowRanges(m))
   rrng[,c("width","strand"):=NULL]
+  
+  if (is.null(suffix)) suffix <- ""
   
   for (file in files) {
     
@@ -91,7 +91,7 @@ export_bed <- function(m = NULL, path = NULL) {
       rrng[,cov:= cov]
     }
     
-    write.table(rrng[!is.na(val),], paste0(path,"/",file,".bedgraph"), append = FALSE, sep = "\t",
+    write.table(rrng[!is.na(val),], paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t",
                 row.names = FALSE, col.names = FALSE, quote = FALSE)
   }
 }

@@ -5,3 +5,4 @@
 .Rbuildignore
 .Ruserdata
 /sampleData
+/data_gen/*.bedGraph

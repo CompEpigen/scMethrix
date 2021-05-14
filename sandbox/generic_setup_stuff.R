@@ -17,15 +17,19 @@ ref_cpgs <- mm10_cpgs
 
 setwd("D:/Git/sampleData/Yunhee.GSE97179")
 
+setwd("D:/Git/sampleData/test_data")
+
+
+
 files <- list.files (getwd(),full.names = TRUE)
 
 files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
 
-files <- files[1:20]
+files <- files[1:4]
 
 scm <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"))
 
-scm <- read_beds(files=files,h5=FALSE)
+scm <- read_beds(files=files,h5=FALSE,coverage=TRUE)
 
 devtools::test()
 

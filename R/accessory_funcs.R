@@ -21,7 +21,6 @@ has_cov = function(m) {
 }
 
 
-
 #' Returns file name minus the extension from a file.path to represent the sample name
 #' @param s A file.path
 #' @return string containing the sample name
