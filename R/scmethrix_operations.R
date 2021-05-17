@@ -7,7 +7,7 @@
 #' data('scMethrix_data')
 #' # export_bed(m=scMethrix_data$mem,path=tempdir())
 #' @export
-merge_scmethrix < function(m1 = NULL, m2 = NULL) {
+merge_scMethrix <- function(m1 = NULL, m2 = NULL) {
   
   if (!is(m1, "scMethrix") || !is(m2, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -484,7 +484,7 @@ convert_methrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
     stop("Input scMethrix is already in HDF5 format.")
   }
   
-  if (verbose) message("Converting in-memory scMethrix to HDF5"), start_time())
+  if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
 
 m <- create_scMethrix(methyl_mat = assays(m)[[1]], h5_dir = h5_dir,
                       rowRanges = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
@@ -636,9 +636,8 @@ get_stats <- function(m = NULL, per_chr = TRUE) {
   
   message("Getting descriptive statistics...",start_time())
   
-  ends <- seqnames(m)@lengths
-  for (i in 1:length(ends))
-    ends[i] <- sum(as.vector(ends[1:i]))
+  len <- seqnames(m)@lengths
+  for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
   starts <- head(c(1, ends + 1), -1)
   
   if (is_h5(m)) {
@@ -676,6 +675,7 @@ get_stats <- function(m = NULL, per_chr = TRUE) {
         )
       })
       stats <- data.table::rbindlist(l = stats, use.names = TRUE)
+      
       
     } else {
       stats <-

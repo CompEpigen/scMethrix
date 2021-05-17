@@ -1,15 +1,21 @@
 test_that("read_index", {
 
-  expect_equivalent(read_index(files),rbind(df1,df3,df4)[,1:3])
-  #expect_equivalent(read_index(files),read_index(files,n_threads=2))
+  index <- read_index(files)
+  expect_equivalent(names(index),c("chr","start","end"))
+  expect_equivalent(dim(index),c(100,3))
+  expect_equivalent(read_index(files),read_index(files,n_threads=2))
   
 })
 
 test_that("read_bed_by_index", {
   
+  file <- files[1]
   index <- read_index(files)
-  expect_equivalent(as.vector(unlist(read_bed_by_index(files[1],index)[1])),c(rep(0,5),rep(NA,13)))
-  
+  C1 <- read.table(file = file, sep = '\t', header = FALSE)
+  bed <- read_bed_by_index(file,index)[[1]]
+  expect_equivalent(dim(bed),c(nrow(index),1))
+  expect_equivalent(dim(na.omit(bed)),c(nrow(C1),1))
+
 })
 
 test_that("read_bed - Input errors", {
@@ -32,7 +38,7 @@ test_that("read_bed - HDF5, no coverage", {
   expect_false(has_cov(scm1))
   expect_equivalent(class(scm1)[1],"scMethrix")
   expect_equivalent(class(get_matrix(scm1))[[1]],"HDF5Matrix")
-  expect_equivalent(dim(scm1),c(18,4))
+  expect_equivalent(dim(scm1),c(100,4))
   expect_equivalent(scm1,scm2)
   
   unlink(path, recursive = TRUE)
@@ -45,21 +51,8 @@ test_that("read_bed - in-memory, no coverage", {
   
   expect_equivalent(class(scm)[1],"scMethrix")
   expect_equivalent(class(get_matrix(scm))[[1]],"matrix")
-  expect_equivalent(dim(scm),c(18,4))
+  expect_equivalent(dim(scm),c(100,4))
   
-})
-
-test_that("read_bed - HDF5 and in-memory equivalence, no coverage", {
-
-  path <- paste0(h5_dir,"HDF5equiv")
-  
-  scm.hdf <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE)
-  scm.mem <- read_beds(files,h5=FALSE)
-  
-  expect_equivalent(as.matrix(assays(scm.hdf)$score),assays(scm.mem)$score)
-  expect_equivalent(rowRanges(scm.hdf),rowRanges(scm.mem))
-  
-  unlink(path, recursive = TRUE)
 })
 
 test_that("read_bed - HDF5, with coverage", {
@@ -76,7 +69,7 @@ test_that("read_bed - HDF5, with coverage", {
   expect_equivalent(class(scm1)[1],"scMethrix")
   expect_equivalent(class(get_matrix(scm1))[[1]],"HDF5Matrix")
   expect_equivalent(class(get_matrix(scm1,type="C"))[[1]],"HDF5Matrix")
-  expect_equivalent(dim(scm1),c(18,4))
+  expect_equivalent(dim(scm1),c(100,4))
   expect_equivalent(scm1,scm2)
   
   unlink(path, recursive = TRUE)
@@ -90,6 +83,34 @@ test_that("read_bed - in-memory, with coverage", {
   expect_equivalent(class(scm)[1],"scMethrix")
   expect_equivalent(class(get_matrix(scm))[[1]],"matrix")
   expect_equivalent(class(get_matrix(scm,type="C"))[[1]],"matrix")
-  expect_equivalent(dim(scm),c(18,4))
+  expect_equivalent(dim(scm),c(100,4))
   
 })
+
+test_that("read_bed - HDF5 and in-memory equivalence, no coverage", {
+  
+  path <- paste0(h5_dir,"HDF5equiv")
+  
+  scm.hdf <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE)
+  scm.mem <- read_beds(files,h5=FALSE)
+  
+  expect_equivalent(as.matrix(assays(scm.hdf)$score),assays(scm.mem)$score)
+  expect_equivalent(rowRanges(scm.hdf),rowRanges(scm.mem))
+  
+  unlink(path, recursive = TRUE)
+})
+
+test_that("read_bed - HDF5 and in-memory equivalence, with coverage", {
+  
+  path <- paste0(h5_dir,"HDF5equiv")
+  
+  scm.hdf <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE, cov_idx = 5)
+  scm.mem <- read_beds(files,h5=FALSE, cov_idx = 5)
+  
+  expect_equivalent(as.matrix(assays(scm.hdf)$score),assays(scm.mem)$score)
+  expect_equivalent(as.matrix(assays(scm.hdf)$coverage),assays(scm.mem)$coverage)
+  expect_equivalent(rowRanges(scm.hdf),rowRanges(scm.mem))
+  
+  unlink(path, recursive = TRUE)
+})
+
