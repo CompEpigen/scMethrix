@@ -4,7 +4,7 @@
 \alias{remove_uncovered}
 \title{Remove loci that are uncovered across all samples}
 \usage{
-remove_uncovered(m)
+remove_uncovered(m = NULL)
 }
 \arguments{
 \item{m}{\code{\link{scMethrix}} object}

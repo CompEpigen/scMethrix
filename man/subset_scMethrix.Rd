@@ -5,7 +5,7 @@
 \title{Subsets an \code{\link{scMethrix}} object based on given conditions.}
 \usage{
 subset_scMethrix(
-  m,
+  m = NULL,
   regions = NULL,
   contigs = NULL,
   samples = NULL,

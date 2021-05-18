@@ -5,7 +5,7 @@
 \title{Extract and summarize methylation or coverage info by regions of interest}
 \usage{
 get_region_summary(
-  m,
+  m = NULL,
   regions = NULL,
   n_chunks = 1,
   n_threads = 1,
@@ -21,8 +21,9 @@ get_region_summary(
 
 \item{regions}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object}
 
-\item{n_chunks}{Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
-#param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.}
+\item{n_chunks}{Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.}
+
+\item{n_threads}{Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.}
 
 \item{type}{matrix which needs to be summarized. Could be \code{M}, \code{C}. Default 'M'}
 

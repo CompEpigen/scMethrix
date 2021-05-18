@@ -1,11 +1,11 @@
-test_that("convert_HDF5_methrix", {
+test_that("convert_HDF5_scMethrix", {
 
-  expect_error(convert_HDF5_methrix("not scMethrix"))
+  expect_error(convert_HDF5_scMethrix("not scMethrix"))
   
   expect_true(is_h5(scm.h5))
   expect_equivalent(class(get_matrix(scm.h5))[1],"HDF5Matrix")
   
-  scm <- convert_HDF5_methrix(scm.h5)
+  scm <- convert_HDF5_scMethrix(scm.h5)
   
   expect_false(is_h5(scm))
   expect_equivalent(class(get_matrix(scm))[1],"matrix") 
@@ -13,14 +13,14 @@ test_that("convert_HDF5_methrix", {
   
 })
 
-test_that("convert_methrix", {
+test_that("convert_scMethrix", {
   
-  expect_error(convert_methrix("not scMethrix"))
+  expect_error(convert_scMethrix("not scMethrix"))
   
   expect_false(is_h5(scm.mem))
   expect_equivalent(class(get_matrix(scm.mem))[1],"matrix") 
   
-  scm <- convert_methrix(scm.mem)
+  scm <- convert_scMethrix(scm.mem)
   
   expect_true(is_h5(scm))
   expect_equivalent(class(get_matrix(scm))[1],"HDF5Matrix")
@@ -155,11 +155,15 @@ test_that("get_stats", {
   
   expect_error(get_matrix("not scMethrix"))
 
-  expect_equivalent(dim(get_stats(scm.h5)),c(8,5))
-  expect_equivalent(dim(get_stats(scm.h5,per_chr = FALSE)),c(4,4))
   
-  expect_equivalent(dim(get_stats(scm.mem)),c(8,5))
-  expect_equivalent(dim(get_stats(scm.mem,per_chr = FALSE)),c(4,4))
+  chr <- length(seqlengths(rowRanges(scm.h5)))
+  samples <- nrow(colData(scm.h5))
+  
+  expect_equivalent(dim(get_stats(scm.h5)),c(chr*samples,5))
+  expect_equivalent(dim(get_stats(scm.h5,per_chr = FALSE)),c(samples,4))
+  
+  expect_equivalent(dim(get_stats(scm.mem)),c(chr*samples,5))
+  expect_equivalent(dim(get_stats(scm.mem,per_chr = FALSE)),c(samples,4))
   
 })
 
@@ -179,15 +183,15 @@ test_that("get_region_summary", {
   
 })
 
-test_that("mask_methrix", {
+test_that("mask_scMethrix", {
   
-  expect_error(mask_methrix("not scMethrix"))
-  expect_error(mask_methrix(scm.mem))
-  expect_error(mask_methrix(scm.mem,n_threads=2))
-  expect_error(mask_methrix(scm.mem,high_quantile=1,type="count"))
-  expect_error(mask_methrix(scm.mem,high_quantile=5,type="coverage"))
+  expect_error(mask_scMethrix("not scMethrix"))
+  expect_error(mask_scMethrix(scm.mem))
+  expect_error(mask_scMethrix(scm.mem,n_threads=2))
+  expect_error(mask_scMethrix(scm.mem,high_quantile=1,type="count"))
+  expect_error(mask_scMethrix(scm.mem,high_quantile=5,type="coverage"))
 
-  m <- mask_methrix(scm.mem,low_count=2)
+  m <- mask_scMethrix(scm.mem,low_count=2)
   
   expect_equivalent(dim(m),c(100,4))
   expect_equivalent(dim(remove_uncovered(m)),c(75,4))

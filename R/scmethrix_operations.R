@@ -1,8 +1,9 @@
 #' Merges two \code{\link{scMethrix}} objects.
 #' @detail Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot
 #' data is not supported at this time
-#' @param m \code{\link{scMethrix}} object
-#' @return An \code{\link{scMethrix}} object
+#' @param m1 A \code{\link{scMethrix}} object
+#' @param m2 A \code{\link{scMethrix}} object
+#' @return A merged \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
 #' # export_bed(m=scMethrix_data$mem,path=tempdir())
@@ -20,7 +21,7 @@ merge_scMethrix <- function(m1 = NULL, m2 = NULL) {
   
   rrng <- unlist(GRangesList("m1" = rowRanges(m1), "m2" = rowRanges(m2)))
   rrng <- unique(rrng)
-  rrng <- sortSeqlevels(rrng)
+  rrng <- GenomeInfoDb::sortSeqlevels(rrng)
   rrng <- sort(rrng)
   
 }
@@ -28,6 +29,7 @@ merge_scMethrix <- function(m1 = NULL, m2 = NULL) {
 #' Converts an \code{\link{scMethrix}} object to methrix object
 #' @details Removes extra slot data and changes structure to match \code{\link{methrix}} format
 #' @param m \code{\link{scMethrix}} object
+#' @param h5_dir Location to save the methrix H5 file
 #' @return a methrix object
 #' @examples
 #' data('scMethrix_data')
@@ -38,9 +40,10 @@ convert_to_methrix <- function(m = NULL, h5_dir = NULL) {
   rrng <- as.data.table(rowRanges(m))
   rrng[,c("width","end") := NULL]
   names(rrng) <- c("chr","start","strand")
-  
-  chrom_sizes <- data.frame(chr=seqlevels(rrng),N=width(range(rrng)))
-  
+
+  chrom_sizes <- data.frame(contig=seqlevels(rowRanges(m)),length=width(range(rowRanges(m))))
+  ref_cpgs_chr <- data.frame(chr=seqlevels(rowRanges(m)),N=summary(rrng$`chr`))
+           
   if (!has_cov(m)) {
     stop("scMethrix does not contain coverage data. Cannot convert to methrix object")
   }
@@ -64,6 +67,7 @@ convert_to_methrix <- function(m = NULL, h5_dir = NULL) {
 #' Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
 #' @param m \code{\link{scMethrix}} object
 #' @param path the \code{\link{file.path}} of the directory to save the files
+#' @param suffix optional suffix to add to the exported bed files
 #' @return nothing
 #' @examples
 #' data('scMethrix_data')
@@ -106,7 +110,7 @@ export_bed <- function(m = NULL, path = NULL, suffix = NULL) {
 #' see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #' #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.
 #' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
-#' #param n_cores Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
+#' @param n_threads Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
 #' @param verbose Boolean to output progress messages. Default TRUE
 #' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
 #' tested group-wise.
@@ -378,7 +382,7 @@ coverage_filter <- function(m = NULL, cov_thr = 1, min_samples = NULL, prop_samp
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
-#' m <- convert_methrix(scMethrix_data$mem, h5_dir=dir)
+#' m <- convert_scMethrix(scMethrix_data$mem, h5_dir=dir)
 #' save_HDF5_scMethrix(m, h5_dir = dir, replace = TRUE)
 #' @return Nothing
 #' @export
@@ -408,7 +412,7 @@ save_HDF5_scMethrix <- function(m = NULL, h5_dir = NULL, replace = FALSE, ...) {
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
-#' m <- convert_methrix(scMethrix_data$mem, h5_dir=dir)
+#' m <- convert_scMethrix(scMethrix_data$mem, h5_dir=dir)
 #' save_HDF5_scMethrix(m, h5_dir = dir, replace = TRUE)
 #' n <- load_HDF5_scMethrix(dir)
 #' @export
@@ -438,10 +442,10 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
-#' m <- convert_methrix(scMethrix_data$mem, h5_dir=dir)
-#' convert_HDF5_methrix(m)
+#' m <- convert_scMethrix(scMethrix_data$mem, h5_dir=dir)
+#' convert_HDF5_scMethrix(m)
 #' @export
-convert_HDF5_methrix <- function(m = NULL) {
+convert_HDF5_scMethrix <- function(m = NULL) {
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -472,9 +476,9 @@ convert_HDF5_methrix <- function(m = NULL) {
 #' @importFrom SummarizedExperiment assays
 #' @examples
 #' data('scMethrix_data')
-#' convert_methrix(scMethrix_data$mem, h5_dir=paste0(tempdir(),"/h5"))
+#' convert_scMethrix(scMethrix_data$mem, h5_dir=paste0(tempdir(),"/h5"))
 #' @export
-convert_methrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
+convert_scMethrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
   
   if (!is(m, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -484,16 +488,16 @@ convert_methrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
     stop("Input scMethrix is already in HDF5 format.")
   }
   
-  if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
+ # if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
 
-m <- create_scMethrix(methyl_mat = assays(m)[[1]], h5_dir = h5_dir,
+  m <- create_scMethrix(methyl_mat = assays(m)[[1]], h5_dir = h5_dir,
                       rowRanges = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
                       colData = m@colData, chrom_sizes = m@metadata$chrom_sizes, 
                       desc = m@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
 
-if (verbose) message("Converted in ", stop_time())
+ # if (verbose) message("Converted in ", stop_time())
 
-return(m)
+  return(m)
 }
 
 
@@ -629,14 +633,14 @@ subset_scMethrix <- function(m = NULL, regions = NULL, contigs = NULL, samples =
 #' @export
 
 get_stats <- function(m = NULL, per_chr = TRUE) {
-  
+
   if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
   message("Getting descriptive statistics...",start_time())
   
-  len <- seqnames(m)@lengths
+  ends <- len <- seqnames(m)@lengths
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
   starts <- head(c(1, ends + 1), -1)
   
@@ -798,7 +802,7 @@ remove_uncovered <- function(m = NULL) {
 #' @examples
 #' @export
 
-mask_methrix <- function(m = NULL, low_count = 0, high_quantile = NULL, n_threads=1 ,type="count") {
+mask_scMethrix <- function(m = NULL, low_count = 0, high_quantile = NULL, n_threads=1 ,type="count") {
   
   if (!is(m, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   

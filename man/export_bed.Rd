@@ -4,12 +4,14 @@
 \alias{export_bed}
 \title{Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files}
 \usage{
-export_bed(m, path)
+export_bed(m = NULL, path = NULL, suffix = NULL)
 }
 \arguments{
 \item{m}{\code{\link{scMethrix}} object}
 
 \item{path}{the \code{\link{file.path}} of the directory to save the files}
+
+\item{suffix}{optional suffix to add to the exported bed files}
 }
 \value{
 nothing

@@ -4,7 +4,7 @@
 \alias{get_stats}
 \title{Estimate descriptive statistics}
 \usage{
-get_stats(m, per_chr = TRUE)
+get_stats(m = NULL, per_chr = TRUE)
 }
 \arguments{
 \item{m}{\code{\link{scMethrix}} object}

@@ -32,7 +32,8 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
 create_scMethrix <- function(methyl_mat = NULL, cov_mat = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, 
                              genome_name = "hg19", chrom_sizes = NULL, desc = NULL, h5_dir = NULL, 
                              replace = FALSE, verbose=TRUE) {
-    if (is_hdf5) {
+    
+  if (is_hdf5) {
       
       assays <- if (!is.null(cov_mat)) {list(score = as(methyl_mat, "HDF5Array"),
                                             coverage = as(cov_mat, "HDF5Array"))
@@ -62,8 +63,9 @@ create_scMethrix <- function(methyl_mat = NULL, cov_mat = NULL, colData = NULL, 
       
     } else {
 
-      assays <- if (!is.null(cov_mat)) {list(score = as.matrix(methyl_mat), coverage = as.matrix(cov_mat))
-      } else {list(score = as.matrix(methyl_mat))}
+      assays <- if (!is.null(cov_mat)) {list(score = as.matrix(do.call(cbind, methyl_mat)),
+                                             coverage = as.matrix(do.call(cbind, cov_mat)))
+      } else {list(score = as.matrix(do.call(cbind, methyl_mat)))}
       
       sse <- SingleCellExperiment::SingleCellExperiment(assays = assays,
                                                       colData = colData,

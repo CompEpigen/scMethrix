@@ -5,7 +5,7 @@
 \title{Filter matrices by coverage}
 \usage{
 coverage_filter(
-  m,
+  m = NULL,
   cov_thr = 1,
   min_samples = NULL,
   prop_samples = NULL,

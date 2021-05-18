@@ -15,12 +15,11 @@ read_beds(
   h5_dir = NULL,
   h5_temp = NULL,
   desc = NULL,
-  verbose = FALSE,
+  verbose = TRUE,
   zero_based = FALSE,
   reads = NULL,
   replace = FALSE,
   stranded = FALSE,
-  coverage = FALSE,
   meth_idx = 4,
   cov_idx = NULL
 )
@@ -56,8 +55,6 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 \item{replace}{Boolean flag for whether to delete the contents of h5_dir before saving}
 
 \item{stranded}{Default c}
-
-\item{coverage}{flag for including a coverage matrix in the experiment}
 
 \item{meth_idx}{The column index of the methylation value for the read}
 

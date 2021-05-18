@@ -32,7 +32,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE,
                       zero_based = FALSE, reads = NULL, replace = FALSE, stranded = FALSE,
                       meth_idx = 4, cov_idx = NULL) {
-  
+
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
   }
