@@ -19,8 +19,6 @@ setwd("D:/Git/sampleData/Yunhee.GSE97179")
 
 setwd("D:/Git/sampleData/test_data")
 
-
-
 files <- list.files (getwd(),full.names = TRUE)
 
 files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]

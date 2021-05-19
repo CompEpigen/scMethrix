@@ -1,3 +1,19 @@
+
+test_that("merge_scMethrix", {
+
+  expect_error(merge_scMethrix(m1=scm.mem,m2="not scMethrix"))
+
+  expect_error(merge_scMethrix(scm.mem,scm.mem,by="col")) #same samples
+  expect_error(merge_scMethrix(scm.mem[1,1],scm.mem[2,2],by="col")) #different regions
+  
+  expect_error(merge_scMethrix(scm.mem[,1],scm.mem[,2],by="row")) #different samples
+  expect_error(merge_scMethrix(scm.mem,scm.mem,by="row")) #same regions
+  
+  expect_equivalent(merge_scMethrix(scm.mem[1],scm.mem[2:nrow(scm.mem)],by="row"),scm.mem)
+  expect_equivalent(merge_scMethrix(scm.mem[,1],scm.mem[,2:ncol(scm.mem)],by="col"),scm.mem)
+  
+})
+
 test_that("convert_HDF5_scMethrix", {
 
   expect_error(convert_HDF5_scMethrix("not scMethrix"))

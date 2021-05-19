@@ -197,8 +197,8 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
   chr <- start <- meth <- meth1 <- meth2 <- cov <- cov1 <- cov2 <- NULL
   data <- data.table::fread(file, header = FALSE, select = c(1:2,meth_idx,cov_idx))
   
-  if (zero_based) data[,2] <- data[,2]+1L
   colnames(data) <- c("chr", "start", "meth",rep("cov",length(data)-3))
+  if (zero_based) data[,start] <- data[,start]+1L
   data <- data.table::setkeyv(data, c("chr","start"))
   
   if (!is.null(cov_idx)) {

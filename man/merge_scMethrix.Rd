@@ -4,12 +4,14 @@
 \alias{merge_scMethrix}
 \title{Merges two \code{\link{scMethrix}} objects.}
 \usage{
-merge_scMethrix(m1 = NULL, m2 = NULL)
+merge_scMethrix(m1 = NULL, m2 = NULL, by = c("row", "col"))
 }
 \arguments{
 \item{m1}{A \code{\link{scMethrix}} object}
 
 \item{m2}{A \code{\link{scMethrix}} object}
+
+\item{by}{Merge by columns or rows}
 }
 \value{
 A merged \code{\link{scMethrix}} object
@@ -19,5 +21,5 @@ Merges two \code{\link{scMethrix}} objects.
 }
 \examples{
 data('scMethrix_data')
-# export_bed(m=scMethrix_data$mem,path=tempdir())
+#merge_scMethrix(scMethrix_data$mem,scMethrix_data$mem)
 }

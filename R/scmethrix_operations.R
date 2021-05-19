@@ -3,12 +3,13 @@
 #' data is not supported at this time
 #' @param m1 A \code{\link{scMethrix}} object
 #' @param m2 A \code{\link{scMethrix}} object
+#' @param by Merge by columns or rows
 #' @return A merged \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
-#' # export_bed(m=scMethrix_data$mem,path=tempdir())
+#' #merge_scMethrix(scMethrix_data$mem,scMethrix_data$mem)
 #' @export
-merge_scMethrix <- function(m1 = NULL, m2 = NULL) {
+merge_scMethrix <- function(m1 = NULL, m2 = NULL, by = c("row", "col")) {
   
   if (!is(m1, "scMethrix") || !is(m2, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -19,11 +20,30 @@ merge_scMethrix <- function(m1 = NULL, m2 = NULL) {
     keep_cov = FALSE
   } 
   
-  rrng <- unlist(GRangesList("m1" = rowRanges(m1), "m2" = rowRanges(m2)))
-  rrng <- unique(rrng)
-  rrng <- GenomeInfoDb::sortSeqlevels(rrng)
-  rrng <- sort(rrng)
+  by <- match.arg(arg = by, choices = c("row", "col"), several.ok = FALSE)
   
+  if (by == "row") {
+    if (nrow(colData(m1)) != nrow(colData(m2)) || !(all(rownames(m1@colData) == rownames(m2@colData)))) {
+      stop("You have different samples in your dataset. You need the same samples in your datasets. ")
+    } else {
+      m <- rbind(m1, m2)
+    }
+    if (any(duplicated(rowRanges(m)))) {
+      stop("There are overlapping regions in your datasets. Each object must contain unique regions. ")
+    }
+  }
+  if (by == "col") {
+    if (any(rownames(m1@colData) %in% rownames(m2@colData))) {
+      stop("You have the same samples in your datasets. You need different samples for this merging.  ")
+    } else if (!identical(rowRanges(m1),rowRanges(m2))) {
+      stop("There are non-overlapping regions in your datasets. This function only takes identical regions. ")
+    } else {
+      m <- cbind(m1, m2)
+    }
+  }
+  
+  gc()
+  return(m)
 }
 
 #' Converts an \code{\link{scMethrix}} object to methrix object
@@ -41,8 +61,8 @@ convert_to_methrix <- function(m = NULL, h5_dir = NULL) {
   rrng[,c("width","end") := NULL]
   names(rrng) <- c("chr","start","strand")
 
-  chrom_sizes <- data.frame(contig=seqlevels(rowRanges(m)),length=width(range(rowRanges(m))))
-  ref_cpgs_chr <- data.frame(chr=seqlevels(rowRanges(m)),N=summary(rrng$`chr`))
+  chrom_sizes <- data.frame(contig=GenomeInfoDb::seqlevels(rowRanges(m)),length=width(range(rowRanges(m))))
+  ref_cpgs_chr <- data.frame(chr=GenomeInfoDb::seqlevels(rowRanges(m)),N=summary(rrng$`chr`))
            
   if (!has_cov(m)) {
     stop("scMethrix does not contain coverage data. Cannot convert to methrix object")
@@ -67,7 +87,7 @@ convert_to_methrix <- function(m = NULL, h5_dir = NULL) {
 #' Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
 #' @param m \code{\link{scMethrix}} object
 #' @param path the \code{\link{file.path}} of the directory to save the files
-#' @param suffix optional suffix to add to the exported bed files
+#' @param suffix optional suffix to add to the exported bed files 
 #' @return nothing
 #' @examples
 #' data('scMethrix_data')
@@ -83,21 +103,23 @@ export_bed <- function(m = NULL, path = NULL, suffix = NULL) {
   rrng <- as.data.table(rowRanges(m))
   rrng[,c("width","strand"):=NULL]
   
-  if (is.null(suffix)) suffix <- ""
+  if (is.null(suffix)) suffix <- "" #TODO: Should switch to some kind of regex input
   
   for (file in files) {
     
-    val <- as.data.table(get_matrix(m=m,type="M"))[, file, with=FALSE] #TODO: get_matrix should output data.table
+    val <- as.data.table(get_matrix(m=m,type="M"))[, file, with=FALSE] 
     rrng[,meth := val]
     
     if (has_cov(m)) {
-      val <- as.data.table(get_matrix(m=m,type="C"))[, file, with=FALSE] #TODO: get_matrix should output data.table
+      val <- as.data.table(get_matrix(m=m,type="C"))[, file, with=FALSE] 
       rrng[,cov := val]
     }
     
     write.table(rrng[which(!is.na(val)),], paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t",
                 row.names = FALSE, col.names = FALSE, quote = FALSE)
   }
+  
+  return(NA)
 }
 
 #' Extract and summarize methylation or coverage info by regions of interest
@@ -566,6 +588,8 @@ subset_scMethrix <- function(m = NULL, regions = NULL, contigs = NULL, samples =
     warning("At least 1 argument mandatory for subsetting. No subset generated")
     return(m)
   }
+  
+  by <- match.arg(arg = by, choices = c("include", "exclude"), several.ok = FALSE)
   
   if (by == "exclude") {
     
