@@ -1,6 +1,6 @@
 #' Merges two \code{\link{scMethrix}} objects.
 #' @detail Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot
-#' data is not supported at this time
+#' data is not supported at this time. Non-common assays between objects will be dropped
 #' @param m1 A \code{\link{scMethrix}} object
 #' @param m2 A \code{\link{scMethrix}} object
 #' @param by Merge by columns or rows
@@ -15,9 +15,12 @@ merge_scMethrix <- function(m1 = NULL, m2 = NULL, by = c("row", "col")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  if (xor(has_cov(m1),has_cov(m2))) {
-    warning("One scMethrix object is missing coverage data. All coverage data will be discarded")
-    keep_cov = FALSE
+  if (!identical(sort(names(assays(m1))), sort(names(assays(m2))))) {
+    warning("Assay list not identical. All non-identical assays will be dropped from merged object.")
+    a1 <- intersect(names(assays(m1)),names(assays(m2)))
+    a2 <- intersect(names(assays(m2)),names(assays(m1)))
+    assays(m1) <- assays(m1)[a1]
+    assays(m2) <- assays(m2)[a2]
   } 
   
   by <- match.arg(arg = by, choices = c("row", "col"), several.ok = FALSE)
@@ -42,12 +45,11 @@ merge_scMethrix <- function(m1 = NULL, m2 = NULL, by = c("row", "col")) {
     }
   }
   
-  gc()
   return(m)
 }
 
 #' Converts an \code{\link{scMethrix}} object to methrix object
-#' @details Removes extra slot data and changes structure to match \code{\link{methrix}} format
+#' @details Removes extra slot data and changes structure to match \code{\link[methrix]{methrix}} format
 #' @param m \code{\link{scMethrix}} object
 #' @param h5_dir Location to save the methrix H5 file
 #' @return a methrix object

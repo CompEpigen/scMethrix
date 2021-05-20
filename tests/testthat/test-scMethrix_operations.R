@@ -9,6 +9,10 @@ test_that("merge_scMethrix", {
   expect_error(merge_scMethrix(scm.mem[,1],scm.mem[,2],by="row")) #different samples
   expect_error(merge_scMethrix(scm.mem,scm.mem,by="row")) #same regions
   
+  s <- scm.mem
+  assays(s) <- assays(s)["score"]
+  expect_warning(merge_scMethrix(s[,1],scm.mem[,2],by="col")) #different assays
+  
   expect_equivalent(merge_scMethrix(scm.mem[1],scm.mem[2:nrow(scm.mem)],by="row"),scm.mem)
   expect_equivalent(merge_scMethrix(scm.mem[,1],scm.mem[,2:ncol(scm.mem)],by="col"),scm.mem)
   

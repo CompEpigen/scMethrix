@@ -18,7 +18,7 @@ a methrix object
 Converts an \code{\link{scMethrix}} object to methrix object
 }
 \details{
-Removes extra slot data and changes structure to match \code{\link{methrix}} format
+Removes extra slot data and changes structure to match \code{\link[methrix]{methrix}} format
 }
 \examples{
 data('scMethrix_data')
