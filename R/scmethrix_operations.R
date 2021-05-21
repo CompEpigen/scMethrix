@@ -120,6 +120,7 @@ merge_scMethrix <- function(m1 = NULL, m2 = NULL, by = c("row", "col")) {
 #' # convert_to_methrix(m=scMethrix_data$mem)
 #' @export
 convert_to_methrix <- function(m = NULL, h5_dir = NULL) {
+  chr <- NULL
   
   rrng <- as.data.table(rowRanges(m))
   rrng[,c("width","end") := NULL]
@@ -158,7 +159,7 @@ convert_to_methrix <- function(m = NULL, h5_dir = NULL) {
 #' # export_bed(m=scMethrix_data$mem,path=tempdir())
 #' @export
 export_bed <- function(m = NULL, path = NULL, suffix = NULL) {
-  
+  meth <- cov <- NULL
   if (!is(m, "scMethrix") || is.null(path)){
     stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
   }
@@ -205,7 +206,7 @@ export_bed <- function(m = NULL, path = NULL, suffix = NULL) {
 #' data('scMethrix_data')
 #' get_region_summary(m = scMethrix_data$mem,
 #' regions = data.table(chr = c('chr1','chr2'), start = c(1,5), end =  c(5,10)),
-#' type = 'M', how = 'mean')
+#' type = 'score', how = 'mean')
 #' @export
 get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads = 1, type="score", how = "mean", 
                                overlap_type = "within", verbose = TRUE, group = NULL) {

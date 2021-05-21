@@ -24,7 +24,9 @@ Imports:
     IRanges,
     SummarizedExperiment,
     doParallel,
-    plyr
+    plyr,
+    GenomeInfoDb,
+    methrix
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: 

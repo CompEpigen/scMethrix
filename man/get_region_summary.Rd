@@ -9,7 +9,7 @@ get_region_summary(
   regions = NULL,
   n_chunks = 1,
   n_threads = 1,
-  type = "M",
+  type = "score",
   how = "mean",
   overlap_type = "within",
   verbose = TRUE,
@@ -51,5 +51,5 @@ Takes \code{\link{scMethrix}} object and summarizes regions
 data('scMethrix_data')
 get_region_summary(m = scMethrix_data$mem,
 regions = data.table(chr = c('chr1','chr2'), start = c(1,5), end =  c(5,10)),
-type = 'M', how = 'mean')
+type = 'score', how = 'mean')
 }
