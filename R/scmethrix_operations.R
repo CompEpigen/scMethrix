@@ -134,12 +134,12 @@ convert_to_methrix <- function(m = NULL, h5_dir = NULL) {
   
   #TODO: Need to export create_methrix function in the methrix package to use this
   if (is_h5(m)) {
-    m_obj <- methrix::create_methrix(beta_mat = get_matrix(m,type="M"), cov_mat = get_matrix(m,type="C"),
+    m_obj <- methrix::create_methrix(beta_mat = get_matrix(m,type="score"), cov_mat = get_matrix(m,type="coverage"),
                                      cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = TRUE, genome_name = m@metadata$genome,
                                      col_data = m@colData, h5_dir = h5_dir, ref_cpg_dt = ref_cpgs_chr,
                                      chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
   } else {
-    m_obj <- methrix::create_methrix(beta_mat = get_matrix(m,type="M"), cov_mat = get_matrix(m,type="C"),
+    m_obj <- methrix::create_methrix(beta_mat = get_matrix(m,type="score"), cov_mat = get_matrix(m,type="coverage"),
                                      cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = FALSE, 
                                      genome_name = m@metadata$genome, col_data = m@colData, 
                                      ref_cpg_dt = ref_cpgs_chr, chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
@@ -171,11 +171,11 @@ export_bed <- function(m = NULL, path = NULL, suffix = NULL) {
   
   for (file in files) {
     
-    val <- as.data.table(get_matrix(m=m,type="M"))[, file, with=FALSE] 
+    val <- as.data.table(get_matrix(m=m,type="score"))[, file, with=FALSE] 
     rrng[,meth := val]
     
     if (has_cov(m)) {
-      val <- as.data.table(get_matrix(m=m,type="C"))[, file, with=FALSE] 
+      val <- as.data.table(get_matrix(m=m,type="coverage"))[, file, with=FALSE] 
       rrng[,cov := val]
     }
     
@@ -207,7 +207,7 @@ export_bed <- function(m = NULL, path = NULL, suffix = NULL) {
 #' regions = data.table(chr = c('chr1','chr2'), start = c(1,5), end =  c(5,10)),
 #' type = 'M', how = 'mean')
 #' @export
-get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads = 1, type="M", how = "mean", 
+get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads = 1, type="score", how = "mean", 
                                overlap_type = "within", verbose = TRUE, group = NULL) {
   
   if (!is(m, "scMethrix")){
@@ -225,7 +225,7 @@ get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads =
   
   if(verbose) message("Generating region summary...",start_time())
   
-  type = match.arg(arg = type, choices = c('M', 'C'))
+  type = match.arg(arg = type, choices = names(assays(m)))
   how = match.arg(arg = how, choices = c('mean', 'median', 'max', 'min', 'sum', 'sd'))
   yid  <- NULL
   
@@ -248,10 +248,10 @@ get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads =
   colnames(n_overlap_cpgs) = c('rid', 'n_overlap_CpGs')
   
   if(n_chunks==1){
-    if (type == "M") {
-      dat = get_matrix(m = m[overlap_indices$xid,], type = "M", add_loci = TRUE)
-    } else if (type == "C") {
-      dat = get_matrix(m = m[overlap_indices$xid,], type = "C", add_loci = TRUE)
+    if (type == "score") {
+      dat = get_matrix(m = m[overlap_indices$xid,], type = "score", add_loci = TRUE)
+    } else if (type == "coverage") {
+      dat = get_matrix(m = m[overlap_indices$xid,], type = "coverage", add_loci = TRUE)
     }
   } else {
     
@@ -389,7 +389,7 @@ coverage_filter <- function(m = NULL, cov_thr = 1, min_samples = NULL, prop_samp
   
   if (is_h5(m)) {
     if (n_chunks == 1) {
-      cov_dat = get_matrix(m = m, type = "C")
+      cov_dat = get_matrix(m = m, type = "coverage")
       if (!is.null(group)) {
         stop("Groups not implemented yet")
         # row_idx <- sapply(unique(m@colData[, group]), function(c) {
@@ -432,7 +432,7 @@ coverage_filter <- function(m = NULL, cov_thr = 1, min_samples = NULL, prop_samp
       # }
     }
   } else {
-    cov_dat = get_matrix(m = m, type = "C")
+    cov_dat = get_matrix(m = m, type = "coverage")
     if (!is.null(group)) {
       stop("Groups not implemented yet")
       # row_idx <- sapply(unique(m@colData[, group]), function(c) {
@@ -807,7 +807,7 @@ get_stats <- function(m = NULL, per_chr = TRUE) {
 #' # Get methylation data with loci inside a Granges object 
 #' get_matrix(scMethrix_data$mem, add_loci=TRUE, in_granges=TRUE)
 #' @export
-get_matrix <- function(m = NULL, add_loci = FALSE, in_granges=FALSE, type = "M") {
+get_matrix <- function(m = NULL, add_loci = FALSE, in_granges=FALSE, type = "score") {
   
   if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -818,11 +818,9 @@ get_matrix <- function(m = NULL, add_loci = FALSE, in_granges=FALSE, type = "M")
             "the output will be a data.frame object. ")
   }
   
-  type = match.arg(arg = type, choices = c('M', 'C'))
+  type = match.arg(arg = type, choices = names(assays(m)))
   
-  type <- if (type == "M") 1 else 2
-  
-  mtx <- SummarizedExperiment::assay(x = m, i = type)
+  mtx <- SummarizedExperiment::assay(x = m, i = which(type %in% names(assays(m))))
   
   if (add_loci) {
     
@@ -921,7 +919,7 @@ mask_scMethrix <- function(m = NULL, low_count = 0, high_quantile = NULL, n_thre
       row_idx <- DelayedMatrixStats::rowCounts(get_matrix(m), 
                                                value = as.integer(NA)) > (nrow(colData(m))-low_count)
     } else {
-      row_idx <- DelayedMatrixStats::rowSums2(get_matrix(m,type="C"),na.rm=TRUE) < low_count
+      row_idx <- DelayedMatrixStats::rowSums2(get_matrix(m,type="coverage"),na.rm=TRUE) < low_count
     }
     
     if (sum(row_idx) == 0) stop("No CpGs found with low_count")
