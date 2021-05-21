@@ -1,3 +1,65 @@
+#' Transforms an assay in an \code{\link{scMethrix}} object.
+#' @detail Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
+#' @param m A \code{\link{scMethrix}} object
+#' @param assay A \code{\link{scMethrix}} object
+#' @param name Merge by columns or rows
+#' @param trans The transformation function
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' #merge_scMethrix(scMethrix_data$mem,scMethrix_data$mem)
+#' @export
+transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL) {
+  
+  if (!is(m, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (typeof(binarize) != "closure") {
+    stop("A valid transform function must be specified.", call. = FALSE)
+  }
+  
+  if (!(assay %in% names(assays(m)))) {
+    stop("Assay does not exist in the object", call. = FALSE)
+  }
+  
+  if (!is(name,"character") || name %in% names(assays(m))) {
+    stop("Invalid name for new assay. It must be a valid string and cannot 
+         already exist in the object", call. = FALSE)
+  }
+  
+  assays(m)[[name]] <- trans(get_matrix(m,type=assay))
+  
+  return(m)
+}
+
+#' Removes an assay from an \code{\link{scMethrix}} object.
+#' @param m A \code{\link{scMethrix}} object
+#' @param assay The name of an assay that exists in the \code{\link{scMethrix}} object
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' #merge_scMethrix(scMethrix_data$mem,scMethrix_data$mem)
+#' @export
+remove_assay <- function(m,assay) {
+  
+  if (!is(m, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (!(assay %in% names(assays(m)))) {
+    stop("Assay is not in object.", call. = FALSE)
+  }
+  
+  if (assay == "score") {
+    stop("Score assay cannot be removed.", call. = FALSE)
+  }
+  
+  assays(m) <- assays(m)[-which(names(assays(m)) == assay)]
+  
+  return(m)
+}
+
 #' Merges two \code{\link{scMethrix}} objects.
 #' @detail Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot
 #' data is not supported at this time. Non-common assays between objects will be dropped
