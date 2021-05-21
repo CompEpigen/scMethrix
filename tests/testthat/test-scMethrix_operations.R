@@ -13,7 +13,6 @@ test_that("transform_assay", {
 })
 
 test_that("remove_assay", {
-  
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(remove_assay(m="not scMethrix"))
     expect_error(remove_assay(scm, assay="not an assay"))
@@ -26,20 +25,22 @@ test_that("remove_assay", {
 })
 
 test_that("merge_scMethrix", {
-    expect_error(merge_scMethrix(m1=scm.mem,m2="not scMethrix"))
-  
-    expect_error(merge_scMethrix(scm.mem,scm.mem,by="col")) #same samples
-    expect_error(merge_scMethrix(scm.mem[1,1],scm.mem[2,2],by="col")) #different regions
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    expect_error(merge_scMethrix(m1=scm,m2="not scMethrix"))
     
-    expect_error(merge_scMethrix(scm.mem[,1],scm.mem[,2],by="row")) #different samples
-    expect_error(merge_scMethrix(scm.mem,scm.mem,by="row")) #same regions
+    expect_error(merge_scMethrix(scm,scm,by="col")) #same samples
+    expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="col")) #different regions
     
-    s <- scm.mem
+    expect_error(merge_scMethrix(scm[,1],scm[,2],by="row")) #different samples
+    expect_error(merge_scMethrix(scm,scm,by="row")) #same regions
+    
+    s <- scm
     assays(s) <- assays(s)["score"]
-    expect_warning(merge_scMethrix(s[,1],scm.mem[,2],by="col")) #different assays
+    expect_warning(merge_scMethrix(s[,1],scm[,2],by="col")) #different assays
     
-    expect_equivalent(merge_scMethrix(scm.mem[1],scm.mem[2:nrow(scm.mem)],by="row"),scm.mem)
-    expect_equivalent(merge_scMethrix(scm.mem[,1],scm.mem[,2:ncol(scm.mem)],by="col"),scm.mem)
+    expect_equivalent(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row"),scm)
+    expect_equivalent(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"),scm)
+  }))
 })
 
 test_that("convert_HDF5_scMethrix", {
@@ -75,169 +76,128 @@ test_that("convert_scMethrix", {
 test_that("subset_scMethrix", {
   
   expect_error(subset_scMethrix("not scMethrix"))
-  expect_warning(subset_scMethrix(scm.h5))
   
-  samples <- c("C1","C3")
-  contigs <- c("chr1","chr2")
-  regions <- GRanges(seqnames = c("chr1","chr2","chr3","chr4"), ranges = IRanges(1,100000000)) 
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    
+    expect_warning(subset_scMethrix(scm))
+    
+    samples <- c("C1","C3")
+    contigs <- c("chr1","chr2")
+    regions <- GRanges(seqnames = c("chr1","chr2","chr3","chr4"), ranges = IRanges(1,100000000)) 
+    
+    # Subset by include
+    s <- subset_scMethrix(scm, samples = samples, by="include")
+    expect_equivalent(dim(s),c(100,2))
+    expect_equivalent(samples,colData(s)@rownames)
+   
+    s <- subset_scMethrix(scm, contigs = contigs, by="include")
+    expect_equivalent(dim(s),c(9,4))
+    expect_equivalent(contigs,as.character(seqnames(s)@values))
+    
+    s <- subset_scMethrix(scm, regions = regions, by="include")
+    expect_equivalent(dim(s),c(10,4))
   
-  # Subset H5 by include
-  
-  s <- subset_scMethrix(scm.h5, samples = samples, by="include")
-  expect_equivalent(dim(s),c(100,2))
-  expect_equivalent(samples,colData(s)@rownames)
-
-  s <- subset_scMethrix(scm.h5, contigs = contigs, by="include")
-  expect_equivalent(dim(s),c(9,4))
-  expect_equivalent(contigs,as.character(seqnames(s)@values))
-  
-  s <- subset_scMethrix(scm.h5, regions = regions, by="include")
-  expect_equivalent(dim(s),c(10,4))
-
-  s <- subset_scMethrix(scm.h5, samples = samples, contigs = contigs, regions = regions, by="include")
-  expect_equivalent(dim(s),c(4,2))
-
-  # Subset mem by include
-  
-  s <- subset_scMethrix(scm.mem, samples = samples, by="include")
-  expect_equivalent(dim(s),c(100,2))
-
-  s <- subset_scMethrix(scm.mem, contigs = contigs, by="include")
-  expect_equivalent(dim(s),c(9,4))
-  
-  s <- subset_scMethrix(scm.mem, regions = regions, by="include")
-  expect_equivalent(dim(s),c(10,4))
-  
-  s <- subset_scMethrix(scm.mem, samples = samples, contigs = contigs, regions = regions, by="include")
-  expect_equivalent(dim(s),c(4,2))
-  
-  # Subset H5 by exclude
-  
-  s <- subset_scMethrix(scm.h5, samples = samples, by = "exclude")
-  expect_equivalent(dim(s),c(100,2))
-  expect_equivalent(length(intersect(colData(s)$colData,samples)),0)
-  
-  s <- subset_scMethrix(scm.h5, contigs = contigs, by = "exclude")
-  expect_equivalent(dim(s),c(91,4))
-  #expect_equivalent(contigs,as.character(seqnames(s)@values))
-  
-  s <- subset_scMethrix(scm.h5, regions = regions, by = "exclude")
-  expect_equivalent(dim(s),c(90,4))
-  
-  s <- subset_scMethrix(scm.h5, samples = samples, contigs = contigs, regions = regions, by = "exclude")
-  expect_equivalent(dim(s),c(85,2))
-  
-  # Subset mem by exclude
-  
-  s <- subset_scMethrix(scm.mem, samples = samples, by = "exclude")
-  expect_equivalent(dim(s),c(100,2))
-  
-  s <- subset_scMethrix(scm.mem, contigs = contigs, by = "exclude")
-  expect_equivalent(dim(s),c(91,4))
-  
-  s <- subset_scMethrix(scm.mem, regions = regions, by = "exclude")
-  expect_equivalent(dim(s),c(90,4))
-  
-  s <- subset_scMethrix(scm.mem, samples = samples, contigs = contigs, regions = regions, by = "exclude")
-  expect_equivalent(dim(s),c(85,2))
-  
+    s <- subset_scMethrix(scm, samples = samples, contigs = contigs, regions = regions, by="include")
+    expect_equivalent(dim(s),c(4,2))
+    
+    # Subset by exclude
+    s <- subset_scMethrix(scm, samples = samples, by = "exclude")
+    expect_equivalent(dim(s),c(100,2))
+    expect_equivalent(length(intersect(colData(s)$colData,samples)),0)
+    
+    s <- subset_scMethrix(scm, contigs = contigs, by = "exclude")
+    expect_equivalent(dim(s),c(91,4))
+    #expect_equivalent(contigs,as.character(seqnames(s)@values))
+    
+    s <- subset_scMethrix(scm, regions = regions, by = "exclude")
+    expect_equivalent(dim(s),c(90,4))
+    
+    s <- subset_scMethrix(scm, samples = samples, contigs = contigs, regions = regions, by = "exclude")
+    expect_equivalent(dim(s),c(85,2))
+  }))
 })
 
 test_that("get_matrix", {
-
-  expect_error(get_matrix("not scMethrix"))
-  expect_warning(get_matrix(scm.h5,add_loci=FALSE, in_granges = TRUE))
-
-  m <- get_matrix(scm.h5)
-  expect_equivalent(dim(m),c(100,4))  
-  expect_equivalent(class(m)[1],"HDF5Matrix")
+ 
+    expect_error(get_matrix("not scMethrix"))
   
-  m <- get_matrix(m=scm.h5,add_loci=TRUE)
-  expect_equivalent(dim(m),c(100,7))  
-  expect_equivalent(class(m)[1],"data.table")
-  
-  m <- get_matrix(scm.h5,add_loci=TRUE, in_granges = TRUE)
- # expect_equivalent(seqnames(m)@lengths,c(10,8))
-  expect_equivalent(dim(mcols(m)),c(100,4))
-  expect_equivalent(class(m)[1],"GRanges")
-
-  m <- get_matrix(scm.mem)
-  expect_equivalent(dim(m),c(100,4))  
-  expect_equivalent(class(m)[1],"matrix")
-  
-  m <- get_matrix(scm.mem,add_loci=TRUE)
-  expect_equivalent(dim(m),c(100,7))  
-  expect_equivalent(class(m)[1],"data.table")
-  
-  m <- get_matrix(scm.mem,add_loci=TRUE, in_granges = TRUE)
-  #expect_equivalent(seqnames(m)@lengths,c(10,8))
-  expect_equivalent(dim(mcols(m)),c(100,4))
-  expect_equivalent(class(m)[1],"GRanges")
-  
+    s <- get_matrix(scm.h5)
+    expect_equivalent(dim(s),c(100,4))  
+    expect_equivalent(class(s)[1],"HDF5Matrix")
+    
+    s <- get_matrix(scm.mem)
+    expect_equivalent(dim(s),c(100,4))  
+    expect_equivalent(class(s)[1],"matrix")
+    
+    invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+      expect_warning(get_matrix(scm,add_loci=FALSE, in_granges = TRUE))
+      
+      s <- get_matrix(m=scm,add_loci=TRUE)
+      expect_equivalent(dim(s),c(100,7))  
+      expect_equivalent(class(s)[1],"data.table")
+      
+      s <- get_matrix(scm,add_loci=TRUE, in_granges = TRUE)
+     # expect_equivalent(seqnames(m)@lengths,c(10,8))
+      expect_equivalent(dim(mcols(s)),c(100,4))
+      expect_equivalent(class(s)[1],"GRanges")
+  }))
 })
 
 
 test_that("remove_uncovered", {
   
   expect_error(get_matrix("not scMethrix"))
-
-  h5 <- subset_scMethrix(scm.h5,samples=c("C1","C2"),by = "include")
-  expect_equivalent(dim(h5),c(100,2))
-  expect_equivalent(dim(remove_uncovered(h5)),c(81,2))
-
-  mem <- subset_scMethrix(scm.mem,samples=c("C1","C2"),by = "include")
-  expect_equivalent(dim(h5),c(100,2))
-  expect_equivalent(dim(remove_uncovered(mem)),c(81,2))
   
-  expect_equivalent(h5,mem)
-  
-  rm(h5,mem)
-  
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    s <- subset_scMethrix(scm,samples=c("C1","C2"),by = "include")
+    expect_equivalent(dim(s),c(100,2))
+    expect_equivalent(dim(remove_uncovered(s)),c(81,2))
+  }))
 })
 
 test_that("get_stats", {
   
   expect_error(get_matrix("not scMethrix"))
-
   
-  chr <- length(seqlengths(rowRanges(scm.h5)))
-  samples <- nrow(colData(scm.h5))
-  
-  expect_equivalent(dim(get_stats(scm.h5)),c(chr*samples,5))
-  expect_equivalent(dim(get_stats(scm.h5,per_chr = FALSE)),c(samples,4))
-  
-  expect_equivalent(dim(get_stats(scm.mem)),c(chr*samples,5))
-  expect_equivalent(dim(get_stats(scm.mem,per_chr = FALSE)),c(samples,4))
-  
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    chr <- length(seqlengths(rowRanges(scm)))
+    samples <- nrow(colData(scm))
+    expect_equivalent(dim(get_stats(scm)),c(chr*samples,5))
+    expect_equivalent(dim(get_stats(scm,per_chr = FALSE)),c(samples,4))
+  }))
 })
 
 test_that("get_region_summary", {
   
   expect_error(get_region_summary("not scMethrix"))
-  expect_error(get_region_summary(scm.mem,group="not a group"))
-  expect_error(get_region_summary(scm.mem,type="not a type"))
-  expect_error(get_region_summary(scm.mem,how="not a how"))
   
-  region <- GRanges(seqnames = c("chr1"), ranges = IRanges(1,10)) 
-  expect_error(get_region_summary(scm.mem,region=region))
-  
-  region <- GRanges(seqnames = c("chr1","chr2","chr3","chr4"), ranges = IRanges(1,100000000)) 
-  expect_equivalent(dim(get_region_summary(scm.mem,region=region)),c(4,9))
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    expect_error(get_region_summary(scm,group="not a group"))
+    expect_error(get_region_summary(scm,type="not a type"))
+    expect_error(get_region_summary(scm,how="not a how"))
+    
+    region <- GRanges(seqnames = c("chr1"), ranges = IRanges(1,10)) 
+    expect_error(get_region_summary(scm,region=region))
+    
+    region <- GRanges(seqnames = c("chr1","chr2","chr3","chr4"), ranges = IRanges(1,100000000)) 
+    expect_equivalent(dim(get_region_summary(scm,region=region)),c(4,9))
   #expect_warning(get_region_summary(scm.mem,n_chunks=1000,region=region))
-  
+  }))
 })
 
 test_that("mask_scMethrix", {
   
   expect_error(mask_scMethrix("not scMethrix"))
-  expect_error(mask_scMethrix(scm.mem))
-  expect_error(mask_scMethrix(scm.mem,n_threads=2))
-  expect_error(mask_scMethrix(scm.mem,high_quantile=1,type="count"))
-  expect_error(mask_scMethrix(scm.mem,high_quantile=5,type="coverage"))
-
-  m <- mask_scMethrix(scm.mem,low_count=2)
   
-  expect_equivalent(dim(m),c(100,4))
-  expect_equivalent(dim(remove_uncovered(m)),c(75,4))
-  
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    expect_error(mask_scMethrix(scm))
+    expect_error(mask_scMethrix(scm,n_threads=2))
+    expect_error(mask_scMethrix(scm,high_quantile=1,type="count"))
+    expect_error(mask_scMethrix(scm,high_quantile=5,type="coverage"))
+    
+    m <- mask_scMethrix(scm,low_count=2)
+    
+    expect_equivalent(dim(m),c(100,4))
+    expect_equivalent(dim(remove_uncovered(m)),c(75,4))
+  }))
 })
