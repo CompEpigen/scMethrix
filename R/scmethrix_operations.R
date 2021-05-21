@@ -15,7 +15,7 @@ transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  if (typeof(binarize) != "closure") {
+  if (typeof(trans) != "closure") {
     stop("A valid transform function must be specified.", call. = FALSE)
   }
   
@@ -23,7 +23,7 @@ transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL) {
     stop("Assay does not exist in the object", call. = FALSE)
   }
   
-  if (!is(name,"character") || name %in% names(assays(m))) {
+  if (!is(name,"character") | name %in% names(assays(m))) {
     stop("Invalid name for new assay. It must be a valid string and cannot 
          already exist in the object", call. = FALSE)
   }
@@ -820,7 +820,7 @@ get_matrix <- function(m = NULL, add_loci = FALSE, in_granges=FALSE, type = "sco
   
   type = match.arg(arg = type, choices = names(assays(m)))
   
-  mtx <- SummarizedExperiment::assay(x = m, i = which(type %in% names(assays(m))))
+  mtx <- SummarizedExperiment::assay(x = m, i = which(type == names(assays(m))))
   
   if (add_loci) {
     

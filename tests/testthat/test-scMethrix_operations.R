@@ -1,21 +1,45 @@
 
+test_that("transform_assay", {
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
+    expect_error(transform_assay(m="not scMethrix"))
+    expect_error(transform_assay(scm,trans="not closure"))
+    expect_error(transform_assay(scm,trans=function(x) x+1,assay="not an assay"))
+    expect_error(transform_assay(scm,trans=function(x) x+1,assay="score",name="score"))
+    plus1 <- transform_assay(scm,trans=function(x) x+1,assay="score",name="plus1")
+    expect_false(isTRUE(all.equal(assays(scm), assays(plus1))))
+    expect_equivalent(get_matrix(scm)+1,get_matrix(plus1,type="plus1"))
+    rm(plus1)
+  }))
+})
+
+test_that("remove_assay", {
+  
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    expect_error(remove_assay(m="not scMethrix"))
+    expect_error(remove_assay(scm, assay="not an assay"))
+    expect_error(remove_assay(scm, assay="score"))
+    plus1 <- transform_assay(scm,trans=function(x) x+1,assay="score",name="plus1")
+    expect_false(isTRUE(all.equal(assays(scm), assays(plus1))))
+    plus1 <- remove_assay(plus1, assay="plus1")
+    expect_true(all.equal(assays(scm), assays(plus1)))
+  }))
+})
+
 test_that("merge_scMethrix", {
-
-  expect_error(merge_scMethrix(m1=scm.mem,m2="not scMethrix"))
-
-  expect_error(merge_scMethrix(scm.mem,scm.mem,by="col")) #same samples
-  expect_error(merge_scMethrix(scm.mem[1,1],scm.mem[2,2],by="col")) #different regions
+    expect_error(merge_scMethrix(m1=scm.mem,m2="not scMethrix"))
   
-  expect_error(merge_scMethrix(scm.mem[,1],scm.mem[,2],by="row")) #different samples
-  expect_error(merge_scMethrix(scm.mem,scm.mem,by="row")) #same regions
-  
-  s <- scm.mem
-  assays(s) <- assays(s)["score"]
-  expect_warning(merge_scMethrix(s[,1],scm.mem[,2],by="col")) #different assays
-  
-  expect_equivalent(merge_scMethrix(scm.mem[1],scm.mem[2:nrow(scm.mem)],by="row"),scm.mem)
-  expect_equivalent(merge_scMethrix(scm.mem[,1],scm.mem[,2:ncol(scm.mem)],by="col"),scm.mem)
-  
+    expect_error(merge_scMethrix(scm.mem,scm.mem,by="col")) #same samples
+    expect_error(merge_scMethrix(scm.mem[1,1],scm.mem[2,2],by="col")) #different regions
+    
+    expect_error(merge_scMethrix(scm.mem[,1],scm.mem[,2],by="row")) #different samples
+    expect_error(merge_scMethrix(scm.mem,scm.mem,by="row")) #same regions
+    
+    s <- scm.mem
+    assays(s) <- assays(s)["score"]
+    expect_warning(merge_scMethrix(s[,1],scm.mem[,2],by="col")) #different assays
+    
+    expect_equivalent(merge_scMethrix(scm.mem[1],scm.mem[2:nrow(scm.mem)],by="row"),scm.mem)
+    expect_equivalent(merge_scMethrix(scm.mem[,1],scm.mem[,2:ncol(scm.mem)],by="col"),scm.mem)
 })
 
 test_that("convert_HDF5_scMethrix", {
