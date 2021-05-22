@@ -7,23 +7,35 @@ test_that("get_sample_name", {
   expect_equal("file.name",get_sample_name("c:/dir/dir.dir/file.name.extension"))
 })
 
+test_that("bin_granges",{
+  regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
+  expect_equivalent(length(bin_granges(regions,bin_size=10)),10)
+})
+
+
+
 test_that("split_granges",{
+  regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
+  regions <- bin_granges(regions,bin_size=10)
   
-  expect_error(split_granges("not scMethrix"))
-  expect_error(split_granges(rowRanges(scm.h5)))
-  expect_error(split_granges(rowRanges(scm.h5),factor=2,num=3))
+  expect_error(split_granges("not granges"))
+  expect_error(split_granges(regions))
+  expect_error(split_granges(regions,factor=2,num=3))
   
-  factor = 2
-  percent = 50 
-  num = 2
+  factor = 10
+  percent = 10  # From 100 regions, all would be split to 10 chunks
+  num = 10
   
-  expect_true(all(rowRanges(scm.h5) == unlist(split_granges(rowRanges(scm.h5),factor=factor))))
-  expect_true(all(rowRanges(scm.h5) == unlist(split_granges(rowRanges(scm.h5),percent=percent))))
-  expect_true(all(rowRanges(scm.h5) == unlist(split_granges(rowRanges(scm.h5),num=num))))
+  expect_equivalent(length(split_granges(regions,factor=factor)),10)
+  expect_equivalent(length(split_granges(regions,percent=percent)),10)
+  expect_equivalent(length(split_granges(regions,num=num)),10)
+  
+  expect_true(all(regions == unlist(split_granges(regions,factor=factor))))
+  expect_true(all(regions == unlist(split_granges(regions,percent=percent))))
+  expect_true(all(regions == unlist(split_granges(regions,num=num))))
 })
 
 test_that("start,split,stop_time",{
-  
   expect_error(split_time())
   expect_error(stop_time())
   

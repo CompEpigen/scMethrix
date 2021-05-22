@@ -84,6 +84,11 @@ split_vector = function(vec, num = 1, by = "chunks") {
 #' @return \code{\link{GRangesList}} containing all the chunked \code{\link{GRanges}}
 #' @import GenomicRanges
 #' @examples
+#' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
+#' regions <- bin_granges(regions,bin_size=10)
+#' split_granges(regions, num=10)
+#' split_granges(regions, factor=10)
+#' split_granges(regions, percent=10)
 #' @export
 split_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, percent = NULL
   
@@ -110,6 +115,41 @@ split_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, perce
  # grl[[i+1]] <- gr[(last(splits)+num):length(gr)]  
   
   return (GenomicRanges::GRangesList(grl))
+}
+
+#' Bins a \code{\link{GRanges}} object into bins of length \code{bin_size}
+#' @details Bins \code{\link{GRanges}} objects into a specified bin size by chromosome
+#' @param gr The \code{\link{GRanges}} object
+#' @param bin_size The size of bin to use
+#' @return \code{\link{GRangesList}} containing all the binned \code{\link{GRanges}}
+#' @import GenomicRanges
+#' @examples
+#' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,10000))
+#' bin_granges(regions,bin_size=1000) 
+#' @export
+bin_granges <- function(gr, bin_size = 100000, enforce_size = FALSE) {
+  
+  ends <- len <- seqnames(gr)@lengths
+  for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
+  starts <- head(c(1, ends + 1), -1)
+  
+  rngs <- lapply(1:length(starts), function (i) {
+    
+    #Get span of each chr     
+    rng <- c(gr[starts[i]],gr[ends[i]])
+    rng <- c(rng,gaps(rng,start=gr[starts[i]]@ranges@start))
+    rng <- reduce(rng)
+    
+    #Create bins
+    rng <- tile(rng, width = bin_size)
+    unlist(rng)
+  })
+  
+  rngs <- unlist(as(rngs, "GRangesList"))
+  return(rngs)
+  
+  #TODO: implement enforce_size to make the minimum IRange for each chr be the length(bin_size)
+  
 }
 
 #--- cast_granges -------------------------------------------------------------------------------------------

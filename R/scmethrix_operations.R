@@ -729,8 +729,6 @@ get_stats <- function(m = NULL, per_chr = TRUE) {
   
   message("Getting descriptive statistics...",start_time())
   
-  browser()
-  
   ends <- len <- seqnames(m)@lengths
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
   starts <- head(c(1, ends + 1), -1)

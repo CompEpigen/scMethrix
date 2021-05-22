@@ -63,7 +63,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     
-    seqlengths(ref_cpgs) <- setNames(width(range(rowRanges(m))), GenomeInfoDb::seqlevels(rowRanges(m)))
+    #seqlengths(ref_cpgs) <- setNames(width(range(rowRanges(m))), GenomeInfoDb::seqlevels(rowRanges(m)))
     
     colData <- data.frame()[1:(length(files)), ]
     row.names(colData) <- unlist(lapply(files,get_sample_name))
