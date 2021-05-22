@@ -7,6 +7,11 @@ test_that("get_sample_name", {
   expect_equal("file.name",get_sample_name("c:/dir/dir.dir/file.name.extension"))
 })
 
+test_that("binarize", {
+  expect_equal(binarize(75),1)
+  expect_equal(binarize(25),0)
+})
+
 test_that("bin_granges",{
   regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
   expect_equivalent(length(bin_granges(regions,bin_size=10)),10) 

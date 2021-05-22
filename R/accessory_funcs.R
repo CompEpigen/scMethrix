@@ -27,9 +27,21 @@ has_cov = function(m) {
 #' @import tools
 #' @examples
 #' #get_sample_name("C:/dir/dir/filename.ext")
- #' @export
+#' @export
 get_sample_name = function(s) {
   return(tools::file_path_sans_ext(basename(s)))
+}
+
+
+#' Binarize an input
+#' @param x A value to binarize
+#' @param val The threshold for binarizing
+#' @return 1 or 0, if above of below the threshold
+#' @examples
+#' binarize(0.7, val=0.5)
+#' @export
+binarize = function(x,val = 50) {
+  ifelse(x > val,1,0)
 }
 
 #' Splits a vector into subvectors
