@@ -19,11 +19,11 @@ transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL) {
     stop("A valid transform function must be specified.", call. = FALSE)
   }
   
-  if (!(assay %in% names(assays(m)))) {
+  if (!(assay %in% assayNames(m))) {
     stop("Assay does not exist in the object", call. = FALSE)
   }
   
-  if (!is(name,"character") | name %in% names(assays(m))) {
+  if (!is(name,"character") | name %in% assayNames(m)) {
     stop("Invalid name for new assay. It must be a valid string and cannot 
          already exist in the object", call. = FALSE)
   }
@@ -47,7 +47,7 @@ remove_assay <- function(m,assay) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  if (!(assay %in% names(assays(m)))) {
+  if (!(assay %in% assayNames(m))) {
     stop("Assay is not in object.", call. = FALSE)
   }
   
@@ -55,7 +55,7 @@ remove_assay <- function(m,assay) {
     stop("Score assay cannot be removed.", call. = FALSE)
   }
   
-  assays(m) <- assays(m)[-which(names(assays(m)) == assay)]
+  assays(m) <- assays(m)[-which(assayNames(m) == assay)]
   
   return(m)
 }
@@ -77,10 +77,10 @@ merge_scMethrix <- function(m1 = NULL, m2 = NULL, by = c("row", "col")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  if (!identical(sort(names(assays(m1))), sort(names(assays(m2))))) {
+  if (!identical(sort(assayNames(m1)), sort(assayNames(m2)))) {
     warning("Assay list not identical. All non-identical assays will be dropped from merged object.")
-    a1 <- intersect(names(assays(m1)),names(assays(m2)))
-    a2 <- intersect(names(assays(m2)),names(assays(m1)))
+    a1 <- intersect(assayNames(m1),assayNames(m2))
+    a2 <- intersect(assayNames(m2),assayNames(m1))
     assays(m1) <- assays(m1)[a1]
     assays(m2) <- assays(m2)[a2]
   } 
@@ -226,7 +226,7 @@ get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads =
   
   if(verbose) message("Generating region summary...",start_time())
   
-  type = match.arg(arg = type, choices = names(assays(m)))
+  type = match.arg(arg = type, choices = assayNames(m))
   how = match.arg(arg = how, choices = c('mean', 'median', 'max', 'min', 'sum', 'sd'))
   yid  <- NULL
   
@@ -729,6 +729,8 @@ get_stats <- function(m = NULL, per_chr = TRUE) {
   
   message("Getting descriptive statistics...",start_time())
   
+  browser()
+  
   ends <- len <- seqnames(m)@lengths
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
   starts <- head(c(1, ends + 1), -1)
@@ -819,9 +821,9 @@ get_matrix <- function(m = NULL, add_loci = FALSE, in_granges=FALSE, type = "sco
             "the output will be a data.frame object. ")
   }
   
-  type = match.arg(arg = type, choices = names(assays(m)))
+  type = match.arg(arg = type, choices = assayNames(m))
   
-  mtx <- SummarizedExperiment::assay(x = m, i = which(type == names(assays(m))))
+  mtx <- SummarizedExperiment::assay(x = m, i = which(type == assayNames(m)))
   
   if (add_loci) {
     
