@@ -8,7 +8,6 @@ files <- c(system.file("extdata", "C1.bedgraph", package="scMethrix"),
 files <- c("D:/Git/scMethrix/inst/extdata/C1.bedgraph","D:/Git/scMethrix/inst/extdata/C2.bedgraph",
            "D:/Git/scMethrix/inst/extdata/C3.bedgraph","D:/Git/scMethrix/inst/extdata/C4.bedgraph")
 
-
 message(files)
 #
 # df1 <- data.table(chr=rep("chr1",5),start=(1:5)*2,end=(1:5)*2+1,value=0,cov=1)
