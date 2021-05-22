@@ -1,8 +1,8 @@
 #' Transforms an assay in an \code{\link{scMethrix}} object.
 #' @detail Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
 #' @param m A \code{\link{scMethrix}} object
-#' @param assay A \code{\link{scMethrix}} object
-#' @param name Merge by columns or rows
+#' @param assay String name of an existing assay
+#' @param name String name of transformed assay
 #' @param trans The transformation function
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -10,7 +10,7 @@
 #' #merge_scMethrix(scMethrix_data$mem,scMethrix_data$mem)
 #' @export
 transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL) {
-  
+
   if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
@@ -23,12 +23,14 @@ transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL) {
     stop("Assay does not exist in the object", call. = FALSE)
   }
   
-  if (!is(name,"character") | name %in% assayNames(m)) {
-    stop("Invalid name for new assay. It must be a valid string and cannot 
-         already exist in the object", call. = FALSE)
+  if (name %in% assayNames(m)) {
+    warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   }
   
-  assays(m)[[name]] <- trans(get_matrix(m,type=assay))
+  s <- apply(get_matrix(m,type=assay),MARGIN=c(1, 2),FUN=trans)
+  message(dim(s))
+  
+  assays(m)[[name]] <- s
   
   return(m)
 }
