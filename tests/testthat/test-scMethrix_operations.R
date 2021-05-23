@@ -1,3 +1,10 @@
+test_that("get_metadata_stats", {
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
+    expect_error(get_metadata_stats(m="not scMethrix"))
+    m <- get_metadata_stats(scm)
+    expect_equivalent(dim(mcols(m)),c(100,4))
+  }))
+})
 
 test_that("transform_assay", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) { 

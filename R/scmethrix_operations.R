@@ -1,3 +1,27 @@
+#' Add descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
+#' @param m A \code{\link{scMethrix}} object
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' get_metadata_stats(scMethrix_data)
+#' @export
+get_metadata_stats <- function(m) {
+  
+  if (!is(m, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  stats <- data.table::data.table(
+      mean_meth = matrixStats::rowMeans2(get_matrix(m), na.rm = TRUE),
+      median_meth = matrixStats::rowMedians(get_matrix(m), na.rm = TRUE),
+      sd_meth = matrixStats::rowSds(get_matrix(m), na.rm = TRUE)
+  )
+  
+  if(has_cov(m)) stats[,"coverage" := matrixStats::rowSums2(get_matrix(m,type="coverage"), na.rm = TRUE)] 
+  mcols(m) <- stats
+  return(m)
+}
+
 #' Transforms an assay in an \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
 #' @param m A \code{\link{scMethrix}} object
@@ -751,7 +775,6 @@ subset_scMethrix <- function(m = NULL, regions = NULL, contigs = NULL, samples =
 #' get_stats(scMethrix_data,per_chr = FALSE)
 #' @return data.table of summary stats
 #' @export
-
 get_stats <- function(m = NULL, per_chr = TRUE) {
 
   if (!is(m, "scMethrix")) {
