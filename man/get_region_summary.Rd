@@ -49,7 +49,7 @@ Takes \code{\link{scMethrix}} object and summarizes regions
 }
 \examples{
 data('scMethrix_data')
-get_region_summary(m = scMethrix_data$mem,
+get_region_summary(m = scMethrix_data,
 regions = data.table(chr = c('chr1','chr2'), start = c(1,5), end =  c(5,10)),
 type = 'score', how = 'mean')
 }

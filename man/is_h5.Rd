@@ -17,5 +17,5 @@ Checks if \code{\link{scMethrix}} object is an HDF5 object
 }
 \examples{
 data('scMethrix_data')
-is_h5(scMethrix_data$mem)
+is_h5(scMethrix_data)
 }

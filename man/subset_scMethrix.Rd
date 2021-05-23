@@ -43,14 +43,14 @@ contigs <- c("chr1","chr3")
 regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
 samples <- c("df1","df3")
 #Subset to only samples bed1 and bed3, and chromosome 1
-subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "include")
+subset_scMethrix(scMethrix_data, samples = samples, contigs = contigs, by = "include")
 
 #Subset to only region "chr1:1-5"
-subset_scMethrix(scMethrix_data$mem, regions = regions, by = "include")
+subset_scMethrix(scMethrix_data, regions = regions, by = "include")
 
 #Subset to exclude samples bed1 and bed3, and chromosome 1
-subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "exclude")
+subset_scMethrix(scMethrix_data, samples = samples, contigs = contigs, by = "exclude")
 
 #Subset to exclude region "chr1:1-5"
-subset_scMethrix(scMethrix_data$mem, regions = regions, by = "exclude")
+subset_scMethrix(scMethrix_data, regions = regions, by = "exclude")
 }

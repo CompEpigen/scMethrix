@@ -21,5 +21,5 @@ Takes \code{\link{scMethrix}} object and removes loci that are uncovered across 
 \examples{
 data('scMethrix_data')
 # Remove uncovered CpGs after subsetting to a single sample
-remove_uncovered(subset_scMethrix(scMethrix_data$mem, samples = "df1", by="include"))
+remove_uncovered(subset_scMethrix(scMethrix_data, samples = "df1", by="include"))
 }

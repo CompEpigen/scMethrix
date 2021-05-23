@@ -3,11 +3,13 @@ test_that("transform_assay", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
     expect_error(transform_assay(m="not scMethrix"))
     expect_error(transform_assay(scm,trans="not closure"))
-    expect_error(transform_assay(scm,trans=function(x) x+1,assay="not an assay"))
-    expect_error(transform_assay(scm,trans=function(x) x+1,assay="score",name="score"))
+    expect_warning(transform_assay(scm,trans=function(x) x+1,assay="score",name="score"))
     plus1 <- transform_assay(scm,trans=function(x) x+1,assay="score",name="plus1")
     expect_false(isTRUE(all.equal(assays(scm), assays(plus1))))
     expect_equivalent(get_matrix(scm)+1,get_matrix(plus1,type="plus1"))
+    if (is_h5(scm)) {
+      expect_equivalent(class(get_matrix(plus1,type="plus1"))[[1]],"HDF5Matrix")
+    }
     rm(plus1)
   }))
 })
@@ -31,8 +33,8 @@ test_that("merge_scMethrix", {
     expect_error(merge_scMethrix(scm,scm,by="col")) #same samples
     expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="col")) #different regions
     
-    expect_error(merge_scMethrix(scm[,1],scm[,2],by="row")) #different samples
     expect_error(merge_scMethrix(scm,scm,by="row")) #same regions
+    expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="row")) #different samples
     
     s <- scm
     assays(s) <- assays(s)["score"]

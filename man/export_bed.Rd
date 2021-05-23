@@ -21,5 +21,5 @@ Exports all samples in an \code{\link{scMethrix}} objects into individual bedgra
 }
 \examples{
 data('scMethrix_data')
-# export_bed(m=scMethrix_data$mem,path=tempdir())
+#export_bed(m=scMethrix_data,path=paste0(tempdir(),"/export"))
 }

@@ -25,5 +25,5 @@ with HDF5 backend. Might take long time!
 }
 \examples{
 data('scMethrix_data')
-convert_scMethrix(scMethrix_data$mem, h5_dir=paste0(tempdir(),"/h5"))
+convert_scMethrix(scMethrix_data, h5_dir=paste0(tempdir(),"/h5"))
 }

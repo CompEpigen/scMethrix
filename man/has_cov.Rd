@@ -17,5 +17,5 @@ Checks if \code{\link{scMethrix}} object has a coverage matrix
 }
 \examples{
 data('scMethrix_data')
-has_cov(scMethrix_data$mem)
+has_cov(scMethrix_data)
 }

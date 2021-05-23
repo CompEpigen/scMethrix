@@ -6,7 +6,7 @@
 #'
 #' @usage data('scMethrix_data')
 #'
-#' @format A list containing two objects of class \code{'scMethrix'}, one in mem and one in H5 format.
+#' @format A object of class \code{'scMethrix'}, in-memory format.
 #'
 #' @keywords datasets
 #' 

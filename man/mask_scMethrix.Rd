@@ -34,3 +34,7 @@ Masks too high or too low counts
 Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
 by putting NA for coverage and beta value. The sites will remain in the object.
 }
+\examples{
+data('scMethrix_data')
+mask_scMethrix(scMethrix_data,low_count=4,type="coverage")
+}

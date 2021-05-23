@@ -4,16 +4,18 @@
 \alias{transform_assay}
 \title{Transforms an assay in an \code{\link{scMethrix}} object.}
 \usage{
-transform_assay(m, assay = NULL, name = NULL, trans = NULL)
+transform_assay(m, assay = NULL, name = NULL, trans = NULL, h5_temp = NULL)
 }
 \arguments{
 \item{m}{A \code{\link{scMethrix}} object}
 
-\item{assay}{A \code{\link{scMethrix}} object}
+\item{assay}{String name of an existing assay}
 
-\item{name}{Merge by columns or rows}
+\item{name}{String name of transformed assay}
 
 \item{trans}{The transformation function}
+
+\item{h5_temp}{temporary directory to store hdf5}
 }
 \value{
 An \code{\link{scMethrix}} object
@@ -21,7 +23,10 @@ An \code{\link{scMethrix}} object
 \description{
 Transforms an assay in an \code{\link{scMethrix}} object.
 }
+\details{
+Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
+}
 \examples{
 data('scMethrix_data')
-#merge_scMethrix(scMethrix_data$mem,scMethrix_data$mem)
+transform_assay(scMethrix_data,assay="score",name="plus1",trans=function(x){x+1})
 }

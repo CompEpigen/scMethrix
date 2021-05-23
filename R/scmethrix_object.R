@@ -5,7 +5,7 @@
 #' @slot elementMetadata A DataFrame describing rows in correspoding assay matrices.
 #' @slot colData genome: the name of the BSgenome that was used to extract CpGs, isHDF5: is it stored in HDF5 Array format
 #' @slot metadata a list of meta data associated with the assays
-#' @slot rowRanges A \code{\link{GRanges) object of the genomic coordinates of CpG sites
+#' @slot rowRanges A \code{\link{GRanges)} object of the genomic coordinates of CpG sites
 #' @slot NAMES NULL
 #' @slot int_colData NULL 
 #' @slot int_metadata NULL

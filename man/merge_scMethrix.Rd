@@ -19,6 +19,10 @@ A merged \code{\link{scMethrix}} object
 \description{
 Merges two \code{\link{scMethrix}} objects.
 }
+\details{
+Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot
+data is not supported at this time. Non-common assays between objects will be dropped
+}
 \examples{
 data('scMethrix_data')
 #merge_scMethrix(scMethrix_data$mem,scMethrix_data$mem)

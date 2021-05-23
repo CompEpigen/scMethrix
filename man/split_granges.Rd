@@ -24,3 +24,10 @@ Chunks a \code{\link{GRanges}} object by \code{factor}, \code{percent} or \code{
 \details{
 Divides \code{\link{GRanges}} into a list based on a chunking parameter
 }
+\examples{
+regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
+regions <- bin_granges(regions,bin_size=10)
+split_granges(regions, num=10)
+split_granges(regions, factor=10)
+split_granges(regions, percent=10)
+}

@@ -24,8 +24,8 @@ Calculate descriptive statistics
 data('scMethrix_data')
 
 #Get stats for each sample and chromosome
-get_stats(scMethrix_data$mem)
+get_stats(scMethrix_data)
 
 #Get stats for each sample
-get_stats(scMethrix_data$mem,per_chr = FALSE)
+get_stats(scMethrix_data,per_chr = FALSE)
 }

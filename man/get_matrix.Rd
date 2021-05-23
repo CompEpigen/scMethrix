@@ -28,11 +28,11 @@ Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
 data('scMethrix_data')
 
 # Get methylation data
-get_matrix(scMethrix_data$mem)
+get_matrix(scMethrix_data)
 
 # Get methylation data with loci
-get_matrix(scMethrix_data$mem, add_loci=TRUE)
+get_matrix(scMethrix_data, add_loci=TRUE)
 
 # Get methylation data with loci inside a Granges object 
-get_matrix(scMethrix_data$mem, add_loci=TRUE, in_granges=TRUE)
+get_matrix(scMethrix_data, add_loci=TRUE, in_granges=TRUE)
 }

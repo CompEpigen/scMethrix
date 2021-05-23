@@ -1,15 +1,16 @@
 #' Transforms an assay in an \code{\link{scMethrix}} object.
-#' @detail Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
+#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
 #' @param m A \code{\link{scMethrix}} object
 #' @param assay String name of an existing assay
 #' @param name String name of transformed assay
 #' @param trans The transformation function
+#' @param h5_temp temporary directory to store hdf5
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
-#' #merge_scMethrix(scMethrix_data$mem,scMethrix_data$mem)
+#' transform_assay(scMethrix_data,assay="score",name="plus1",trans=function(x){x+1})
 #' @export
-transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL) {
+transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL, h5_temp = NULL) {
 
   if (!is(m, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -19,16 +20,40 @@ transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL) {
     stop("A valid transform function must be specified.", call. = FALSE)
   }
   
-  if (!(assay %in% assayNames(m))) {
+  if (!(assay %in% SummarizedExperiment::assayNames(m))) {
     stop("Assay does not exist in the object", call. = FALSE)
   }
   
-  if (name %in% assayNames(m)) {
+  if (name %in% SummarizedExperiment::assayNames(m)) {
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   }
-  
-  s <- apply(get_matrix(m,type=assay),MARGIN=c(1, 2),FUN=trans)
-  message(dim(s))
+
+  if (is_h5(m)) {
+    
+    if (is.null(h5_temp)) {h5_temp <- tempdir()}
+    
+    grid <- DelayedArray::RegularArrayGrid(refdim = dim(m),
+                                           spacings = c(dim(m)[1], 1L)) 
+    
+    trans_sink <- HDF5Array::HDF5RealizationSink(dim = dim(m),
+                                             dimnames = list(NULL,row.names(colData(m))), #type = "double",
+                                             filepath = tempfile(pattern="trans_sink_",tmpdir=h5_temp),
+                                             name = "trans", level = 6)
+    
+    blocs <- DelayedArray::blockApply(get_matrix(m,type=assay), grid = grid, trans)
+    
+    for(i in 1:length(blocs)) {
+      
+      DelayedArray::write_block(block = as.matrix(blocs[[i]]), viewport = grid[[i]], sink = trans_sink)
+      
+    }
+    
+    rm(blocs)
+    s <- as(trans_sink, "HDF5Array")
+    
+  } else {
+    s <- apply(get_matrix(m,type=assay),1:2,trans)
+  }
   
   assays(m)[[name]] <- s
   
@@ -41,7 +66,7 @@ transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL) {
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
-#' #merge_scMethrix(scMethrix_data$mem,scMethrix_data$mem)
+#' remove_assay(scMethrix_data,assay="coverage")
 #' @export
 remove_assay <- function(m,assay) {
   
@@ -49,7 +74,7 @@ remove_assay <- function(m,assay) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  if (!(assay %in% assayNames(m))) {
+  if (!(assay %in% SummarizedExperiment::assayNames(m))) {
     stop("Assay is not in object.", call. = FALSE)
   }
   
@@ -57,13 +82,13 @@ remove_assay <- function(m,assay) {
     stop("Score assay cannot be removed.", call. = FALSE)
   }
   
-  assays(m) <- assays(m)[-which(assayNames(m) == assay)]
+  assays(m) <- assays(m)[-which(SummarizedExperiment::assayNames(m) == assay)]
   
   return(m)
 }
 
 #' Merges two \code{\link{scMethrix}} objects.
-#' @detail Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot
+#' @details Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot
 #' data is not supported at this time. Non-common assays between objects will be dropped
 #' @param m1 A \code{\link{scMethrix}} object
 #' @param m2 A \code{\link{scMethrix}} object
@@ -79,10 +104,13 @@ merge_scMethrix <- function(m1 = NULL, m2 = NULL, by = c("row", "col")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  if (!identical(sort(assayNames(m1)), sort(assayNames(m2)))) {
+  names1 = SummarizedExperiment::assayNames(m1)
+  names2 = SummarizedExperiment::assayNames(m2)
+  
+  if (!all((sort(names1)==sort(names2)))) {
     warning("Assay list not identical. All non-identical assays will be dropped from merged object.")
-    a1 <- intersect(assayNames(m1),assayNames(m2))
-    a2 <- intersect(assayNames(m2),assayNames(m1))
+    a1 <- intersect(names1, names2)
+    a2 <- intersect(names2, names1)
     assays(m1) <- assays(m1)[a1]
     assays(m2) <- assays(m2)[a2]
   } 
@@ -90,7 +118,7 @@ merge_scMethrix <- function(m1 = NULL, m2 = NULL, by = c("row", "col")) {
   by <- match.arg(arg = by, choices = c("row", "col"), several.ok = FALSE)
   
   if (by == "row") {
-    if (nrow(colData(m1)) != nrow(colData(m2)) || !(all(rownames(m1@colData) == rownames(m2@colData)))) {
+    if (nrow(colData(m1)) != nrow(colData(m2)) || !all(rownames(m1@colData) == rownames(m2@colData))) {
       stop("You have different samples in your dataset. You need the same samples in your datasets. ")
     } else {
       m <- rbind(m1, m2)
@@ -158,7 +186,7 @@ convert_to_methrix <- function(m = NULL, h5_dir = NULL) {
 #' @return nothing
 #' @examples
 #' data('scMethrix_data')
-#' # export_bed(m=scMethrix_data$mem,path=tempdir())
+#' #export_bed(m=scMethrix_data,path=paste0(tempdir(),"/export"))
 #' @export
 export_bed <- function(m = NULL, path = NULL, suffix = NULL) {
   meth <- cov <- NULL
@@ -206,7 +234,7 @@ export_bed <- function(m = NULL, path = NULL, suffix = NULL) {
 #' @return table of summary statistic for the given region
 #' @examples
 #' data('scMethrix_data')
-#' get_region_summary(m = scMethrix_data$mem,
+#' get_region_summary(m = scMethrix_data,
 #' regions = data.table(chr = c('chr1','chr2'), start = c(1,5), end =  c(5,10)),
 #' type = 'score', how = 'mean')
 #' @export
@@ -228,7 +256,7 @@ get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads =
   
   if(verbose) message("Generating region summary...",start_time())
   
-  type = match.arg(arg = type, choices = assayNames(m))
+  type = match.arg(arg = type, choices = SummarizedExperiment::assayNames(m))
   how = match.arg(arg = how, choices = c('mean', 'median', 'max', 'min', 'sum', 'sd'))
   yid  <- NULL
   
@@ -357,6 +385,8 @@ get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads =
 #' @param n_threads Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. If \code{n_threads} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_threads}. Default = 1.
 #' @importFrom methods is as new
 #' @examples
+#' data('scMethrix_data')
+#' coverage_filter(scMethrix_data,min_sample=2)
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
 coverage_filter <- function(m = NULL, cov_thr = 1, min_samples = NULL, prop_samples=NULL, group = NULL, n_chunks=1, n_threads=1) {
@@ -471,7 +501,7 @@ coverage_filter <- function(m = NULL, cov_thr = 1, min_samples = NULL, prop_samp
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
-#' m <- convert_scMethrix(scMethrix_data$mem, h5_dir=dir)
+#' m <- convert_scMethrix(scMethrix_data, h5_dir=dir)
 #' save_HDF5_scMethrix(m, h5_dir = dir, replace = TRUE)
 #' @return Nothing
 #' @export
@@ -501,7 +531,7 @@ save_HDF5_scMethrix <- function(m = NULL, h5_dir = NULL, replace = FALSE, ...) {
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
-#' m <- convert_scMethrix(scMethrix_data$mem, h5_dir=dir)
+#' m <- convert_scMethrix(scMethrix_data, h5_dir=dir)
 #' save_HDF5_scMethrix(m, h5_dir = dir, replace = TRUE)
 #' n <- load_HDF5_scMethrix(dir)
 #' @export
@@ -531,7 +561,7 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
-#' m <- convert_scMethrix(scMethrix_data$mem, h5_dir=dir)
+#' m <- convert_scMethrix(scMethrix_data, h5_dir=dir)
 #' convert_HDF5_scMethrix(m)
 #' @export
 convert_HDF5_scMethrix <- function(m = NULL) {
@@ -565,7 +595,7 @@ convert_HDF5_scMethrix <- function(m = NULL) {
 #' @importFrom SummarizedExperiment assays
 #' @examples
 #' data('scMethrix_data')
-#' convert_scMethrix(scMethrix_data$mem, h5_dir=paste0(tempdir(),"/h5"))
+#' convert_scMethrix(scMethrix_data, h5_dir=paste0(tempdir(),"/h5"))
 #' @export
 convert_scMethrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
   
@@ -598,7 +628,6 @@ convert_scMethrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
 #' @param zero.rm Removes zero values from equations (the default empty value for sparse matrices)
 #' @param na.rm Removes the NA values from equations
 #' @return An object of class \code{\link{scMethrix}}
-#' @examples
 #' @export
 order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
   # 
@@ -632,16 +661,16 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 #' samples <- c("df1","df3")
 
 #' #Subset to only samples bed1 and bed3, and chromosome 1
-#' subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "include")
+#' subset_scMethrix(scMethrix_data, samples = samples, contigs = contigs, by = "include")
 #' 
 #' #Subset to only region "chr1:1-5"
-#' subset_scMethrix(scMethrix_data$mem, regions = regions, by = "include")
+#' subset_scMethrix(scMethrix_data, regions = regions, by = "include")
 #' 
 #' #Subset to exclude samples bed1 and bed3, and chromosome 1
-#' subset_scMethrix(scMethrix_data$mem, samples = samples, contigs = contigs, by = "exclude")
+#' subset_scMethrix(scMethrix_data, samples = samples, contigs = contigs, by = "exclude")
 #' 
 #' #Subset to exclude region "chr1:1-5"
-#' subset_scMethrix(scMethrix_data$mem, regions = regions, by = "exclude")
+#' subset_scMethrix(scMethrix_data, regions = regions, by = "exclude")
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
 
@@ -716,10 +745,10 @@ subset_scMethrix <- function(m = NULL, regions = NULL, contigs = NULL, samples =
 #' data('scMethrix_data')
 #' 
 #' #Get stats for each sample and chromosome
-#' get_stats(scMethrix_data$mem)
+#' get_stats(scMethrix_data)
 #' 
 #' #Get stats for each sample
-#' get_stats(scMethrix_data$mem,per_chr = FALSE)
+#' get_stats(scMethrix_data,per_chr = FALSE)
 #' @return data.table of summary stats
 #' @export
 
@@ -802,13 +831,13 @@ get_stats <- function(m = NULL, per_chr = TRUE) {
 #' data('scMethrix_data')
 #' 
 #' # Get methylation data
-#' get_matrix(scMethrix_data$mem)
+#' get_matrix(scMethrix_data)
 #' 
 #' # Get methylation data with loci
-#' get_matrix(scMethrix_data$mem, add_loci=TRUE)
+#' get_matrix(scMethrix_data, add_loci=TRUE)
 #' 
 #' # Get methylation data with loci inside a Granges object 
-#' get_matrix(scMethrix_data$mem, add_loci=TRUE, in_granges=TRUE)
+#' get_matrix(scMethrix_data, add_loci=TRUE, in_granges=TRUE)
 #' @export
 get_matrix <- function(m = NULL, add_loci = FALSE, in_granges=FALSE, type = "score") {
   
@@ -821,9 +850,9 @@ get_matrix <- function(m = NULL, add_loci = FALSE, in_granges=FALSE, type = "sco
             "the output will be a data.frame object. ")
   }
   
-  type = match.arg(arg = type, choices = assayNames(m))
+  type = match.arg(arg = type, choices = SummarizedExperiment::assayNames(m))
   
-  mtx <- SummarizedExperiment::assay(x = m, i = which(type == assayNames(m)))
+  mtx <- SummarizedExperiment::assay(x = m, i = which(type == SummarizedExperiment::assayNames(m)))
   
   if (add_loci) {
     
@@ -851,7 +880,7 @@ get_matrix <- function(m = NULL, add_loci = FALSE, in_granges=FALSE, type = "sco
 #' @examples
 #' data('scMethrix_data')
 #' # Remove uncovered CpGs after subsetting to a single sample
-#' remove_uncovered(subset_scMethrix(scMethrix_data$mem, samples = "df1", by="include"))
+#' remove_uncovered(subset_scMethrix(scMethrix_data, samples = "df1", by="include"))
 #' @export
 remove_uncovered <- function(m = NULL) {
   
@@ -889,6 +918,8 @@ remove_uncovered <- function(m = NULL) {
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
+#' data('scMethrix_data')
+#' mask_scMethrix(scMethrix_data,low_count=4,type="coverage")
 #' @export
 
 mask_scMethrix <- function(m = NULL, low_count = 0, high_quantile = NULL, n_threads=1 ,type="count") {

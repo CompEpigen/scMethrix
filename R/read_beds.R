@@ -329,10 +329,8 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
       bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index, ref_cpgs = ref_cpgs,
                                  meth_idx = meth_idx, cov_idx = cov_idx, zero_based = zero_based)
 
-      
       DelayedArray::write_block(block = as.matrix(cbind(lapply(bed, `[[`, 1))), 
                                 viewport = grid[[i]], sink = M_sink)      
-      
       
       # DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(lapply(bed, `[[`, 1))), 
       #                           viewport = grid[[i]], sink = M_sink)

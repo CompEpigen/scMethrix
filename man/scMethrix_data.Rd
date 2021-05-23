@@ -5,7 +5,7 @@
 \alias{scMethrix_data}
 \title{WGBS for single cell methylome of murine neuronal cells}
 \format{
-A list containing two objects of class \code{'scMethrix'}, one in mem and one in H5 format.
+A object of class \code{'scMethrix'}, in-memory format.
 }
 \usage{
 data('scMethrix_data')

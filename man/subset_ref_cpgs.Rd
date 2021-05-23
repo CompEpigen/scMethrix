@@ -24,3 +24,7 @@ Typically used to reduce the number of potential CpG sites to include only those
 in the input files so as to maximize performance and minimize resources. Can also be used for quality
 control to see if there is excessive number of CpG sites that are not present in the reference genome.
 }
+\examples{
+ref_cpgs = data.frame(chr="chr1",start=(1:5*2-1), end=(1:5*2))
+subset_ref_cpgs(ref_cpgs,ref_cpgs[1:3,])
+}

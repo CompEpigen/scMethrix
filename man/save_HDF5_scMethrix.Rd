@@ -27,6 +27,6 @@ Takes \code{\link{scMethrix}} object and saves it in the specified directory
 \examples{
 data('scMethrix_data')
 dir <- paste0(tempdir(),"/h5")
-m <- convert_scMethrix(scMethrix_data$mem, h5_dir=dir)
+m <- convert_scMethrix(scMethrix_data, h5_dir=dir)
 save_HDF5_scMethrix(m, h5_dir = dir, replace = TRUE)
 }

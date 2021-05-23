@@ -3,7 +3,7 @@
 #' @return boolean Whether the object is HDF5
 #' @examples
 #' data('scMethrix_data')
-#' is_h5(scMethrix_data$mem)
+#' is_h5(scMethrix_data)
 #' @export
 is_h5 = function(m) {
   return(m@metadata$is_h5)
@@ -14,7 +14,7 @@ is_h5 = function(m) {
 #' @return boolean Whether the object has a coverage matrix
 #' @examples
 #' data('scMethrix_data')
-#' has_cov(scMethrix_data$mem)
+#' has_cov(scMethrix_data)
 #' @export
 has_cov = function(m) {
   return(m@metadata$has_cov)
@@ -31,7 +31,6 @@ has_cov = function(m) {
 get_sample_name = function(s) {
   return(tools::file_path_sans_ext(basename(s)))
 }
-
 
 #' Binarize an input
 #' @param x A value to binarize
@@ -139,7 +138,7 @@ split_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, perce
 #' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,10000))
 #' bin_granges(regions,bin_size=1000) 
 #' @export
-bin_granges <- function(gr, bin_size = 100000, enforce_size = FALSE) {
+bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
   
   ends <- len <- seqnames(gr)@lengths
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
@@ -228,6 +227,9 @@ stop_time <- function() {
 #' @param gen_cpgs A subset of CpG sites. Usually obtained from \code{\link{read_index}}.
 #' @param verbose flag to output messages or not
 #' @return Returns list of CpG sites in bedgraph format
+#' @examples
+#' ref_cpgs = data.frame(chr="chr1",start=(1:5*2-1), end=(1:5*2))
+#' subset_ref_cpgs(ref_cpgs,ref_cpgs[1:3,])
 #' @export
 subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   keys <- plyr::join.keys(ref_cpgs, gen_cpgs, c("chr","start"))

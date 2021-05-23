@@ -19,5 +19,5 @@ Removes an assay from an \code{\link{scMethrix}} object.
 }
 \examples{
 data('scMethrix_data')
-#merge_scMethrix(scMethrix_data$mem,scMethrix_data$mem)
+remove_assay(scMethrix_data,assay="coverage")
 }

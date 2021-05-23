@@ -39,3 +39,7 @@ Filter matrices by coverage
 \details{
 Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
 }
+\examples{
+data('scMethrix_data')
+coverage_filter(scMethrix_data,min_sample=2)
+}

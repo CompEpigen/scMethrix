@@ -1,6 +1,6 @@
 list.of.packages <- c("SingleCellExperiment","data.table","plyr","HDF5Array","tictoc","beepr",
                       "GenomicRanges","parallel","roxygen2","dplyr","rbenchmark","testthat","rtracklayer",
-                      "BRGenomics","tools","microbenchmark","measurements","magrittr","doParallel","parallel",
+                      "tools","microbenchmark","measurements","magrittr","doParallel","parallel",
                       "Cairo","ggplot2","methrix","BSgenome","BSgenome.Hsapiens.UCSC.hg19","usethis",
                       "BSgenome.Mmusculus.UCSC.mm10")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -25,7 +25,7 @@ files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
 
 files <- files[1:4]
 
-scm <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"))
+scm <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5,6))
 
 scm <- read_beds(files=files,h5=FALSE)
 
