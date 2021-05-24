@@ -17,7 +17,7 @@ is_h5 = function(m) {
 #' has_cov(scMethrix_data)
 #' @export
 has_cov = function(m) {
-  return(m@metadata$has_cov)
+  return("coverage" %in% SummarizedExperiment::assayNames(m))
 }
 
 

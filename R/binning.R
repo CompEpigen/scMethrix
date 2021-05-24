@@ -1,12 +1,11 @@
 # trans <- c(score = function(x) mean(x,na.rm=TRUE),coverage = function(x) sum(x,na.rm=TRUE))
 
-bin_scMethrix <- function(m, bin_size = 100000, trans = NULL) {
+bin_scMethrix <- function(m, bin_size = 10000000, trans = NULL) {
 
   bins <- bin_granges(rowRanges(m),bin_size = bin_size)
   bins <- subsetByOverlaps(bins,rowRanges(m))
   
   sites <- sapply(1:length(bins),function (i) {
-    message(i)
     (findOverlaps(rowRanges(m),bins[i]))@from
   })
   
@@ -26,25 +25,22 @@ bin_scMethrix <- function(m, bin_size = 100000, trans = NULL) {
     })
     
     setDT(vals, key=names(vals[[1]]))
-    vals <- transpose(vals)
+    vals <- data.table::transpose(vals)
     colnames(vals) <- rownames(colData(m))
     
-    assys[[name]] <- vals
+    assys[[name]] <- as(vals,typeof(get_matrix(m,type=name)))
   }
   
   if (is_h5(m)) {
     
-  m_obj <- create_scMethrix(methyl_mat=reads$meth, cov_mat=reads$cov, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
-                            h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
+    m_obj <- create_scMethrix(assays = assys, rowRanges=bins, is_hdf5 = TRUE, 
+                            h5_dir = h5_dir, genome_name = m@metadata$genome,desc = m@metadata$desc,colData = colData(m),
                             replace = replace)
   
   } else {
     
-    m_obj <- create_scMethrix(methyl_mat=reads$meth, cov_mat=reads$cov, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
-                              h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
-                              replace = replace)
+    m_obj <- create_scMethrix(assays = assys, rowRanges=bins, is_hdf5 = FALSE, 
+                              genome_name = m@metadata$genome,desc = m@metadata$desc,colData = colData(m),)
     
   }
-  
-  
 }

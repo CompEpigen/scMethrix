@@ -35,7 +35,8 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
     
   if (is_hdf5) {
 
-    sse <- SingleCellExperiment::SingleCellExperiment(assays = assays, colData = colData, 
+    sse <- SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "HDF5Array")), 
+                                                      colData = colData, 
                                                         rowRanges = rowRanges,
                                                         metadata = list(genome = genome_name,
                                                                         chrom_sizes = chrom_sizes,
@@ -54,12 +55,9 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
         message("Written in ",stop_time())
         }
       
-      
-      
-      
     } else {
       
-      sse <- SingleCellExperiment::SingleCellExperiment(assays = assays,
+      sse <- SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "matrix")),
                                                       colData = colData,
                                                       rowRanges = rowRanges,
                                                       metadata = list(genome = genome_name,

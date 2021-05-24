@@ -1,3 +1,4 @@
+#------------------------------------------------------------------------------------------------------------
 #' Add descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
 #' @param m A \code{\link{scMethrix}} object
 #' @return An \code{\link{scMethrix}} object
@@ -11,17 +12,30 @@ get_metadata_stats <- function(m) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  stats <- data.table::data.table(
-      mean_meth = matrixStats::rowMeans2(get_matrix(m), na.rm = TRUE),
-      median_meth = matrixStats::rowMedians(get_matrix(m), na.rm = TRUE),
-      sd_meth = matrixStats::rowSds(get_matrix(m), na.rm = TRUE)
-  )
-  
-  if(has_cov(m)) stats[,"coverage" := matrixStats::rowSums2(get_matrix(m,type="coverage"), na.rm = TRUE)] 
+  if (is_h5(m)) {
+    stats <-
+      data.table::data.table(
+        mean_meth = DelayedMatrixStats::rowMeans2(get_matrix(m), na.rm = TRUE),
+        median_meth = DelayedMatrixStats::rowMedians(get_matrix(m), na.rm = TRUE),
+        sd_meth = DelayedMatrixStats::rowSds(get_matrix(m), na.rm = TRUE)
+      )
+    
+    if(has_cov(m)) stats[,"coverage" := DelayedMatrixStats::rowSums2(get_matrix(m,type="coverage"), na.rm = TRUE)] 
+    
+  } else {
+    stats <- data.table::data.table(
+        mean_meth = matrixStats::rowMeans2(get_matrix(m), na.rm = TRUE),
+        median_meth = matrixStats::rowMedians(get_matrix(m), na.rm = TRUE),
+        sd_meth = matrixStats::rowSds(get_matrix(m), na.rm = TRUE)
+    )
+    
+    if(has_cov(m)) stats[,"coverage" := matrixStats::rowSums2(get_matrix(m,type="coverage"), na.rm = TRUE)] 
+  }
   mcols(m) <- stats
   return(m)
 }
 
+#------------------------------------------------------------------------------------------------------------
 #' Transforms an assay in an \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
 #' @param m A \code{\link{scMethrix}} object
@@ -84,6 +98,7 @@ transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL, h5_temp = 
   return(m)
 }
 
+#------------------------------------------------------------------------------------------------------------
 #' Removes an assay from an \code{\link{scMethrix}} object.
 #' @param m A \code{\link{scMethrix}} object
 #' @param assay The name of an assay that exists in the \code{\link{scMethrix}} object
@@ -111,6 +126,7 @@ remove_assay <- function(m,assay) {
   return(m)
 }
 
+#------------------------------------------------------------------------------------------------------------
 #' Merges two \code{\link{scMethrix}} objects.
 #' @details Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot
 #' data is not supported at this time. Non-common assays between objects will be dropped
@@ -164,6 +180,7 @@ merge_scMethrix <- function(m1 = NULL, m2 = NULL, by = c("row", "col")) {
   return(m)
 }
 
+#------------------------------------------------------------------------------------------------------------
 #' Converts an \code{\link{scMethrix}} object to methrix object
 #' @details Removes extra slot data and changes structure to match \code{\link[methrix]{methrix}} format
 #' @param m \code{\link{scMethrix}} object
@@ -203,6 +220,7 @@ convert_to_methrix <- function(m = NULL, h5_dir = NULL) {
   return(m_obj) 
 }
 
+#------------------------------------------------------------------------------------------------------------
 #' Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
 #' @param m \code{\link{scMethrix}} object
 #' @param path the \code{\link{file.path}} of the directory to save the files
@@ -241,6 +259,7 @@ export_bed <- function(m = NULL, path = NULL, suffix = NULL) {
   return(NA)
 }
 
+#------------------------------------------------------------------------------------------------------------
 #' Extract and summarize methylation or coverage info by regions of interest
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
 #' @param m \code{\link{scMethrix}} object
@@ -396,7 +415,6 @@ get_region_summary = function (m = NULL, regions = NULL, n_chunks=1, n_threads =
 
 
 #--------------------------------------------------------------------------------------------------------------------------
-
 #' Filter matrices by coverage
 #' @details Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
 #' @param m \code{\link{scMethrix}} object
@@ -633,7 +651,7 @@ convert_scMethrix <- function(m = NULL, h5_dir = NULL, verbose = TRUE) {
   
  # if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
 
-  m <- create_scMethrix(methyl_mat = assays(m)[[1]], h5_dir = h5_dir,
+  m <- create_scMethrix(assays = assays(m), h5_dir = h5_dir,
                       rowRanges = rowRanges(m), is_hdf5 = TRUE, genome_name = m@metadata$genome,
                       colData = m@colData, chrom_sizes = m@metadata$chrom_sizes, 
                       desc = m@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
@@ -666,7 +684,6 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
-
 #' Subsets an \code{\link{scMethrix}} object based on given conditions.
 #' @details Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can 
 #' either subset to or filter out the input parameters.
@@ -697,7 +714,6 @@ order_by_sd <- function (m, zero.rm = FALSE, na.rm = FALSE) {
 #' subset_scMethrix(scMethrix_data, regions = regions, by = "exclude")
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
-
 subset_scMethrix <- function(m = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), verbose=TRUE) {
   
   if (!is(m, "scMethrix")){
@@ -895,6 +911,8 @@ get_matrix <- function(m = NULL, add_loci = FALSE, in_granges=FALSE, type = "sco
   
   return (mtx)
 }
+
+#------------------------------------------------------------------------------------------------------------
 
 #' Remove loci that are uncovered across all samples
 #' @details Takes \code{\link{scMethrix}} object and removes loci that are uncovered across all samples

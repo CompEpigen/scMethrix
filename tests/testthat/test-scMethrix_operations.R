@@ -3,6 +3,10 @@ test_that("get_metadata_stats", {
     expect_error(get_metadata_stats(m="not scMethrix"))
     m <- get_metadata_stats(scm)
     expect_equivalent(dim(mcols(m)),c(100,4))
+    
+    m <- remove_assay(scm,assay="coverage")
+    m <- get_metadata_stats(m)
+    expect_equivalent(dim(mcols(m)),c(100,3))
   }))
 })
 
