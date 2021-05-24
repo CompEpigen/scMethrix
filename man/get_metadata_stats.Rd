@@ -4,10 +4,10 @@
 \alias{get_metadata_stats}
 \title{Add descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.}
 \usage{
-get_metadata_stats(m)
+get_metadata_stats(scm)
 }
 \arguments{
-\item{m}{A \code{\link{scMethrix}} object}
+\item{scm}{A \code{\link{scMethrix}} object}
 }
 \value{
 An \code{\link{scMethrix}} object

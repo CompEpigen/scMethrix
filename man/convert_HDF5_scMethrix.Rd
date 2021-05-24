@@ -4,10 +4,10 @@
 \alias{convert_HDF5_scMethrix}
 \title{Converts HDF5 \code{\link{scMethrix}} object to standard in-memory object.}
 \usage{
-convert_HDF5_scMethrix(m = NULL)
+convert_HDF5_scMethrix(scm = NULL)
 }
 \arguments{
-\item{m}{An object of class \code{\link{scMethrix}}, HDF5 format}
+\item{scm}{An object of class \code{\link{scMethrix}}, HDF5 format}
 }
 \value{
 An object of class \code{\link{scMethrix}}
@@ -21,6 +21,6 @@ Takes a \code{\link{scMethrix}} object and returns with the same object with in-
 \examples{
 data('scMethrix_data')
 dir <- paste0(tempdir(),"/h5")
-m <- convert_scMethrix(scMethrix_data, h5_dir=dir)
-convert_HDF5_scMethrix(m)
+scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
+convert_HDF5_scMethrix(scm)
 }

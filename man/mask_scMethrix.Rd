@@ -5,7 +5,7 @@
 \title{Masks too high or too low counts}
 \usage{
 mask_scMethrix(
-  m = NULL,
+  scm = NULL,
   low_count = 0,
   high_quantile = NULL,
   n_threads = 1,
@@ -13,7 +13,7 @@ mask_scMethrix(
 )
 }
 \arguments{
-\item{m}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}} object}
 
 \item{low_count}{The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.}
 

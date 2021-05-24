@@ -4,10 +4,10 @@
 \alias{convert_scMethrix}
 \title{Converts an in-memory object to an on-disk HDF5 object.}
 \usage{
-convert_scMethrix(m = NULL, h5_dir = NULL, verbose = TRUE)
+convert_scMethrix(scm = NULL, h5_dir = NULL, verbose = TRUE)
 }
 \arguments{
-\item{m}{An object of class \code{\link{scMethrix}}}
+\item{scm}{An object of class \code{\link{scMethrix}}}
 
 \item{h5_dir}{Directory for the HDF5 object to be stored}
 

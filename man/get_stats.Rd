@@ -4,10 +4,10 @@
 \alias{get_stats}
 \title{Estimate descriptive statistics}
 \usage{
-get_stats(m = NULL, per_chr = TRUE)
+get_stats(scm = NULL, per_chr = TRUE)
 }
 \arguments{
-\item{m}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}} object}
 
 \item{per_chr}{Estimate stats per chromosome. Default TRUE}
 }

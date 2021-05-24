@@ -4,10 +4,10 @@
 \alias{convert_to_methrix}
 \title{Converts an \code{\link{scMethrix}} object to methrix object}
 \usage{
-convert_to_methrix(m = NULL, h5_dir = NULL)
+convert_to_methrix(scm = NULL, h5_dir = NULL)
 }
 \arguments{
-\item{m}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}} object}
 
 \item{h5_dir}{Location to save the methrix H5 file}
 }
@@ -22,5 +22,5 @@ Removes extra slot data and changes structure to match \code{\link[methrix]{meth
 }
 \examples{
 data('scMethrix_data')
-# convert_to_methrix(m=scMethrix_data$mem)
+# convert_to_methrix(scMethrix_data)
 }

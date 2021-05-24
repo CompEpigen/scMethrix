@@ -5,7 +5,7 @@
 \title{Filter matrices by coverage}
 \usage{
 coverage_filter(
-  m = NULL,
+  scm = NULL,
   cov_thr = 1,
   min_samples = NULL,
   prop_samples = NULL,
@@ -15,7 +15,7 @@ coverage_filter(
 )
 }
 \arguments{
-\item{m}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}} object}
 
 \item{cov_thr}{minimum coverage required to call a loci covered}
 
@@ -41,5 +41,5 @@ Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statisti
 }
 \examples{
 data('scMethrix_data')
-coverage_filter(scMethrix_data,min_sample=2)
+coverage_filter(scMethrix_data, min_sample=2)
 }

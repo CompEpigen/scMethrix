@@ -1,18 +1,18 @@
 test_that("get_metadata_stats", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
-    expect_error(get_metadata_stats(m="not scMethrix"))
-    m <- get_metadata_stats(scm)
-    expect_equivalent(dim(mcols(m)),c(100,4))
+    expect_error(get_metadata_stats(scm="not scMethrix"))
+    s <- get_metadata_stats(scm)
+    expect_equivalent(dim(mcols(s)),c(100,4))
     
-    m <- remove_assay(scm,assay="coverage")
-    m <- get_metadata_stats(m)
-    expect_equivalent(dim(mcols(m)),c(100,3))
+    s <- remove_assay(scm,assay="coverage")
+    s <- get_metadata_stats(s)
+    expect_equivalent(dim(mcols(s)),c(100,3))
   }))
 })
 
 test_that("remove_assay", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(remove_assay(m="not scMethrix"))
+    expect_error(remove_assay(scm="not scMethrix"))
     expect_error(remove_assay(scm, assay="not an assay"))
     expect_error(remove_assay(scm, assay="score"))
     plus1 <- transform_assay(scm,trans=function(x) x+1,assay="score",name="plus1")
@@ -24,7 +24,7 @@ test_that("remove_assay", {
 
 test_that("merge_scMethrix", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(merge_scMethrix(m1=scm,m2="not scMethrix"))
+    expect_error(merge_scMethrix(scm1=scm,scm2="not scMethrix"))
     
     expect_error(merge_scMethrix(scm,scm,by="col")) #same samples
     expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="col")) #different regions
@@ -130,7 +130,7 @@ test_that("get_matrix", {
     invisible(lapply(list(scm.mem,scm.h5), function(scm) {
       expect_warning(get_matrix(scm,add_loci=FALSE, in_granges = TRUE))
       
-      s <- get_matrix(m=scm,add_loci=TRUE)
+      s <- get_matrix(scm=scm,add_loci=TRUE)
       expect_equivalent(dim(s),c(100,7))  
       expect_equivalent(class(s)[1],"data.table")
       

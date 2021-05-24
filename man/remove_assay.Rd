@@ -4,10 +4,10 @@
 \alias{remove_assay}
 \title{Removes an assay from an \code{\link{scMethrix}} object.}
 \usage{
-remove_assay(m, assay)
+remove_assay(scm, assay)
 }
 \arguments{
-\item{m}{A \code{\link{scMethrix}} object}
+\item{scm}{A \code{\link{scMethrix}} object}
 
 \item{assay}{The name of an assay that exists in the \code{\link{scMethrix}} object}
 }

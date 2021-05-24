@@ -4,10 +4,10 @@
 \alias{get_matrix}
 \title{Extract methylation or coverage matrices}
 \usage{
-get_matrix(m = NULL, add_loci = FALSE, in_granges = FALSE, type = "score")
+get_matrix(scm = NULL, add_loci = FALSE, in_granges = FALSE, type = "score")
 }
 \arguments{
-\item{m}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}} object}
 
 \item{add_loci}{Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table}
 

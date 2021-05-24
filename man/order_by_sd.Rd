@@ -4,10 +4,10 @@
 \alias{order_by_sd}
 \title{Order scMethrix object by SD}
 \usage{
-order_by_sd(m, zero.rm = FALSE, na.rm = FALSE)
+order_by_sd(scm, zero.rm = FALSE, na.rm = FALSE)
 }
 \arguments{
-\item{m}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}} object}
 
 \item{zero.rm}{Removes zero values from equations (the default empty value for sparse matrices)}
 

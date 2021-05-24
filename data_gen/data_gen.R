@@ -16,7 +16,7 @@ cpg <- lapply(list(0,1,2,3), function(n) {
 m <- m[sort(unlist(cpg))]
 suffix <- "_sub"
 
-export_bed(m = m, path = dir, suffix=suffix)
+export_bed(m, path = dir, suffix=suffix)
 
 dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 files <- list.files (dir,full.names = TRUE)

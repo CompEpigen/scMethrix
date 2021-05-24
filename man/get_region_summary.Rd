@@ -5,7 +5,7 @@
 \title{Extract and summarize methylation or coverage info by regions of interest}
 \usage{
 get_region_summary(
-  m = NULL,
+  scm = NULL,
   regions = NULL,
   n_chunks = 1,
   n_threads = 1,
@@ -17,7 +17,7 @@ get_region_summary(
 )
 }
 \arguments{
-\item{m}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}} object}
 
 \item{regions}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object}
 
@@ -49,7 +49,7 @@ Takes \code{\link{scMethrix}} object and summarizes regions
 }
 \examples{
 data('scMethrix_data')
-get_region_summary(m = scMethrix_data,
-regions = data.table(chr = c('chr1','chr2'), start = c(1,5), end =  c(5,10)),
-type = 'score', how = 'mean')
+get_region_summary(scMethrix_data,
+   regions = data.table(chr = c('chr1','chr2'), start = c(1), end =  c(10000000)),
+   type = 'score', how = 'mean')
 }

@@ -4,12 +4,12 @@
 \alias{merge_scMethrix}
 \title{Merges two \code{\link{scMethrix}} objects.}
 \usage{
-merge_scMethrix(m1 = NULL, m2 = NULL, by = c("row", "col"))
+merge_scMethrix(scm1 = NULL, scm2 = NULL, by = c("row", "col"))
 }
 \arguments{
-\item{m1}{A \code{\link{scMethrix}} object}
+\item{scm1}{A \code{\link{scMethrix}} object}
 
-\item{m2}{A \code{\link{scMethrix}} object}
+\item{scm2}{A \code{\link{scMethrix}} object}
 
 \item{by}{Merge by columns or rows}
 }
@@ -25,5 +25,5 @@ data is not supported at this time. Non-common assays between objects will be dr
 }
 \examples{
 data('scMethrix_data')
-#merge_scMethrix(scMethrix_data$mem,scMethrix_data$mem)
+merge_scMethrix(scMethrix_data[1:5],scMethrix_data[6:10],by="row")
 }

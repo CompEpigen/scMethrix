@@ -4,10 +4,10 @@
 \alias{export_bed}
 \title{Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files}
 \usage{
-export_bed(m = NULL, path = NULL, suffix = NULL)
+export_bed(scm = NULL, path = NULL, suffix = NULL)
 }
 \arguments{
-\item{m}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}} object}
 
 \item{path}{the \code{\link{file.path}} of the directory to save the files}
 
@@ -21,5 +21,5 @@ Exports all samples in an \code{\link{scMethrix}} objects into individual bedgra
 }
 \examples{
 data('scMethrix_data')
-#export_bed(m=scMethrix_data,path=paste0(tempdir(),"/export"))
+export_bed(scMethrix_data,path=paste0(tempdir(),"/export"))
 }

@@ -5,7 +5,7 @@
 \title{Subsets an \code{\link{scMethrix}} object based on given conditions.}
 \usage{
 subset_scMethrix(
-  m = NULL,
+  scm = NULL,
   regions = NULL,
   contigs = NULL,
   samples = NULL,
@@ -14,7 +14,7 @@ subset_scMethrix(
 )
 }
 \arguments{
-\item{m}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}} object}
 
 \item{regions}{genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
 
@@ -40,8 +40,8 @@ either subset to or filter out the input parameters.
 data('scMethrix_data')
 
 contigs <- c("chr1","chr3")
-regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,5)) 
-samples <- c("df1","df3")
+regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100000000)) 
+samples <- c("C1","C2")
 #Subset to only samples bed1 and bed3, and chromosome 1
 subset_scMethrix(scMethrix_data, samples = samples, contigs = contigs, by = "include")
 

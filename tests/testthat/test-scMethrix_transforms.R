@@ -1,11 +1,11 @@
 test_that("bin_scMethrix", {
   
-  expect_error(bin_scMethrix(m="not scMethrix"))
-  expect_error(bin_scMethrix(m=scm.h5))
+  expect_error(bin_scMethrix("not scMethrix"))
+  expect_error(bin_scMethrix(scm.h5))
   
   #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   invisible(lapply(list(scm.mem), function(scm) {
-    bin <- bin_scMethrix(m=scm,bin_size = 10000000, h5_dir = paste0(tempdir(),"/bin"))
+    bin <- bin_scMethrix(scm,bin_size = 10000000, h5_dir = paste0(tempdir(),"/bin"))
     expect_equivalent(dim(bin),c(77,4))
   }))
   rm(bin)
@@ -13,7 +13,7 @@ test_that("bin_scMethrix", {
 
 test_that("transform_assay", {
   
-  expect_error(transform_assay(m="not scMethrix"))
+  expect_error(transform_assay("not scMethrix"))
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(transform_assay(scm,trans="not closure"))
