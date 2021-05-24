@@ -10,21 +10,6 @@ test_that("get_metadata_stats", {
   }))
 })
 
-test_that("transform_assay", {
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
-    expect_error(transform_assay(m="not scMethrix"))
-    expect_error(transform_assay(scm,trans="not closure"))
-    expect_warning(transform_assay(scm,trans=function(x) x+1,assay="score",name="score"))
-    plus1 <- transform_assay(scm,trans=function(x) x+1,assay="score",name="plus1")
-    expect_false(isTRUE(all.equal(assays(scm), assays(plus1))))
-    expect_equivalent(get_matrix(scm)+1,get_matrix(plus1,type="plus1"))
-    if (is_h5(scm)) {
-      expect_equivalent(class(get_matrix(plus1,type="plus1"))[[1]],"HDF5Matrix")
-    }
-    rm(plus1)
-  }))
-})
-
 test_that("remove_assay", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(remove_assay(m="not scMethrix"))

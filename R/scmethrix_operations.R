@@ -36,69 +36,6 @@ get_metadata_stats <- function(m) {
 }
 
 #------------------------------------------------------------------------------------------------------------
-#' Transforms an assay in an \code{\link{scMethrix}} object.
-#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
-#' @param m A \code{\link{scMethrix}} object
-#' @param assay String name of an existing assay
-#' @param name String name of transformed assay
-#' @param trans The transformation function
-#' @param h5_temp temporary directory to store hdf5
-#' @return An \code{\link{scMethrix}} object
-#' @examples
-#' data('scMethrix_data')
-#' transform_assay(scMethrix_data,assay="score",name="plus1",trans=function(x){x+1})
-#' @export
-transform_assay <- function(m,assay = NULL, name = NULL,trans = NULL, h5_temp = NULL) {
-
-  if (!is(m, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (typeof(trans) != "closure") {
-    stop("A valid transform function must be specified.", call. = FALSE)
-  }
-  
-  if (!(assay %in% SummarizedExperiment::assayNames(m))) {
-    stop("Assay does not exist in the object", call. = FALSE)
-  }
-  
-  if (name %in% SummarizedExperiment::assayNames(m)) {
-    warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
-  }
-
-  if (is_h5(m)) {
-    
-    if (is.null(h5_temp)) {h5_temp <- tempdir()}
-    
-    grid <- DelayedArray::RegularArrayGrid(refdim = dim(m),
-                                           spacings = c(dim(m)[1], 1L)) 
-    
-    trans_sink <- HDF5Array::HDF5RealizationSink(dim = dim(m),
-                                             dimnames = list(NULL,row.names(colData(m))), #type = "double",
-                                             filepath = tempfile(pattern="trans_sink_",tmpdir=h5_temp),
-                                             name = "trans", level = 6)
-    
-    blocs <- DelayedArray::blockApply(get_matrix(m,type=assay), grid = grid, trans)
-    
-    for(i in 1:length(blocs)) {
-      
-      DelayedArray::write_block(block = as.matrix(blocs[[i]]), viewport = grid[[i]], sink = trans_sink)
-      
-    }
-    
-    rm(blocs)
-    s <- as(trans_sink, "HDF5Array")
-    
-  } else {
-    s <- apply(get_matrix(m,type=assay),1:2,trans)
-  }
-  
-  assays(m)[[name]] <- s
-  
-  return(m)
-}
-
-#------------------------------------------------------------------------------------------------------------
 #' Removes an assay from an \code{\link{scMethrix}} object.
 #' @param m A \code{\link{scMethrix}} object
 #' @param assay The name of an assay that exists in the \code{\link{scMethrix}} object
