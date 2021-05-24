@@ -20,7 +20,7 @@ get_metadata_stats <- function(scm) {
         sd_meth = DelayedMatrixStats::rowSds(get_matrix(scm), na.rm = TRUE)
       )
     
-    if(has_cov(scm)) stats[,"coverage" := DelayedMatrixStats::rowSums2(get_matrix(scm,type="coverage"), na.rm = TRUE)] 
+    if(has_cov(scm)) stats[,"counts" := DelayedMatrixStats::rowSums2(get_matrix(scm,type="counts"), na.rm = TRUE)] 
     
   } else {
     stats <- data.table::data.table(
@@ -29,7 +29,7 @@ get_metadata_stats <- function(scm) {
         sd_meth = matrixStats::rowSds(get_matrix(scm), na.rm = TRUE)
     )
     
-    if(has_cov(scm)) stats[,"coverage" := matrixStats::rowSums2(get_matrix(scm,type="coverage"), na.rm = TRUE)] 
+    if(has_cov(scm)) stats[,"counts" := matrixStats::rowSums2(get_matrix(scm,type="counts"), na.rm = TRUE)] 
   }
   mcols(scm) <- stats
   return(scm)
@@ -42,7 +42,7 @@ get_metadata_stats <- function(scm) {
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
-#' remove_assay(scMethrix_data,assay="coverage")
+#' remove_assay(scMethrix_data,assay="counts")
 #' @export
 remove_assay <- function(scm,assay) {
   
@@ -143,12 +143,12 @@ convert_to_methrix <- function(scm = NULL, h5_dir = NULL) {
   
   #TODO: Need to export create_methrix function in the methrix package to use this
   if (is_h5(scm)) {
-    m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="coverage"),
+    m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="counts"),
                                      cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = TRUE, genome_name = scm@metadata$genome,
                                      col_data = scm@colData, h5_dir = h5_dir, ref_cpg_dt = ref_cpgs_chr,
                                      chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
   } else {
-    m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="coverage"),
+    m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="counts"),
                                      cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = FALSE, 
                                      genome_name = scm@metadata$genome, col_data = scm@colData, 
                                      ref_cpg_dt = ref_cpgs_chr, chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
@@ -187,7 +187,7 @@ export_bed <- function(scm = NULL, path = NULL, suffix = NULL) {
     rrng[,meth := val]
     
     if (has_cov(scm)) {
-      val <- as.data.table(get_matrix(scm,type="coverage"))[, file, with=FALSE] 
+      val <- as.data.table(get_matrix(scm,type="counts"))[, file, with=FALSE] 
       rrng[,cov := val]
     }
     
@@ -263,8 +263,8 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
   if(n_chunks==1){
     if (type == "score") {
       dat = get_matrix(scm = scm[overlap_indices$xid,], type = "score", add_loci = TRUE)
-    } else if (type == "coverage") {
-      dat = get_matrix(scm = scm[overlap_indices$xid,], type = "coverage", add_loci = TRUE)
+    } else if (type == "counts") {
+      dat = get_matrix(scm = scm[overlap_indices$xid,], type = "counts", add_loci = TRUE)
     }
   } else {
     
@@ -403,7 +403,7 @@ coverage_filter <- function(scm = NULL, cov_thr = 1, min_samples = NULL, prop_sa
   
   if (is_h5(scm)) {
     if (n_chunks == 1) {
-      cov_dat = get_matrix(scm, type = "coverage")
+      cov_dat = get_matrix(scm, type = "counts")
       if (!is.null(group)) {
         stop("Groups not implemented yet")
         # row_idx <- sapply(unique(m@colData[, group]), function(c) {
@@ -446,7 +446,7 @@ coverage_filter <- function(scm = NULL, cov_thr = 1, min_samples = NULL, prop_sa
       # }
     }
   } else {
-    cov_dat = get_matrix(scm, type = "coverage")
+    cov_dat = get_matrix(scm, type = "counts")
     if (!is.null(group)) {
       stop("Groups not implemented yet")
       # row_idx <- sapply(unique(m@colData[, group]), function(c) {
@@ -599,8 +599,6 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 
   return(scm)
 }
-
-
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Order scMethrix object by SD
@@ -803,7 +801,7 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
 #' @param scm \code{\link{scMethrix}} object
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
 #' @param in_granges Do you want the outcome in \code{\link{GRanges}}?
-#' @param type Which matrix to get, "m": methlation, "c": coverage
+#' @param type Which matrix to get
 #' @return Coverage or Methylation matrix
 #' @examples
 #' data('scMethrix_data')
@@ -894,28 +892,27 @@ remove_uncovered <- function(scm = NULL) {
 #' @param high_quantile The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
 #' higher quantile than the defined will be masked. Default = 0.99.
 #' @param n_threads Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
-#' @param type Whether to use the "coverage" matrix or sample "count" when masking
+#' @param type Whether to use the "counts" coverage matrix or "cells" count when masking
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
 #' data('scMethrix_data')
-#' mask_scMethrix(scMethrix_data,low_count=4,type="coverage")
+#' mask_scMethrix(scMethrix_data,low_count=4,type="counts")
 #' @export
-
-mask_scMethrix <- function(scm = NULL, low_count = 0, high_quantile = NULL, n_threads=1 ,type="count") {
+mask_scMethrix <- function(scm = NULL, low_count = 0, high_quantile = NULL, n_threads=1 ,type="cells") {
   
   if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
   if (!is_h5(scm) & n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
   
-  type = match.arg(arg = type, choices = c('count', 'coverage'))
+  type = match.arg(arg = type, choices = c('cells', 'counts'))
   
-  if (!has_cov(scm) && type == "coverage") stop("No coverage matrix is present in the object. 
-                                              Retry with type='count'")
+  if (!has_cov(scm) && type == "counts") stop("No coverage matrix is present in the object. 
+                                              Retry with type='cells'")
   
   if (!is.null(high_quantile)) {
-    if (type == 'count') stop("high_quantile cannot be used with 'count' ")
+    if (type == 'cells') stop("high_quantile cannot be used with 'cells' ")
     if (high_quantile >= 1 | high_quantile <= 0) stop("High quantile should be between 0 and 1. ")
   }
   
@@ -929,11 +926,11 @@ mask_scMethrix <- function(scm = NULL, low_count = 0, high_quantile = NULL, n_th
     
     n <- nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
     
-    if (type == "count") {
+    if (type == "cells") {
       row_idx <- DelayedMatrixStats::rowCounts(get_matrix(scm), 
                                                value = as.integer(NA)) > (nrow(colData(scm))-low_count)
     } else {
-      row_idx <- DelayedMatrixStats::rowSums2(get_matrix(scm,type="coverage"),na.rm=TRUE) < low_count
+      row_idx <- DelayedMatrixStats::rowSums2(get_matrix(scm,type="counts"),na.rm=TRUE) < low_count
     }
     
     if (sum(row_idx) == 0) stop("No CpGs found with low_count")
@@ -942,13 +939,13 @@ mask_scMethrix <- function(scm = NULL, low_count = 0, high_quantile = NULL, n_th
     emp <- array(as.integer(NA),c(length(row_idx), nrow(colData(scm))))
     
     assays(scm)[[1]][row_idx,] <- emp
-    if (type == "coverage") assays(scm)[[2]][row_idx,] <- emp 
+    if (type == "counts") assays(scm)[[2]][row_idx,] <- emp 
     
     n <- n-(nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)))
     
     for (i in seq_along(colnames(scm))) {
       if (n[i]==0) next
-      message(paste0("   Masked ", n[i], " CpGs due to too low count in sample ",  colnames(scm)[i], "."))
+      message(paste0("   Masked ", n[i], " CpGs due to too low cells in sample ",  colnames(scm)[i], "."))
     }
   }
   

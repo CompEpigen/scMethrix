@@ -348,7 +348,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   if (verbose) message("Object created in ",stop_time()) 
   
   if (!is.null(cov_idx)) {
-    reads = list(score = M_sink, coverage = cov_sink)
+    reads = list(score = M_sink, counts = cov_sink)
   } else {
     reads = list(score = M_sink)
   }
@@ -403,7 +403,7 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
     
     if (!is.null(cov_idx)) {
       reads <- list(score = cbind(lapply(reads, `[[`, 1)),
-                   coverage = cbind(lapply(reads, `[[`, 2)))
+                    counts = cbind(lapply(reads, `[[`, 2)))
     } else {
       reads <- list(score = cbind(lapply(reads, `[[`, 1)))
     }

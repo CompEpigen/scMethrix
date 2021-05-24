@@ -9,7 +9,7 @@ mask_scMethrix(
   low_count = 0,
   high_quantile = NULL,
   n_threads = 1,
-  type = "count"
+  type = "cells"
 )
 }
 \arguments{
@@ -22,7 +22,7 @@ higher quantile than the defined will be masked. Default = 0.99.}
 
 \item{n_threads}{Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.}
 
-\item{type}{Whether to use the "coverage" matrix or sample "count" when masking}
+\item{type}{Whether to use the "counts" coverage matrix or "cells" count when masking}
 }
 \value{
 An object of class \code{\link{scMethrix}}
@@ -36,5 +36,5 @@ by putting NA for coverage and beta value. The sites will remain in the object.
 }
 \examples{
 data('scMethrix_data')
-mask_scMethrix(scMethrix_data,low_count=4,type="coverage")
+mask_scMethrix(scMethrix_data,low_count=4,type="counts")
 }

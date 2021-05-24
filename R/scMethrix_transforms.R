@@ -73,13 +73,13 @@ transform_assay <- function(m,assay = NULL, name = NULL, trans = NULL, h5_temp =
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
-#' trans <- c(score = function(x) mean(x,na.rm=TRUE),coverage = function(x) sum(x,na.rm=TRUE))
+#' trans <- c(score = function(x) mean(x,na.rm=TRUE),counts = function(x) sum(x,na.rm=TRUE))
 #' bin_scMethrix(scMethrix_data,trans = trans)
 #' @export
 bin_scMethrix <- function(m, bin_size = 100000, trans = NULL, h5_dir = NULL) {
 
   if (is.null(trans)) {
-    trans <- c(score = function(x) mean(x,na.rm=TRUE),coverage = function(x) sum(x,na.rm=TRUE))
+    trans <- c(score = function(x) mean(x,na.rm=TRUE),counts = function(x) sum(x,na.rm=TRUE))
   }
     
   if (!is(m, "scMethrix")) {

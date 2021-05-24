@@ -4,7 +4,7 @@ test_that("get_metadata_stats", {
     s <- get_metadata_stats(scm)
     expect_equivalent(dim(mcols(s)),c(100,4))
     
-    s <- remove_assay(scm,assay="coverage")
+    s <- remove_assay(scm,assay="counts")
     s <- get_metadata_stats(s)
     expect_equivalent(dim(mcols(s)),c(100,3))
   }))

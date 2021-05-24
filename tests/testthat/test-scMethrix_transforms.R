@@ -7,8 +7,8 @@ test_that("bin_scMethrix", {
   invisible(lapply(list(scm.mem), function(scm) {
     bin <- bin_scMethrix(scm,bin_size = 10000000, h5_dir = paste0(tempdir(),"/bin"))
     expect_equivalent(dim(bin),c(77,4))
+    rm(bin)
   }))
-  rm(bin)
 })
 
 test_that("transform_assay", {

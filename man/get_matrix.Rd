@@ -13,7 +13,7 @@ get_matrix(scm = NULL, add_loci = FALSE, in_granges = FALSE, type = "score")
 
 \item{in_granges}{Do you want the outcome in \code{\link{GRanges}}?}
 
-\item{type}{Which matrix to get, "m": methlation, "c": coverage}
+\item{type}{Which matrix to get}
 }
 \value{
 Coverage or Methylation matrix

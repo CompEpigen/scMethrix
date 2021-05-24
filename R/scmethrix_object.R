@@ -42,7 +42,7 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
                                                                         chrom_sizes = chrom_sizes,
                                                                         descriptive_stats = desc,
                                                                         is_h5 = TRUE, 
-                                                                        has_cov = ("coverage" %in% names(assays))))
+                                                                        has_cov = ("count" %in% names(assays))))
       #TODO: Cannot save to same directory input files exist in
       if (!is.null(h5_dir)) {
         message("Writing to disk...",start_time())
@@ -64,9 +64,12 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
                                                                       chrom_sizes = chrom_sizes,
                                                                       descriptive_stats = desc,
                                                                       is_h5 = FALSE, 
-                                                                      has_cov = ("coverage" %in% names(assays))))
+                                                                      has_cov = ("count" %in% names(assays))))
     }
 
     return(scMethrix(sse))
 }
 
+setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
+          (x); SummarizedExperiment::assay(x, i="score")}
+)

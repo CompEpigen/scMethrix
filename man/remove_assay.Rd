@@ -19,5 +19,5 @@ Removes an assay from an \code{\link{scMethrix}} object.
 }
 \examples{
 data('scMethrix_data')
-remove_assay(scMethrix_data,assay="coverage")
+remove_assay(scMethrix_data,assay="counts")
 }

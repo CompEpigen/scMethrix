@@ -28,6 +28,6 @@ Uses the inputted function to transform an assay in the \code{\link{scMethrix}} 
 }
 \examples{
 data('scMethrix_data')
-trans <- c(score = function(x) mean(x,na.rm=TRUE),coverage = function(x) sum(x,na.rm=TRUE))
+trans <- c(score = function(x) mean(x,na.rm=TRUE),counts = function(x) sum(x,na.rm=TRUE))
 bin_scMethrix(scMethrix_data,trans = trans)
 }
