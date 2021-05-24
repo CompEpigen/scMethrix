@@ -29,29 +29,25 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
 })
 
 # Create scMethrix obj
-create_scMethrix <- function(methyl_mat = NULL, cov_mat = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, 
+create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, 
                              genome_name = "hg19", chrom_sizes = NULL, desc = NULL, h5_dir = NULL, 
                              replace = FALSE, verbose=TRUE) {
     
   if (is_hdf5) {
-      
-      assays <- if (!is.null(cov_mat)) {list(score = as(methyl_mat, "HDF5Array"),
-                                            coverage = as(cov_mat, "HDF5Array"))
-               } else {list(score = as(methyl_mat, "HDF5Array"))}
 
-      sse <- SingleCellExperiment::SingleCellExperiment(assays = assays, colData = colData, 
+    sse <- SingleCellExperiment::SingleCellExperiment(assays = assays, colData = colData, 
                                                         rowRanges = rowRanges,
                                                         metadata = list(genome = genome_name,
                                                                         chrom_sizes = chrom_sizes,
                                                                         descriptive_stats = desc,
                                                                         is_h5 = TRUE, 
-                                                                        has_cov = !is.null(cov_mat)))
+                                                                        has_cov = ("coverage" %in% names(assays))))
       #TODO: Cannot save to same directory input files exist in
       if (!is.null(h5_dir)) {
         message("Writing to disk...",start_time())
         
         tryCatch(HDF5Array::saveHDF5SummarizedExperiment(x = sse, dir = h5_dir, replace = replace, 
-                                                         chunkdim = c(nrow(methyl_mat),1), verbose=verbose), 
+                                                         chunkdim = c(length(rowRanges),1), verbose=verbose), 
                                                          error = function(e) message(e,"\nThe dataset is not 
                                                          saved. Please save manually using the 
                                                          HDF5Array::saveSummarizedExperiment command."))
@@ -62,10 +58,6 @@ create_scMethrix <- function(methyl_mat = NULL, cov_mat = NULL, colData = NULL, 
       
       
     } else {
-
-      assays <- if (!is.null(cov_mat)) {list(score = as.matrix(do.call(cbind, methyl_mat)),
-                                             coverage = as.matrix(do.call(cbind, cov_mat)))
-      } else {list(score = as.matrix(do.call(cbind, methyl_mat)))}
       
       sse <- SingleCellExperiment::SingleCellExperiment(assays = assays,
                                                       colData = colData,
@@ -74,7 +66,7 @@ create_scMethrix <- function(methyl_mat = NULL, cov_mat = NULL, colData = NULL, 
                                                                       chrom_sizes = chrom_sizes,
                                                                       descriptive_stats = desc,
                                                                       is_h5 = FALSE, 
-                                                                      has_cov = !is.null(cov_mat)))
+                                                                      has_cov = ("coverage" %in% names(assays))))
     }
 
     return(scMethrix(sse))

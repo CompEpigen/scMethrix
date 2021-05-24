@@ -67,7 +67,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     colData <- data.frame()[1:(length(files)), ]
     row.names(colData) <- unlist(lapply(files,get_sample_name))
-    m_obj <- create_scMethrix(methyl_mat=reads$meth, cov_mat=reads$cov, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
+    m_obj <- create_scMethrix(assays = reads, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
                               replace = replace)
     
@@ -91,7 +91,10 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     message("Creating scMethrix object")
     colData <- data.frame()[1:(length(files)), ]
     row.names(colData) <- unlist(lapply(files,get_sample_name))
-    m_obj <- create_scMethrix(methyl_mat=reads$meth, cov_mat=reads$cov, 
+    
+    assays = 
+    
+    m_obj <- create_scMethrix(assays = reads, 
                               rowRanges=ref_cpgs, is_hdf5 = FALSE, genome_name = genome_name, 
                               desc = desc, colData = colData )
   }
@@ -332,16 +335,10 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
       DelayedArray::write_block(block = as.matrix(cbind(lapply(bed, `[[`, 1))), 
                                 viewport = grid[[i]], sink = M_sink)      
       
-      # DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(lapply(bed, `[[`, 1))), 
-      #                           viewport = grid[[i]], sink = M_sink)
-      if (!is.null(cov_idx)) 
-        
-        
+      if (!is.null(cov_idx)) {
         DelayedArray::write_block(block = as.matrix(cbind(lapply(data, `[[`, 2))), 
                                   viewport = grid[[i]], sink = cov_sink)
-        
-        # DelayedArray::write_block(block = as.matrix(dplyr::bind_cols(lapply(data, `[[`, 2))), 
-        #                                             viewport = grid[[i]], sink = cov_sink)
+      }
     }
     
     rm(bed)
@@ -352,7 +349,15 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   if (n_threads != 0) parallel::stopCluster(cl)
   if (verbose) message("Object created in ",stop_time()) 
   
-  return(list(meth = M_sink, cov = cov_sink))
+  if (!is.null(cov_idx)) {
+    reads = list(score = M_sink, coverage = cov_sink)
+  } else {
+    reads = list(score = M_sink)
+  }
+  
+  reads <- lapply(reads,function(x) as(x, "HDF5Array"))
+  
+  return(reads)
 }
 
 #' Writes methylation values from input BED files into an in-memory \code{\link{RangedSummarizedExperiment}}
@@ -386,7 +391,7 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
     
     chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
     
-    data <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
+    reads <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
                                   batch_size=round(batch_size/n_threads), 
                                   n_threads = 0, zero_based = zero_based, verbose = verbose))
     
@@ -395,26 +400,22 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
   } else {
     # Single thread functionality
     # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
-    data <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based,
+    reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based,
                    meth_idx = meth_idx, cov_idx = cov_idx)
     
     if (!is.null(cov_idx)) {
-      
-      data <- list(meth = cbind(lapply(data, `[[`, 1)),
-                   cov = cbind(lapply(data, `[[`, 2)))
-      
-      # data <- list(meth = dplyr::bind_cols(lapply(data, `[[`, 1)),
-      #              cov = dplyr::bind_cols(lapply(data, `[[`, 2)))
+      reads <- list(score = cbind(lapply(reads, `[[`, 1)),
+                   coverage = cbind(lapply(reads, `[[`, 2)))
     } else {
-      data <- list(meth = cbind(lapply(data, `[[`, 1)),NULL)
-      
-      # data <- list(meth = dplyr::bind_cols(lapply(data, `[[`, 1)),NULL)
+      reads <- list(score = cbind(lapply(reads, `[[`, 1)))
     }
+    
+    reads <- lapply(reads,function(x) as.matrix(do.call(cbind, x)))
     
     # if (verbose) message(" (",split_time(),")")
   }
   
   if (verbose) message("Data read in ",stop_time()) 
   
-  return (data)
+  return (reads)
 }
