@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{get_region_summary}
 \alias{get_region_summary}
-\title{Extract and summarize methylation or coverage info by regions of interest}
+\title{Extracts and summarizes methylation or coverage info by regions of interest}
 \usage{
 get_region_summary(
   scm = NULL,
@@ -42,7 +42,7 @@ tested group-wise.}
 table of summary statistic for the given region
 }
 \description{
-Extract and summarize methylation or coverage info by regions of interest
+Extracts and summarizes methylation or coverage info by regions of interest
 }
 \details{
 Takes \code{\link{scMethrix}} object and summarizes regions

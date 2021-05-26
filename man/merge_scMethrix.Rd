@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{merge_scMethrix}
 \alias{merge_scMethrix}
-\title{Merges two \code{\link{scMethrix}} objects.}
+\title{Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}}
 \usage{
 merge_scMethrix(scm1 = NULL, scm2 = NULL, by = c("row", "col"))
 }
@@ -17,7 +17,7 @@ merge_scMethrix(scm1 = NULL, scm2 = NULL, by = c("row", "col"))
 A merged \code{\link{scMethrix}} object
 }
 \description{
-Merges two \code{\link{scMethrix}} objects.
+Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
 }
 \details{
 Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot

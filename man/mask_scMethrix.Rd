@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{mask_scMethrix}
 \alias{mask_scMethrix}
-\title{Masks too high or too low counts}
+\title{Masks high or low coverage \code{count} or \code{cell} count}
 \usage{
 mask_scMethrix(
   scm = NULL,
@@ -28,7 +28,7 @@ higher quantile than the defined will be masked. Default = 0.99.}
 An object of class \code{\link{scMethrix}}
 }
 \description{
-Masks too high or too low counts
+Masks high or low coverage \code{count} or \code{cell} count
 }
 \details{
 Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage

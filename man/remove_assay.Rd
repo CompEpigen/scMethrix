@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{remove_assay}
 \alias{remove_assay}
-\title{Removes an assay from an \code{\link{scMethrix}} object.}
+\title{Removes an assay from an \code{\link{scMethrix}} object}
 \usage{
 remove_assay(scm, assay)
 }
@@ -15,7 +15,7 @@ remove_assay(scm, assay)
 An \code{\link{scMethrix}} object
 }
 \description{
-Removes an assay from an \code{\link{scMethrix}} object.
+Removes an assay from an \code{\link{scMethrix}} object
 }
 \examples{
 data('scMethrix_data')

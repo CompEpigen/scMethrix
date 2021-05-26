@@ -24,16 +24,17 @@ test_that("split_granges",{
   
   expect_error(split_granges("not granges"))
   expect_error(split_granges(regions))
-  expect_error(split_granges(regions,factor=2,num=3))
+  expect_error(split_granges(regions,chunks=2,size=3))
   
-  factor = 10
-  percent = 10  # From 100 regions, all would be split to 10 chunks
-  num = 10
+  chunks = 3
+  percent = 33
+  size = 33
   
-  expect_equivalent(length(split_granges(regions,factor=factor)),10)
-  expect_equivalent(split_granges(regions,factor=factor),split_granges(regions,percent=percent))
-  expect_equivalent(split_granges(regions,percent=percent),split_granges(regions,num=num))
-  expect_true(all(regions == unlist(split_granges(regions,num=num))))
+  expect_equivalent(length(split_granges(regions,chunks=chunks)),3)
+  expect_equivalent(length(split_granges(regions,percent=percent)),4)
+  expect_equivalent(length(split_granges(regions,percent=percent)[[4]]),1)
+  expect_equivalent(split_granges(regions,percent=percent),split_granges(regions,size=size))
+  expect_true(all(regions == unlist(split_granges(regions,size=size))))
 
 })
 

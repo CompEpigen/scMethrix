@@ -2,7 +2,7 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{get_sample_name}
 \alias{get_sample_name}
-\title{Returns file name minus the extension from a file.path to represent the sample name}
+\title{Returns sample name derived from the input file name}
 \usage{
 get_sample_name(s)
 }
@@ -13,7 +13,7 @@ get_sample_name(s)
 string containing the sample name
 }
 \description{
-Returns file name minus the extension from a file.path to represent the sample name
+Returns sample name derived from the input file name
 }
 \examples{
 #get_sample_name("C:/dir/dir/filename.ext")

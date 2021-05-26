@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{get_matrix}
 \alias{get_matrix}
-\title{Extract methylation or coverage matrices}
+\title{Extract assays from an \code{\link{scMethrix}} object}
 \usage{
 get_matrix(scm = NULL, add_loci = FALSE, in_granges = FALSE, type = "score")
 }
@@ -19,7 +19,7 @@ get_matrix(scm = NULL, add_loci = FALSE, in_granges = FALSE, type = "score")
 Coverage or Methylation matrix
 }
 \description{
-Extract methylation or coverage matrices
+Extract assays from an \code{\link{scMethrix}} object
 }
 \details{
 Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix

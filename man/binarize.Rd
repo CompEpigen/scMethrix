@@ -2,21 +2,22 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{binarize}
 \alias{binarize}
-\title{Binarize an input}
+\title{Binarize an input value based on a \code{threshold}}
 \usage{
-binarize(x, val = 50)
+binarize(x, threshold = 50)
 }
 \arguments{
 \item{x}{A value to binarize}
 
-\item{val}{The threshold for binarizing}
+\item{threshold}{The threshold for binarizing}
 }
 \value{
 1 or 0, if above of below the threshold
 }
 \description{
-Binarize an input
+Binarize an input value based on a \code{threshold}
 }
 \examples{
-binarize(0.7, val=0.5)
+vals <- c(0,0.25,0.5,0.75,1)
+binarize(vals, threshold=0.5)
 }

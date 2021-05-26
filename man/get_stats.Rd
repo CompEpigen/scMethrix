@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{get_stats}
 \alias{get_stats}
-\title{Estimate descriptive statistics}
+\title{Estimate descriptive statistics for each sample}
 \usage{
 get_stats(scm = NULL, per_chr = TRUE)
 }
@@ -15,10 +15,10 @@ get_stats(scm = NULL, per_chr = TRUE)
 data.table of summary stats
 }
 \description{
-Estimate descriptive statistics
+Estimate descriptive statistics for each sample
 }
 \details{
-Calculate descriptive statistics
+Calculate descriptive statistics (mean, median, SD) either by sample or \code{per_chr}
 }
 \examples{
 data('scMethrix_data')

@@ -12,13 +12,14 @@ convert_to_methrix(scm = NULL, h5_dir = NULL)
 \item{h5_dir}{Location to save the methrix H5 file}
 }
 \value{
-a methrix object
+a \code{\link[methrix]{methrix}} object
 }
 \description{
 Converts an \code{\link{scMethrix}} object to methrix object
 }
 \details{
-Removes extra slot data and changes structure to match \code{\link[methrix]{methrix}} format
+Removes extra slot data from an \code{\link{scMethrix}} object and changes structure to match
+\code{\link[methrix]{methrix}} format
 }
 \examples{
 data('scMethrix_data')

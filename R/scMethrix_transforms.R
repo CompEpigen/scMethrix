@@ -143,7 +143,8 @@ bin_scMethrix <- function(m, bin_size = 100000, trans = NULL, h5_dir = NULL) {
 #' @export
 impute_scMethrix <- function (m, threshold = 50) {
   
-  impute <- transform_assay(m,assay = "score",name = "impute",trans = function(x) {ifelse(m > threshold,1,0)})
+  #impute <- transform_assay(m,assay = "score",name = "impute",trans = function(x) {ifelse(m > threshold,1,0)})
+  
   
   
 }

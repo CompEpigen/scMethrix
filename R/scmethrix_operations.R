@@ -1,5 +1,6 @@
 #------------------------------------------------------------------------------------------------------------
-#' Add descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
+#' Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
+#' @details Adds the mean, median and SD for each region in an \code{\link{scMethrix}} object
 #' @param scm A \code{\link{scMethrix}} object
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -36,7 +37,7 @@ get_metadata_stats <- function(scm) {
 }
 
 #------------------------------------------------------------------------------------------------------------
-#' Removes an assay from an \code{\link{scMethrix}} object.
+#' Removes an assay from an \code{\link{scMethrix}} object
 #' @param scm A \code{\link{scMethrix}} object
 #' @param assay The name of an assay that exists in the \code{\link{scMethrix}} object
 #' @return An \code{\link{scMethrix}} object
@@ -64,7 +65,7 @@ remove_assay <- function(scm,assay) {
 }
 
 #------------------------------------------------------------------------------------------------------------
-#' Merges two \code{\link{scMethrix}} objects.
+#' Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
 #' @details Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot
 #' data is not supported at this time. Non-common assays between objects will be dropped
 #' @param scm1 A \code{\link{scMethrix}} object
@@ -119,10 +120,11 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 
 #------------------------------------------------------------------------------------------------------------
 #' Converts an \code{\link{scMethrix}} object to methrix object
-#' @details Removes extra slot data and changes structure to match \code{\link[methrix]{methrix}} format
+#' @details Removes extra slot data from an \code{\link{scMethrix}} object and changes structure to match
+#' \code{\link[methrix]{methrix}} format
 #' @param scm \code{\link{scMethrix}} object
 #' @param h5_dir Location to save the methrix H5 file
-#' @return a methrix object
+#' @return a \code{\link[methrix]{methrix}} object
 #' @examples
 #' data('scMethrix_data')
 #' # convert_to_methrix(scMethrix_data)
@@ -199,7 +201,7 @@ export_bed <- function(scm = NULL, path = NULL, suffix = NULL) {
 }
 
 #------------------------------------------------------------------------------------------------------------
-#' Extract and summarize methylation or coverage info by regions of interest
+#' Extracts and summarizes methylation or coverage info by regions of interest
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
 #' @param scm \code{\link{scMethrix}} object
 #' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object
@@ -504,7 +506,7 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, ...)
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Loads HDF5 scMethrix object
+#' Loads HDF5 \code{\link{scMethrix}} object
 #' @details Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
 #' @param dir The directory to read in from. Default NULL
 #' @param ... Parameters to pass to \code{\link{loadHDF5SummarizedExperiment}}
@@ -534,7 +536,7 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Converts HDF5 \code{\link{scMethrix}} object to standard in-memory object.
+#' Converts HDF5 \code{\link{scMethrix}} object to an in-memory \code{\link{scMethrix}} object.
 #' @details Takes a \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
 #' @param scm An object of class \code{\link{scMethrix}}, HDF5 format
 #' @return An object of class \code{\link{scMethrix}}
@@ -566,7 +568,7 @@ convert_HDF5_scMethrix <- function(scm = NULL) {
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Converts an in-memory object to an on-disk HDF5 object.
+#' Converts an in-memory \code{\link{scMethrix}} to an HDF5 \code{\link{scMethrix}}
 #' @details Takes a \code{\link{scMethrix}} object and returns with the same object with delayed array assay slots
 #' with HDF5 backend. Might take long time!
 #' @param scm An object of class \code{\link{scMethrix}}
@@ -601,7 +603,7 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Order scMethrix object by SD
+#' Order \code{\link{scMethrix}} object by SD
 #' @details Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
 #' @param scm \code{\link{scMethrix}} object
 #' @param zero.rm Removes zero values from equations (the default empty value for sparse matrices)
@@ -621,9 +623,9 @@ order_by_sd <- function (scm, zero.rm = FALSE, na.rm = FALSE) {
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Subsets an \code{\link{scMethrix}} object based on given conditions.
+#' Subsets an \code{\link{scMethrix}} object based on \code{regions}, \code{contigs} and/or \code{samples}.
 #' @details Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can 
-#' either subset to or filter out the input parameters.
+#' either subset (\code{include}) to or filter (\code{exclude}) the specified parameters.
 #' @param scm \code{\link{scMethrix}} object
 #' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param contigs string of chromosome names to subset by
@@ -714,8 +716,8 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Estimate descriptive statistics
-#' @details Calculate descriptive statistics
+#' Estimate descriptive statistics for each sample
+#' @details Calculate descriptive statistics (mean, median, SD) either by sample or \code{per_chr}
 #' @param scm \code{\link{scMethrix}} object
 #' @param per_chr Estimate stats per chromosome. Default TRUE
 #' @examples
@@ -796,7 +798,7 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
 
 #--------------------------------------------------------------------------------------------------------------------------
 
-#' Extract methylation or coverage matrices
+#' Extract assays from an \code{\link{scMethrix}} object
 #' @details Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
 #' @param scm \code{\link{scMethrix}} object
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
@@ -884,7 +886,7 @@ remove_uncovered <- function(scm = NULL) {
 
 #--------------------------------------------------------------------------------------------------------------------------
 
-#' Masks too high or too low counts
+#' Masks high or low coverage \code{count} or \code{cell} count
 #' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
 #'  by putting NA for coverage and beta value. The sites will remain in the object. 
 #' @param scm \code{\link{scMethrix}} object

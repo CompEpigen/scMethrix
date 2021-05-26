@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{subset_scMethrix}
 \alias{subset_scMethrix}
-\title{Subsets an \code{\link{scMethrix}} object based on given conditions.}
+\title{Subsets an \code{\link{scMethrix}} object based on \code{regions}, \code{contigs} and/or \code{samples}.}
 \usage{
 subset_scMethrix(
   scm = NULL,
@@ -30,11 +30,11 @@ subset_scMethrix(
 An object of class \code{\link{scMethrix}}
 }
 \description{
-Subsets an \code{\link{scMethrix}} object based on given conditions.
+Subsets an \code{\link{scMethrix}} object based on \code{regions}, \code{contigs} and/or \code{samples}.
 }
 \details{
 Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can
-either subset to or filter out the input parameters.
+either subset (\code{include}) to or filter (\code{exclude}) the specified parameters.
 }
 \examples{
 data('scMethrix_data')

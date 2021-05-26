@@ -2,32 +2,33 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{split_granges}
 \alias{split_granges}
-\title{Chunks a \code{\link{GRanges}} object by \code{factor}, \code{percent} or \code{number}}
+\title{Splits a \code{\link{GRanges}} object by \code{chunks}, \code{percent} or \code{size}}
 \usage{
-split_granges(gr, factor = NA, percent = NA, num = NA)
+split_granges(gr, chunks = NA, percent = NA, size = NA)
 }
 \arguments{
 \item{gr}{The \code{\link{GRanges}} object}
 
-\item{factor}{The factor to which divide the chunks into}
+\item{chunks}{The total number of desired chunks (rounded up to nearest int)}
 
-\item{percent}{The size in percentage of CpGs in each chunk}
+\item{percent}{The percentage of overall CpGs in each chunk}
 
-\item{num}{The number of CpGs to include in each chunk}
+\item{size}{The number of CpGs to include in each chunk}
 }
 \value{
 \code{\link{GRangesList}} containing all the chunked \code{\link{GRanges}}
 }
 \description{
-Chunks a \code{\link{GRanges}} object by \code{factor}, \code{percent} or \code{number}
+Splits a \code{\link{GRanges}} object by \code{chunks}, \code{percent} or \code{size}
 }
 \details{
-Divides \code{\link{GRanges}} into a list based on a chunking parameter
+Divides each region \code{\link{GRanges}} into equally-sized lists based on a chunking parameter.
+If \code{len(gr) \%\% number != 0}, then the last vector will have a length of less than size \code{number}
 }
 \examples{
 regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
-regions <- bin_granges(regions,bin_size=10)
-split_granges(regions, num=10)
-split_granges(regions, factor=10)
+regions <- bin_granges(regions,bin_size=1)
+split_granges(regions, chunks=10)
 split_granges(regions, percent=10)
+split_granges(regions, size=10)
 }

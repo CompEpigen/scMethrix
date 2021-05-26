@@ -2,23 +2,24 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{bin_granges}
 \alias{bin_granges}
-\title{Bins a \code{\link{GRanges}} object into bins of length \code{bin_size}}
+\title{Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size}}
 \usage{
 bin_granges(gr, bin_size = 1e+05)
 }
 \arguments{
 \item{gr}{The \code{\link{GRanges}} object}
 
-\item{bin_size}{The size of bin to use}
+\item{bin_size}{The length of region in each bin}
 }
 \value{
 \code{\link{GRangesList}} containing all the binned \code{\link{GRanges}}
 }
 \description{
-Bins a \code{\link{GRanges}} object into bins of length \code{bin_size}
+Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size}
 }
 \details{
-Bins \code{\link{GRanges}} objects into a specified bin size by chromosome
+Bins a single region in \code{\link{GRanges}} format into multiple regions with a specified
+\code{bin_size}. If \code{length(gr) \%\% bin_size != 0}, then the last GRange will have a length < \code{bin_size}
 }
 \examples{
 regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,10000))

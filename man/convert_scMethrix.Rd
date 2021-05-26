@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{convert_scMethrix}
 \alias{convert_scMethrix}
-\title{Converts an in-memory object to an on-disk HDF5 object.}
+\title{Converts an in-memory \code{\link{scMethrix}} to an HDF5 \code{\link{scMethrix}}}
 \usage{
 convert_scMethrix(scm = NULL, h5_dir = NULL, verbose = TRUE)
 }
@@ -17,7 +17,7 @@ convert_scMethrix(scm = NULL, h5_dir = NULL, verbose = TRUE)
 An object of class \code{\link{scMethrix}}, HDF5 format
 }
 \description{
-Converts an in-memory object to an on-disk HDF5 object.
+Converts an in-memory \code{\link{scMethrix}} to an HDF5 \code{\link{scMethrix}}
 }
 \details{
 Takes a \code{\link{scMethrix}} object and returns with the same object with delayed array assay slots

@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{load_HDF5_scMethrix}
 \alias{load_HDF5_scMethrix}
-\title{Loads HDF5 scMethrix object}
+\title{Loads HDF5 \code{\link{scMethrix}} object}
 \usage{
 load_HDF5_scMethrix(dir = NULL, ...)
 }
@@ -15,7 +15,7 @@ load_HDF5_scMethrix(dir = NULL, ...)
 An object of class \code{\link{scMethrix}}
 }
 \description{
-Loads HDF5 scMethrix object
+Loads HDF5 \code{\link{scMethrix}} object
 }
 \details{
 Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it

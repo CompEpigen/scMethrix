@@ -2,7 +2,7 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{cast_granges}
 \alias{cast_granges}
-\title{Casts regions into \code{\link{GRanges}} format}
+\title{Casts genomic regions into \code{\link{GRanges}} format}
 \usage{
 cast_granges(regions)
 }
@@ -13,7 +13,7 @@ cast_granges(regions)
 \code{\link{GRanges}} object with the input regions
 }
 \description{
-Casts regions into \code{\link{GRanges}} format
+Casts genomic regions into \code{\link{GRanges}} format
 }
 \details{
 Casts the input as a \code{\link{GRanges}} object. Input can be \code{\link{GRanges}} or a

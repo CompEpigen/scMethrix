@@ -2,7 +2,7 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{split_vector}
 \alias{split_vector}
-\title{Splits a vector into subvectors}
+\title{Splits a vector into subvectors by \code{chunk} or \code{size}}
 \usage{
 split_vector(vec, num = 1, by = "chunks")
 }
@@ -17,7 +17,7 @@ split_vector(vec, num = 1, by = "chunks")
 A vector of vectors
 }
 \description{
-Splits a vector into subvectors
+Splits a vector into subvectors by \code{chunk} or \code{size}
 }
 \details{
 Splits a vector into \code{num} vectors or vectors of \code{n} size. If \code{len(vec)\%\%num != 0},

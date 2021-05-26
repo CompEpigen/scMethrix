@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{get_metadata_stats}
 \alias{get_metadata_stats}
-\title{Add descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.}
+\title{Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.}
 \usage{
 get_metadata_stats(scm)
 }
@@ -13,7 +13,10 @@ get_metadata_stats(scm)
 An \code{\link{scMethrix}} object
 }
 \description{
-Add descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
+Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
+}
+\details{
+Adds the mean, median and SD for each region in an \code{\link{scMethrix}} object
 }
 \examples{
 data('scMethrix_data')

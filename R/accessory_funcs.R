@@ -20,8 +20,7 @@ has_cov = function(m) {
   return("counts" %in% SummarizedExperiment::assayNames(m))
 }
 
-
-#' Returns file name minus the extension from a file.path to represent the sample name
+#' Returns sample name derived from the input file name
 #' @param s A file.path
 #' @return string containing the sample name
 #' @import tools
@@ -32,18 +31,21 @@ get_sample_name = function(s) {
   return(tools::file_path_sans_ext(basename(s)))
 }
 
-#' Binarize an input
+#' Binarize an input value based on a \code{threshold}
+#' @detail Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
+#'  If \code{x} = \code{threshold}, \code{x} = 0.
 #' @param x A value to binarize
-#' @param val The threshold for binarizing
+#' @param threshold The threshold for binarizing
 #' @return 1 or 0, if above of below the threshold
 #' @examples
-#' binarize(0.7, val=0.5)
+#' vals <- c(0,0.25,0.5,0.75,1)
+#' binarize(vals, threshold=0.5)
 #' @export
-binarize = function(x,val = 50) {
-  ifelse(x > val,1,0)
+binarize = function(x,threshold = 50) {
+  ifelse(x > threshold,1,0)
 }
 
-#' Splits a vector into subvectors
+#' Splits a vector into subvectors by \code{chunk} or \code{size}
 #' @details Splits a vector into \code{num} vectors or vectors of \code{n} size. If \code{len(vec)%%num != 0},
 #' then the last vector will have a length of less than size \code{num}
 #' @param vec The vector to split
@@ -86,52 +88,55 @@ split_vector = function(vec, num = 1, by = "chunks") {
   }
 }
 
-#' Chunks a \code{\link{GRanges}} object by \code{factor}, \code{percent} or \code{number}
-#' @details Divides \code{\link{GRanges}} into a list based on a chunking parameter
+#' Splits a \code{\link{GRanges}} object by \code{chunks}, \code{percent} or \code{size}
+#' @details Divides each region \code{\link{GRanges}} into equally-sized lists based on a chunking parameter. 
+#' If \code{len(gr) %% number != 0}, then the last vector will have a length of less than size \code{number}
 #' @param gr The \code{\link{GRanges}} object
-#' @param factor The factor to which divide the chunks into
-#' @param percent The size in percentage of CpGs in each chunk
-#' @param num The number of CpGs to include in each chunk
+#' @param chunks The total number of desired chunks (rounded up to nearest int)
+#' @param percent The percentage of overall CpGs in each chunk
+#' @param size The number of CpGs to include in each chunk
 #' @return \code{\link{GRangesList}} containing all the chunked \code{\link{GRanges}}
 #' @import GenomicRanges
 #' @examples
 #' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
-#' regions <- bin_granges(regions,bin_size=10)
-#' split_granges(regions, num=10)
-#' split_granges(regions, factor=10)
+#' regions <- bin_granges(regions,bin_size=1)
+#' split_granges(regions, chunks=10)
 #' split_granges(regions, percent=10)
+#' split_granges(regions, size=10)
 #' @export
-split_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, percent = NULL
+split_granges = function(gr,chunks = NA, percent = NA, size = NA) { #=NULL, percent = NULL
+
+    if (sum(is.na(c(chunks,percent,size))) != 2) stop("Max 1 argument for chunking.")
   
-  if (sum(is.na(c(factor,percent,num))) != 2) stop("Max 1 argument for chunking.")
-  
-  if (!is.na(percent)) factor = 100/percent
-  
-  if (!is.na(factor)) {
-    num <- floor(length(gr)/factor)
+  if (!is.na(percent)) {
+    size <- floor(length(gr)*percent/(100))
   }
   
-  if (!is.na(num)) {
-    splits <- ceiling(length(gr)/num)
-    splits <- num*(0:(splits-1))+1
+  if (!is.na(chunks)) {
+    chunks = ceiling(chunks)
+    size <- ceiling(length(gr)/chunks)
+  }
+  
+  if (!is.na(size)) {
+    splits <- ceiling(length(gr)/size)
+    splits <- size*(0:(splits-1))+1
   }
   
   grl <- list()
   
   for (i in 1:length(splits)) {
     s <- splits[i]
-    grl[[i]] <- gr[s:(s+num-1)]
+    grl[[i]] <- gr[s:min(s+size-1,length(gr))]
   }
     
- # grl[[i+1]] <- gr[(last(splits)+num):length(gr)]  
-  
   return (GenomicRanges::GRangesList(grl))
 }
 
-#' Bins a \code{\link{GRanges}} object into bins of length \code{bin_size}
-#' @details Bins \code{\link{GRanges}} objects into a specified bin size by chromosome
+#' Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size} 
+#' @details Bins a single region in \code{\link{GRanges}} format into multiple regions with a specified
+#' \code{bin_size}. If \code{length(gr) %% bin_size != 0}, then the last GRange will have a length < \code{bin_size}
 #' @param gr The \code{\link{GRanges}} object
-#' @param bin_size The size of bin to use
+#' @param bin_size The length of region in each bin
 #' @return \code{\link{GRangesList}} containing all the binned \code{\link{GRanges}}
 #' @import GenomicRanges
 #' @examples
@@ -139,7 +144,7 @@ split_granges = function(gr,factor = NA, percent = NA, num = NA) { #=NULL, perce
 #' bin_granges(regions,bin_size=1000) 
 #' @export
 bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
-  
+
   ends <- len <- seqnames(gr)@lengths
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
   starts <- head(c(1, ends + 1), -1)
@@ -164,7 +169,7 @@ bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
 }
 
 #--- cast_granges -------------------------------------------------------------------------------------------
-#' Casts regions into \code{\link{GRanges}} format
+#' Casts genomic regions into \code{\link{GRanges}} format
 #' @details Casts the input as a \code{\link{GRanges}} object. Input can be \code{\link{GRanges}} or a 
 #' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input BED format
 #'  must be \code{chr-start-end} for \code{\link{data.frame}} objects.
@@ -192,7 +197,7 @@ start_time <- function() {
   invisible(NULL)
 }
 
-#' Outputs the split/lap/iteration time 
+#' Outputs the split/lap/iteration time
 #' @details Gets the stored elapsed \\code{\link{proc.time}} from either the initial 
 #' \code{\link{start_time}} or the previous \code{split_time}
 #' @return Returns formatted elapsed time since \code{\link{start_time}} or last \code{\link{split_time}}
