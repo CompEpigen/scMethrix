@@ -6,3 +6,5 @@
 .Ruserdata
 /sampleData
 /data_gen/*.bedGraph
+docs
+docs/

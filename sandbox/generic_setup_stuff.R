@@ -2,7 +2,7 @@ list.of.packages <- c("SingleCellExperiment","data.table","plyr","HDF5Array","ti
                       "GenomicRanges","parallel","roxygen2","dplyr","rbenchmark","testthat","rtracklayer",
                       "tools","microbenchmark","measurements","magrittr","doParallel","parallel",
                       "Cairo","ggplot2","methrix","BSgenome","BSgenome.Hsapiens.UCSC.hg19","usethis",
-                      "BSgenome.Mmusculus.UCSC.mm10")
+                      "BSgenome.Mmusculus.UCSC.mm10","pkgdown")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 lapply(list.of.packages, require, character.only = TRUE)
