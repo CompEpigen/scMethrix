@@ -42,7 +42,11 @@ get_sample_name = function(s) {
 #' binarize(vals, threshold=0.5)
 #' @export
 binarize = function(x,threshold = 50) {
-  ifelse(x > threshold,1,0)
+  if (is.na(x)) {
+    -1
+  } else {
+    ifelse(x > threshold,1,0)
+  }
 }
 
 #' Splits a vector into subvectors by \code{chunk} or \code{size}

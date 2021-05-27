@@ -54,6 +54,10 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     if (is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
     
+    if(dir.exists(h5_dir) && !replace) stop("h5_dir already exists! Use 'replace=TRUE' to replace it. All 
+                                            existing data in that directory will be deleted.") 
+    
+    
     if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,batch_size = batch_size, zero_based = zero_based)
     
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}

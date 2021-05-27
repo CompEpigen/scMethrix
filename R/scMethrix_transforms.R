@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------------------------------------
 #' Transforms an assay in an \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
-#' @param m A \code{\link{scMethrix}} object
+#' @param scm A \code{\link{scMethrix}} object
 #' @param assay String name of an existing assay
 #' @param name String name of transformed assay
 #' @param trans The transformation function
@@ -11,9 +11,9 @@
 #' data('scMethrix_data')
 #' transform_assay(scMethrix_data,assay="score",name="plus1",trans=function(x){x+1})
 #' @export
-transform_assay <- function(m,assay = NULL, name = NULL, trans = NULL, h5_temp = NULL) {
+transform_assay <- function(scm,assay = NULL, name = NULL, trans = NULL, h5_temp = NULL) {
   
-  if (!is(m, "scMethrix")) {
+  if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
@@ -21,27 +21,29 @@ transform_assay <- function(m,assay = NULL, name = NULL, trans = NULL, h5_temp =
     stop("A valid transform function must be specified.", call. = FALSE)
   }
   
-  if (!(assay %in% SummarizedExperiment::assayNames(m))) {
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
     stop("Assay does not exist in the object", call. = FALSE)
   }
   
-  if (name %in% SummarizedExperiment::assayNames(m)) {
+  if (name %in% SummarizedExperiment::assayNames(scm)) {
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   }
   
-  if (is_h5(m)) {
+  if (is_h5(scm)) {
     
     if (is.null(h5_temp)) {h5_temp <- tempdir()}
     
-    grid <- DelayedArray::RegularArrayGrid(refdim = dim(m),
-                                           spacings = c(dim(m)[1], 1L)) 
+    grid <- DelayedArray::RegularArrayGrid(refdim = dim(scm),
+                                           spacings = c(length(scm), 1L)) 
     
-    trans_sink <- HDF5Array::HDF5RealizationSink(dim = dim(m),
-                                                 dimnames = list(NULL,row.names(colData(m))), #type = "double",
+    trans_sink <- HDF5Array::HDF5RealizationSink(dim = dim(scm),
+                                                 dimnames = list(NULL,row.names(colData(scm))), #type = "double",
                                                  filepath = tempfile(pattern="trans_sink_",tmpdir=h5_temp),
-                                                 name = "trans", level = 6)
+                                                 name = name, level = 6)
     
-    blocs <- DelayedArray::blockApply(get_matrix(m,type=assay), grid = grid, trans)
+    blocs <- DelayedArray::blockApply(get_matrix(scm,type=assay), grid = grid, FUN = function(x) 
+      sapply(x,trans))
+    beep()
     
     for(i in 1:length(blocs)) {
       
@@ -53,12 +55,12 @@ transform_assay <- function(m,assay = NULL, name = NULL, trans = NULL, h5_temp =
     s <- as(trans_sink, "HDF5Array")
     
   } else {
-    s <- apply(get_matrix(m,type=assay),1:2,trans)
+    s <- apply(get_matrix(scm,type=assay),1:2,trans)
   }
   
-  assays(m)[[name]] <- s
+  assays(scm)[[name]] <- s
   
-  return(m)
+  return(scm)
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -149,4 +151,29 @@ impute_scMethrix <- function (m, threshold = 50) {
   
 }
 
+
+
+
+
+umap_scMethrix <- function(scm) {
+  
+  start_time()
+  
+  scm.bin <- transform_assay(scm,assay="score",name="binary",trans=binarize)
+  scm.umap <- umap(t(get_matrix(scm.bin,type="binary")),n_neighbors=min(100,ncol(scm)))
+ 
+  stop_time()
+  beep()
+  
+  df <- data.frame(x = scm.umap$layout[,1],
+                   y = scm.umap$layout[,2])
+  
+  ggplot(df, aes(x, y)) +
+    geom_point()
+  
+  
+  
+  
+   
+}
 
