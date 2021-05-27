@@ -2,7 +2,7 @@
 % Please edit documentation in R/read_beds.R
 \name{read_hdf5_data}
 \alias{read_hdf5_data}
-\title{Writes methylation values from input BED files into an HDF5array}
+\title{Writes values from input BED files into an in-disk \code{\link{HDF5Array}}}
 \usage{
 read_hdf5_data(
   files,
@@ -36,7 +36,7 @@ read_hdf5_data(
 List of \code{\link{HDF5Array}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
 }
 \description{
-Writes methylation values from input BED files into an HDF5array
+Writes values from input BED files into an in-disk \code{\link{HDF5Array}}
 }
 \details{
 Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation

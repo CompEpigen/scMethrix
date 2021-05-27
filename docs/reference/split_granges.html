@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Chunks a GRanges object by factor, percent or number — split_granges • scMethrix</title>
+<title>Splits a GRanges object by chunks, percent or size — split_granges • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Chunks a GRanges object by factor, percent or number — split_granges" />
-<meta property="og:description" content="Chunks a GRanges object by factor, percent or number" />
+<meta property="og:title" content="Splits a GRanges object by chunks, percent or size — split_granges" />
+<meta property="og:description" content="Splits a GRanges object by chunks, percent or size" />
 
 
 
@@ -111,16 +111,16 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Chunks a <code>GRanges</code> object by <code>factor</code>, <code>percent</code> or <code>number</code></h1>
+    <h1>Splits a <code>GRanges</code> object by <code>chunks</code>, <code>percent</code> or <code>size</code></h1>
     <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/accessory_funcs.R'><code>R/accessory_funcs.R</code></a></small>
     <div class="hidden name"><code>split_granges.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Chunks a <code>GRanges</code> object by <code>factor</code>, <code>percent</code> or <code>number</code></p>
+    <p>Splits a <code>GRanges</code> object by <code>chunks</code>, <code>percent</code> or <code>size</code></p>
     </div>
 
-    <pre class="usage"><span class='fu'>split_granges</span><span class='op'>(</span><span class='va'>gr</span>, factor <span class='op'>=</span> <span class='cn'>NA</span>, percent <span class='op'>=</span> <span class='cn'>NA</span>, num <span class='op'>=</span> <span class='cn'>NA</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>split_granges</span><span class='op'>(</span><span class='va'>gr</span>, chunks <span class='op'>=</span> <span class='cn'>NA</span>, percent <span class='op'>=</span> <span class='cn'>NA</span>, size <span class='op'>=</span> <span class='cn'>NA</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -130,15 +130,15 @@
       <td><p>The <code>GRanges</code> object</p></td>
     </tr>
     <tr>
-      <th>factor</th>
-      <td><p>The factor to which divide the chunks into</p></td>
+      <th>chunks</th>
+      <td><p>The total number of desired chunks (rounded up to nearest int)</p></td>
     </tr>
     <tr>
       <th>percent</th>
-      <td><p>The size in percentage of CpGs in each chunk</p></td>
+      <td><p>The percentage of overall CpGs in each chunk</p></td>
     </tr>
     <tr>
-      <th>num</th>
+      <th>size</th>
       <td><p>The number of CpGs to include in each chunk</p></td>
     </tr>
     </table>
@@ -148,84 +148,16 @@
     <p><code>GRangesList</code> containing all the chunked <code>GRanges</code></p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Divides <code>GRanges</code> into a list based on a chunking parameter</p>
+    <p>Divides each region <code>GRanges</code> into equally-sized lists based on a chunking parameter.
+If <code>len(gr) %% number != 0</code>, then the last vector will have a length of less than size <code>number</code></p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='va'>regions</span> <span class='op'>&lt;-</span> <span class='fu'>GenomicRanges</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html'>GRanges</a></span><span class='op'>(</span>seqnames <span class='op'>=</span> <span class='st'>"chr1"</span>, ranges <span class='op'>=</span> <span class='fu'>IRanges</span><span class='op'>(</span><span class='fl'>1</span>,<span class='fl'>100</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>regions</span> <span class='op'>&lt;-</span> <span class='fu'><a href='bin_granges.html'>bin_granges</a></span><span class='op'>(</span><span class='va'>regions</span>,bin_size<span class='op'>=</span><span class='fl'>10</span><span class='op'>)</span>
-<span class='fu'>split_granges</span><span class='op'>(</span><span class='va'>regions</span>, num<span class='op'>=</span><span class='fl'>10</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; GRangesList object of length 1:
-#&gt; [[1]]
-#&gt; GRanges object with 10 ranges and 0 metadata columns:
-#&gt;        seqnames    ranges strand
-#&gt;           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
-#&gt;    [1]     chr1      1-10      *
-#&gt;    [2]     chr1     11-20      *
-#&gt;    [3]     chr1     21-30      *
-#&gt;    [4]     chr1     31-40      *
-#&gt;    [5]     chr1     41-50      *
-#&gt;    [6]     chr1     51-60      *
-#&gt;    [7]     chr1     61-70      *
-#&gt;    [8]     chr1     71-80      *
-#&gt;    [9]     chr1     81-90      *
-#&gt;   [10]     chr1    91-100      *
-#&gt;   -------
-#&gt;   seqinfo: 1 sequence from an unspecified genome; no seqlengths
-#&gt; </div><div class='input'><span class='fu'>split_granges</span><span class='op'>(</span><span class='va'>regions</span>, factor<span class='op'>=</span><span class='fl'>10</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; GRangesList object of length 10:
-#&gt; [[1]]
-#&gt; GRanges object with 1 range and 0 metadata columns:
-#&gt;       seqnames    ranges strand
-#&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
-#&gt;   [1]     chr1      1-10      *
-#&gt;   -------
-#&gt;   seqinfo: 1 sequence from an unspecified genome; no seqlengths
-#&gt; 
-#&gt; [[2]]
-#&gt; GRanges object with 1 range and 0 metadata columns:
-#&gt;       seqnames    ranges strand
-#&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
-#&gt;   [1]     chr1     11-20      *
-#&gt;   -------
-#&gt;   seqinfo: 1 sequence from an unspecified genome; no seqlengths
-#&gt; 
-#&gt; [[3]]
-#&gt; GRanges object with 1 range and 0 metadata columns:
-#&gt;       seqnames    ranges strand
-#&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
-#&gt;   [1]     chr1     21-30      *
-#&gt;   -------
-#&gt;   seqinfo: 1 sequence from an unspecified genome; no seqlengths
-#&gt; 
-#&gt; ...
-#&gt; &lt;7 more elements&gt;</div><div class='input'><span class='fu'>split_granges</span><span class='op'>(</span><span class='va'>regions</span>, percent<span class='op'>=</span><span class='fl'>10</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; GRangesList object of length 10:
-#&gt; [[1]]
-#&gt; GRanges object with 1 range and 0 metadata columns:
-#&gt;       seqnames    ranges strand
-#&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
-#&gt;   [1]     chr1      1-10      *
-#&gt;   -------
-#&gt;   seqinfo: 1 sequence from an unspecified genome; no seqlengths
-#&gt; 
-#&gt; [[2]]
-#&gt; GRanges object with 1 range and 0 metadata columns:
-#&gt;       seqnames    ranges strand
-#&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
-#&gt;   [1]     chr1     11-20      *
-#&gt;   -------
-#&gt;   seqinfo: 1 sequence from an unspecified genome; no seqlengths
-#&gt; 
-#&gt; [[3]]
-#&gt; GRanges object with 1 range and 0 metadata columns:
-#&gt;       seqnames    ranges strand
-#&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
-#&gt;   [1]     chr1     21-30      *
-#&gt;   -------
-#&gt;   seqinfo: 1 sequence from an unspecified genome; no seqlengths
-#&gt; 
-#&gt; ...
-#&gt; &lt;7 more elements&gt;</div></pre>
+<span class='va'>regions</span> <span class='op'>&lt;-</span> <span class='fu'><a href='bin_granges.html'>bin_granges</a></span><span class='op'>(</span><span class='va'>regions</span>,bin_size<span class='op'>=</span><span class='fl'>1</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in bin_granges(regions, bin_size = 1): could not find function "bin_granges"</span></div><div class='input'><span class='fu'>split_granges</span><span class='op'>(</span><span class='va'>regions</span>, chunks<span class='op'>=</span><span class='fl'>10</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in split_granges(regions, chunks = 10): unused argument (chunks = 10)</span></div><div class='input'><span class='fu'>split_granges</span><span class='op'>(</span><span class='va'>regions</span>, percent<span class='op'>=</span><span class='fl'>10</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in 0:(splits - 1): result would be too long a vector</span></div><div class='input'><span class='fu'>split_granges</span><span class='op'>(</span><span class='va'>regions</span>, size<span class='op'>=</span><span class='fl'>10</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in split_granges(regions, size = 10): unused argument (size = 10)</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

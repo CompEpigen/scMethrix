@@ -37,13 +37,11 @@ transform_assay <- function(scm,assay = NULL, name = NULL, trans = NULL, h5_temp
                                            spacings = c(length(scm), 1L)) 
     
     trans_sink <- HDF5Array::HDF5RealizationSink(dim = dim(scm),
-                                                 dimnames = list(NULL,row.names(colData(scm))), #type = "double",
+                                                 dimnames = list(NULL,row.names(colData(scm))), type = "integer",
                                                  filepath = tempfile(pattern="trans_sink_",tmpdir=h5_temp),
                                                  name = name, level = 6)
     
-    blocs <- DelayedArray::blockApply(get_matrix(scm,type=assay), grid = grid, FUN = function(x) 
-      sapply(x,trans))
-    beep()
+    blocs <- DelayedArray::blockApply(get_matrix(scm,type=assay), grid = grid, FUN = trans)
     
     for(i in 1:length(blocs)) {
       
@@ -160,7 +158,7 @@ umap_scMethrix <- function(scm) {
   start_time()
   
   scm.bin <- transform_assay(scm,assay="score",name="binary",trans=binarize)
-  scm.umap <- umap(t(get_matrix(scm.bin,type="binary")),n_neighbors=min(100,ncol(scm)))
+  scm.umap <- umap(t(get_matrix(scm.bin,type="binary")),n_neighbors=min(100,10))#ncol(scm)))
  
   stop_time()
   beep()

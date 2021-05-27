@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Extract and summarize methylation or coverage info by regions of interest — get_region_summary • scMethrix</title>
+<title>Extracts and summarizes methylation or coverage info by regions of interest — get_region_summary • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Extract and summarize methylation or coverage info by regions of interest — get_region_summary" />
-<meta property="og:description" content="Extract and summarize methylation or coverage info by regions of interest" />
+<meta property="og:title" content="Extracts and summarizes methylation or coverage info by regions of interest — get_region_summary" />
+<meta property="og:description" content="Extracts and summarizes methylation or coverage info by regions of interest" />
 
 
 
@@ -111,13 +111,13 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Extract and summarize methylation or coverage info by regions of interest</h1>
+    <h1>Extracts and summarizes methylation or coverage info by regions of interest</h1>
     <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
     <div class="hidden name"><code>get_region_summary.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Extract and summarize methylation or coverage info by regions of interest</p>
+    <p>Extracts and summarizes methylation or coverage info by regions of interest</p>
     </div>
 
     <pre class="usage"><span class='fu'>get_region_summary</span><span class='op'>(</span>
@@ -188,8 +188,7 @@ tested group-wise.</p></td>
 <span class='fu'>get_region_summary</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,
    regions <span class='op'>=</span> <span class='fu'>data.table</span><span class='op'>(</span>chr <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>'chr1'</span>,<span class='st'>'chr2'</span><span class='op'>)</span>, start <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>)</span>, end <span class='op'>=</span>  <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>10000000</span><span class='op'>)</span><span class='op'>)</span>,
    type <span class='op'>=</span> <span class='st'>'score'</span>, how <span class='op'>=</span> <span class='st'>'mean'</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Generating region summary...</span></div><div class='output co'>#&gt; <span class='message'>Summarizing by average</span></div><div class='output co'>#&gt; <span class='message'>Region summary generating in 0.08s</span></div><div class='output co'>#&gt;     chr start      end n_overlap_CpGs rid  C1  C2  C3  C4
-#&gt; 1: chr1     1 10000000              1   1 NaN 100 100 100</div></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error in get_region_summary(scMethrix_data, regions = data.table(chr = c("chr1",     "chr2"), start = c(1), end = c(1e+07)), type = "score", how = "mean"): could not find function "get_region_summary"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

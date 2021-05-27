@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Binarize an input — binarize • scMethrix</title>
+<title>Binarize an input value based on a threshold — binarize • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Binarize an input — binarize" />
-<meta property="og:description" content="Binarize an input" />
+<meta property="og:title" content="Binarize an input value based on a threshold — binarize" />
+<meta property="og:description" content="Binarize an input value based on a threshold" />
 
 
 
@@ -111,16 +111,16 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Binarize an input</h1>
+    <h1>Binarize an input value based on a <code>threshold</code></h1>
     <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/accessory_funcs.R'><code>R/accessory_funcs.R</code></a></small>
     <div class="hidden name"><code>binarize.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Binarize an input</p>
+    <p>Binarize an input value based on a <code>threshold</code></p>
     </div>
 
-    <pre class="usage"><span class='fu'>binarize</span><span class='op'>(</span><span class='va'>x</span>, val <span class='op'>=</span> <span class='fl'>50</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>binarize</span><span class='op'>(</span><span class='va'>x</span>, threshold <span class='op'>=</span> <span class='fl'>50</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -130,7 +130,7 @@
       <td><p>A value to binarize</p></td>
     </tr>
     <tr>
-      <th>val</th>
+      <th>threshold</th>
       <td><p>The threshold for binarizing</p></td>
     </tr>
     </table>
@@ -140,8 +140,9 @@
     <p>1 or 0, if above of below the threshold</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>binarize</span><span class='op'>(</span><span class='fl'>0.7</span>, val<span class='op'>=</span><span class='fl'>0.5</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; [1] 1</div></pre>
+    <pre class="examples"><div class='input'><span class='va'>vals</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0</span>,<span class='fl'>0.25</span>,<span class='fl'>0.5</span>,<span class='fl'>0.75</span>,<span class='fl'>1</span><span class='op'>)</span>
+<span class='fu'>binarize</span><span class='op'>(</span><span class='va'>vals</span>, threshold<span class='op'>=</span><span class='fl'>0.5</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in binarize(vals, threshold = 0.5): could not find function "binarize"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

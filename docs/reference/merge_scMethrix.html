@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Merges two scMethrix objects. — merge_scMethrix • scMethrix</title>
+<title>Merges two scMethrix objects by row or col — merge_scMethrix • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Merges two scMethrix objects. — merge_scMethrix" />
-<meta property="og:description" content="Merges two scMethrix objects." />
+<meta property="og:title" content="Merges two scMethrix objects by row or col — merge_scMethrix" />
+<meta property="og:description" content="Merges two scMethrix objects by row or col" />
 
 
 
@@ -111,13 +111,13 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Merges two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects.</h1>
+    <h1>Merges two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects by <code>row</code> or <code>col</code></h1>
     <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
     <div class="hidden name"><code>merge_scMethrix.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Merges two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects.</p>
+    <p>Merges two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects by <code>row</code> or <code>col</code></p>
     </div>
 
     <pre class="usage"><span class='fu'>merge_scMethrix</span><span class='op'>(</span>scm1 <span class='op'>=</span> <span class='cn'>NULL</span>, scm2 <span class='op'>=</span> <span class='cn'>NULL</span>, by <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"row"</span>, <span class='st'>"col"</span><span class='op'>)</span><span class='op'>)</span></pre>
@@ -150,13 +150,7 @@ data is not supported at this time. Non-common assays between objects will be dr
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
 <span class='fu'>merge_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>[</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>5</span><span class='op'>]</span>,<span class='va'>scMethrix_data</span><span class='op'>[</span><span class='fl'>6</span><span class='op'>:</span><span class='fl'>10</span><span class='op'>]</span>,by<span class='op'>=</span><span class='st'>"row"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 10
-#&gt;    n_samples: 4
-#&gt;    assays: score, counts
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 34.2 Kb</div></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error in merge_scMethrix(scMethrix_data[1:5], scMethrix_data[6:10], by = "row"): could not find function "merge_scMethrix"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

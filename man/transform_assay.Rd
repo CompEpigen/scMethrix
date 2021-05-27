@@ -4,10 +4,10 @@
 \alias{transform_assay}
 \title{Transforms an assay in an \code{\link{scMethrix}} object.}
 \usage{
-transform_assay(m, assay = NULL, name = NULL, trans = NULL, h5_temp = NULL)
+transform_assay(scm, assay = NULL, name = NULL, trans = NULL, h5_temp = NULL)
 }
 \arguments{
-\item{m}{A \code{\link{scMethrix}} object}
+\item{scm}{A \code{\link{scMethrix}} object}
 
 \item{assay}{String name of an existing assay}
 

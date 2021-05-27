@@ -32,7 +32,7 @@ get_sample_name = function(s) {
 }
 
 #' Binarize an input value based on a \code{threshold}
-#' @detail Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
+#' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
 #'  If \code{x} = \code{threshold}, \code{x} = 0.
 #' @param x A value to binarize
 #' @param threshold The threshold for binarizing
@@ -42,11 +42,7 @@ get_sample_name = function(s) {
 #' binarize(vals, threshold=0.5)
 #' @export
 binarize = function(x,threshold = 50) {
-  if (is.na(x)) {
-    -1
-  } else {
-    ifelse(x > threshold,1,0)
-  }
+    ifelse(is.na(x),-1, ifelse(x > threshold,1,0))
 }
 
 #' Splits a vector into subvectors by \code{chunk} or \code{size}
@@ -104,6 +100,7 @@ split_vector = function(vec, num = 1, by = "chunks") {
 #' @examples
 #' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
 #' regions <- bin_granges(regions,bin_size=1)
+#' (regions)
 #' split_granges(regions, chunks=10)
 #' split_granges(regions, percent=10)
 #' split_granges(regions, size=10)

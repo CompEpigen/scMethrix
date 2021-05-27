@@ -1,0 +1,68 @@
+reference: 
+- title: "BED input functions"
+- contents:
+  - read_beds
+  - read_index
+  - read_bed_by_index
+  - read_hdf5_data
+  - read_mem_data
+  - subset_ref_cpgs
+  - get_sample_name
+- title: "Base object and data"
+- contents:
+  - scMethrix-class
+  - scMethrix_data
+- subtitle: "Object getters"
+- contents:
+  - is_h5
+  - has_cov
+- title: "scMethrix base operations"
+- subtitle: "Save/load and conversion"
+- contents:
+  - save_HDF5_scMethrix
+  - load_HDF5_scMethrix
+  - convert_HDF5_scMethrix
+  - convert_scMethrix
+  - convert_to_methrix
+  - export_bed
+- subtitle: "Assay retrieval"
+- contents:
+  - remove_assay
+  - get_matrix
+- subtitle: "Operations"
+- contents:
+  - merge_scMethrix
+  - subset_scMethrix
+  - mask_scMethrix
+  - coverage_filter
+  - remove_uncovered
+- subtitle: "Statistics"
+- contents:
+  - get_stats
+  - get_region_summary
+  - get_metadata_stats
+- title: "scMethrix transformations"
+- subtitle: "Assay generic tranform"
+- contents:
+  - transform_assay
+- subtitle: "Binning"
+- contents:
+  - bin_scMethrix
+- subtitle: "Imputation"
+- contents:
+  - impute_scMethrix
+- title: "Misc functions"
+- subtitle: "Transforms"
+- contents: 
+  - binarize
+- subtitle: "GRanges/List"
+- contents:
+  - bin_granges
+  - cast_granges
+  - split_granges
+  - split_vector
+- subtitle: "Timer"
+- contents:
+  - start_time
+  - split_time
+  - stop_time

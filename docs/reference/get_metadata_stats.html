@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Add descriptive statistics to metadata columns in an scMethrix object. — get_metadata_stats • scMethrix</title>
+<title>Adds descriptive statistics to metadata columns in an scMethrix object. — get_metadata_stats • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Add descriptive statistics to metadata columns in an scMethrix object. — get_metadata_stats" />
-<meta property="og:description" content="Add descriptive statistics to metadata columns in an scMethrix object." />
+<meta property="og:title" content="Adds descriptive statistics to metadata columns in an scMethrix object. — get_metadata_stats" />
+<meta property="og:description" content="Adds descriptive statistics to metadata columns in an scMethrix object." />
 
 
 
@@ -111,13 +111,13 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Add descriptive statistics to metadata columns in an <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</h1>
+    <h1>Adds descriptive statistics to metadata columns in an <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</h1>
     <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
     <div class="hidden name"><code>get_metadata_stats.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Add descriptive statistics to metadata columns in an <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</p>
+    <p>Adds descriptive statistics to metadata columns in an <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</p>
     </div>
 
     <pre class="usage"><span class='fu'>get_metadata_stats</span><span class='op'>(</span><span class='va'>scm</span><span class='op'>)</span></pre>
@@ -134,17 +134,14 @@
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>An <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Adds the mean, median and SD for each region in an <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
 <span class='fu'>get_metadata_stats</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 100
-#&gt;    n_samples: 4
-#&gt;    assays: score, counts
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 40.6 Kb</div></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error in get_metadata_stats(scMethrix_data): could not find function "get_metadata_stats"</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

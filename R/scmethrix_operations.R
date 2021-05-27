@@ -601,26 +601,26 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 
   return(scm)
 }
-
-#--------------------------------------------------------------------------------------------------------------------------
-#' Order \code{\link{scMethrix}} object by SD
-#' @details Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
-#' @param scm \code{\link{scMethrix}} object
-#' @param zero.rm Removes zero values from equations (the default empty value for sparse matrices)
-#' @param na.rm Removes the NA values from equations
-#' @return An object of class \code{\link{scMethrix}}
-#' @export
-order_by_sd <- function (scm, zero.rm = FALSE, na.rm = FALSE) {
-  # 
-  # if (!is(m, "scMethrix")){
-  #   stop("A valid scMethrix object needs to be supplied.")
-  # }
-  # 
-  # sds <- DelayedMatrixStats::rowSds(x = get_matrix(m),na.rm=TRUE)
-  # 
-  # m$sd <- sds
-  
-}
+#' 
+#' #--------------------------------------------------------------------------------------------------------------------------
+#' #' Order \code{\link{scMethrix}} object by SD
+#' #' @details Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
+#' #' @param scm \code{\link{scMethrix}} object
+#' #' @param zero.rm Removes zero values from equations (the default empty value for sparse matrices)
+#' #' @param na.rm Removes the NA values from equations
+#' #' @return An object of class \code{\link{scMethrix}}
+#' #' @export
+#' order_by_sd <- function (scm, zero.rm = FALSE, na.rm = FALSE) {
+#'   # 
+#'   # if (!is(m, "scMethrix")){
+#'   #   stop("A valid scMethrix object needs to be supplied.")
+#'   # }
+#'   # 
+#'   # sds <- DelayedMatrixStats::rowSds(x = get_matrix(m),na.rm=TRUE)
+#'   # 
+#'   # m$sd <- sds
+#'   
+#' }
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Subsets an \code{\link{scMethrix}} object based on \code{regions}, \code{contigs} and/or \code{samples}.

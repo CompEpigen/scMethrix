@@ -264,7 +264,7 @@ read_bed_by_index2 <- function(file,zero_based=FALSE) {
   return(read_bed_by_index(file,get("ref_cpgs", envir=globalenv()),zero_based))
 }
 
-#' Writes methylation values from input BED files into an HDF5array
+#' Writes values from input BED files into an in-disk \code{\link{HDF5Array}}
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.
 #' @param files The BED files to parse
@@ -362,7 +362,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
   return(reads)
 }
 
-#' Writes methylation values from input BED files into an in-memory \code{\link{RangedSummarizedExperiment}}
+#' Writes values from input BED files into an in-memory \code{\link{matrix}}
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.
 #' @param files The BED files to parse
