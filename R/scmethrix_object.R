@@ -11,9 +11,8 @@
 #' @slot int_metadata NULL
 #' @slot int_elementMetadata NULL 
 #' @exportClass scMethrix
-#' @importFrom graphics axis legend lines mtext par plot title
-#' @importFrom stats complete.cases cov density median prcomp quantile sd
-#' @import utils methods
+#' @importFrom stats median quantile sd
+#' @importFrom utils data head write.table
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #'
 scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")

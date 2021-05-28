@@ -77,9 +77,8 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
                               replace = replace)
     
-    message("Object built!")
-    
-    return(m_obj)
+    message("Object built!\n")
+
     
   } else {
 
@@ -94,14 +93,19 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     #colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
     #colData <- t(unlist(lapply(files,get_sample_name)))
     
-    message("Creating scMethrix object")
+    message("Building scMethrix object")
     colData <- data.frame()[1:(length(files)), ]
     row.names(colData) <- unlist(lapply(files,get_sample_name))
 
     m_obj <- create_scMethrix(assays = reads, 
                               rowRanges=ref_cpgs, is_hdf5 = FALSE, genome_name = genome_name, 
                               desc = desc, colData = colData )
+    
+    
   }
+  
+  message("Object built!\n")
+  return(m_obj)
 }
 
 #' Parse BED files for unique genomic coordinates
@@ -121,7 +125,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 #' }
 #' @export
 read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 200, verbose = TRUE) {
-  
+
   # Parallel functionality
   if (n_threads != 0) {
     
@@ -142,7 +146,7 @@ read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 20
     
     rrng <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
                                   batch_size=round(batch_size/n_threads), 
-                                  n_threads = 0, zero_based = zero_based, verbose = verbose))
+                                  n_threads = 0, zero_based = zero_based, verbose = FALSE))
     
     parallel::stopCluster(cl)
     
@@ -208,6 +212,7 @@ read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 20
 #' \dontrun{
 #' #Do Nothing
 #' }
+#' @export
 read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero_based=FALSE) {
 
   . <- chr <- start <- meth <- meth1 <- meth2 <- cov <- cov1 <- cov2 <- NULL
@@ -268,10 +273,6 @@ read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero
   return(sample)
 }
 
-read_bed_by_index2 <- function(file,zero_based=FALSE) {
-  return(read_bed_by_index(file,get("ref_cpgs", envir=globalenv()),zero_based))
-}
-
 #' Writes values from input BED files into an in-disk \code{\link{HDF5Array}}
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.
@@ -322,7 +323,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
     doParallel::registerDoParallel(cl)  
     
     parallel::clusterEvalQ(cl, c(library(data.table)))
-    parallel::clusterExport(cl,list('read_bed_by_index','read_bed_by_index2','get_sample_name'))
+    parallel::clusterExport(cl,list('read_bed_by_index','get_sample_name'))
     
     files <- split_vector(files,n_threads,by="size")
   }
@@ -349,7 +350,7 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
                                 viewport = grid[[i]], sink = M_sink)      
       
       if (!is.null(cov_idx)) {
-        DelayedArray::write_block(block = as.matrix(cbind(lapply(data, `[[`, 2))), 
+        DelayedArray::write_block(block = as.matrix(cbind(lapply(bed, `[[`, 2))), 
                                   viewport = grid[[i]], sink = cov_sink)
       }
     }
@@ -402,14 +403,13 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
     cl <- parallel::makeCluster(n_threads)  
     doParallel::registerDoParallel(cl)  
     
-    parallel::clusterEvalQ(cl) #, c(library(dplyr)))
+    parallel::clusterEvalQ(cl, c(library(data.table)))
     parallel::clusterExport(cl,list('read_bed_by_index','start_time','split_time','stop_time','get_sample_name'))
     
     chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
     
-    reads <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
-                                  batch_size=round(batch_size/n_threads), 
-                                  n_threads = 0, zero_based = zero_based, verbose = verbose))
+    reads <- c(parallel::parLapply(cl,files,fun=read_bed_by_index, ref_cpgs = ref_cpgs, 
+                                   zero_based = zero_based, meth_idx = meth_idx, cov_idx = cov_idx))
     
     parallel::stopCluster(cl)
   
@@ -418,7 +418,7 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
     # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
     reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based,
                    meth_idx = meth_idx, cov_idx = cov_idx)
-    
+  }
     if (!is.null(cov_idx)) {
       reads <- list(score = cbind(lapply(reads, `[[`, 1)),
                     counts = cbind(lapply(reads, `[[`, 2)))
@@ -429,7 +429,6 @@ read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero
     reads <- lapply(reads,function(x) as.matrix(do.call(cbind, x)))
     
     # if (verbose) message(" (",split_time(),")")
-  }
   
   if (verbose) message("Data read in ",stop_time()) 
   

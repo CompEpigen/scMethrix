@@ -114,3 +114,22 @@ test_that("read_bed - HDF5 and in-memory equivalence, with coverage", {
   unlink(path, recursive = TRUE)
 })
 
+test_that("read_bed - threaded", {
+  
+  scm <- lapply(c(0,2), function(x) read_beds(files,h5=FALSE,n_threads = x))
+  expect_equivalent(dim(scm[[1]]),c(100,4))
+  expect_equivalent(scm[[1]],scm[[2]])
+  
+  scm <- lapply(c(0,2), function(x) read_beds(files,h5=FALSE,cov_idx=5,n_threads = x))
+  expect_equivalent(dim(scm[[1]]),c(100,4))
+  expect_equivalent(scm[[1]],scm[[2]])
+  
+  # scm <- lapply(c(0,2), function(x) read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE,n_threads = x))
+  # expect_equivalent(dim(scm[[1]]),c(100,4))
+  # expect_equivalent(scm[[1]],scm[[2]])
+  # 
+  # scm <- lapply(c(0,2), function(x) read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE,cov_idx=5,n_threads = x))
+  # expect_equivalent(dim(scm[[1]]),c(100,4))
+  # expect_equivalent(scm[[1]],scm[[2]])
+
+})
