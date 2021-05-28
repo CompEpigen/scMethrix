@@ -238,13 +238,26 @@ stop_time <- function() {
 #' subset_ref_cpgs(ref_cpgs,ref_cpgs[1:3,])
 #' @export
 subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
-  keys <- plyr::join.keys(ref_cpgs, gen_cpgs, c("chr","start"))
-  sub_cpgs <- ref_cpgs[keys$x %in% keys$y, , drop = FALSE]
-  r <- nrow(ref_cpgs)
-  s <- nrow(sub_cpgs)
-  g <- nrow(gen_cpgs)
-  if (verbose) message("Dropped ",r-s,"/",r," CpGs (",round((r-s)/r*100,2),"%) from the reference set")
-  if (verbose) message(g-s,"/",g," subset CpGs (",round((g-s)/g*100,2),"%) were not present in the reference set")
+  
+  id <- NULL
+  
+  keys <- rbind(ref_cpgs[,c("chr","start")], gen_cpgs[,c("chr","start")])
+  setDT(keys)[, id := .GRP, by = c("chr","start")]
+  
+  ref <- nrow(ref_cpgs)
+  gen <- nrow(gen_cpgs)
+
+  keys <- list(
+    ref = keys[seq_len(ref),id],
+    sub = keys[ref + seq_len(gen),id]
+  )
+  
+  sub_cpgs <- ref_cpgs[keys$ref %in% keys$sub, , drop = FALSE]
+  sub <- nrow(sub_cpgs)
+  
+  if (verbose) message("Dropped ",ref-sub,"/",ref," CpGs (",round((ref-sub)/ref*100,2),"%) from the reference set")
+  if (verbose) message(gen-sub,"/",gen," subset CpGs (",round((gen-sub)/gen*100,2),"%) were not present in the reference set")
+  
   return(sub_cpgs)
 }
 

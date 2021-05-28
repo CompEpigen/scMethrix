@@ -204,15 +204,15 @@ read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 20
 #' @param meth_idx The column index of the methylation value for the read
 #' @param cov_idx The column index(es) of the read count
 #' @return data.table containing vector of all indexed methylation values for the input BED
-#' @importFrom plyr .
 #' @examples
 #' \dontrun{
 #' #Do Nothing
 #' }
 read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero_based=FALSE) {
-  chr <- start <- meth <- meth1 <- meth2 <- cov <- cov1 <- cov2 <- NULL
+
+  . <- chr <- start <- meth <- meth1 <- meth2 <- cov <- cov1 <- cov2 <- NULL
   data <- data.table::fread(file, header = FALSE, select = c(1:2,meth_idx,cov_idx))
-  
+
   colnames(data) <- c("chr", "start", "meth",rep("cov",length(data)-3))
   if (zero_based) data[,start] <- data[,start]+1L
   data <- data.table::setkeyv(data, c("chr","start"))
