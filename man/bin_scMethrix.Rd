@@ -4,10 +4,10 @@
 \alias{bin_scMethrix}
 \title{Bins the ranges of an \code{\link{scMethrix}} object.}
 \usage{
-bin_scMethrix(m, bin_size = 1e+05, trans = NULL, h5_dir = NULL)
+bin_scMethrix(scm, bin_size = 1e+05, trans = NULL, h5_dir = NULL)
 }
 \arguments{
-\item{m}{A \code{\link{scMethrix}} object}
+\item{scm}{A \code{\link{scMethrix}} object}
 
 \item{bin_size}{The size of each bin. First bin will begin at the start position of the first genomic
 region on the chromosome}

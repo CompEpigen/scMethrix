@@ -4,10 +4,10 @@
 \alias{impute_scMethrix}
 \title{Imputes the NA values of a \code{\link{scMethrix}} object.}
 \usage{
-impute_scMethrix(m, threshold = 50)
+impute_scMethrix(scm, threshold = 50)
 }
 \arguments{
-\item{m}{A \code{\link{scMethrix}} object}
+\item{scm}{A \code{\link{scMethrix}} object}
 
 \item{threshold}{The value for cutoff in the "score" assay to determine methylated or unmethylated status.
 Default = 50}

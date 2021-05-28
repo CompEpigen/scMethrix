@@ -26,7 +26,9 @@ Imports:
     doParallel,
     plyr,
     GenomeInfoDb,
-    methrix
+    methrix,
+    umap (>= 0.2.7.0),
+    ggplot2 (>= 3.3.3),
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: 
@@ -34,3 +36,4 @@ Suggests:
     testthat
 URL: https://github.com/CompEpigen/scMethrix
 BugReports: https://github.com/CompEpigen/scMethrix/issues
+biocViews: DNAMethylation, Sequencing, Coverage

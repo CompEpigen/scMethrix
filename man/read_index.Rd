@@ -34,3 +34,8 @@ Create list of unique genomic regions from input BED files. Populates a list of 
 the genomic coordinates from BED files, then runs \code{\link{unique}} when the list is full and keeps the running
 results in the batch_size+1 position. Also indexes based on 'chr' and 'start' for later searching.
 }
+\examples{
+\dontrun{
+#Do Nothing
+}
+}

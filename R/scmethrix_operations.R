@@ -130,7 +130,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 #' # convert_to_methrix(scMethrix_data)
 #' @export
 convert_to_methrix <- function(scm = NULL, h5_dir = NULL) {
-  chr <- NULL
+  chr <- m_obj <- NULL
   
   rrng <- as.data.table(rowRanges(scm))
   rrng[,c("width","end") := NULL]
@@ -145,15 +145,15 @@ convert_to_methrix <- function(scm = NULL, h5_dir = NULL) {
   
   #TODO: Need to export create_methrix function in the methrix package to use this
   if (is_h5(scm)) {
-    m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="counts"),
-                                     cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = TRUE, genome_name = scm@metadata$genome,
-                                     col_data = scm@colData, h5_dir = h5_dir, ref_cpg_dt = ref_cpgs_chr,
-                                     chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
+    # m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="counts"),
+    #                                  cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = TRUE, genome_name = scm@metadata$genome,
+    #                                  col_data = scm@colData, h5_dir = h5_dir, ref_cpg_dt = ref_cpgs_chr,
+    #                                  chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
   } else {
-    m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="counts"),
-                                     cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = FALSE, 
-                                     genome_name = scm@metadata$genome, col_data = scm@colData, 
-                                     ref_cpg_dt = ref_cpgs_chr, chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
+    # m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="counts"),
+    #                                  cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = FALSE, 
+    #                                  genome_name = scm@metadata$genome, col_data = scm@colData, 
+    #                                  ref_cpg_dt = ref_cpgs_chr, chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
   }
   
   return(m_obj) 
@@ -601,28 +601,27 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 
   return(scm)
 }
-#' 
-#' #--------------------------------------------------------------------------------------------------------------------------
-#' #' Order \code{\link{scMethrix}} object by SD
-#' #' @details Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
-#' #' @param scm \code{\link{scMethrix}} object
-#' #' @param zero.rm Removes zero values from equations (the default empty value for sparse matrices)
-#' #' @param na.rm Removes the NA values from equations
-#' #' @return An object of class \code{\link{scMethrix}}
-#' #' @export
-#' order_by_sd <- function (scm, zero.rm = FALSE, na.rm = FALSE) {
-#'   # 
-#'   # if (!is(m, "scMethrix")){
-#'   #   stop("A valid scMethrix object needs to be supplied.")
-#'   # }
-#'   # 
-#'   # sds <- DelayedMatrixStats::rowSds(x = get_matrix(m),na.rm=TRUE)
-#'   # 
-#'   # m$sd <- sds
-#'   
-#' }
 
-#--------------------------------------------------------------------------------------------------------------------------
+# 
+# #' Order \code{\link{scMethrix}} object by SD
+# #' @details Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
+# #' @param scm \code{\link{scMethrix}} object
+# #' @param zero.rm Removes zero values from equations (the default empty value for sparse matrices)
+# #' @param na.rm Removes the NA values from equations
+# #' @return An object of class \code{\link{scMethrix}}
+# #' @export
+# order_by_sd <- function (scm, zero.rm = FALSE, na.rm = FALSE) {
+#   # 
+#   # if (!is(m, "scMethrix")){
+#   #   stop("A valid scMethrix object needs to be supplied.")
+#   # }
+#   # 
+#   # sds <- DelayedMatrixStats::rowSds(x = get_matrix(m),na.rm=TRUE)
+#   # 
+#   # m$sd <- sds
+#   
+# }
+
 #' Subsets an \code{\link{scMethrix}} object based on \code{regions}, \code{contigs} and/or \code{samples}.
 #' @details Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can 
 #' either subset (\code{include}) to or filter (\code{exclude}) the specified parameters.
@@ -639,7 +638,7 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 #' contigs <- c("chr1","chr3")
 #' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100000000)) 
 #' samples <- c("C1","C2")
-
+#' 
 #' #Subset to only samples bed1 and bed3, and chromosome 1
 #' subset_scMethrix(scMethrix_data, samples = samples, contigs = contigs, by = "include")
 #' 

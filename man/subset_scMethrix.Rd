@@ -2,18 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{subset_scMethrix}
 \alias{subset_scMethrix}
-\title{#--------------------------------------------------------------------------------------------------------------------------
-#' Order \code{\link{scMethrix}} object by SD
-#' @details Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
-#' @param scm \code{\link{scMethrix}} object
-#' @param zero.rm Removes zero values from equations (the default empty value for sparse matrices)
-#' @param na.rm Removes the NA values from equations
-#' @return An object of class \code{\link{scMethrix}}
-#' @export
-order_by_sd <- function (scm, zero.rm = FALSE, na.rm = FALSE) {if (!is(m, "scMethrix")){stop("A valid scMethrix object needs to be supplied.")}sds <- DelayedMatrixStats::rowSds(x = get_matrix(m),na.rm=TRUE)m$sd <- sds
-
-}
-Subsets an \code{\link{scMethrix}} object based on \code{regions}, \code{contigs} and/or \code{samples}.}
+\title{Subsets an \code{\link{scMethrix}} object based on \code{regions}, \code{contigs} and/or \code{samples}.}
 \usage{
 subset_scMethrix(
   scm = NULL,
@@ -41,17 +30,6 @@ subset_scMethrix(
 An object of class \code{\link{scMethrix}}
 }
 \description{
-#--------------------------------------------------------------------------------------------------------------------------
-#' Order \code{\link{scMethrix}} object by SD
-#' @details Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
-#' @param scm \code{\link{scMethrix}} object
-#' @param zero.rm Removes zero values from equations (the default empty value for sparse matrices)
-#' @param na.rm Removes the NA values from equations
-#' @return An object of class \code{\link{scMethrix}}
-#' @export
-order_by_sd <- function (scm, zero.rm = FALSE, na.rm = FALSE) {if (!is(m, "scMethrix")){stop("A valid scMethrix object needs to be supplied.")}sds <- DelayedMatrixStats::rowSds(x = get_matrix(m),na.rm=TRUE)m$sd <- sds
-
-}
 Subsets an \code{\link{scMethrix}} object based on \code{regions}, \code{contigs} and/or \code{samples}.
 }
 \details{
@@ -64,6 +42,7 @@ data('scMethrix_data')
 contigs <- c("chr1","chr3")
 regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100000000)) 
 samples <- c("C1","C2")
+
 #Subset to only samples bed1 and bed3, and chromosome 1
 subset_scMethrix(scMethrix_data, samples = samples, contigs = contigs, by = "include")
 

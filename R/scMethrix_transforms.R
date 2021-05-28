@@ -64,7 +64,7 @@ transform_assay <- function(scm,assay = NULL, name = NULL, trans = NULL, h5_temp
 #------------------------------------------------------------------------------------------------------------
 #' Bins the ranges of an \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
-#' @param m A \code{\link{scMethrix}} object
+#' @param scm A \code{\link{scMethrix}} object
 #' @param bin_size The size of each bin. First bin will begin at the start position of the first genomic
 #' region on the chromosome
 #' @param trans The transforms for each assay. Must be a named vector of functions (closure). 
@@ -76,30 +76,30 @@ transform_assay <- function(scm,assay = NULL, name = NULL, trans = NULL, h5_temp
 #' trans <- c(score = function(x) mean(x,na.rm=TRUE),counts = function(x) sum(x,na.rm=TRUE))
 #' bin_scMethrix(scMethrix_data,trans = trans)
 #' @export
-bin_scMethrix <- function(m, bin_size = 100000, trans = NULL, h5_dir = NULL) {
+bin_scMethrix <- function(scm, bin_size = 100000, trans = NULL, h5_dir = NULL) {
 
   if (is.null(trans)) {
     trans <- c(score = function(x) mean(x,na.rm=TRUE),counts = function(x) sum(x,na.rm=TRUE))
   }
     
-  if (!is(m, "scMethrix")) {
+  if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  if (is_h5(m) && is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
+  if (is_h5(scm) && is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
   
-  bins <- bin_granges(rowRanges(m),bin_size = bin_size)
-  bins <- subsetByOverlaps(bins,rowRanges(m))
+  bins <- bin_granges(rowRanges(scm),bin_size = bin_size)
+  bins <- subsetByOverlaps(bins,rowRanges(scm))
   
   sites <- sapply(1:length(bins),function (i) {
-    (findOverlaps(rowRanges(m),bins[i]))@from
+    (findOverlaps(rowRanges(scm),bins[i]))@from
   })
   
   assys <- list()
   
-  for (n in 1:length(assays(m))) {
+  for (n in 1:length(assays(scm))) {
 
-    name <- SummarizedExperiment::assayNames(m)[n]
+    name <- SummarizedExperiment::assayNames(scm)[n]
     
     tryCatch(
       expr = {op <- trans[[name]]},
@@ -107,26 +107,26 @@ bin_scMethrix <- function(m, bin_size = 100000, trans = NULL, h5_dir = NULL) {
     )
     
     vals <- lapply(sites,function (i) {
-      apply(get_matrix(m[i,],type=name),2,op)
+      apply(get_matrix(scm[i,],type=name),2,op)
     })
     
     setDT(vals, key=names(vals[[1]]))
     vals <- data.table::transpose(vals)
-    colnames(vals) <- rownames(colData(m))
+    colnames(vals) <- rownames(colData(scm))
     
-    assys[[name]] <- as(vals,class(get_matrix(m,type=name)))
+    assys[[name]] <- as(vals,class(get_matrix(scm,type=name)))
   }
   
-  if (is_h5(m)) {
+  if (is_h5(scm)) {
     
     m_obj <- create_scMethrix(assays = assys, rowRanges=bins, is_hdf5 = TRUE, 
-                            h5_dir = h5_dir, genome_name = m@metadata$genome,desc = m@metadata$desc,colData = colData(m),
+                            h5_dir = h5_dir, genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),
                             replace = replace)
   
   } else {
     
     m_obj <- create_scMethrix(assays = assys, rowRanges=bins, is_hdf5 = FALSE, 
-                              genome_name = m@metadata$genome,desc = m@metadata$desc,colData = colData(m),)
+                              genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),)
     
   }
 }
@@ -134,14 +134,14 @@ bin_scMethrix <- function(m, bin_size = 100000, trans = NULL, h5_dir = NULL) {
 #------------------------------------------------------------------------------------------------------------
 #' Imputes the NA values of a \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
-#' @param m A \code{\link{scMethrix}} object
+#' @param scm A \code{\link{scMethrix}} object
 #' @param threshold The value for cutoff in the "score" assay to determine methylated or unmethylated status. 
 #' Default = 50
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
 #' @export
-impute_scMethrix <- function (m, threshold = 50) {
+impute_scMethrix <- function (scm, threshold = 50) {
   
   #impute <- transform_assay(m,assay = "score",name = "impute",trans = function(x) {ifelse(m > threshold,1,0)})
   
@@ -152,8 +152,19 @@ impute_scMethrix <- function (m, threshold = 50) {
 
 
 
-
+#------------------------------------------------------------------------------------------------------------
+#' Generates UMAP for scMethrix
+#' @details Does UMAP stuff
+#' @param scm A \code{\link{scMethrix}} object
+#' @return An \code{\link{scMethrix}} object
+#' @import umap
+#' @import ggplot2
+#' @examples
+#' data('scMethrix_data')
+#' @export
 umap_scMethrix <- function(scm) {
+  
+  x <- y <- NULL
   
   start_time()
   
@@ -161,7 +172,6 @@ umap_scMethrix <- function(scm) {
   scm.umap <- umap(t(get_matrix(scm.bin,type="binary")),n_neighbors=min(100,10))#ncol(scm)))
  
   stop_time()
-  beep()
   
   df <- data.frame(x = scm.umap$layout[,1],
                    y = scm.umap$layout[,2])
@@ -169,9 +179,6 @@ umap_scMethrix <- function(scm) {
   ggplot(df, aes(x, y)) +
     geom_point()
   
-  
-  
-  
-   
+
 }
 

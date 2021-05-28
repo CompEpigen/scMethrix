@@ -42,3 +42,8 @@ Writes values from input BED files into an in-disk \code{\link{HDF5Array}}
 Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 values for each BED file/sample. Each column contains the meth. values for a single sample.
 }
+\examples{
+\dontrun{
+#Do Nothing
+}
+}

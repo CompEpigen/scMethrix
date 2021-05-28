@@ -33,3 +33,8 @@ Parses BED files for methylation values using previously generated index genomic
 Creates an NA-based vector populated with methlylation values from the input BED file in the
 respective indexed genomic coordinates
 }
+\examples{
+\dontrun{
+#Do Nothing
+}
+}

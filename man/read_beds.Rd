@@ -70,3 +70,8 @@ Versatile BedGraph reader.
 Reads BED files and generates methylation matrices.
 Optionally arrays can be serialized as on-disk HDFS5 arrays.
 }
+\examples{
+\dontrun{
+#Do Nothing
+}
+}

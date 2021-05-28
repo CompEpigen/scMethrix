@@ -24,7 +24,9 @@
 #' @rawNamespace import(data.table, except = c(shift, first, second))
 #' @import SingleCellExperiment GenomicRanges tools
 #' @examples
-
+#' \dontrun{
+#' #Do Nothing
+#' }
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
@@ -112,8 +114,11 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 #' @param zero_based Whether the input data is 0 or 1 based
 #' @param verbose flag to output messages or not.
 #' @return data.table containing all unique genomic coordinates
-#' @import data.table parallel doParallel
+#' @import parallel doParallel
 #' @examples
+#' \dontrun{
+#' #Do Nothing
+#' }
 #' @export
 read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 200, verbose = TRUE) {
   
@@ -201,6 +206,9 @@ read_index <- function(files, n_threads = 0, zero_based = FALSE, batch_size = 20
 #' @return data.table containing vector of all indexed methylation values for the input BED
 #' @importFrom plyr .
 #' @examples
+#' \dontrun{
+#' #Do Nothing
+#' }
 read_bed_by_index <- function(file, ref_cpgs, meth_idx = 4, cov_idx = NULL, zero_based=FALSE) {
   chr <- start <- meth <- meth1 <- meth2 <- cov <- cov1 <- cov2 <- NULL
   data <- data.table::fread(file, header = FALSE, select = c(1:2,meth_idx,cov_idx))
@@ -276,8 +284,11 @@ read_bed_by_index2 <- function(file,zero_based=FALSE) {
 #' @param cov_idx The column index(es) of the read count
 #' @param verbose flag to output messages or not.
 #' @return List of \code{\link{HDF5Array}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
-#' @import data.table DelayedArray HDF5Array parallel doParallel
+#' @import DelayedArray HDF5Array parallel doParallel
 #' @examples
+#' \dontrun{
+#' #Do Nothing
+#' }
 read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_based = FALSE, verbose = TRUE,
                            meth_idx = 4, cov_idx = NULL) {
   
@@ -376,6 +387,9 @@ read_hdf5_data <- function(files, ref_cpgs, n_threads = 0, h5_temp = NULL, zero_
 #' @return matrix of the methylation values for input BED files
 #' @import parallel doParallel
 #' @examples
+#' \dontrun{
+#' #Do Nothing
+#' }
 read_mem_data <- function(files, ref_cpgs, batch_size = 200, n_threads = 0, zero_based = FALSE, 
                           meth_idx = 4, cov_idx = NULL, verbose = TRUE) {
   
