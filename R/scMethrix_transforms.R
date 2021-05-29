@@ -151,6 +151,23 @@ impute_scMethrix <- function (scm, threshold = 50) {
  
   scm <- transform_assay(scm,assay = "score",name = "binary",trans = binarize)
   
+  melissa_obj <- generate_melissa_object(scm)
+  basis_obj <- create_rbf_object(M = 4)
+  
+  set.seed(15)
+  # Run Melissa with K = 4 clusters
+  melissa_obj <- melissa(X = melissa_obj$met, K = 4, basis = basis_obj,
+                         vb_max_iter = 20, vb_init_nstart = 1, 
+                         is_parallel = FALSE)
+  
+  # melissa_obj <- partition_dataset(melissa_obj)
+  # melissa_obj$met[[1]][[10]]
+  # 
+  return(scm)
+}
+
+generate_melissa_object <- function (scm) {
+  
   # Convert Granges to genomic interval [-1,1]
   chrom_size <- scm@metadata$chrom_sizes
   chrom_start <- sapply(coverage(scm), function(x) {x@lengths[1]}+1)
@@ -161,9 +178,45 @@ impute_scMethrix <- function (scm, threshold = 50) {
   }
   
   mcols(scm) <- cbind(mcols(scm),interval = interval[,interval])
+  
+  # Put into Melissa met format
+  loc <- paste0(rowRanges(scm)@seqnames,":",chrom_start)
+  cells <- list()
+  
+  for (n in 1:ncol(scm)) {
     
-  return(scm)
+    met <- matrix(cbind(mcols(scm)$interval,get_matrix(scm[,n],type="binary")),
+                  ncol = 2,dimnames =list(loc,NULL))
+    
+    ends <- len <- seqnames(rowRanges(scm))@lengths
+    for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
+    starts <- head(c(1, ends + 1), -1)
+    
+    mets <- lapply(1:length(starts), function (i) as.matrix(met[starts[i]:ends[i],,drop=FALSE]))
+    mets <- lapply(mets, function (m) m[-which(m[,2]==-1),])
+    
+    cells[[colnames(scm)[n]]] <- mets
+  }
+  
+  # # Parameter options
+   opts <- list()
+  # # Load cell filenames
+  # opts$met_files <- NULL
+  # opts$cell_id <- colnames(scm)
+  # opts$is_centre  <- is_centre   # Whether genomic region is already pre-centred
+  # opts$is_window  <- is_window   # Use predefined window region
+  # opts$upstream   <- upstream    # Upstream of centre
+  # opts$downstream <- downstream  # Downstream of centre
+  # opts$chrom_size <- chrom_size_file  # Chromosome size file
+  # opts$chr_discarded <- chr_discarded # Chromosomes to discard
+  # opts$cov        <- cov         # Regions with at least n CpGs
+  # opts$sd_thresh  <- sd_thresh   # Variance of methylation within region
+  # 
+  melissa_obj <- structure(list(met = cells, anno_region = NULL, opts = opts),
+                   class = "melissa_data_obj")
+  return(melissa_obj)
 }
+
 
 #------------------------------------------------------------------------------------------------------------
 #' Generates UMAP for scMethrix
