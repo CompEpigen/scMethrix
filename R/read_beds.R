@@ -73,9 +73,12 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     colData <- data.frame()[1:(length(files)), ]
     row.names(colData) <- unlist(lapply(files,get_sample_name))
+    
+    chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
+    
     m_obj <- create_scMethrix(assays = reads, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
-                              replace = replace)
+                              replace = replace,chrom_size = chrom_size)
     
     message("Object built!\n")
 
@@ -94,13 +97,15 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     #colData <- t(unlist(lapply(files,get_sample_name)))
     
     message("Building scMethrix object")
+    
     colData <- data.frame()[1:(length(files)), ]
     row.names(colData) <- unlist(lapply(files,get_sample_name))
-
+    
+    chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
+    
     m_obj <- create_scMethrix(assays = reads, 
                               rowRanges=ref_cpgs, is_hdf5 = FALSE, genome_name = genome_name, 
-                              desc = desc, colData = colData )
-    
+                              desc = desc, colData = colData,chrom_size = chrom_size )
     
   }
   

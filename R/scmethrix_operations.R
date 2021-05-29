@@ -136,7 +136,7 @@ convert_to_methrix <- function(scm = NULL, h5_dir = NULL) {
   rrng[,c("width","end") := NULL]
   names(rrng) <- c("chr","start","strand")
 
-  chrom_sizes <- data.frame(contig=GenomeInfoDb::seqlevels(rowRanges(scm)),length=width(range(rowRanges(scm))))
+  chrom_size <- data.frame(contig=GenomeInfoDb::seqlevels(rowRanges(scm)),length=width(range(rowRanges(scm))))
   ref_cpgs_chr <- data.frame(chr=GenomeInfoDb::seqlevels(rowRanges(scm)),N=summary(rrng$`chr`))
            
   if (!has_cov(scm)) {
@@ -594,7 +594,7 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 
   scm <- create_scMethrix(assays = assays(scm), h5_dir = h5_dir,
                       rowRanges = rowRanges(scm), is_hdf5 = TRUE, genome_name = scm@metadata$genome,
-                      colData = scm@colData, chrom_sizes = scm@metadata$chrom_sizes, 
+                      colData = scm@colData, chrom_size = scm@metadata$chrom_sizes, 
                       desc = scm@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
 
  # if (verbose) message("Converted in ", stop_time())

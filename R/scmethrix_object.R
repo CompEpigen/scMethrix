@@ -29,7 +29,7 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
 
 # Create scMethrix obj
 create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, 
-                             genome_name = "hg19", chrom_sizes = NULL, desc = NULL, h5_dir = NULL, 
+                             genome_name = "hg19", chrom_size = NULL, desc = NULL, h5_dir = NULL, 
                              replace = FALSE, verbose=TRUE) {
     
   if (is_hdf5) {
@@ -38,7 +38,7 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
                                                       colData = colData, 
                                                         rowRanges = rowRanges,
                                                         metadata = list(genome = genome_name,
-                                                                        chrom_sizes = chrom_sizes,
+                                                                        chrom_size = chrom_size,
                                                                         descriptive_stats = desc,
                                                                         is_h5 = TRUE, 
                                                                         has_cov = ("count" %in% names(assays))))
@@ -60,7 +60,7 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
                                                       colData = colData,
                                                       rowRanges = rowRanges,
                                                       metadata = list(genome = genome_name,
-                                                                      chrom_sizes = chrom_sizes,
+                                                                      chrom_size = chrom_size,
                                                                       descriptive_stats = desc,
                                                                       is_h5 = FALSE, 
                                                                       has_cov = ("count" %in% names(assays))))

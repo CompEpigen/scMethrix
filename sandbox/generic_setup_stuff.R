@@ -27,9 +27,9 @@ files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
 
 files <- files[1:25]
 
-scm <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5,6),replace=TRUE)
+scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5,6),replace=TRUE)
 
-scm <- read_beds(files=files,h5=FALSE)
+scm.big.mem <- read_beds(files=files,h5=FALSE)
 
 # Useful functions
 devtools::test()

@@ -44,16 +44,16 @@ transform_assay <- function(scm,assay = NULL, name = NULL, trans = NULL, h5_temp
     blocs <- DelayedArray::blockApply(get_matrix(scm,type=assay), grid = grid, FUN = trans)
     
     for(i in 1:length(blocs)) {
-      
       DelayedArray::write_block(block = as.matrix(blocs[[i]]), viewport = grid[[i]], sink = trans_sink)
-      
     }
     
     rm(blocs)
-    s <- as(trans_sink, "HDF5Array")
+    s <- as(trans_sink, "HDF5Matrix")
     
   } else {
-    s <- apply(get_matrix(scm,type=assay),1:2,trans)
+    s <- as.data.table(get_matrix(scm,type="score"))
+    s[, names(s) := lapply(.SD, trans)]
+    s <- as(s, "matrix")
   }
   
   assays(scm)[[name]] <- s
@@ -143,14 +143,27 @@ bin_scMethrix <- function(scm, bin_size = 100000, trans = NULL, h5_dir = NULL) {
 #' @export
 impute_scMethrix <- function (scm, threshold = 50) {
   
-  #impute <- transform_assay(m,assay = "score",name = "impute",trans = function(x) {ifelse(m > threshold,1,0)})
+  . <- NULL
   
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+ 
+  scm <- transform_assay(scm,assay = "score",name = "binary",trans = binarize)
   
+  # Convert Granges to genomic interval [-1,1]
+  chrom_size <- scm@metadata$chrom_sizes
+  chrom_start <- sapply(coverage(scm), function(x) {x@lengths[1]}+1)
+  interval <- as.data.table(rowRanges(scm))[,.(seqnames,start)]
   
+  for (i in 1: length(chrom_size)) {
+    interval[seqnames==names(chrom_start)[i], interval := round((2*((start-chrom_start[i])/chrom_size[i]))-1, digits = 3)]
+  }
+  
+  mcols(scm) <- cbind(mcols(scm),interval = interval[,interval])
+    
+  return(scm)
 }
-
-
-
 
 #------------------------------------------------------------------------------------------------------------
 #' Generates UMAP for scMethrix
@@ -164,21 +177,23 @@ impute_scMethrix <- function (scm, threshold = 50) {
 #' @export
 umap_scMethrix <- function(scm) {
   
-  x <- y <- NULL
-  
-  start_time()
-  
-  scm.bin <- transform_assay(scm,assay="score",name="binary",trans=binarize)
-  scm.umap <- umap(t(get_matrix(scm.bin,type="binary")),n_neighbors=min(100,10))#ncol(scm)))
- 
-  stop_time()
-  
-  df <- data.frame(x = scm.umap$layout[,1],
-                   y = scm.umap$layout[,2])
-  
-  ggplot(df, aes(x, y)) +
-    geom_point()
-  
-
+  # x <- y <- NULL
+  # 
+  # start_time()
+  # 
+  # scm.bin <- transform_assay(scm.small,assay="score",name="binary",trans=binarize)
+  # 
+  # start_time()
+  # scm.umap <- umap(as.matrix(get_matrix(scm.bin,type="bin")),n_neighbors=min(100,ncol(scm.bin)))
+  # stop_time()
+  # beep()
+  # 
+  # stop_time()
+  # 
+  # df <- data.frame(x = scm.umap$layout[,1],
+  #                  y = scm.umap$layout[,2])
+  # 
+  # ggplot(df, aes(x, y)) +
+  #   geom_point()
 }
 
