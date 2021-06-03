@@ -776,8 +776,6 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
         )
       })
       stats <- data.table::rbindlist(l = stats, use.names = TRUE)
-      
-      
     } else {
       stats <-
         data.table::data.table(

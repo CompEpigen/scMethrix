@@ -152,21 +152,20 @@ impute_scMethrix <- function (scm, threshold = 50) {
   scm <- transform_assay(scm,assay = "score",name = "binary",trans = binarize)
   
   melissa_obj <- generate_melissa_object(scm)
-  basis_obj <- create_rbf_object(M = 4)
+  basis_obj <- BPRMeth::create_rbf_object(M = 4)
   
   set.seed(15)
   # Run Melissa with K = 4 clusters
-  melissa_obj <- melissa(X = melissa_obj$met, K = 4, basis = basis_obj,
+  melissa_obj <- Melissa::melissa(X = melissa_obj$met, K = 4, basis = basis_obj,
                          vb_max_iter = 20, vb_init_nstart = 1, 
                          is_parallel = FALSE)
   
-  # melissa_obj <- partition_dataset(melissa_obj)
-  # melissa_obj$met[[1]][[10]]
-  # 
   return(scm)
 }
 
-generate_melissa_object <- function (scm) {
+generate_melissa_object <- function (scm, maxgap) {
+  
+  . <- NULL
   
   # Convert Granges to genomic interval [-1,1]
   chrom_size <- scm@metadata$chrom_sizes

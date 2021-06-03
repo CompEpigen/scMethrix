@@ -28,6 +28,9 @@ Imports:
     methrix,
     umap,
     ggplot2,
+    BPRMeth,
+    RColorBrewer,
+    Melissa
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: 
