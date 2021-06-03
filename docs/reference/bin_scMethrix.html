@@ -12,8 +12,8 @@
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/spacelab/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 
@@ -120,13 +120,13 @@
     <p>Bins the ranges of an <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>bin_scMethrix</span><span class='op'>(</span><span class='va'>m</span>, bin_size <span class='op'>=</span> <span class='fl'>1e+05</span>, trans <span class='op'>=</span> <span class='cn'>NULL</span>, h5_dir <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>bin_scMethrix</span><span class='op'>(</span><span class='va'>scm</span>, bin_size <span class='op'>=</span> <span class='fl'>1e+05</span>, trans <span class='op'>=</span> <span class='cn'>NULL</span>, h5_dir <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>m</th>
+      <th>scm</th>
       <td><p>A <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
     </tr>
     <tr>
@@ -156,7 +156,7 @@ Default = mean(.., na.rm=TRUE)</p></td>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
 <span class='va'>trans</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>score <span class='op'>=</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span><span class='op'>(</span><span class='va'>x</span>,na.rm<span class='op'>=</span><span class='cn'>TRUE</span><span class='op'>)</span>,counts <span class='op'>=</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span><span class='op'>(</span><span class='va'>x</span>,na.rm<span class='op'>=</span><span class='cn'>TRUE</span><span class='op'>)</span><span class='op'>)</span>
 <span class='fu'>bin_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,trans <span class='op'>=</span> <span class='va'>trans</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in bin_scMethrix(scMethrix_data, trans = trans): could not find function "bin_scMethrix"</span></div></pre>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

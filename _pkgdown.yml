@@ -52,6 +52,7 @@ reference:
 - contents:
   - impute_scMethrix
 - subtitle: "Dimensionality Reduction"
+- contents:
   - bin_scMethrix
   - pca_scMethrix
   - umap_scMethrix

@@ -6,14 +6,14 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Writes methylation values from input BED files into an in-memory RangedSummarizedExperiment — read_mem_data • scMethrix</title>
+<title>Writes values from input BED files into an in-memory matrix — read_mem_data • scMethrix</title>
 
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/spacelab/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Writes methylation values from input BED files into an in-memory RangedSummarizedExperiment — read_mem_data" />
-<meta property="og:description" content="Writes methylation values from input BED files into an in-memory RangedSummarizedExperiment" />
+<meta property="og:title" content="Writes values from input BED files into an in-memory matrix — read_mem_data" />
+<meta property="og:description" content="Writes values from input BED files into an in-memory matrix" />
 
 
 
@@ -111,13 +111,13 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Writes methylation values from input BED files into an in-memory <code>RangedSummarizedExperiment</code></h1>
+    <h1>Writes values from input BED files into an in-memory <code><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></code></h1>
     <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/read_beds.R'><code>R/read_beds.R</code></a></small>
     <div class="hidden name"><code>read_mem_data.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Writes methylation values from input BED files into an in-memory <code>RangedSummarizedExperiment</code></p>
+    <p>Writes values from input BED files into an in-memory <code><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></code></p>
     </div>
 
     <pre class="usage"><span class='fu'>read_mem_data</span><span class='op'>(</span>
@@ -176,6 +176,11 @@
     <p>Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 values for each BED file/sample. Each column contains the meth. values for a single sample.</p>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='co'>#Do Nothing</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Filter matrices by coverage — coverage_filter • scMethrix</title>
+<title>Helper function to format long form data for plotting — get_palette • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Filter matrices by coverage — coverage_filter" />
-<meta property="og:description" content="Filter matrices by coverage" />
+<meta property="og:title" content="Helper function to format long form data for plotting — get_palette" />
+<meta property="og:description" content="Helper function to format long form data for plotting" />
 
 
 
@@ -111,76 +111,34 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Filter matrices by coverage</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>coverage_filter.Rd</code></div>
+    <h1>Helper function to format long form data for plotting</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_plot.R'><code>R/scMethrix_plot.R</code></a></small>
+    <div class="hidden name"><code>get_palette.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Filter matrices by coverage</p>
+    <p>Helper function to format long form data for plotting</p>
     </div>
 
-    <pre class="usage"><span class='fu'>coverage_filter</span><span class='op'>(</span>
-  scm <span class='op'>=</span> <span class='cn'>NULL</span>,
-  cov_thr <span class='op'>=</span> <span class='fl'>1</span>,
-  min_samples <span class='op'>=</span> <span class='cn'>NULL</span>,
-  prop_samples <span class='op'>=</span> <span class='cn'>NULL</span>,
-  group <span class='op'>=</span> <span class='cn'>NULL</span>,
-  n_chunks <span class='op'>=</span> <span class='fl'>1</span>,
-  n_threads <span class='op'>=</span> <span class='fl'>1</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>get_palette</span><span class='op'>(</span><span class='va'>n_row</span>, <span class='va'>col_palette</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>scm</th>
-      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+      <th>n_row</th>
+      <td><p>Number of colors</p></td>
     </tr>
     <tr>
-      <th>cov_thr</th>
-      <td><p>minimum coverage required to call a loci covered</p></td>
-    </tr>
-    <tr>
-      <th>min_samples</th>
-      <td><p>Minimum number of samples that should have a loci with coverage &gt;= <code>cov_thr</code>. If <code>group</code> is given, then this applies per group. Only need one of <code>prop_samples</code> or <code>min_samples</code>.</p></td>
-    </tr>
-    <tr>
-      <th>prop_samples</th>
-      <td><p>Minimum proportion of samples that should have a loci with coverage &gt;= <code>cov_thr</code>. If <code>group</code> is given, then this applies per group. Only need one of <code>prop_samples</code> or <code>min_samples</code>.</p></td>
-    </tr>
-    <tr>
-      <th>group</th>
-      <td><p>a column name from sample annotation that defines groups. In this case, the number of min_samples will be
-tested group-wise.</p></td>
-    </tr>
-    <tr>
-      <th>n_chunks</th>
-      <td><p>Number of chunks to split the <code><a href='scMethrix-class.html'>scMethrix</a></code> object in case it is very large. Default = 1.</p></td>
-    </tr>
-    <tr>
-      <th>n_threads</th>
-      <td><p>Number of parallel instances. <code>n_threads</code> should be less than or equal to <code>n_chunks</code>. If <code>n_threads</code> is not specified, then <code>n_chunks</code> is initialized to be equal to <code>n_threads</code>. Default = 1.</p></td>
+      <th>col_palette</th>
+      <td><p>String for RColorBrewer palette name</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An object of class <code><a href='scMethrix-class.html'>scMethrix</a></code></p>
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+    <p>RColorBrewer palette</p>
 
-    <p>Takes <code><a href='scMethrix-class.html'>scMethrix</a></code> object and filters CpGs based on coverage statistics</p>
-
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>coverage_filter</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, min_sample<span class='op'>=</span><span class='fl'>2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Filtering by coverage...</span></div><div class='output co'>#&gt; <span class='message'>Retained 75 of 100 sites</span></div><div class='output co'>#&gt; <span class='message'>Filtered in 0.36s</span></div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 75
-#&gt;    n_samples: 4
-#&gt;    assays: score, counts
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 36 Kb</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
