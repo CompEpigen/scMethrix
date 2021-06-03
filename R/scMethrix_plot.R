@@ -139,7 +139,7 @@ plot_density <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL,
 #--------------------------------------------------------------------------------------------------------------------------
 #' Plot PCA results
 #'
-#' @param pca_res Results from \code{\link{scMethrix_pca}}
+#' @param pca_res Results from \code{\link{pca_scMethrix}}
 #' @param scm optinal scMethrix object. Default NULL
 #' @param col_anno Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object
 #' @param shape_anno Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object
@@ -149,7 +149,7 @@ plot_density <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL,
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
-#' scmpc = scMethrix_pca(scMethrix_data, do_plot = FALSE)
+#' scmpc = pca_scMethrix(scMethrix_data, do_plot = FALSE)
 #' plot_pca(scmpc)
 #' @export
 plot_pca <- function(pca_res, scm = NULL, col_anno = NULL, shape_anno = NULL,

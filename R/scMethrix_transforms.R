@@ -217,35 +217,4 @@ generate_melissa_object <- function (scm, maxgap) {
 }
 
 
-#------------------------------------------------------------------------------------------------------------
-#' Generates UMAP for scMethrix
-#' @details Does UMAP stuff
-#' @param scm A \code{\link{scMethrix}} object
-#' @return An \code{\link{scMethrix}} object
-#' @import umap
-#' @import ggplot2
-#' @examples
-#' data('scMethrix_data')
-#' @export
-umap_scMethrix <- function(scm) {
-  
-  # x <- y <- NULL
-  # 
-  # start_time()
-  # 
-  # scm.bin <- transform_assay(scm.small,assay="score",name="binary",trans=binarize)
-  # 
-  # start_time()
-  # scm.umap <- umap(as.matrix(get_matrix(scm.bin,type="bin")),n_neighbors=min(100,ncol(scm.bin)))
-  # stop_time()
-  # beep()
-  # 
-  # stop_time()
-  # 
-  # df <- data.frame(x = scm.umap$layout[,1],
-  #                  y = scm.umap$layout[,2])
-  # 
-  # ggplot(df, aes(x, y)) +
-  #   geom_point()
-}
 

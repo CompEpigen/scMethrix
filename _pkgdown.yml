@@ -1,3 +1,6 @@
+template:
+  params:
+    bootswatch: spacelab
 reference: 
 - title: "BED input functions"
 - contents:
@@ -42,15 +45,25 @@ reference:
   - get_region_summary
   - get_metadata_stats
 - title: "scMethrix transformations"
-- subtitle: "Assay generic tranform"
+- subtitle: "Assay transform"
 - contents:
   - transform_assay
-- subtitle: "Binning"
-- contents:
-  - bin_scMethrix
 - subtitle: "Imputation"
 - contents:
   - impute_scMethrix
+- subtitle: "Dimensionality Reduction"
+  - bin_scMethrix
+  - pca_scMethrix
+  - umap_scMethrix
+- title: "Plotting"
+- contents: 
+  - plot_violin
+  - plot_density
+  - plot_pca
+  - plot_coverage
+  - plot_stats
+  - prepare_plot_data
+  - get_palette
 - title: "Misc functions"
 - subtitle: "Transforms"
 - contents: 

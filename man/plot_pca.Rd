@@ -15,7 +15,7 @@ plot_pca(
 )
 }
 \arguments{
-\item{pca_res}{Results from \code{\link{scMethrix_pca}}}
+\item{pca_res}{Results from \code{\link{pca_scMethrix}}}
 
 \item{scm}{optinal scMethrix object. Default NULL}
 
@@ -37,6 +37,6 @@ Plot PCA results
 }
 \examples{
 data('scMethrix_data')
-scmpc = scMethrix_pca(scMethrix_data, do_plot = FALSE)
+scmpc = pca_scMethrix(scMethrix_data, do_plot = FALSE)
 plot_pca(scmpc)
 }

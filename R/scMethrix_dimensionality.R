@@ -13,10 +13,10 @@
 #' @return PCA results
 #' @examples
 #' data('scMethrix_data')
-#' scMethrix_pca(scMethrix_data, do_plot = FALSE)
+#' pca_scMethrix(scMethrix_data, do_plot = FALSE)
 #' @export
 #'
-scMethrix_pca <- function(scm, var = "top", top_var = 1000, ranges = NULL,
+pca_scMethrix <- function(scm, var = "top", top_var = 1000, ranges = NULL,
                           pheno = NULL, do_plot = TRUE, n_pc = 2) {
   var_select <- match.arg(var, c("top", "rand"))
   
@@ -115,4 +115,37 @@ scMethrix_pca <- function(scm, var = "top", top_var = 1000, ranges = NULL,
   gc(verbose = FALSE)
   
   return(results)
+}
+
+
+#------------------------------------------------------------------------------------------------------------
+#' Generates UMAP for scMethrix
+#' @details Does UMAP stuff
+#' @param scm A \code{\link{scMethrix}} object
+#' @return An \code{\link{scMethrix}} object
+#' @import umap
+#' @import ggplot2
+#' @examples
+#' data('scMethrix_data')
+#' @export
+umap_scMethrix <- function(scm) {
+  
+  # x <- y <- NULL
+  # 
+  # start_time()
+  # 
+  # scm.bin <- transform_assay(scm.small,assay="score",name="binary",trans=binarize)
+  # 
+  # start_time()
+  # scm.umap <- umap(as.matrix(get_matrix(scm.bin,type="bin")),n_neighbors=min(100,ncol(scm.bin)))
+  # stop_time()
+  # beep()
+  # 
+  # stop_time()
+  # 
+  # df <- data.frame(x = scm.umap$layout[,1],
+  #                  y = scm.umap$layout[,2])
+  # 
+  # ggplot(df, aes(x, y)) +
+  #   geom_point()
 }
