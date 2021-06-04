@@ -16,29 +16,36 @@
 #' pca_scMethrix(scMethrix_data, do_plot = FALSE)
 #' @export
 #'
-pca_scMethrix <- function(scm, var = "top", top_var = 1000, ranges = NULL,
-                          pheno = NULL, do_plot = TRUE, n_pc = 2) {
-  var_select <- match.arg(var, c("top", "rand"))
+pca_scMethrix <- function(scm, type="score", var = "top", top_var = 1000, ranges = NULL,
+                          pheno = NULL, do_plot = TRUE, n_pc = 2, verbose = FALSE) {
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
+  }
+  
+  if (!(type %in% SummarizedExperiment::assayNames(scm))) {
+    stop("Assay does not exist in the object", call. = FALSE)
   }
   
   if (!(is.numeric(top_var) & is.numeric(n_pc))){
     stop("Either top_var or n_pc variables are not numeric.")
   }
   
+  if (verbose) message("Generating PCA...",start_time())
+  
+  var_select <- match.arg(var, c("top", "rand"))
+  
   ## subset based on the input ranges
   if (!is.null(ranges)) {
     message("GenomicRanges will be used for the PCA")
     meth_sub <- subset_scMethrix(scm = scm, regions = ranges)
-    meth_sub <- get_matrix(scm = meth_sub, type = "score", add_loci = FALSE)
+    meth_sub <- get_matrix(scm = meth_sub, type = type, add_loci = FALSE)
   }
   
   if (is.null(top_var)) {
     message("All CpGs in the dataset will be used for the PCA")
     if (is.null(ranges)) {
-      meth_sub <- get_matrix(scm = scm, type = "score", add_loci = FALSE)
+      meth_sub <- get_matrix(scm = scm, type = type, add_loci = FALSE)
     }
   } else {
     if (!is.numeric(top_var)){
@@ -87,36 +94,18 @@ pca_scMethrix <- function(scm, var = "top", top_var = 1000, ranges = NULL,
   names(pc_vars) <- colnames(meth_pca$x)
   pc_vars <- round(pc_vars, digits = 2)
   
-  #-----------------------------------------------------------------------------------------------------------------------
-  # Draw cumulative variance explained by PCs
+  reducedDim(scm, "PCA") <- meth_pca$x
+  metadata(scm)$PCA_vars <- pc_vars
+
+  if (verbose) message("PCA finished in ",stop_time())
   
-  if (do_plot) {
-    par(bty = "n", mgp = c(2.5, 0.5, 0), mar = c(3, 4, 2, 2) + 0.1,
-        tcl = -0.25, las = 1)
-    plot(pc_vars, type = "h", col = "red", xlab = "", ylab = "variance Explained",
-         ylim = c(0, 1), yaxs = "i")
-    mtext(side = 1, "Principal component", line = 2)
-    cum_var <- cumsum(meth_pca$sdev^2)/sum(meth_pca$sdev^2) * meth_pca$sdev[1]^2/sum(meth_pca$sdev^2)
-    lines(cumsum(cum_var), type = "s")
-    axis(side = 4, at = pretty(c(0, 1)), labels = pretty(c(0, 1)))
-    legend("topright", col = c("red", "black"), lty = 1, c("Per PC", "Cumulative"), bty = "n")
-    #lines(x = c(length(meth_pca$sdev), n_pc, n_pc), y = c(cum_var[n_pc], cum_var[n_pc], 0), lty = 3)
-    title(main = paste0("Variance explained by ", n_pc, " PC: ", round(sum(c(meth_pca$sdev^2/sum(meth_pca$sdev^2))[seq_len(n_pc)]),
-                                                                       digits = 2)), adj = 0)
-  }
-  #-----------------------------------------------------------------------------------------------------------------------
-  
-  results <- list(PC_matrix = meth_pca$x, var_explained = pc_vars)
-  
-  if (do_plot) {
-    plot_pca(pca_res = results, scm = scm, col_anno = pheno)
-  }
-  
+  message("PCA vars (saved in metadata$PCA_vars):")
+  print(pc_vars, quote=FALSE, print.gap=2)
+
   gc(verbose = FALSE)
   
-  return(results)
+  return(scm)
 }
-
 
 #------------------------------------------------------------------------------------------------------------
 #' Generates UMAP for scMethrix

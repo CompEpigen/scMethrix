@@ -51,6 +51,7 @@ reference:
 - subtitle: "Imputation"
 - contents:
   - impute_scMethrix
+  - generate_melissa_object
 - subtitle: "Dimensionality Reduction"
 - contents:
   - bin_scMethrix

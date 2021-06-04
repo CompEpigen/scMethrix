@@ -5,19 +5,17 @@
 \title{Plot PCA results}
 \usage{
 plot_pca(
-  pca_res,
   scm = NULL,
   col_anno = NULL,
   shape_anno = NULL,
   pc_x = "PC1",
   pc_y = "PC2",
-  show_labels = FALSE
+  show_labels = FALSE,
+  plot_vars = FALSE
 )
 }
 \arguments{
-\item{pca_res}{Results from \code{\link{pca_scMethrix}}}
-
-\item{scm}{optinal scMethrix object. Default NULL}
+\item{scm}{optional scMethrix object. Default NULL}
 
 \item{col_anno}{Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object}
 
@@ -28,6 +26,8 @@ plot_pca(
 \item{pc_y}{Default 'PC2'}
 
 \item{show_labels}{Default FLASE}
+
+\item{pca_res}{Results from \code{\link{pca_scMethrix}}}
 }
 \value{
 ggplot2 object

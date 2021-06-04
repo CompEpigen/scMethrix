@@ -140,7 +140,7 @@ plot_density <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL,
 #' Plot PCA results
 #'
 #' @param pca_res Results from \code{\link{pca_scMethrix}}
-#' @param scm optinal scMethrix object. Default NULL
+#' @param scm optional scMethrix object. Default NULL
 #' @param col_anno Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object
 #' @param shape_anno Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object
 #' @param pc_x Default 'PC1'
@@ -152,16 +152,26 @@ plot_density <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL,
 #' scmpc = pca_scMethrix(scMethrix_data, do_plot = FALSE)
 #' plot_pca(scmpc)
 #' @export
-plot_pca <- function(pca_res, scm = NULL, col_anno = NULL, shape_anno = NULL,
-                     pc_x = "PC1", pc_y = "PC2", show_labels = FALSE) {
+plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL,
+                     pc_x = "PC1", pc_y = "PC2", show_labels = FALSE, plot_vars = FALSE) {
   
+  if (!is(scm, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.")
+  }
+  
+  
+  if (!("PCA" %in% reducedDimNames(scm))){
+    stop("PCA results not present in scMethrix object. Run pca_scMethrix() first.")
+  }
+  
+  pca_res <- reducedDim(scm,type="PCA")
+  pc_vars <- scm@metadata$PCA_vars
   
   X <- Y <- color_me <- shape_me <- row_names <- NULL
   
-  
-  pc_vars <- pca_res$var_explained
-  pca_res <- as.data.frame(pca_res$PC_matrix)
-  pca_res$row_names <- rownames(pca_res)
+  # pc_vars <- pca_res$var_explained
+  # pca_res <- as.data.frame(pca_res$PC_matrix)
+  # pca_res$row_names <- rownames(pca_res)
   
   x_lab <- paste0(pc_x, " [", pc_vars[pc_x]*100, " %]")
   y_lab <- paste0(pc_y, " [", pc_vars[pc_y]*100, " %]")
@@ -223,8 +233,28 @@ plot_pca <- function(pca_res, scm = NULL, col_anno = NULL, shape_anno = NULL,
   if (show_labels) {
     pca_gg <- pca_gg + geom_label(size = 4)
   }
+
+  if (plot_vars) {
+    
+    sdev <- scm@metadata$PCA_vars
+    n_pc <- length(sdev)
+    
+    par(bty = "n", mgp = c(2.5, 0.5, 0), mar = c(3, 4, 2, 2) + 0.1,
+        tcl = -0.25, las = 1)
+    plot(pc_vars, type = "h", col = "red", xlab = "", ylab = "variance Explained",
+         ylim = c(0, 1), yaxs = "i")
+    mtext(side = 1, "Principal component", line = 2)
+    cum_var <- cumsum(sdev^2)/sum(sdev^2) * sdev[1]^2/sum(sdev^2)
+    lines(cumsum(cum_var), type = "s")
+    axis(side = 4, at = pretty(c(0, 1)), labels = pretty(c(0, 1)))
+    legend("topright", col = c("red", "black"), lty = 1, c("Per PC", "Cumulative"), bty = "n")
+    #lines(x = c(length(meth_pca$sdev), n_pc, n_pc), y = c(cum_var[n_pc], cum_var[n_pc], 0), lty = 3)
+    title(main = paste0("Variance explained by ", n_pc, " PC: ", round(sum(c(sdev^2/sum(sdev^2))[seq_len(n_pc)]),
+                                                                       digits = 2)), adj = 0)
+    
+  } 
   
-  pca_gg
+  return(pca_gg)
 }
 
 #--------------------------------------------------------------------------------------------------------------------------

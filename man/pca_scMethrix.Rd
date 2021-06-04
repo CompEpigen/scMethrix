@@ -6,12 +6,14 @@
 \usage{
 pca_scMethrix(
   scm,
+  type = "score",
   var = "top",
   top_var = 1000,
   ranges = NULL,
   pheno = NULL,
   do_plot = TRUE,
-  n_pc = 2
+  n_pc = 2,
+  verbose = FALSE
 )
 }
 \arguments{
