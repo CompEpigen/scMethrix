@@ -1,4 +1,4 @@
-#' Helper function to format long form data for plotting
+#' Format \code{\link{scMethrix}} matrix to long form data for plotting
 #' @param scm Input \code{\link{scMethrix}} object
 #' @param n_cpgs Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.
 #' @param ranges genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
@@ -54,7 +54,7 @@ prepare_plot_data <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL){
   
 }
 
-#' Helper function to format long form data for plotting
+#' Getter for plot palette colors
 #' @param n_row Number of colors
 #' @param col_palette String for RColorBrewer palette name  
 #' @return RColorBrewer palette

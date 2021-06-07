@@ -59,7 +59,6 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     if(dir.exists(h5_dir) && !replace) stop("h5_dir already exists! Use 'replace=TRUE' to replace it. All 
                                             existing data in that directory will be deleted.") 
     
-    
     if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,batch_size = batch_size, zero_based = zero_based)
     
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
@@ -68,8 +67,6 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     message("Building scMethrix object")
 
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
-    
-    #seqlengths(ref_cpgs) <- setNames(width(range(rowRanges(m))), GenomeInfoDb::seqlevels(rowRanges(m)))
     
     colData <- data.frame()[1:(length(files)), ]
     row.names(colData) <- unlist(lapply(files,get_sample_name))

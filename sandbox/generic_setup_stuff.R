@@ -2,11 +2,20 @@ list.of.packages <- c("SingleCellExperiment","data.table","plyr","HDF5Array","ti
                       "GenomicRanges","parallel","roxygen2","dplyr","rbenchmark","testthat","rtracklayer",
                       "tools","microbenchmark","measurements","magrittr","doParallel","parallel",
                       "Cairo","ggplot2","methrix","BSgenome","BSgenome.Hsapiens.UCSC.hg19","usethis",
-                      "BSgenome.Mmusculus.UCSC.mm10","pkgdown","umap","stringi")
+                      "BSgenome.Mmusculus.UCSC.mm10","pkgdown","umap","stringi","missMDA")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 lapply(list.of.packages, require, character.only = TRUE)
 rm(list.of.packages,new.packages)
+
+source("D:/Git/scMethrix/R/accessory_funcs.R")
+source("D:/Git/scMethrix/R/scMethrix_operations.R")
+source("D:/Git/scMethrix/R/scMethrix_object.R")
+source("D:/Git/scMethrix/R/read_beds.R")
+source("D:/Git/scMethrix/R/scMethrix_dimensionality.R")
+source("D:/Git/scMethrix/R/scMethrix_transforms.R")
+source("D:/Git/scMethrix/R/scMethrix_transforms.R")
+source("D:/Git/scMethrix/tests/testthat/setup.R")
 
 #setwd("D:/Documents/School/Thesis/scMethrix/sample.data/small/")
 

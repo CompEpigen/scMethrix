@@ -33,6 +33,20 @@ get_sample_name = function(s) {
 
 #' Binarize an input value based on a \code{threshold}
 #' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
+#'  If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as -1
+#' @param x A value to binarize
+#' @param threshold The threshold for binarizing
+#' @return 1 or 0, if above of below the threshold, or -1 if NA
+#' @examples
+#' vals <- c(0,0.25,0.5,0.75,1,NA)
+#' binarize(vals, threshold=0.5)
+#' @export
+binarize = function(x,threshold = 50) {
+    ifelse(is.na(x),-1, ifelse(x > threshold,1,0))
+}
+
+#' Binarize an input value based on a \code{threshold}
+#' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
 #'  If \code{x} = \code{threshold}, \code{x} = 0.
 #' @param x A value to binarize
 #' @param threshold The threshold for binarizing
@@ -41,8 +55,8 @@ get_sample_name = function(s) {
 #' vals <- c(0,0.25,0.5,0.75,1)
 #' binarize(vals, threshold=0.5)
 #' @export
-binarize = function(x,threshold = 50) {
-    ifelse(is.na(x),-1, ifelse(x > threshold,1,0))
+binarize2 = function(x,threshold = 50) {
+  ifelse(is.na(x),NA, ifelse(x > threshold,1,0))
 }
 
 #' Splits a vector into subvectors by \code{chunk} or \code{size}
