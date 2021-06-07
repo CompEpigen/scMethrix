@@ -138,6 +138,10 @@ test_that("get_matrix", {
      # expect_equivalent(seqnames(m)@lengths,c(10,8))
       expect_equivalent(dim(mcols(s)),c(100,4))
       expect_equivalent(class(s)[1],"GRanges")
+      
+      s <- get_matrix(scm,order_by_sd = TRUE)
+      expect_false(is.unsorted(rev(rowSds(s,na.rm=TRUE)),na.rm=TRUE))
+      
   }))
 })
 

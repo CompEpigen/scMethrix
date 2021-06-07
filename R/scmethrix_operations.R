@@ -801,7 +801,8 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
 #' @param in_granges Do you want the outcome in \code{\link{GRanges}}?
 #' @param type Which matrix to get
-#' @return Coverage or Methylation matrix
+#' @param order_by_sd Order output matrix by standard deviation
+#' @return HDF5Matrix or matrix
 #' @examples
 #' data('scMethrix_data')
 #' 
@@ -813,8 +814,11 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
 #' 
 #' # Get methylation data with loci inside a Granges object 
 #' get_matrix(scMethrix_data, add_loci=TRUE, in_granges=TRUE)
+#' 
+#' Get methylation data sorted by SD
+#' get_matrix(scMethrix_data, order_by_sd = TRUE)
 #' @export
-get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, type = "score") {
+get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, type = "score", order_by_sd=FALSE) {
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -825,9 +829,18 @@ get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, type = "s
             "the output will be a data.frame object. ")
   }
   
-  type = match.arg(arg = type, choices = SummarizedExperiment::assayNames(scm))
+  type <- match.arg(arg = type, choices = SummarizedExperiment::assayNames(scm))
+  order_by <- 
   
   mtx <- SummarizedExperiment::assay(x = scm, i = which(type == SummarizedExperiment::assayNames(scm)))
+  
+  if (order_by_sd) {
+    if (is_h5(scm)) {
+      sds = DelayedMatrixStats::rowSds(mtx, na.rm = TRUE)
+    } else {
+      sds = matrixStats::rowSds(mtx, na.rm = TRUE)
+    }
+  }
   
   if (add_loci) {
     
@@ -844,6 +857,8 @@ get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, type = "s
     }
     
   }
+  
+  if (order_by_sd) mtx <- mtx[order(sds, decreasing = TRUE), ]
   
   return (mtx)
 }
