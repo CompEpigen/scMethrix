@@ -41,7 +41,7 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
                                                  filepath = tempfile(pattern="trans_sink_",tmpdir=h5_temp),
                                                  name = new_assay, level = 6)
     
-    blocs <- DelayedArray::blockApply(get_matrix(scm,type=assay), grid = grid, FUN = trans)
+    blocs <- DelayedArray::blockApply(get_matrix(scm,assay=assay), grid = grid, FUN = trans)
     
     for(i in 1:length(blocs)) {
       DelayedArray::write_block(block = as.matrix(blocs[[i]]), viewport = grid[[i]], sink = trans_sink)
@@ -51,7 +51,7 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
     s <- as(trans_sink, "HDF5Matrix")
     
   } else {
-    s <- as.data.table(get_matrix(scm,type=assay))
+    s <- as.data.table(get_matrix(scm,assay=assay))
     s[, names(s) := lapply(.SD, trans)]
     s <- as(s, "matrix")
   }
@@ -107,14 +107,14 @@ bin_scMethrix <- function(scm, bin_size = 100000, trans = NULL, h5_dir = NULL) {
     )
     
     vals <- lapply(sites,function (i) {
-      apply(get_matrix(scm[i,],type=name),2,op)
+      apply(get_matrix(scm[i,],assay=name),2,op)
     })
     
     setDT(vals, key=names(vals[[1]]))
     vals <- data.table::transpose(vals)
     colnames(vals) <- rownames(colData(scm))
     
-    assys[[name]] <- as(vals,class(get_matrix(scm,type=name)))
+    assys[[name]] <- as(vals,class(get_matrix(scm,assay=name)))
   }
   
   if (is_h5(scm)) {
@@ -184,7 +184,7 @@ generate_melissa_object <- function (scm, maxgap) {
   
   for (n in 1:ncol(scm)) {
     
-    met <- matrix(cbind(mcols(scm)$interval,get_matrix(scm[,n],type="binary")),
+    met <- matrix(cbind(mcols(scm)$interval,get_matrix(scm[,n],assay="binary")),
                   ncol = 2,dimnames =list(loc,NULL))
     
     ends <- len <- seqnames(rowRanges(scm))@lengths
@@ -252,13 +252,13 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = NULL, n_pc =
   
   if (length(n_pc) == 2) {
     warning("Caution: n_pc is given as range. This can be very time-intensive.")
-    n_pc <- missMDA::estim_ncpPCA(get_matrix(scm,type = assay),ncp.min = n_pc[1], ncp.max = n_pc[2], 
+    n_pc <- missMDA::estim_ncpPCA(get_matrix(scm,assay = assay),ncp.min = n_pc[1], ncp.max = n_pc[2], 
                          method.cv = "Kfold", verbose = TRUE)
     n_pc <- n_pc$ncp
   }
   
-  impute <- missMDA::imputePCA(get_matrix(scm,type = assay), ncp = n_pc, ...)
-  assays(scm)[[new_assay]] <- as(impute$completeObs,class(get_matrix(scm,type=assay))[[1]])
+  impute <- missMDA::imputePCA(get_matrix(scm,assay = assay), ncp = n_pc, ...)
+  assays(scm)[[new_assay]] <- as(impute$completeObs,class(get_matrix(scm,assay=assay))[[1]])
   
   return(scm)
 }

@@ -244,7 +244,7 @@ plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL,
          ylim = c(0, 1), yaxs = "i")
     mtext(side = 1, "Principal component", line = 2)
     cum_var <- cumsum(sdev^2)/sum(sdev^2) * sdev[1]^2/sum(sdev^2)
-    lines(cumsum(cum_var), type = "s")
+    lines(cumsum(cum_var), assay = "s")
     axis(side = 4, at = pretty(c(0, 1)), labels = pretty(c(0, 1)))
     legend("topright", col = c("red", "black"), lty = 1, c("Per PC", "Cumulative"), bty = "n")
     #lines(x = c(length(meth_pca$sdev), n_pc, n_pc), y = c(cum_var[n_pc], cum_var[n_pc], 0), lty = 3)
@@ -293,11 +293,11 @@ plot_coverage <- function(scm, type = c("hist", "dens"), pheno = NULL, perGroup 
     sel_rows <- sample(seq_len(nrow(scm@elementMetadata)), size = n_rows,
                        replace = FALSE)
     
-    meth_sub <- get_matrix(scm = scm[sel_rows, ], type = "counts",
+    meth_sub <- get_matrix(scm = scm[sel_rows, ], assay = "counts",
                                     add_loci = FALSE)
     
   } else {
-    meth_sub <- get_matrix(scm = scm, type = "counts", add_loci = FALSE)
+    meth_sub <- get_matrix(scm = scm, assay = "counts", add_loci = FALSE)
   }
   
   if (perGroup) {

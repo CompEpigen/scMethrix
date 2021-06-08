@@ -40,12 +40,12 @@ pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, range
   if (!is.null(ranges)) {
     message("GenomicRanges will be used for the PCA")
     meth_sub <- subset_scMethrix(scm = scm, regions = ranges)
-    meth_sub <- get_matrix(scm = meth_sub, type = assay, add_loci = FALSE)
+    meth_sub <- get_matrix(scm = meth_sub, assay = assay, add_loci = FALSE)
   }
   
   if (is.null(top_var)) {
     message("All CpGs in the dataset will be used for the PCA")
-    meth_sub <- get_matrix(scm = scm, type = assay, add_loci = FALSE)
+    meth_sub <- get_matrix(scm = scm, assay = assay, add_loci = FALSE)
   } else {
 
     top_var <- as.integer(as.character(top_var))
@@ -53,9 +53,9 @@ pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, range
     if (var_select == "rand") {
       message("Random CpGs within provided GRanges will be used for the PCA")
       ids <- sample(x = seq_along(meth_sub), replace = FALSE, size = min(top_var, nrow(meth_sub)))
-      meth_sub <- get_matrix(scm = scm[ids, ], type = assay, add_loci = FALSE)
+      meth_sub <- get_matrix(scm = scm[ids, ], assay = assay, add_loci = FALSE)
     } else {
-      meth_sub <- get_matrix(scm = scm, type = assay, add_loci = FALSE)
+      meth_sub <- get_matrix(scm = scm, assay = assay, add_loci = FALSE)
       message("Taking top ",top_var," most variable CpGs for the PCA")
       if (is_h5(scm)) {
         sds <- DelayedMatrixStats::rowSds(meth_sub, na.rm = TRUE)

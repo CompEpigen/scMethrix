@@ -8,7 +8,7 @@ get_matrix(
   scm = NULL,
   add_loci = FALSE,
   in_granges = FALSE,
-  type = "score",
+  assay = "score",
   order_by_sd = FALSE
 )
 }
@@ -19,7 +19,7 @@ get_matrix(
 
 \item{in_granges}{Do you want the outcome in \code{\link{GRanges}}?}
 
-\item{type}{Which matrix to get}
+\item{assay}{Which matrix to get}
 
 \item{order_by_sd}{Order output matrix by standard deviation}
 }

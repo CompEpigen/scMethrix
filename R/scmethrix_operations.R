@@ -21,7 +21,7 @@ get_metadata_stats <- function(scm) {
         sd_meth = DelayedMatrixStats::rowSds(get_matrix(scm), na.rm = TRUE)
       )
     
-    if(has_cov(scm)) stats[,"counts" := DelayedMatrixStats::rowSums2(get_matrix(scm,type="counts"), na.rm = TRUE)] 
+    if(has_cov(scm)) stats[,"counts" := DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"), na.rm = TRUE)] 
     
   } else {
     stats <- data.table::data.table(
@@ -30,7 +30,7 @@ get_metadata_stats <- function(scm) {
         sd_meth = matrixStats::rowSds(get_matrix(scm), na.rm = TRUE)
     )
     
-    if(has_cov(scm)) stats[,"counts" := matrixStats::rowSums2(get_matrix(scm,type="counts"), na.rm = TRUE)] 
+    if(has_cov(scm)) stats[,"counts" := matrixStats::rowSums2(get_matrix(scm,assay="counts"), na.rm = TRUE)] 
   }
   mcols(scm) <- stats
   return(scm)
@@ -185,11 +185,11 @@ export_bed <- function(scm = NULL, path = NULL, suffix = NULL) {
   
   for (file in files) {
     
-    val <- as.data.table(get_matrix(scm,type="score"))[, file, with=FALSE] 
+    val <- as.data.table(get_matrix(scm,assay="score"))[, file, with=FALSE] 
     rrng[,meth := val]
     
     if (has_cov(scm)) {
-      val <- as.data.table(get_matrix(scm,type="counts"))[, file, with=FALSE] 
+      val <- as.data.table(get_matrix(scm,assay="counts"))[, file, with=FALSE] 
       rrng[,cov := val]
     }
     
@@ -264,9 +264,9 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
   
   if(n_chunks==1){
     if (type == "score") {
-      dat = get_matrix(scm = scm[overlap_indices$xid,], type = "score", add_loci = TRUE)
+      dat = get_matrix(scm = scm[overlap_indices$xid,], assay = "score", add_loci = TRUE)
     } else if (type == "counts") {
-      dat = get_matrix(scm = scm[overlap_indices$xid,], type = "counts", add_loci = TRUE)
+      dat = get_matrix(scm = scm[overlap_indices$xid,], assay = "counts", add_loci = TRUE)
     }
   } else {
     
@@ -405,7 +405,7 @@ coverage_filter <- function(scm = NULL, cov_thr = 1, min_samples = NULL, prop_sa
   
   if (is_h5(scm)) {
     if (n_chunks == 1) {
-      cov_dat = get_matrix(scm, type = "counts")
+      cov_dat = get_matrix(scm, assay = "counts")
       if (!is.null(group)) {
         stop("Groups not implemented yet")
         # row_idx <- sapply(unique(m@colData[, group]), function(c) {
@@ -448,7 +448,7 @@ coverage_filter <- function(scm = NULL, cov_thr = 1, min_samples = NULL, prop_sa
       # }
     }
   } else {
-    cov_dat = get_matrix(scm, type = "counts")
+    cov_dat = get_matrix(scm, assay = "counts")
     if (!is.null(group)) {
       stop("Groups not implemented yet")
       # row_idx <- sapply(unique(m@colData[, group]), function(c) {
@@ -800,7 +800,7 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
 #' @param scm \code{\link{scMethrix}} object
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
 #' @param in_granges Do you want the outcome in \code{\link{GRanges}}?
-#' @param type Which matrix to get
+#' @param assay Which matrix to get
 #' @param order_by_sd Order output matrix by standard deviation
 #' @return HDF5Matrix or matrix
 #' @examples
@@ -818,7 +818,7 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
 #' # Get methylation data sorted by SD
 #' get_matrix(scMethrix_data, order_by_sd = TRUE)
 #' @export
-get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, type = "score", order_by_sd=FALSE) {
+get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, assay = "score", order_by_sd=FALSE) {
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -829,10 +829,10 @@ get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, type = "s
             "the output will be a data.frame object. ")
   }
   
-  type <- match.arg(arg = type, choices = SummarizedExperiment::assayNames(scm))
+  assay <- match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm))
   order_by <- 
   
-  mtx <- SummarizedExperiment::assay(x = scm, i = which(type == SummarizedExperiment::assayNames(scm)))
+  mtx <- SummarizedExperiment::assay(x = scm, i = which(assay == SummarizedExperiment::assayNames(scm)))
   
   if (order_by_sd) {
     if (is_h5(scm)) {
@@ -944,7 +944,7 @@ mask_scMethrix <- function(scm = NULL, low_count = 0, high_quantile = NULL, n_th
       row_idx <- DelayedMatrixStats::rowCounts(get_matrix(scm), 
                                                value = as.integer(NA)) > (nrow(colData(scm))-low_count)
     } else {
-      row_idx <- DelayedMatrixStats::rowSums2(get_matrix(scm,type="counts"),na.rm=TRUE) < low_count
+      row_idx <- DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"),na.rm=TRUE) < low_count
     }
     
     if (sum(row_idx) == 0) stop("No CpGs found with low_count")
