@@ -4,7 +4,13 @@
 \alias{get_matrix}
 \title{Extract assays from an \code{\link{scMethrix}} object}
 \usage{
-get_matrix(scm = NULL, add_loci = FALSE, in_granges = FALSE, type = "score")
+get_matrix(
+  scm = NULL,
+  add_loci = FALSE,
+  in_granges = FALSE,
+  type = "score",
+  order_by_sd = FALSE
+)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}} object}
@@ -14,9 +20,11 @@ get_matrix(scm = NULL, add_loci = FALSE, in_granges = FALSE, type = "score")
 \item{in_granges}{Do you want the outcome in \code{\link{GRanges}}?}
 
 \item{type}{Which matrix to get}
+
+\item{order_by_sd}{Order output matrix by standard deviation}
 }
 \value{
-Coverage or Methylation matrix
+HDF5Matrix or matrix
 }
 \description{
 Extract assays from an \code{\link{scMethrix}} object
@@ -35,4 +43,7 @@ get_matrix(scMethrix_data, add_loci=TRUE)
 
 # Get methylation data with loci inside a Granges object 
 get_matrix(scMethrix_data, add_loci=TRUE, in_granges=TRUE)
+
+# Get methylation data sorted by SD
+get_matrix(scMethrix_data, order_by_sd = TRUE)
 }

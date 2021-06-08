@@ -27,7 +27,7 @@ plot_pca(
 
 \item{show_labels}{Default FLASE}
 
-\item{pca_res}{Results from \code{\link{pca_scMethrix}}}
+\item{plot_vars}{Create additional plot for principal component shares}
 }
 \value{
 ggplot2 object
@@ -37,6 +37,6 @@ Plot PCA results
 }
 \examples{
 data('scMethrix_data')
-scmpc = pca_scMethrix(scMethrix_data, do_plot = FALSE)
+scmpc = pca_scMethrix(scMethrix_data)
 plot_pca(scmpc)
 }

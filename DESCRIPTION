@@ -30,7 +30,8 @@ Imports:
     ggplot2,
     BPRMeth,
     RColorBrewer,
-    Melissa
+    Melissa,
+    missMDA
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: 

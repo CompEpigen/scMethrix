@@ -2,7 +2,7 @@
 % Please edit documentation in R/scMethrix_plot.R
 \name{get_palette}
 \alias{get_palette}
-\title{Helper function to format long form data for plotting}
+\title{Getter for plot palette colors}
 \usage{
 get_palette(n_row, col_palette)
 }
@@ -15,5 +15,5 @@ get_palette(n_row, col_palette)
 RColorBrewer palette
 }
 \description{
-Helper function to format long form data for plotting
+Getter for plot palette colors
 }

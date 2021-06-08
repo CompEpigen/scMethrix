@@ -15,7 +15,7 @@ test_that("remove_assay", {
     expect_error(remove_assay(scm="not scMethrix"))
     expect_error(remove_assay(scm, assay="not an assay"))
     expect_error(remove_assay(scm, assay="score"))
-    plus1 <- transform_assay(scm,trans=function(x) x+1,assay="score",name="plus1")
+    plus1 <- transform_assay(scm,trans=function(x) x+1,assay="score",new_assay="plus1")
     expect_false(isTRUE(all.equal(assays(scm), assays(plus1))))
     plus1 <- remove_assay(plus1, assay="plus1")
     expect_true(all.equal(assays(scm), assays(plus1)))

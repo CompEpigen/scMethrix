@@ -815,7 +815,7 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
 #' # Get methylation data with loci inside a Granges object 
 #' get_matrix(scMethrix_data, add_loci=TRUE, in_granges=TRUE)
 #' 
-#' Get methylation data sorted by SD
+#' # Get methylation data sorted by SD
 #' get_matrix(scMethrix_data, order_by_sd = TRUE)
 #' @export
 get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, type = "score", order_by_sd=FALSE) {

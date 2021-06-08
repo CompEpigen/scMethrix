@@ -6,18 +6,18 @@
 \usage{
 pca_scMethrix(
   scm,
-  type = "score",
+  assay = "score",
   var = "top",
   top_var = 1000,
   ranges = NULL,
   pheno = NULL,
-  do_plot = TRUE,
-  n_pc = 2,
   verbose = FALSE
 )
 }
 \arguments{
 \item{scm}{Input \code{\link{scMethrix}} object}
+
+\item{assay}{The assay to use. Default is 'score'}
 
 \item{var}{Choose between random CpG sites ('rand') or most variable CpGs ('top').}
 
@@ -27,9 +27,7 @@ pca_scMethrix(
 
 \item{pheno}{Column name of colData(m). Default NULL. Will be used as a factor to color different groups}
 
-\item{do_plot}{Should a plot be generated?}
-
-\item{n_pc}{Default 2.}
+\item{verbose}{flag to output messages or not}
 }
 \value{
 PCA results
@@ -39,5 +37,5 @@ Principal Component Analysis
 }
 \examples{
 data('scMethrix_data')
-pca_scMethrix(scMethrix_data, do_plot = FALSE)
+pca_scMethrix(scMethrix_data)
 }

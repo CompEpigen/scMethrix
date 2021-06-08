@@ -138,18 +138,17 @@ plot_density <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL,
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Plot PCA results
-#'
-#' @param pca_res Results from \code{\link{pca_scMethrix}}
 #' @param scm optional scMethrix object. Default NULL
 #' @param col_anno Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object
 #' @param shape_anno Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object
 #' @param pc_x Default 'PC1'
 #' @param pc_y Default 'PC2'
 #' @param show_labels Default FLASE
+#' @param plot_vars Create additional plot for principal component shares
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
-#' scmpc = pca_scMethrix(scMethrix_data, do_plot = FALSE)
+#' scmpc = pca_scMethrix(scMethrix_data)
 #' plot_pca(scmpc)
 #' @export
 plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL,

@@ -4,14 +4,20 @@
 \alias{transform_assay}
 \title{Transforms an assay in an \code{\link{scMethrix}} object.}
 \usage{
-transform_assay(scm, assay = NULL, name = NULL, trans = NULL, h5_temp = NULL)
+transform_assay(
+  scm,
+  assay = NULL,
+  new_assay = NULL,
+  trans = NULL,
+  h5_temp = NULL
+)
 }
 \arguments{
 \item{scm}{A \code{\link{scMethrix}} object}
 
 \item{assay}{String name of an existing assay}
 
-\item{name}{String name of transformed assay}
+\item{new_assay}{String name of transformed assay}
 
 \item{trans}{The transformation function}
 
@@ -28,5 +34,5 @@ Uses the inputted function to transform an assay in the \code{\link{scMethrix}} 
 }
 \examples{
 data('scMethrix_data')
-transform_assay(scMethrix_data,assay="score",name="plus1",trans=function(x){x+1})
+transform_assay(scMethrix_data,assay="score",new_assay="plus1",trans=function(x){x+1})
 }

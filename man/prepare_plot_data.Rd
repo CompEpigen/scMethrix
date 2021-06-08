@@ -2,7 +2,7 @@
 % Please edit documentation in R/scMethrix_plot.R
 \name{prepare_plot_data}
 \alias{prepare_plot_data}
-\title{Helper function to format long form data for plotting}
+\title{Format \code{\link{scMethrix}} matrix to long form data for plotting}
 \usage{
 prepare_plot_data(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL)
 }
@@ -19,5 +19,5 @@ prepare_plot_data(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL)
 'Long' matrix for methylation
 }
 \description{
-Helper function to format long form data for plotting
+Format \code{\link{scMethrix}} matrix to long form data for plotting
 }
