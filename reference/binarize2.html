@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Remove loci that are uncovered across all samples — remove_uncovered • scMethrix</title>
+<title>Binarize an input value based on a threshold — binarize2 • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Remove loci that are uncovered across all samples — remove_uncovered" />
-<meta property="og:description" content="Remove loci that are uncovered across all samples" />
+<meta property="og:title" content="Binarize an input value based on a threshold — binarize2" />
+<meta property="og:description" content="Binarize an input value based on a threshold" />
 
 
 
@@ -111,45 +111,42 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Remove loci that are uncovered across all samples</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>remove_uncovered.Rd</code></div>
+    <h1>Binarize an input value based on a <code>threshold</code></h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/accessory_funcs.R'><code>R/accessory_funcs.R</code></a></small>
+    <div class="hidden name"><code>binarize2.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Remove loci that are uncovered across all samples</p>
+    <p>Binarize an input value based on a <code>threshold</code></p>
     </div>
 
-    <pre class="usage"><span class='fu'>remove_uncovered</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>binarize2</span><span class='op'>(</span><span class='va'>x</span>, threshold <span class='op'>=</span> <span class='fl'>50</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>scm</th>
-      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+      <th>x</th>
+      <td><p>A value to binarize</p></td>
+    </tr>
+    <tr>
+      <th>threshold</th>
+      <td><p>The threshold for binarizing</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An object of class <code><a href='scMethrix-class.html'>scMethrix</a></code></p>
+    <p>1 or 0, if above of below the threshold</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Takes <code><a href='scMethrix-class.html'>scMethrix</a></code> object and removes loci that are uncovered across all samples</p>
+    <p>Assigns a value of 0 or 1 based on being &lt; or &gt; the <code>thresdhold</code>, respectively.
+If <code>x</code> = <code>threshold</code>, <code>x</code> = 0.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='co'># Remove uncovered CpGs after subsetting to a single sample</span>
-<span class='fu'>remove_uncovered</span><span class='op'>(</span><span class='fu'><a href='subset_scMethrix.html'>subset_scMethrix</a></span><span class='op'>(</span><span class='va'>scMethrix_data</span>, samples <span class='op'>=</span> <span class='st'>"df1"</span>, by<span class='op'>=</span><span class='st'>"include"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by samples</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.07s</span></div><div class='output co'>#&gt; <span class='message'>Removing uncovered CpGs...</span></div><div class='output co'>#&gt; <span class='message'>Removed 100 [100%] uncovered loci of 100 sites (0.01s)</span></div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 0
-#&gt;    n_samples: 0
-#&gt;    assays: score, counts
-#&gt;    reduced dims: 
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 32 Kb</div></pre>
+    <pre class="examples"><div class='input'><span class='va'>vals</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0</span>,<span class='fl'>0.25</span>,<span class='fl'>0.5</span>,<span class='fl'>0.75</span>,<span class='fl'>1</span><span class='op'>)</span>
+<span class='fu'><a href='binarize.html'>binarize</a></span><span class='op'>(</span><span class='va'>vals</span>, threshold<span class='op'>=</span><span class='fl'>0.5</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [1] 0 0 0 1 1</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
