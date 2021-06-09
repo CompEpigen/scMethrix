@@ -13,6 +13,14 @@
 reduce_matrix <- function(scm, assay = "score", var = "top", top_var = 1000,
                             pheno = NULL, verbose = FALSE) {
 
+  if (!is(scm, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.")
+  }
+  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
+    stop("Assay does not exist in the object", call. = FALSE)
+  }
+  
   if (!is.numeric(top_var)){
     stop("Parameters top_var must be numeric.")
   }
@@ -60,15 +68,17 @@ reduce_matrix <- function(scm, assay = "score", var = "top", top_var = 1000,
   return (meth_sub)
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------
 #' Principal Component Analysis
-#'
+#' @detail Do PCA stuff
 #' @param scm Input \code{\link{scMethrix}} object
 #' @param assay The assay to use. Default is 'score'
-#' @param top_var Number of variable CpGs to use. Default 1000. Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with \code{ranges}.
+#' @param top_var Number of variable CpGs to use. Default 1000. Set it to NULL to use all CpGs (which is not
+#'  recommended due to memory requirements).
 #' @param var Choose between random CpG sites ('rand') or most variable CpGs ('top').
 #' @param verbose flag to output messages or not
 #' @return \code{\link{scMethrix}} object with reducedDim 'PCA'
+#' @importFrom stats
 #' @examples
 #' data('scMethrix_data')
 #' pca_scMethrix(scMethrix_data)
@@ -77,17 +87,8 @@ reduce_matrix <- function(scm, assay = "score", var = "top", top_var = 1000,
 pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000,
                           verbose = FALSE) {
   
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
-  }
-  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
-    stop("Assay does not exist in the object", call. = FALSE)
-  }
-  
-  meth_sub <- reduce_matrix(scm,assay = assay, var = var, top_var = top_var, pheno = pheno, verbose = verbose)
-  
-  meth_pca <- prcomp(x = t(meth_sub), retx = TRUE)
+  meth <- reduce_matrix(scm,assay = assay, var = var, top_var = top_var, pheno = pheno, verbose = verbose)
+  meth <- prcomp(x = t(meth), retx = TRUE)
   
     # Variance explained by PC's
   pc_vars <- meth_pca$sdev^2/sum(meth_pca$sdev^2)
@@ -112,10 +113,11 @@ pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000,
 #' @details Does UMAP stuff
 #' @param scm Input \code{\link{scMethrix}} object
 #' @param assay The assay to use. Default is 'score'
-#' @param top_var Number of variable CpGs to use. Default 1000. Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with \code{ranges}.
+#' @param top_var Number of variable CpGs to use. Default 1000. Set it to NULL to use all CpGs (which is not
+#'  recommended due to memory requirements).
 #' @param var Choose between random CpG sites ('rand') or most variable CpGs ('top').
 #' @param verbose flag to output messages or not
-#' @return \code{\link{scMethrix}} object with reducedDim 'umap'
+#' @return \code{\link{scMethrix}} object with reducedDim 'UMAP'
 #' @import umap
 #' @examples
 #' data('scMethrix_data')
@@ -124,19 +126,36 @@ pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000,
 umap_scMethrix <- function(scm, assay="score", n_neighbors = 20, var = "top", top_var = 1000,
                            verbose = FALSE) {
   x <- y <- NULL
-  
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
-  }
-  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
-    stop("Assay does not exist in the object", call. = FALSE)
-  }
 
-  meth_sub <- reduce_matrix(scm,assay = assay, var = var, top_var = top_var, pheno = pheno, verbose = verbose)
-  umap <- umap(as.matrix(t(meth_sub)),n_neighbors=min(n_neighbors,ncol(scm.bin)))
+  meth <- reduce_matrix(scm,assay = assay, var = var, top_var = top_var, pheno = pheno, verbose = verbose)
+  umap <- umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)))
 
-  reducedDim(scm, "umap") <- umap$layout
+  reducedDim(scm, "UMAP") <- umap$layout
+  
+  return(scm)
+}
+
+#------------------------------------------------------------------------------------------------------------
+#' Generates tSNE for scMethrix
+#' @details Does tSNE stuff
+#' @param scm Input \code{\link{scMethrix}} object
+#' @param assay The assay to use. Default is 'score'
+#' @param top_var Number of variable CpGs to use. Default 1000. Set it to NULL to use all CpGs (which is not
+#'  recommended due to memory requirements).
+#' @param var Choose between random CpG sites ('rand') or most variable CpGs ('top').
+#' @param verbose flag to output messages or not
+#' @return \code{\link{scMethrix}} object with reducedDim 'tSNE'
+#' @import RTsne
+#' @examples
+#' data('scMethrix_data')
+#' umap_scMethrix(scMethrix_data)
+#' @export
+tsne_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbose = FALSE) {
+  
+  meth <- reduce_matrix(scm,assay = assay, var = var, top_var = top_var, pheno = pheno, verbose = verbose)
+  meth_sub <- Rtsne(as.matrix(t(meth)), perplexity = floor(ncol(meth)/3))
+  
+  reducedDim(scm, "tSNE") <- meth_sub$Y
   
   return(scm)
 }

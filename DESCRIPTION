@@ -31,7 +31,8 @@ Imports:
     BPRMeth,
     RColorBrewer,
     Melissa,
-    missMDA
+    missMDA,
+    Rtsne
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: 
