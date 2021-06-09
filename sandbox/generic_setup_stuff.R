@@ -40,6 +40,8 @@ scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(
 
 scm.big.mem <- read_beds(files=files,h5=FALSE)
 
+scm.20.mem <- readRDS(file = "D:/Git/sampleData/scm.20.mem.rds")
+
 # Useful functions
 devtools::test()
 devtools::install()

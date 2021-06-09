@@ -830,8 +830,6 @@ get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, assay = "
   }
   
   assay <- match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm))
-  order_by <- 
-  
   mtx <- SummarizedExperiment::assay(x = scm, i = which(assay == SummarizedExperiment::assayNames(scm)))
   
   if (order_by_sd) {

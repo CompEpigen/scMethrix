@@ -95,7 +95,7 @@ bin_scMethrix <- function(scm, bin_size = 100000, trans = NULL, h5_dir = NULL) {
     (findOverlaps(rowRanges(scm),bins[i]))@from
   })
   
-  assys <- list()
+  assays <- list()
   
   for (n in 1:length(assays(scm))) {
     
@@ -114,18 +114,18 @@ bin_scMethrix <- function(scm, bin_size = 100000, trans = NULL, h5_dir = NULL) {
     vals <- data.table::transpose(vals)
     colnames(vals) <- rownames(colData(scm))
     
-    assys[[name]] <- as(vals,class(get_matrix(scm,assay=name)))
+    assays[[name]] <- as(vals,class(get_matrix(scm,assay=name)))
   }
   
   if (is_h5(scm)) {
     
-    m_obj <- create_scMethrix(assays = assys, rowRanges=bins, is_hdf5 = TRUE, 
+    m_obj <- create_scMethrix(assays = assays, rowRanges=bins, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),
                               replace = replace)
     
   } else {
     
-    m_obj <- create_scMethrix(assays = assys, rowRanges=bins, is_hdf5 = FALSE, 
+    m_obj <- create_scMethrix(assays = assays, rowRanges=bins, is_hdf5 = FALSE, 
                               genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),)
     
   }
@@ -137,11 +137,13 @@ bin_scMethrix <- function(scm, bin_size = 100000, trans = NULL, h5_dir = NULL) {
 #' @param scm A \code{\link{scMethrix}} object
 #' @param threshold The value for cutoff in the "score" assay to determine methylated or unmethylated status. 
 #' Default = 50
+#' @param assay Which assay to impute
+#' @param new_assay Name of the newly imputed assay
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
 #' @export
-impute_by_melissa <- function (scm, threshold = 50) {
+impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay = NULL) {
   
   . <- NULL
   
@@ -149,50 +151,32 @@ impute_by_melissa <- function (scm, threshold = 50) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  scm <- transform_assay(scm, assay = "score", new_assay = "binary",trans = binarize)
-  
-  melissa_obj <- generate_melissa_object(scm)
-  basis_obj <- BPRMeth::create_rbf_object(M = 4)
-  
-  set.seed(15)
-  # Run Melissa with K = 4 clusters
-  melissa_obj <- Melissa::melissa(X = melissa_obj$met, K = 4, basis = basis_obj,
-                                  vb_max_iter = 20, vb_init_nstart = 1, 
-                                  is_parallel = FALSE)
-  
-  return(scm)
-}
+  scm <- transform_assay(scm, assay = assay, new_assay = "binary", trans = binarize)
 
-generate_melissa_object <- function (scm, maxgap) {
-  
-  . <- NULL
-  
   # Convert Granges to genomic interval [-1,1]
-  chrom_size <- scm@metadata$chrom_sizes
+  chrom_size <- scm@metadata$chrom_size
   chrom_start <- sapply(coverage(scm), function(x) {x@lengths[1]}+1)
   interval <- as.data.table(rowRanges(scm))[,.(seqnames,start)]
   
   for (i in 1: length(chrom_size)) {
-    interval[seqnames==names(chrom_start)[i], interval := round((2*((start-chrom_start[i])/chrom_size[i]))-1, digits = 3)]
+    # The final square bracket at line below is added due to bug:
+    # https://stackoverflow.com/questions/34667536/have-to-call-variable-twice-before-evaluated
+    interval[seqnames==names(chrom_start)[i], interval := round((2*((start-chrom_start[i])/chrom_size[i]))-1, digits = 7)][]
   }
   
   mcols(scm) <- cbind(mcols(scm),interval = interval[,interval])
   
   # Put into Melissa met format
-  loc <- paste0(rowRanges(scm)@seqnames,":",chrom_start)
+  loc <- as.matrix(rowRanges(scm)@seqnames)
+  loc <- matrix(loc,dimnames = list(paste0(rowRanges(scm)@seqnames,":",interval$start)))
   cells <- list()
   
   for (n in 1:ncol(scm)) {
     
-    met <- matrix(cbind(mcols(scm)$interval,get_matrix(scm[,n],assay="binary")),
-                  ncol = 2,dimnames =list(loc,NULL))
-    
-    ends <- len <- seqnames(rowRanges(scm))@lengths
-    for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
-    starts <- head(c(1, ends + 1), -1)
-    
-    mets <- lapply(1:length(starts), function (i) as.matrix(met[starts[i]:ends[i],,drop=FALSE]))
-    mets <- lapply(mets, function (m) m[-which(m[,2]==-1),])
+    met <- matrix(c(mcols(scm)$interval,get_matrix(scm[,n],assay="binary")),
+                  ncol = 2,dimnames = list(rownames(loc),NULL))
+    mets <- lapply(rowRanges(scm)@seqnames@values, function(x) met[which(loc == x),,drop=FALSE])
+    mets <- lapply(mets, function (m) m[-which(m[,2]==-1),,drop=FALSE])
     
     cells[[colnames(scm)[n]]] <- mets
   }
@@ -213,7 +197,18 @@ generate_melissa_object <- function (scm, maxgap) {
   # 
   melissa_obj <- structure(list(met = cells, anno_region = NULL, opts = opts),
                            class = "melissa_data_obj")
-  return(melissa_obj)
+  
+  # Do the imputation
+  basis_obj <- BPRMeth::create_rbf_object(M = 4)
+  
+  set.seed(123)
+  melissa_obj <- Melissa::melissa(X = melissa_obj$met, basis = basis_obj,K = 4,
+                                  vb_max_iter = 30, vb_init_nstart = 1, 
+                                  is_parallel = FALSE)
+  plot_melissa_profiles(melissa_obj = melissa_obj, region = 1, 
+                        title = "Methylation profiles for region 25")
+  
+  return(scm)
 }
 
 #------------------------------------------------------------------------------------------------------------

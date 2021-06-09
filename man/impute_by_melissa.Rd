@@ -4,13 +4,17 @@
 \alias{impute_by_melissa}
 \title{Imputes the NA values of a \code{\link{scMethrix}} object.}
 \usage{
-impute_by_melissa(scm, threshold = 50)
+impute_by_melissa(scm, threshold = 50, assay = "score", new_assay = NULL)
 }
 \arguments{
 \item{scm}{A \code{\link{scMethrix}} object}
 
 \item{threshold}{The value for cutoff in the "score" assay to determine methylated or unmethylated status.
 Default = 50}
+
+\item{assay}{Which assay to impute}
+
+\item{new_assay}{Name of the newly imputed assay}
 }
 \value{
 An \code{\link{scMethrix}} object
