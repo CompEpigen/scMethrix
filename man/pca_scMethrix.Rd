@@ -4,36 +4,26 @@
 \alias{pca_scMethrix}
 \title{Principal Component Analysis}
 \usage{
-pca_scMethrix(
-  scm,
-  assay = "score",
-  var = "top",
-  top_var = 1000,
-  ranges = NULL,
-  pheno = NULL,
-  verbose = FALSE
-)
+pca_scMethrix(scm, assay = "score", verbose = FALSE, ...)
 }
 \arguments{
 \item{scm}{Input \code{\link{scMethrix}} object}
 
 \item{assay}{The assay to use. Default is 'score'}
 
-\item{var}{Choose between random CpG sites ('rand') or most variable CpGs ('top').}
-
-\item{top_var}{Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with \code{ranges}.}
-
-\item{ranges}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
-
-\item{pheno}{Column name of colData(m). Default NULL. Will be used as a factor to color different groups}
-
 \item{verbose}{flag to output messages or not}
+
+\item{...}{arguments passed to or from other methods.  If \code{x} is
+    a formula one might specify \code{scale.} or \code{tol}.}
 }
 \value{
-PCA results
+\code{\link{scMethrix}} object with reducedDim 'PCA'
 }
 \description{
 Principal Component Analysis
+}
+\details{
+Do PCA stuff
 }
 \examples{
 data('scMethrix_data')

@@ -205,8 +205,8 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   melissa_obj <- Melissa::melissa(X = melissa_obj$met, basis = basis_obj,K = 4,
                                   vb_max_iter = 30, vb_init_nstart = 1, 
                                   is_parallel = FALSE)
-  plot_melissa_profiles(melissa_obj = melissa_obj, region = 1, 
-                        title = "Methylation profiles for region 25")
+  # plot_melissa_profiles(melissa_obj = melissa_obj, region = 1, 
+  #                       title = "Methylation profiles for region 25")
   
   return(scm)
 }

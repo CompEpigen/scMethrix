@@ -146,6 +146,7 @@ plot_density <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL,
 #' @param show_labels Default FLASE
 #' @param plot_vars Create additional plot for principal component shares
 #' @return ggplot2 object
+#' @importFrom graphics par mtext lines axis legend title
 #' @examples
 #' data('scMethrix_data')
 #' scmpc = pca_scMethrix(scMethrix_data)
@@ -440,4 +441,27 @@ plot_stats <- function(plot_dat, what = "Score", stat = "mean", ignore_chr = NUL
   }
   
   plot_dat_gg
+}
+
+plot_melissa <- function() {
+  
+  
+  
+}
+
+plot_imap <- function(scm) {
+  
+  x <- y <- NULL
+  
+  umap <- get_matrix(scm,assay="umap")
+
+  df <- data.frame(x = scm$layout[,1],
+                   y = scm$layout[,2])
+  
+  ggplot(df, aes(x, y)) +
+    geom_point()
+  
+  
+  
+  
 }

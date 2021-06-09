@@ -32,7 +32,7 @@ Imports:
     RColorBrewer,
     Melissa,
     missMDA,
-    Rtsne
+    Rtsne,
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: 
