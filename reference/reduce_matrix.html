@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Masks high or low coverage count or cell count — mask_scMethrix • scMethrix</title>
+<title>Reduces a matrix — reduce_matrix • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Masks high or low coverage count or cell count — mask_scMethrix" />
-<meta property="og:description" content="Masks high or low coverage count or cell count" />
+<meta property="og:title" content="Reduces a matrix — reduce_matrix" />
+<meta property="og:description" content="Reduces a matrix" />
 
 
 
@@ -111,21 +111,21 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Masks high or low coverage <code>count</code> or <code>cell</code> count</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>mask_scMethrix.Rd</code></div>
+    <h1>Reduces a matrix</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_dimensionality.R'><code>R/scMethrix_dimensionality.R</code></a></small>
+    <div class="hidden name"><code>reduce_matrix.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Masks high or low coverage <code>count</code> or <code>cell</code> count</p>
+    <p>Reduces a matrix</p>
     </div>
 
-    <pre class="usage"><span class='fu'>mask_scMethrix</span><span class='op'>(</span>
-  scm <span class='op'>=</span> <span class='cn'>NULL</span>,
-  low_count <span class='op'>=</span> <span class='fl'>0</span>,
-  high_quantile <span class='op'>=</span> <span class='cn'>NULL</span>,
-  n_threads <span class='op'>=</span> <span class='fl'>1</span>,
-  type <span class='op'>=</span> <span class='st'>"cells"</span>
+    <pre class="usage"><span class='fu'>reduce_matrix</span><span class='op'>(</span>
+  <span class='va'>scm</span>,
+  assay <span class='op'>=</span> <span class='st'>"score"</span>,
+  var <span class='op'>=</span> <span class='st'>"top"</span>,
+  top_var <span class='op'>=</span> <span class='fl'>1000</span>,
+  verbose <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -133,46 +133,59 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>scm</th>
-      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+      <td><p>Input <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
     </tr>
     <tr>
-      <th>low_count</th>
-      <td><p>The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.</p></td>
+      <th>assay</th>
+      <td><p>The assay to use. Default is 'score'</p></td>
     </tr>
     <tr>
-      <th>high_quantile</th>
-      <td><p>The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
-higher quantile than the defined will be masked. Default = 0.99.</p></td>
+      <th>var</th>
+      <td><p>Choose between random CpG sites ('rand') or most variable CpGs ('top').</p></td>
     </tr>
     <tr>
-      <th>n_threads</th>
-      <td><p>Number of parallel instances. Can only be used if <code><a href='scMethrix-class.html'>scMethrix</a></code> is in HDF5 format. Default = 1.</p></td>
+      <th>top_var</th>
+      <td><p>Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with <code>ranges</code>.</p></td>
     </tr>
     <tr>
-      <th>type</th>
-      <td><p>Whether to use the "counts" coverage matrix or "cells" count when masking</p></td>
+      <th>verbose</th>
+      <td><p>flag to output messages or not</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An object of class <code><a href='scMethrix-class.html'>scMethrix</a></code></p>
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>Takes <code><a href='scMethrix-class.html'>scMethrix</a></code> object and masks sites with too high or too low coverage
-by putting NA for coverage and beta value. The sites will remain in the object.</p>
+    <p>Reduced matrix</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>mask_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,low_count<span class='op'>=</span><span class='fl'>4</span>,type<span class='op'>=</span><span class='st'>"counts"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Masking CpG sites in  quintile and counts &lt; 4</span></div><div class='output co'>#&gt; <span class='message'>   Masked 30 CpGs due to too low cells in sample C1.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 25 CpGs due to too low cells in sample C2.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 28 CpGs due to too low cells in sample C3.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 27 CpGs due to too low cells in sample C4.</span></div><div class='output co'>#&gt; <span class='message'>Masked in 0.38s</span></div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 100
-#&gt;    n_samples: 4
-#&gt;    assays: score, counts
-#&gt;    reduced dims: 
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 37 Kb</div></pre>
+<span class='fu'>reduce_matrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Taking top 1000 most variable CpGs for the reduction</span></div><div class='output co'>#&gt;        C1  C2  C3  C4
+#&gt;  [1,]   0   0 100 100
+#&gt;  [2,] 100 100   0   0
+#&gt;  [3,] 100   0 100 100
+#&gt;  [4,] 100   0   0   0
+#&gt;  [5,]  50 100  50 100
+#&gt;  [6,]  50 100 100 100
+#&gt;  [7,] 100 100 100  50
+#&gt;  [8,]  42  33  32   0
+#&gt;  [9,]  16  33  33   0
+#&gt; [10,]   0  20  25  33
+#&gt; [11,]  31   3  13   6
+#&gt; [12,]  21  30   6  34
+#&gt; [13,]  16  20   0   0
+#&gt; [14,]   0   0   0  15
+#&gt; [15,]  14   0   0   0
+#&gt; [16,] 100 100 100 100
+#&gt; [17,] 100 100 100 100
+#&gt; [18,]   0   0   0   0
+#&gt; [19,] 100 100 100 100
+#&gt; [20,] 100 100 100 100
+#&gt; [21,] 100 100 100 100
+#&gt; [22,] 100 100 100 100
+#&gt; [23,]   0   0   0   0
+#&gt; [24,] 100 100 100 100
+#&gt; [25,] 100 100 100 100</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
