@@ -50,26 +50,31 @@ reference:
   - transform_assay
 - subtitle: "Imputation"
 - contents:
-  - impute_scMethrix
-  - generate_melissa_object
+  - impute_by_iPCA
+  - impute_by_melissa
 - subtitle: "Dimensionality Reduction"
 - contents:
-  - bin_scMethrix
   - pca_scMethrix
   - umap_scMethrix
+  - tsne_scMethrix
+  - reduce_matrix
 - title: "Plotting"
 - contents: 
   - plot_violin
   - plot_density
-  - plot_pca
   - plot_coverage
   - plot_stats
+  - plot_pca
+  - plot_umap
+  - plot_tsne
   - prepare_plot_data
   - get_palette
 - title: "Misc functions"
 - subtitle: "Transforms"
 - contents: 
   - binarize
+  - binarize2
+  - bin_scMethrix
 - subtitle: "GRanges/List"
 - contents:
   - bin_granges

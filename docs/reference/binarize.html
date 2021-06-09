@@ -137,16 +137,16 @@
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>1 or 0, if above of below the threshold</p>
+    <p>1 or 0, if above of below the threshold, or -1 if NA</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>Assigns a value of 0 or 1 based on being &lt; or &gt; the <code>thresdhold</code>, respectively.
-If <code>x</code> = <code>threshold</code>, <code>x</code> = 0.</p>
+If <code>x</code> = <code>threshold</code>, <code>x</code> = 0. NA values are assigned as -1</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='va'>vals</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0</span>,<span class='fl'>0.25</span>,<span class='fl'>0.5</span>,<span class='fl'>0.75</span>,<span class='fl'>1</span><span class='op'>)</span>
+    <pre class="examples"><div class='input'><span class='va'>vals</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0</span>,<span class='fl'>0.25</span>,<span class='fl'>0.5</span>,<span class='fl'>0.75</span>,<span class='fl'>1</span>,<span class='cn'>NA</span><span class='op'>)</span>
 <span class='fu'>binarize</span><span class='op'>(</span><span class='va'>vals</span>, threshold<span class='op'>=</span><span class='fl'>0.5</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; [1] 0 0 0 1 1</div></pre>
+</div><div class='output co'>#&gt; [1]  0  0  0  1  1 -1</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

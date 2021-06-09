@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Converts HDF5 scMethrix object to an in-memory scMethrix object. — convert_HDF5_scMethrix • scMethrix</title>
+<title>Imputes the an scMethrix object using a iterative PCA model — impute_by_iPCA • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Converts HDF5 scMethrix object to an in-memory scMethrix object. — convert_HDF5_scMethrix" />
-<meta property="og:description" content="Converts HDF5 scMethrix object to an in-memory scMethrix object." />
+<meta property="og:title" content="Imputes the an scMethrix object using a iterative PCA model — impute_by_iPCA" />
+<meta property="og:description" content="Imputes the an scMethrix object using a iterative PCA model" />
 
 
 
@@ -111,51 +111,65 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Converts HDF5 <code><a href='scMethrix-class.html'>scMethrix</a></code> object to an in-memory <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>convert_HDF5_scMethrix.Rd</code></div>
+    <h1>Imputes the an <code><a href='scMethrix-class.html'>scMethrix</a></code> object using a iterative PCA model</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_transforms.R'><code>R/scMethrix_transforms.R</code></a></small>
+    <div class="hidden name"><code>impute_by_iPCA.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Converts HDF5 <code><a href='scMethrix-class.html'>scMethrix</a></code> object to an in-memory <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</p>
+    <p>Imputes the an <code><a href='scMethrix-class.html'>scMethrix</a></code> object using a iterative PCA model</p>
     </div>
 
-    <pre class="usage"><span class='fu'>convert_HDF5_scMethrix</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>impute_by_iPCA</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, assay <span class='op'>=</span> <span class='st'>"score"</span>, new_assay <span class='op'>=</span> <span class='cn'>NULL</span>, n_pc <span class='op'>=</span> <span class='fl'>2</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>scm</th>
-      <td><p>An object of class <code><a href='scMethrix-class.html'>scMethrix</a></code>, HDF5 format</p></td>
+      <td><p>A <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+    </tr>
+    <tr>
+      <th>assay</th>
+      <td><p>the assay to impute</p></td>
+    </tr>
+    <tr>
+      <th>new_assay</th>
+      <td><p>the new assay name</p></td>
+    </tr>
+    <tr>
+      <th>n_pc</th>
+      <td><p>The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value.
+For a range, the optimal value will be estimated; this is time-intensive.</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Additional arguments for missMDA::imputePCA</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An object of class <code><a href='scMethrix-class.html'>scMethrix</a></code></p>
+    <p>An <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Takes a <code><a href='scMethrix-class.html'>scMethrix</a></code> object and returns with the same object with in-memory assay slots.</p>
+    <p>Uses the inputted function to transform an assay in the <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</p>
+    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
+
+    <p>Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.</p>
+<p>Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='va'>dir</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/paste.html'>paste0</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span><span class='op'>(</span><span class='op'>)</span>,<span class='st'>"/h5"</span><span class='op'>)</span>
-<span class='va'>scm</span> <span class='op'>&lt;-</span> <span class='fu'><a href='convert_scMethrix.html'>convert_scMethrix</a></span><span class='op'>(</span><span class='va'>scMethrix_data</span>, h5_dir<span class='op'>=</span><span class='va'>dir</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Writing to disk...</span></div><div class='output co'>#&gt; <span class='message'>Start writing assay 1/2 to HDF5 file:</span>
-#&gt; <span class='message'>  C:\Users\geekb\AppData\Local\Temp\RtmpMTrM8U/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>/ Reading and realizing block 1/1 ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>\ Writing it ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>Finished writing assay 1/2 to HDF5 file:</span>
-#&gt; <span class='message'>  C:\Users\geekb\AppData\Local\Temp\RtmpMTrM8U/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>Start writing assay 2/2 to HDF5 file:</span>
-#&gt; <span class='message'>  C:\Users\geekb\AppData\Local\Temp\RtmpMTrM8U/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>/ Reading and realizing block 1/1 ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>\ Writing it ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>Finished writing assay 2/2 to HDF5 file:</span>
-#&gt; <span class='message'>  C:\Users\geekb\AppData\Local\Temp\RtmpMTrM8U/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>Serialize SingleCellExperiment object to RDS file:</span>
-#&gt; <span class='message'>  C:\Users\geekb\AppData\Local\Temp\RtmpMTrM8U/h5/se.rds</span></div><div class='output co'>#&gt; <span class='message'>Written in 0.14s</span></div><div class='input'><span class='fu'>convert_HDF5_scMethrix</span><span class='op'>(</span><span class='va'>scm</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Converting in-memory scMethrix to HDF5</span></div><div class='output co'>#&gt; An object of class scMethrix
+<span class='fu'>impute_by_iPCA</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, assay <span class='op'>=</span> <span class='st'>"score"</span>, new_assay <span class='op'>=</span> <span class='st'>"impute"</span>, n_pc <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 100
 #&gt;    n_samples: 4
-#&gt;    assays: score, counts
+#&gt;    assays: score, counts, impute
 #&gt;    reduced dims: 
 #&gt;    is_h5: FALSE
 #&gt;    Reference: hg19
-#&gt;    Physical size: 37 Kb</div></pre>
+#&gt;    Physical size: 40.9 Kb</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

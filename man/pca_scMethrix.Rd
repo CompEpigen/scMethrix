@@ -4,12 +4,23 @@
 \alias{pca_scMethrix}
 \title{Principal Component Analysis}
 \usage{
-pca_scMethrix(scm, assay = "score", verbose = FALSE, ...)
+pca_scMethrix(
+  scm,
+  assay = "score",
+  var = "top",
+  top_var = 1000,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{scm}{Input \code{\link{scMethrix}} object}
 
 \item{assay}{The assay to use. Default is 'score'}
+
+\item{var}{Choose between random CpG sites ('rand') or most variable CpGs ('top').}
+
+\item{top_var}{Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with \code{ranges}.}
 
 \item{verbose}{flag to output messages or not}
 
@@ -28,4 +39,7 @@ Do PCA stuff
 \examples{
 data('scMethrix_data')
 pca_scMethrix(scMethrix_data)
+}
+\seealso{
+\code{\link[=plot_pca]{plot_pca()}} for plotting
 }

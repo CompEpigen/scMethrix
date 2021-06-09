@@ -75,12 +75,13 @@ reduce_matrix <- function(scm, assay = "score", var = "top", top_var = 1000, ver
 #' @inheritParams stats::prcomp
 #' @return \code{\link{scMethrix}} object with reducedDim 'PCA'
 #' @importFrom stats prcomp
+#' @seealso [plot_pca()] for plotting
 #' @examples
 #' data('scMethrix_data')
 #' pca_scMethrix(scMethrix_data)
 #' @export
 #'
-pca_scMethrix <- function(scm, assay="score", verbose = FALSE, ...) {
+pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbose = FALSE, ...) {
   
   if (verbose) message("Starting PCA ",start_time())
   
@@ -108,22 +109,17 @@ pca_scMethrix <- function(scm, assay="score", verbose = FALSE, ...) {
 #------------------------------------------------------------------------------------------------------------
 #' Generates UMAP for scMethrix
 #' @details Does UMAP stuff
-#' param scm Input \code{\link{scMethrix}} object
-#' param assay The assay to use. Default is 'score'
-#' param top_var Number of variable CpGs to use. Default 1000. Set it to NULL to use all CpGs (which is not
-#'  recommended due to memory requirements).
-#' param var Choose between random CpG sites ('rand') or most variable CpGs ('top').
-#' param verbose flag to output messages or not
-#' @param n_neighbors The number of nearest neighbors to use
+#' @param n_neighbors integer; number of nearest neighbors
 #' @inheritParams reduce_matrix 
 #' @inheritParams umap::umap
 #' @return \code{\link{scMethrix}} object with reducedDim 'UMAP'
 #' @import umap
+#' @seealso [plot_umap()] for plotting
 #' @examples
 #' data('scMethrix_data')
 #' umap_scMethrix(scMethrix_data)
 #' @export
-umap_scMethrix <- function(scm, assay="score", verbose = FALSE, n_neighbors = 15, ...) {
+umap_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbose = FALSE, n_neighbors = 15, ...) {
   
   if (verbose) message("Starting UMAP",start_time())
   
@@ -142,21 +138,16 @@ umap_scMethrix <- function(scm, assay="score", verbose = FALSE, n_neighbors = 15
 #------------------------------------------------------------------------------------------------------------
 #' Generates tSNE for scMethrix
 #' @details Does tSNE stuff
-#' param scm Input \code{\link{scMethrix}} object
-#' param assay The assay to use. Default is 'score'
-#' param top_var Number of variable CpGs to use. Default 1000. Set it to NULL to use all CpGs (which is not
-#'  recommended due to memory requirements).
-#' param var Choose between random CpG sites ('rand') or most variable CpGs ('top').
-#' param verbose flag to output messages or not
 #' @inheritParams reduce_matrix 
 #' @inheritParams Rtsne::Rtsne
 #' @return \code{\link{scMethrix}} object with reducedDim 'tSNE'
 #' @import Rtsne
+#' @seealso [plot_tsne()] for plotting
 #' @examples
 #' data('scMethrix_data')
 #' umap_scMethrix(scMethrix_data)
 #' @export
-tsne_scMethrix <- function(scm, assay="score", perplexity = 30, verbose = FALSE, ...) {
+tsne_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, perplexity = 30, verbose = FALSE, ...) {
   
   if (verbose) message("Starting tSNE",start_time())
   

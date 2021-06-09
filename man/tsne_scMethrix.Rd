@@ -4,12 +4,24 @@
 \alias{tsne_scMethrix}
 \title{Generates tSNE for scMethrix}
 \usage{
-tsne_scMethrix(scm, assay = "score", perplexity = 30, verbose = FALSE, ...)
+tsne_scMethrix(
+  scm,
+  assay = "score",
+  var = "top",
+  top_var = 1000,
+  perplexity = 30,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{scm}{Input \code{\link{scMethrix}} object}
 
 \item{assay}{The assay to use. Default is 'score'}
+
+\item{var}{Choose between random CpG sites ('rand') or most variable CpGs ('top').}
+
+\item{top_var}{Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with \code{ranges}.}
 
 \item{perplexity}{numeric; Perplexity parameter (should not be bigger than 3 * perplexity < nrow(X) - 1, see details for interpretation)}
 
@@ -25,14 +37,11 @@ Generates tSNE for scMethrix
 }
 \details{
 Does tSNE stuff
-param scm Input \code{\link{scMethrix}} object
-param assay The assay to use. Default is 'score'
-param top_var Number of variable CpGs to use. Default 1000. Set it to NULL to use all CpGs (which is not
-recommended due to memory requirements).
-param var Choose between random CpG sites ('rand') or most variable CpGs ('top').
-param verbose flag to output messages or not
 }
 \examples{
 data('scMethrix_data')
 umap_scMethrix(scMethrix_data)
+}
+\seealso{
+\code{\link[=plot_tsne]{plot_tsne()}} for plotting
 }

@@ -4,16 +4,28 @@
 \alias{umap_scMethrix}
 \title{Generates UMAP for scMethrix}
 \usage{
-umap_scMethrix(scm, assay = "score", verbose = FALSE, n_neighbors = 15, ...)
+umap_scMethrix(
+  scm,
+  assay = "score",
+  var = "top",
+  top_var = 1000,
+  verbose = FALSE,
+  n_neighbors = 15,
+  ...
+)
 }
 \arguments{
 \item{scm}{Input \code{\link{scMethrix}} object}
 
 \item{assay}{The assay to use. Default is 'score'}
 
+\item{var}{Choose between random CpG sites ('rand') or most variable CpGs ('top').}
+
+\item{top_var}{Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with \code{ranges}.}
+
 \item{verbose}{flag to output messages or not}
 
-\item{n_neighbors}{The number of nearest neighbors to use}
+\item{n_neighbors}{integer; number of nearest neighbors}
 
 \item{...}{list of settings; values overwrite defaults from config;
 see documentation of umap.default for details about available settings}
@@ -26,14 +38,11 @@ Generates UMAP for scMethrix
 }
 \details{
 Does UMAP stuff
-param scm Input \code{\link{scMethrix}} object
-param assay The assay to use. Default is 'score'
-param top_var Number of variable CpGs to use. Default 1000. Set it to NULL to use all CpGs (which is not
-recommended due to memory requirements).
-param var Choose between random CpG sites ('rand') or most variable CpGs ('top').
-param verbose flag to output messages or not
 }
 \examples{
 data('scMethrix_data')
 umap_scMethrix(scMethrix_data)
+}
+\seealso{
+\code{\link[=plot_umap]{plot_umap()}} for plotting
 }

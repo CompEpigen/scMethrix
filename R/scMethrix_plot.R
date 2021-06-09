@@ -460,8 +460,25 @@ plot_imap <- function(scm) {
   
   ggplot(df, aes(x, y)) +
     geom_point()
+
+}
+
+#' Plot tSNE results
+#' @param scm \code{\link{scMethrix}}; the experiment containing the tSNE
+#' @return ggplot2 object
+#' @examples
+#' data('scMethrix_data')
+#' @export
+plot_tsne <- function(scm) {
   
-  
-  
+}
+
+#' Plot UMAP results
+#' @param scm \code{\link{scMethrix}}; the experiment containing the UMAP
+#' @return ggplot2 object
+#' @examples
+#' data('scMethrix_data')
+#' @export
+plot_umap <- function(scm) {
   
 }
