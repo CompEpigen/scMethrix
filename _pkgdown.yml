@@ -60,14 +60,15 @@ reference:
   - reduce_matrix
 - title: "Plotting"
 - contents: 
+  - prepare_plot_data
   - plot_violin
   - plot_density
   - plot_coverage
   - plot_stats
+  - plot_dim_red
   - plot_pca
   - plot_umap
   - plot_tsne
-  - prepare_plot_data
   - get_palette
 - title: "Misc functions"
 - subtitle: "Transforms"

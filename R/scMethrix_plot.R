@@ -329,118 +329,6 @@ plot_melissa <- function() {
 }
 
 
-#--------------------------------------------------------------------------------------------------------------------------
-#' Plot PCA results
-#' @param scm optional scMethrix object. Default NULL
-#' @param col_anno Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object
-#' @param shape_anno Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object
-#' @param pc_x Default 'PC1'
-#' @param pc_y Default 'PC2'
-#' @param show_labels Default FLASE
-#' @param plot_vars Create additional plot for principal component shares
-#' @return ggplot2 object
-#' @importFrom graphics par mtext lines axis legend title
-#' @examples
-#' data('scMethrix_data')
-#' scmpc = pca_scMethrix(scMethrix_data)
-#' plot_pca(scmpc)
-#' @export
-plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL,
-                     pc_x = "PC1", pc_y = "PC2", show_labels = FALSE, plot_vars = FALSE) {
-  
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
-  }
-  
-  if (!("PCA" %in% reducedDimNames(scm))){
-    stop("PCA results not present in scMethrix object. Run pca_scMethrix() first.")
-  }
-  
-  pca_res <- reducedDim(scm,type="PCA")
-  pc_vars <- scm@metadata$PCA_vars
-  
-  X <- Y <- color_me <- shape_me <- row_names <- NULL
-  
-  # pc_vars <- pca_res$var_explained
-  # pca_res <- as.data.frame(pca_res$PC_matrix)
-  # pca_res$row_names <- rownames(pca_res)
-  
-  x_lab <- paste0(pc_x, " [", pc_vars[pc_x]*100, " %]")
-  y_lab <- paste0(pc_y, " [", pc_vars[pc_y]*100, " %]")
-  
-  if (!is.null(col_anno)) {
-    col_anno_idx <- which(colnames(pca_res) == col_anno)
-    if (length(col_anno_idx) == 0) {
-      stop(paste0(col_anno, " not found in provided methrix object"))
-    } else {
-      colnames(pca_res)[col_anno_idx] <- "color_me"
-    }
-  }
-  
-  if (!is.null(shape_anno)) {
-    shape_anno_idx <- which(colnames(pca_res) == shape_anno)
-    if (length(shape_anno_idx) == 0) {
-      stop(paste0(shape_anno, " not found in provided methrix object"))
-    } else {
-      colnames(pca_res)[shape_anno_idx] <- "shape_me"
-    }
-  }
-  
-  pc_x_idx <- which(colnames(pca_res) == pc_x)
-  pc_y_idx <- which(colnames(pca_res) == pc_y)
-  colnames(pca_res)[c(pc_x_idx, pc_y_idx)] <- c("X", "Y")
-  
-  if (all(c("color_me", "shape_me") %in% colnames(pca_res))) {
-    pca_gg <- ggplot(data = pca_res, aes(x = X, y = Y, color = color_me,
-                                         shape = shape_me, label = row_names)) + geom_point(size = 3) +
-      xlab(pc_x) + ylab(pc_y) + labs(color = col_anno, shape = shape_anno) +
-      scale_color_brewer(palette = "Dark2")
-  } else if ("color_me" %in% colnames(pca_res)) {
-    pca_gg <- ggplot(data = pca_res, aes(x = X, y = Y, color = color_me,
-                                         label = row_names)) + geom_point(size = 3) + xlab(pc_x) + ylab(pc_y) +
-      labs(color = col_anno) + scale_color_brewer(palette = "Dark2")
-  } else if ("shape_me" %in% colnames(pca_res)) {
-    pca_gg <- ggplot(data = pca_res, aes(x = X, y = Y, shape = shape_me,
-                                         label = row_names)) + geom_point(size = 3) + xlab(pc_x) + ylab(pc_y) +
-      labs(shape = shape_anno)
-  } else {
-    pca_gg <- ggplot(data = as.data.frame(pca_res), aes(x = X, y = Y,
-                                                        label = row_names)) + geom_point(size = 3, fill = "black",
-                                                                                         color = "gray70") + xlab(pc_x) + ylab(pc_y)
-  }
-  
-  pca_gg <- pca_gg + xlab(label = x_lab) + ylab(label = y_lab) + theme_classic(base_size = 12) +
-    theme(axis.text.x = element_text(colour = "black", size = 12),
-          axis.text.y = element_text(colour = "black", size = 12))
-  
-  if (show_labels) {
-    pca_gg <- pca_gg + geom_label(size = 4)
-  }
-  
-  if (plot_vars) {
-    
-    sdev <- scm@metadata$PCA_vars
-    n_pc <- length(sdev)
-    
-    par(bty = "n", mgp = c(2.5, 0.5, 0), mar = c(3, 4, 2, 2) + 0.1,
-        tcl = -0.25, las = 1)
-    plot(pc_vars, type = "h", col = "red", xlab = "", ylab = "variance Explained",
-         ylim = c(0, 1), yaxs = "i")
-    mtext(side = 1, "Principal component", line = 2)
-    cum_var <- cumsum(sdev^2)/sum(sdev^2) * sdev[1]^2/sum(sdev^2)
-    lines(cumsum(cum_var), assay = "s")
-    axis(side = 4, at = pretty(c(0, 1)), labels = pretty(c(0, 1)))
-    legend("topright", col = c("red", "black"), lty = 1, c("Per PC", "Cumulative"), bty = "n")
-    #lines(x = c(length(meth_pca$sdev), n_pc, n_pc), y = c(cum_var[n_pc], cum_var[n_pc], 0), lty = 3)
-    title(main = paste0("Variance explained by ", n_pc, " PC: ", round(sum(c(sdev^2/sum(sdev^2))[seq_len(n_pc)]),
-                                                                       digits = 2)), adj = 0)
-    
-  } 
-  
-  return(pca_gg)
-}
-
-
 plot_imap <- function(scm) {
   
   x <- y <- NULL
@@ -458,11 +346,12 @@ plot_imap <- function(scm) {
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Plot PCA results
-#' @param dimred dimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
+#' @param dim_red dimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
 #' the X and Y coordinates of the dim. red., with each row being a seperate sample
-#' @param labels A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired
-#' @param show_labels Default FLASE
-#' @param plot_vars Create additional plot for principal component shares
+#' @param axis_labels A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired
+#' @param col_anno Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object
+#' @param shape_anno Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object
+#' @param show_dp_labels Default FLASE
 #' @return ggplot2 object
 #' @importFrom graphics par mtext lines axis legend title
 #' @examples
@@ -498,7 +387,7 @@ plot_dim_red <- function(dim_red, col_anno = NULL, shape_anno = NULL, axis_label
   }
   
   if (is.null(axis_labels)) {
-    axis_label = list(X="",Y="")
+    axis_labels = list(X="",Y="")
   }
   
   dim_red = as.data.frame(dim_red)
@@ -508,23 +397,22 @@ plot_dim_red <- function(dim_red, col_anno = NULL, shape_anno = NULL, axis_label
   if (all(c("color_me", "shape_me") %in% colnames(dim_red))) {
     dimred_gg <- ggplot(data = dim_red, aes(x = X, y = Y, color = color_me,
                                             shape = shape_me, label = row_names)) + geom_point(size = 3) +
-      xlab(pc_x) + ylab(pc_y) + labs(color = col_anno, shape = shape_anno) +
-      scale_color_brewer(palette = "Dark2")
+      labs(color = col_anno, shape = shape_anno) + scale_color_brewer(palette = "Dark2")
   } else if ("color_me" %in% colnames(dim_red)) {
     dimred_gg <- ggplot(data = dim_red, aes(x = X, y = Y, color = color_me,
-                                            label = row_names)) + geom_point(size = 3) + xlab(pc_x) + ylab(pc_y) +
+                                            label = row_names)) + geom_point(size = 3) +
       labs(color = col_anno) + scale_color_brewer(palette = "Dark2")
   } else if ("shape_me" %in% colnames(dim_red)) {
     dimred_gg <- ggplot(data = dim_red, aes(x = X, y = Y, shape = shape_me,
-                                            label = row_names)) + geom_point(size = 3) + xlab(pc_x) + ylab(pc_y) +
+                                            label = row_names)) + geom_point(size = 3) +
       labs(shape = shape_anno)
   } else {
     dimred_gg <- ggplot(data = as.data.frame(dim_red), aes(x = X, y = Y,
                                                            label = row_names)) + geom_point(size = 3, fill = "black",
-                                                                                            color = "gray70") + xlab(pc_x) + ylab(pc_y)
+                                                                                            color = "gray70")
   }
   
-  dimred_gg <- dimred_gg  + theme_classic(base_size = 12) + xlab(label = axis_labels$X) + ylab(label = axis_labels$Y) + 
+  dimred_gg <- dimred_gg  + theme_classic(base_size = 12) + xlab(axis_labels$X) + ylab(axis_labels$Y) + 
     theme(axis.text.x = element_text(colour = "black", size = 12),
           axis.text.y = element_text(colour = "black", size = 12))
   
@@ -536,8 +424,20 @@ plot_dim_red <- function(dim_red, col_anno = NULL, shape_anno = NULL, axis_label
   
 }
 
-plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL,
-                     pc_x = "PC1", pc_y = "PC2", show_labels = FALSE, plot_vars = FALSE) {
+#--------------------------------------------------------------------------------------------------------------------------
+#' Plot PCA results
+#' @param scm \code{\link{scMethrix}}; the experiment containing the PCA
+#' @param plot_vars Plot the variance explanation too
+#' @param show_labels Show cell names on each data point. Default FLASE
+#' @inheritParams plot_dim_red 
+#' @return ggplot2 object
+#' @importFrom graphics par mtext lines axis legend title barplot points
+#' @examples
+#' data('scMethrix_data')
+#' scmpc = pca_scMethrix(scMethrix_data)
+#' plot_pca(scmpc)
+#' @export
+plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE, plot_vars = FALSE) {
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
@@ -547,45 +447,41 @@ plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL,
     stop("PCA results not present in scMethrix object. Run pca_scMethrix() first.")
   }
   
+  dim_red = reducedDim(scm,type="PCA")[,1:2]
+  pc_vars = scm@metadata$PCA_vars
+  
+  pc_x = colnames(dim_red)[1]
+  pc_y = colnames(dim_red)[2]
+  
   axis_labels = list(
     X = paste0(pc_x, " [", pc_vars[pc_x]*100, " %]"),
     Y = paste0(pc_y, " [", pc_vars[pc_y]*100, " %]")
   )
   
-  plot_dim_red(dim_red = reducedDim(scm,type="PCA")[,1:2], col_anno = col_anno, shape_anno = shape_anno, 
+  pca_gg <- plot_dim_red(dim_red = dim_red, col_anno = col_anno, shape_anno = shape_anno, 
                show_dp_labels = show_labels, axis_labels = axis_labels)
   
   if (plot_vars) {
-    
-    sdev <- scm@metadata$PCA_vars
-    n_pc <- length(sdev)
-    
-    par(bty = "n", mgp = c(2.5, 0.5, 0), mar = c(3, 4, 2, 2) + 0.1,
-        tcl = -0.25, las = 1)
-    plot(pc_vars, type = "h", col = "red", xlab = "", ylab = "variance Explained",
-         ylim = c(0, 1), yaxs = "i")
-    mtext(side = 1, "Principal component", line = 2)
-    cum_var <- cumsum(sdev^2)/sum(sdev^2) * sdev[1]^2/sum(sdev^2)
-    lines(cumsum(cum_var), assay = "s")
-    axis(side = 4, at = pretty(c(0, 1)), labels = pretty(c(0, 1)))
-    legend("topright", col = c("red", "black"), lty = 1, c("Per PC", "Cumulative"), bty = "n")
-    #lines(x = c(length(meth_pca$sdev), n_pc, n_pc), y = c(cum_var[n_pc], cum_var[n_pc], 0), lty = 3)
-    title(main = paste0("Variance explained by ", n_pc, " PC: ", round(sum(c(sdev^2/sum(sdev^2))[seq_len(n_pc)]),
-                                                                       digits = 2)), adj = 0)
-    
-  } 
+    par(mar = c(3, 4, 1, 4))
+    b = barplot(height = pc_vars, names.arg = NA, col = "#2c3e50", ylim = c(0, 1), las = 2, axes = FALSE, ylab = "Variance Explained")
+    points(x = b, y = cumsum(pc_vars), type = 'l', lty = 2, lwd = 1.2, xpd = TRUE, col = "#c0392b")
+    points(x = b, y = cumsum(pc_vars), type = 'p', pch = 19, xpd = TRUE, col = "#c0392b")
+    mtext(text = paste0("PC", 1:length(pc_vars)), side = 1, at = b, las = 2, line = 0.5, cex = 0.8)
+    axis(side = 2, at = seq(0, 1, 0.1), line = 0, las = 2, cex.axis = 0.8)
+    axis(side = 4, at = seq(0, 1, 0.1), line = 0, las = 2, cex.axis = 0.8)
+    legend(x = "topleft", legend = "Cumulative", col = "#c0392b", pch = 19, lwd = 1, cex = 0.75, bty = "n")
+  }
   
   return(pca_gg)
 }
 
 #' Plot tSNE results
-#' @param scm \code{\link{scMethrix}}; the experiment containing the tSNE
+#' @inheritParams plot_pca
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
 #' @export
-plot_tsne <- function(scm, col_anno = NULL, shape_anno = NULL) {
-  
+plot_tsne <- function(scm, col_anno = NULL, shape_anno = NULL, show_labels = FALSE) {
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
@@ -601,12 +497,12 @@ plot_tsne <- function(scm, col_anno = NULL, shape_anno = NULL) {
 }
 
 #' Plot UMAP results
-#' @param scm \code{\link{scMethrix}}; the experiment containing the UMAP
+#' @inheritParams plot_pca
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
 #' @export
-plot_umap <- function(scm, col_anno = NULL, shape_anno = NULL) {
+plot_umap <- function(scm, col_anno = NULL, shape_anno = NULL, show_labels = FALSE) {
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")

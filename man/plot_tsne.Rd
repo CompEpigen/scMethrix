@@ -4,10 +4,16 @@
 \alias{plot_tsne}
 \title{Plot tSNE results}
 \usage{
-plot_tsne(scm)
+plot_tsne(scm, col_anno = NULL, shape_anno = NULL, show_labels = FALSE)
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}}; the experiment containing the tSNE}
+\item{scm}{\code{\link{scMethrix}}; the experiment containing the PCA}
+
+\item{col_anno}{Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object}
+
+\item{shape_anno}{Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object}
+
+\item{show_labels}{Show cell names on each data point. Default FLASE}
 }
 \value{
 ggplot2 object
