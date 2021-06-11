@@ -124,8 +124,6 @@
   scm <span class='op'>=</span> <span class='cn'>NULL</span>,
   col_anno <span class='op'>=</span> <span class='cn'>NULL</span>,
   shape_anno <span class='op'>=</span> <span class='cn'>NULL</span>,
-  pc_x <span class='op'>=</span> <span class='st'>"PC1"</span>,
-  pc_y <span class='op'>=</span> <span class='st'>"PC2"</span>,
   show_labels <span class='op'>=</span> <span class='cn'>FALSE</span>,
   plot_vars <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
@@ -135,7 +133,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>scm</th>
-      <td><p>optional scMethrix object. Default NULL</p></td>
+      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the experiment containing the PCA</p></td>
     </tr>
     <tr>
       <th>col_anno</th>
@@ -146,20 +144,12 @@
       <td><p>Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required <code>methrix</code> object</p></td>
     </tr>
     <tr>
-      <th>pc_x</th>
-      <td><p>Default 'PC1'</p></td>
-    </tr>
-    <tr>
-      <th>pc_y</th>
-      <td><p>Default 'PC2'</p></td>
-    </tr>
-    <tr>
       <th>show_labels</th>
-      <td><p>Default FLASE</p></td>
+      <td><p>Show cell names on each data point. Default FLASE</p></td>
     </tr>
     <tr>
       <th>plot_vars</th>
-      <td><p>Create additional plot for principal component shares</p></td>
+      <td><p>Plot the variance explanation too</p></td>
     </tr>
     </table>
 

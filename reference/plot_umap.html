@@ -120,14 +120,26 @@
     <p>Plot UMAP results</p>
     </div>
 
-    <pre class="usage"><span class='fu'>plot_umap</span><span class='op'>(</span><span class='va'>scm</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>plot_umap</span><span class='op'>(</span><span class='va'>scm</span>, col_anno <span class='op'>=</span> <span class='cn'>NULL</span>, shape_anno <span class='op'>=</span> <span class='cn'>NULL</span>, show_labels <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>scm</th>
-      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the experiment containing the UMAP</p></td>
+      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the experiment containing the PCA</p></td>
+    </tr>
+    <tr>
+      <th>col_anno</th>
+      <td><p>Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required <code>methrix</code> object</p></td>
+    </tr>
+    <tr>
+      <th>shape_anno</th>
+      <td><p>Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required <code>methrix</code> object</p></td>
+    </tr>
+    <tr>
+      <th>show_labels</th>
+      <td><p>Show cell names on each data point. Default FLASE</p></td>
     </tr>
     </table>
 
