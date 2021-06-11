@@ -10,6 +10,7 @@ pca_scMethrix(
   var = "top",
   top_var = 1000,
   verbose = FALSE,
+  n_pc = 2,
   ...
 )
 }
@@ -34,7 +35,7 @@ pca_scMethrix(
 Principal Component Analysis
 }
 \details{
-Do PCA stuff
+Do PCA stuff. NA values will be removed.
 }
 \examples{
 data('scMethrix_data')

@@ -34,3 +34,6 @@ data('scMethrix_data')
 scmpc = pca_scMethrix(scMethrix_data)
 plot_pca(scmpc)
 }
+\seealso{
+\code{\link[=pca_scMethrix]{pca_scMethrix()}} for dimensionality reduction
+}

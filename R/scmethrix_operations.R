@@ -911,7 +911,7 @@ remove_uncovered <- function(scm = NULL) {
 #' data('scMethrix_data')
 #' mask_scMethrix(scMethrix_data,low_count=4,type="counts")
 #' @export
-mask_scMethrix <- function(scm = NULL, low_count = 0, high_quantile = NULL, n_threads=1 ,type="cells") {
+mask_scMethrix <- function(scm = NULL, low_count = 0, high_quantile = NULL, n_threads=1 ,type="counts") {
   
   if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   

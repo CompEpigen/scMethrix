@@ -24,3 +24,6 @@ Plot tSNE results
 \examples{
 data('scMethrix_data')
 }
+\seealso{
+\code{\link[=tsne_scMethrix]{tsne_scMethrix()}} for dimensionality reduction
+}

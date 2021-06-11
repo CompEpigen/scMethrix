@@ -5,14 +5,15 @@
 #' @param top_var Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with \code{ranges}.
 #' @param var Choose between random CpG sites ('rand') or most variable CpGs ('top').
 #' @param verbose flag to output messages or not
+#' @param na.rm Remove NA values
 #' @return Reduced matrix
 #' @importFrom stats complete.cases var
 #' @examples
 #' data('scMethrix_data')
-#' reduce_matrix(scMethrix_data)
+#' reduce_cpgs(scMethrix_data)
 #' @export
-reduce_matrix <- function(scm, assay = "score", var = "top", top_var = 1000, verbose = FALSE) {
-  
+reduce_cpgs <- function(scm, assay = "score", var = "top", top_var = 1000, na.rm = FALSE, verbose = FALSE) {
+
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
@@ -20,11 +21,7 @@ reduce_matrix <- function(scm, assay = "score", var = "top", top_var = 1000, ver
   if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
     stop("Assay does not exist in the object", call. = FALSE)
   }
-  
-  if (!is.numeric(top_var)){
-    stop("Parameters top_var must be numeric.")
-  }
-  
+
   var_select <- match.arg(var, c("top", "rand"))
   
   if (verbose) message("Generating reduced dataset...")
@@ -38,8 +35,9 @@ reduce_matrix <- function(scm, assay = "score", var = "top", top_var = 1000, ver
     
     if (var_select == "rand") {
       message("Random CpGs within provided GRanges will be used for the reduction")
-      ids <- sample(x = seq_along(meth_sub), replace = FALSE, size = min(top_var, nrow(meth_sub)))
-      meth_sub <- get_matrix(scm = scm[ids, ], assay = assay, add_loci = FALSE)
+      meth_sub <- get_matrix(scm = scm, assay = assay, add_loci = FALSE)
+      ids <- sample(x = 1:nrow(meth_sub), replace = FALSE, size = min(top_var, nrow(meth_sub)))
+      meth_sub <- meth_sub[ids, ]
     } else {
       message("Taking top ",top_var," most variable CpGs for the reduction")
       meth_sub <- get_matrix(scm = scm, assay = assay, add_loci = FALSE)
@@ -54,11 +52,15 @@ reduce_matrix <- function(scm, assay = "score", var = "top", top_var = 1000, ver
     }
   }
   
-  # Remove NA
-  if (is_h5(scm)) {
-    meth_sub <- meth_sub[!DelayedMatrixStats::rowAnyMissings(meth_sub), , drop = FALSE]
-  } else {
-    meth_sub <- meth_sub[stats::complete.cases(meth_sub), , drop = FALSE]
+  if (na.rm) {
+      count <- nrow(meth_sub)
+    if (is_h5(scm)) {
+      meth_sub <- meth_sub[!DelayedMatrixStats::rowAnyMissings(meth_sub), , drop = FALSE]
+    } else {
+      meth_sub <- meth_sub[stats::complete.cases(meth_sub), , drop = FALSE]
+    }
+    
+    message("Removed ",count - nrow(meth_sub)," CpGs due to NA")
   }
   
   if (nrow(meth_sub) == 0) {
@@ -70,8 +72,9 @@ reduce_matrix <- function(scm, assay = "score", var = "top", top_var = 1000, ver
 
 #--------------------------------------------------------------------------------------------------------------
 #' Principal Component Analysis
-#' @details Do PCA stuff
-#' @inheritParams reduce_matrix 
+#' @details Do PCA stuff. NA values will be removed.
+#' @param n_pc Number of principal components to use
+#' @inheritParams reduce_cpgs 
 #' @inheritParams stats::prcomp
 #' @return \code{\link{scMethrix}} object with reducedDim 'PCA'
 #' @importFrom stats prcomp
@@ -81,26 +84,27 @@ reduce_matrix <- function(scm, assay = "score", var = "top", top_var = 1000, ver
 #' pca_scMethrix(scMethrix_data)
 #' @export
 #'
-pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbose = FALSE, ...) {
+pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbose = FALSE, n_pc = 2, ...) {
   
   if (verbose) message("Starting PCA ",start_time())
   
-  meth <- reduce_matrix(scm,assay = assay, ...)
-  meth <- prcomp(x = t(meth), retx = TRUE, ...)
+  meth <- reduce_cpgs(scm,assay = assay, var = var, top_var = top_var, verbose = verbose, na.rm = TRUE)
+  meth <- prcomp(x = as.matrix(t(meth)), retx = TRUE)#, ...)
   
   # Variance explained by PC's
   pc_vars <- meth$sdev^2/sum(meth$sdev^2)
   names(pc_vars) <- colnames(meth$x)
   pc_vars <- round(pc_vars, digits = 2)
   
-  reducedDim(scm, "PCA") <- meth$x
-  scm@metadata$PCA_vars <- pc_vars
+  reducedDim(scm, "PCA") <- meth$x[,1:n_pc]
+  scm@metadata$PCA_vars <- pc_vars[1:n_pc]
 
-  message("PCA vars (saved in metadata$PCA_vars):")
-  print(pc_vars, quote=FALSE, print.gap=2)
+  if (verbose) {
+    message("PCA vars (saved in metadata$PCA_vars):")
+    message(paste(names(pc_vars), pc_vars, sep = ":", collapse = ", "))
+    message("PCA finished in ",stop_time())
+  }
   
-  if (verbose) message("PCA finished in ",stop_time())
-
   gc(verbose = FALSE)
     
   return(scm)
@@ -110,7 +114,7 @@ pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbo
 #' Generates UMAP for scMethrix
 #' @details Does UMAP stuff
 #' @param n_neighbors integer; number of nearest neighbors
-#' @inheritParams reduce_matrix 
+#' @inheritParams reduce_cpgs 
 #' @inheritParams umap::umap
 #' @return \code{\link{scMethrix}} object with reducedDim 'UMAP'
 #' @import umap
@@ -123,8 +127,8 @@ umap_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verb
   
   if (verbose) message("Starting UMAP",start_time())
   
-  meth <- reduce_matrix(scm,assay = assay, ...)
-  umap <- umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)), ...)
+  meth <- reduce_cpgs(scm,assay = assay, var = var, top_var = top_var, verbose = verbose, na.rm=TRUE)
+  umap <- umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)))#, ...)
   
   reducedDim(scm, "UMAP") <- umap$layout
   
@@ -138,7 +142,7 @@ umap_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verb
 #------------------------------------------------------------------------------------------------------------
 #' Generates tSNE for scMethrix
 #' @details Does tSNE stuff
-#' @inheritParams reduce_matrix 
+#' @inheritParams reduce_cpgs 
 #' @inheritParams Rtsne::Rtsne
 #' @return \code{\link{scMethrix}} object with reducedDim 'tSNE'
 #' @import Rtsne
@@ -151,8 +155,8 @@ tsne_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, perp
   
   if (verbose) message("Starting tSNE",start_time())
   
-  meth <- reduce_matrix(scm,assay = assay, ...)
-  meth_sub <- Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), ...)
+  meth <- reduce_cpgs(scm,assay = assay, var = var, top_var = top_var, verbose = verbose, na.rm = TRUE)
+  meth_sub <- Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)))#, ...)
   
   reducedDim(scm, "tSNE") <- meth_sub$Y
   

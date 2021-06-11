@@ -9,7 +9,7 @@ mask_scMethrix(
   low_count = 0,
   high_quantile = NULL,
   n_threads = 1,
-  type = "cells"
+  type = "counts"
 )
 }
 \arguments{

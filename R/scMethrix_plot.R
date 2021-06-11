@@ -431,6 +431,7 @@ plot_dim_red <- function(dim_red, col_anno = NULL, shape_anno = NULL, axis_label
 #' @param show_labels Show cell names on each data point. Default FLASE
 #' @inheritParams plot_dim_red 
 #' @return ggplot2 object
+#' @seealso [pca_scMethrix()] for dimensionality reduction
 #' @importFrom graphics par mtext lines axis legend title barplot points
 #' @examples
 #' data('scMethrix_data')
@@ -477,6 +478,7 @@ plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels
 
 #' Plot tSNE results
 #' @inheritParams plot_pca
+#' @seealso [tsne_scMethrix()] for dimensionality reduction
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
@@ -499,6 +501,7 @@ plot_tsne <- function(scm, col_anno = NULL, shape_anno = NULL, show_labels = FAL
 #' Plot UMAP results
 #' @inheritParams plot_pca
 #' @return ggplot2 object
+#' @seealso [umap_scMethrix()] for dimensionality reduction
 #' @examples
 #' data('scMethrix_data')
 #' @export
