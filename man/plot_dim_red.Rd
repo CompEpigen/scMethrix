@@ -2,7 +2,7 @@
 % Please edit documentation in R/scMethrix_plot.R
 \name{plot_dim_red}
 \alias{plot_dim_red}
-\title{Plot PCA results}
+\title{Plot dimensionality reduction}
 \usage{
 plot_dim_red(
   dim_red,
@@ -28,7 +28,7 @@ the X and Y coordinates of the dim. red., with each row being a seperate sample}
 ggplot2 object
 }
 \description{
-Plot PCA results
+Plot dimensionality reduction
 }
 \examples{
 data('scMethrix_data')

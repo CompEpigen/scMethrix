@@ -4,7 +4,7 @@
 \alias{plot_tsne}
 \title{Plot tSNE results}
 \usage{
-plot_tsne(scm, col_anno = NULL, shape_anno = NULL, show_labels = FALSE)
+plot_tsne(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the experiment containing the PCA}

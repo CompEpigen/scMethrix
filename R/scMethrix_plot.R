@@ -4,7 +4,7 @@
 #' @param ranges genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param pheno Row name of colData(m). Will be used as a factor to color different groups in the violin plot.
 #' @return 'Long' matrix for methylation
-prepare_plot_data <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL){
+prepare_plot_data <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL){
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
@@ -60,8 +60,11 @@ prepare_plot_data <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL){
 #' @return RColorBrewer palette
 get_palette <- function(n_row, col_palette){
   
+  if (n_row == 0) {
+    stop("Zero colors present in the palette")
+  }
+  
   if (!col_palette %in% rownames(RColorBrewer::brewer.pal.info)){
-    
     stop("Please provide a valid RColorBrewer palettte. Possible values are: ", paste0(rownames(RColorBrewer::brewer.pal.info)), sep=", ")
   }
   color_pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(RColorBrewer::brewer.pal.info[col_palette,
@@ -82,9 +85,13 @@ get_palette <- function(n_row, col_palette){
 #' @examples
 #' data('scMethrix_data')
 #' plot_violin(scm = scMethrix_data)
-plot_violin <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL,
+plot_violin <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL,
                         col_palette = "RdYlGn") {
   variable <- Meth <- NULL
+  
+  if (!is(scm, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.")
+  }
   
   plot.data <- prepare_plot_data(scm=scm, ranges = ranges, n_cpgs = n_cpgs, pheno = pheno)
   
@@ -114,10 +121,14 @@ plot_violin <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL,
 #' @examples
 #' data('scMethrix_data')
 #' plot_density(scm = scMethrix_data)
-plot_density <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL,
+plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL,
                          col_palette = "RdYlGn") {
   
   variable <- Meth <- NULL
+  
+  if (!is(scm, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.")
+  }
   
   plot.data <- prepare_plot_data(scm=scm, ranges = ranges, n_cpgs = n_cpgs, pheno = pheno)
   col_palette <- get_palette(ncol(scm), col_palette)
@@ -153,7 +164,7 @@ plot_density <- function(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL,
 #' plot_coverage(scm = scMethrix_data)
 #' @export
 
-plot_coverage <- function(scm, type = c("hist", "dens"), pheno = NULL, perGroup = FALSE,
+plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, perGroup = FALSE,
                           lim = 100, size.lim = 1e+06, col_palette = "RdYlGn") {
   
   value <- variable <- NULL
@@ -161,8 +172,8 @@ plot_coverage <- function(scm, type = c("hist", "dens"), pheno = NULL, perGroup 
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
-  colors_palette <- get_palette(ncol(scm), col_palette)
   
+  colors_palette <- get_palette(ncol(scm), col_palette)
   
   type <- match.arg(arg = type, choices = c("hist", "dens"), several.ok = FALSE)
   
@@ -330,22 +341,22 @@ plot_melissa <- function() {
 
 
 plot_imap <- function(scm) {
-  
-  x <- y <- NULL
-  
-  umap <- get_matrix(scm,assay="umap")
-  
-  df <- data.frame(x = scm$layout[,1],
-                   y = scm$layout[,2])
-  
-  ggplot(df, aes(x, y)) +
-    geom_point()
-  
+  # 
+  # x <- y <- NULL
+  # 
+  # umap <- get_matrix(scm,assay="umap")
+  # 
+  # df <- data.frame(x = scm$layout[,1],
+  #                  y = scm$layout[,2])
+  # 
+  # ggplot(df, aes(x, y)) +
+  #   geom_point()
+  # 
 }
 
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Plot PCA results
+#' Plot dimensionality reduction
 #' @param dim_red dimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
 #' the X and Y coordinates of the dim. red., with each row being a seperate sample
 #' @param axis_labels A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired
@@ -483,7 +494,7 @@ plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels
 #' @examples
 #' data('scMethrix_data')
 #' @export
-plot_tsne <- function(scm, col_anno = NULL, shape_anno = NULL, show_labels = FALSE) {
+plot_tsne <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE) {
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
@@ -505,7 +516,7 @@ plot_tsne <- function(scm, col_anno = NULL, shape_anno = NULL, show_labels = FAL
 #' @examples
 #' data('scMethrix_data')
 #' @export
-plot_umap <- function(scm, col_anno = NULL, shape_anno = NULL, show_labels = FALSE) {
+plot_umap <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE) {
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")

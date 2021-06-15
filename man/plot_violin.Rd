@@ -5,7 +5,7 @@
 \title{Violin Plot for \eqn{\beta}-Values}
 \usage{
 plot_violin(
-  scm,
+  scm = NULL,
   ranges = NULL,
   n_cpgs = 25000,
   pheno = NULL,

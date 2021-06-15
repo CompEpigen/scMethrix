@@ -22,6 +22,8 @@ reduce_cpgs(
 
 \item{top_var}{Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with \code{ranges}.}
 
+\item{na.rm}{Remove NA values}
+
 \item{verbose}{flag to output messages or not}
 }
 \value{

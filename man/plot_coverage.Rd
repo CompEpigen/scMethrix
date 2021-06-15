@@ -5,7 +5,7 @@
 \title{Coverage QC Plots}
 \usage{
 plot_coverage(
-  scm,
+  scm = NULL,
   type = c("hist", "dens"),
   pheno = NULL,
   perGroup = FALSE,

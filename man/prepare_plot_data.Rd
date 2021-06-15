@@ -4,7 +4,7 @@
 \alias{prepare_plot_data}
 \title{Format \code{\link{scMethrix}} matrix to long form data for plotting}
 \usage{
-prepare_plot_data(scm, ranges = NULL, n_cpgs = 25000, pheno = NULL)
+prepare_plot_data(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL)
 }
 \arguments{
 \item{scm}{Input \code{\link{scMethrix}} object}

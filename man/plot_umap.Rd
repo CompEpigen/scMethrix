@@ -4,7 +4,7 @@
 \alias{plot_umap}
 \title{Plot UMAP results}
 \usage{
-plot_umap(scm, col_anno = NULL, shape_anno = NULL, show_labels = FALSE)
+plot_umap(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the experiment containing the PCA}

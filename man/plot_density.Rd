@@ -5,7 +5,7 @@
 \title{Density Plot of \eqn{\beta}-Values}
 \usage{
 plot_density(
-  scm,
+  scm = NULL,
   ranges = NULL,
   n_cpgs = 25000,
   pheno = NULL,

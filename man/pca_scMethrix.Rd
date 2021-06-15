@@ -25,6 +25,8 @@ pca_scMethrix(
 
 \item{verbose}{flag to output messages or not}
 
+\item{n_pc}{Number of principal components to use}
+
 \item{...}{arguments passed to or from other methods.  If \code{x} is
     a formula one might specify \code{scale.} or \code{tol}.}
 }
