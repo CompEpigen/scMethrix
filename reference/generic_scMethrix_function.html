@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Converts an in-memory scMethrix to an HDF5 scMethrix — convert_scMethrix • scMethrix</title>
+<title>Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package — generic_scMethrix_function • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Converts an in-memory scMethrix to an HDF5 scMethrix — convert_scMethrix" />
-<meta property="og:description" content="Converts an in-memory scMethrix to an HDF5 scMethrix" />
+<meta property="og:title" content="Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package — generic_scMethrix_function" />
+<meta property="og:description" content="Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package" />
 
 
 
@@ -111,16 +111,25 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Converts an in-memory <code><a href='scMethrix-class.html'>scMethrix</a></code> to an HDF5 <code><a href='scMethrix-class.html'>scMethrix</a></code></h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>convert_scMethrix.Rd</code></div>
+    <h1>Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_object.R'><code>R/scmethrix_object.R</code></a></small>
+    <div class="hidden name"><code>generic_scMethrix_function.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Converts an in-memory <code><a href='scMethrix-class.html'>scMethrix</a></code> to an HDF5 <code><a href='scMethrix-class.html'>scMethrix</a></code></p>
+    <p>Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package</p>
     </div>
 
-    <pre class="usage"><span class='fu'>convert_scMethrix</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, h5_dir <span class='op'>=</span> <span class='cn'>NULL</span>, verbose <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>generic_scMethrix_function</span><span class='op'>(</span>
+  <span class='va'>scm</span>,
+  <span class='va'>assay</span>,
+  <span class='va'>new_assay</span>,
+  <span class='va'>trans</span>,
+  <span class='va'>verbose</span>,
+  <span class='va'>n_chunks</span>,
+  <span class='va'>n_threads</span>,
+  <span class='va'>h5_dir</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -130,39 +139,36 @@
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
-      <th>h5_dir</th>
-      <td><p>string; The directory to use. Will be created if it does not exist. Default = NULL</p></td>
+      <th>assay</th>
+      <td><p>string; name of an existing assay. Default = "score"</p></td>
+    </tr>
+    <tr>
+      <th>new_assay</th>
+      <td><p>string; name for transformed assay. Default = "new_assay"</p></td>
+    </tr>
+    <tr>
+      <th>trans</th>
+      <td><p>closure; The transformation function. Default = mean</p></td>
     </tr>
     <tr>
       <th>verbose</th>
       <td><p>boolean; Flag for outputting function status messages. Default = TRUE</p></td>
     </tr>
+    <tr>
+      <th>n_chunks</th>
+      <td><p>integer; Number of chunks to split the <code><a href='scMethrix-class.html'>scMethrix</a></code> object in case it is very large. Default = 1</p></td>
+    </tr>
+    <tr>
+      <th>n_threads</th>
+      <td><p>integer; Number of parallel instances. <code>n_threads</code> must be less than or equal to <code>n_chunks</code>. Default = 1</p></td>
+    </tr>
+    <tr>
+      <th>h5_dir</th>
+      <td><p>string; The directory to use. Will be created if it does not exist. Default = NULL</p></td>
+    </tr>
     </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An object of class <code><a href='scMethrix-class.html'>scMethrix</a></code>, HDF5 format</p>
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>Takes a <code><a href='scMethrix-class.html'>scMethrix</a></code> object and returns with the same object with delayed array assay slots
-with HDF5 backend. Might take long time!</p>
-
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>convert_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, h5_dir<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/paste.html'>paste0</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span><span class='op'>(</span><span class='op'>)</span>,<span class='st'>"/h5"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Writing to disk...</span></div><div class='output co'>#&gt; <span class='message'>Start writing assay 1/2 to HDF5 file:</span>
-#&gt; <span class='message'>  /var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpvimqDQ/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>/ Reading and realizing block 1/1 ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>\ Writing it ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>Finished writing assay 1/2 to HDF5 file:</span>
-#&gt; <span class='message'>  /var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpvimqDQ/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>Start writing assay 2/2 to HDF5 file:</span>
-#&gt; <span class='message'>  /var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpvimqDQ/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>/ Reading and realizing block 1/1 ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>\ Writing it ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>Finished writing assay 2/2 to HDF5 file:</span>
-#&gt; <span class='message'>  /var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpvimqDQ/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>Serialize SingleCellExperiment object to RDS file:</span>
-#&gt; <span class='message'>  /var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpvimqDQ/h5/se.rds</span></div><div class='output co'>#&gt; <span class='message'>Written in 0.15s</span></div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 100
-#&gt;    n_samples: 4
-#&gt;    assays: score, counts
-#&gt;    reduced dims: 
-#&gt;    is_h5: TRUE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 37.3 Kb</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

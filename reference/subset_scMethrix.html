@@ -134,7 +134,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>scm</th>
-      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
       <th>regions</th>
@@ -142,11 +142,11 @@
     </tr>
     <tr>
       <th>contigs</th>
-      <td><p>string of chromosome names to subset by</p></td>
+      <td><p>string; array of chromosome names to subset by</p></td>
     </tr>
     <tr>
       <th>samples</th>
-      <td><p>string of sample names to subset by</p></td>
+      <td><p>string; array of sample names to subset by</p></td>
     </tr>
     <tr>
       <th>by</th>
@@ -154,7 +154,7 @@
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>flag to output messages or not</p></td>
+      <td><p>boolean; Flag for outputting function status messages. Default = TRUE</p></td>
     </tr>
     </table>
 
@@ -175,7 +175,7 @@ either subset (<code>include</code>) to or filter (<code>exclude</code>) the spe
 
 <span class='co'>#Subset to only samples bed1 and bed3, and chromosome 1</span>
 <span class='fu'>subset_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, samples <span class='op'>=</span> <span class='va'>samples</span>, contigs <span class='op'>=</span> <span class='va'>contigs</span>, by <span class='op'>=</span> <span class='st'>"include"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by contigs</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by samples</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.12s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by contigs</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by samples</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.11s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 7
 #&gt;    n_samples: 2
 #&gt;    assays: score, counts
@@ -185,7 +185,7 @@ either subset (<code>include</code>) to or filter (<code>exclude</code>) the spe
 #&gt;    Physical size: 32.7 Kb</div><div class='input'>
 <span class='co'>#Subset to only region "chr1:1-5"</span>
 <span class='fu'>subset_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, regions <span class='op'>=</span> <span class='va'>regions</span>, by <span class='op'>=</span> <span class='st'>"include"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.07s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.08s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 1
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts
@@ -195,7 +195,7 @@ either subset (<code>include</code>) to or filter (<code>exclude</code>) the spe
 #&gt;    Physical size: 32.9 Kb</div><div class='input'>
 <span class='co'>#Subset to exclude samples bed1 and bed3, and chromosome 1</span>
 <span class='fu'>subset_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, samples <span class='op'>=</span> <span class='va'>samples</span>, contigs <span class='op'>=</span> <span class='va'>contigs</span>, by <span class='op'>=</span> <span class='st'>"exclude"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by contigs</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.06s</span></div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by samples</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.05s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by contigs</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.07s</span></div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by samples</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.06s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 93
 #&gt;    n_samples: 2
 #&gt;    assays: score, counts
@@ -205,7 +205,7 @@ either subset (<code>include</code>) to or filter (<code>exclude</code>) the spe
 #&gt;    Physical size: 34.9 Kb</div><div class='input'>
 <span class='co'>#Subset to exclude region "chr1:1-5"</span>
 <span class='fu'>subset_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, regions <span class='op'>=</span> <span class='va'>regions</span>, by <span class='op'>=</span> <span class='st'>"exclude"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.10s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.12s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 99
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts
