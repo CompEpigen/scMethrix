@@ -27,3 +27,29 @@ test_that("transform_assay", {
     rm(plus1)
   }))
 })
+
+test_that("impute_by_iPCA", {
+  
+  expect_error(impute_by_iPCA("not scMethrix"))
+
+  #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+  invisible(lapply(list(scm.mem), function(scm) {
+    expect_error(impute_by_iPCA(scm,assay = "not an assay"))
+    expect_error(impute_by_iPCA(scm,new_assay = "score"))
+    expect_warning(impute_by_iPCA(scm,new_assay = "counts"))
+    
+    impute = impute_by_iPCA(scm,new_assay="impute")
+    expect_true("impute" %in% SummarizedExperiment::assayNames(impute))
+    
+    sco <- get_matrix(impute,assay="score")
+    imp <- get_matrix(impute,assay="impute")
+    NAs <- which(is.na(sco))
+    nonNAs <- which(!is.na(sco))
+    
+    expect_true(anyNA(sco) && !anyNA(imp))
+    expect_equivalent(sco[nonNAs],imp[nonNAs])
+    expect_false(all(sco[NAs] %in% imp[NAs]))
+    
+    rm(bin)
+  }))
+})
