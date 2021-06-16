@@ -49,7 +49,24 @@ test_that("impute_by_iPCA", {
     expect_true(anyNA(sco) && !anyNA(imp))
     expect_equivalent(sco[nonNAs],imp[nonNAs])
     expect_false(all(sco[NAs] %in% imp[NAs]))
-    
-    rm(bin)
   }))
 })
+
+test_that("generate_training_set", {
+  
+  expect_error(generate_training_set("not scMethrix"))
+  
+  #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    expect_error(generate_training_set(scm,training_prop = 2))
+    
+    set <- generate_training_set(scm,training_prop = 0.2)
+    expect_equivalent(nrow(set$training),20)
+    expect_equivalent(nrow(set$test),80)
+    
+    expect_equivalent(scm,merge_scMethrix(set$training,set$test)) #TODO: validate this better
+  }))
+})
+
+
+

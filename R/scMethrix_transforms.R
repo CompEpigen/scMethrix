@@ -251,3 +251,31 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = NULL, n_pc =
   
   return(scm)
 }
+
+#------------------------------------------------------------------------------------------------------------
+#' Splits an experiment into two for use as a training and test set
+#' @details Does stuff
+#' @param training_prop number within [0-1]; The size of the training set as a proportion of the experiment 
+#' For a range, the optimal value will be estimated; this is time-intensive.
+#' @inheritParams generic_scMethrix_function
+#' @return list; two \code{\link{scMethrix}} objects names 'training' and 'test'
+#' @examples
+#' data('scMethrix_data')
+#' generate_learning_set(scMethrix_data, training_prop = 0.2)
+#' @export
+generate_training_set <- function(scm = NULL, training_prop = 0.2) {
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (training_prop > 1 || training_prop < 0) {
+    stop("training_prop must in the range of [0,1]", call. = FALSE)
+  }
+  set.seed(123)
+  idx <- sort(sample(1:nrow(scm),floor(nrow(scm)*training_prop)))
+  
+  training <- scm[idx,]
+  test <- scm[setdiff(1:nrow(scm),idx),]
+  
+  return(list(training = training,test = test))
+}
