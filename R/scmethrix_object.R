@@ -73,3 +73,17 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
 setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
           (x); SummarizedExperiment::assay(x, i="score")}
 )
+
+
+#' Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package
+#' @param scm \code{\link{scMethrix}}; the single cell methylation experiment
+#' @param assay string; name of an existing assay. Default = "score"
+#' @param new_assay string; name for transformed assay. Default = "new_assay"
+#' @param trans closure; The transformation function. Default = mean
+#' @param verbose boolean; Flag for outputting function status messages. Default = TRUE 
+#' @param n_chunks integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1
+#' @param n_threads integer; Number of parallel instances. \code{n_threads} must be less than or equal to \code{n_chunks}. Default = 1
+#' @param h5_dir string; The directory to use. Will be created if it does not exist. Default = NULL
+generic_scMethrix_function <- function(scm, assay, new_assay, trans, verbose, n_chunks, n_threads, h5_dir) {}
+
+

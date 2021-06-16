@@ -13,13 +13,13 @@ plot_violin(
 )
 }
 \arguments{
-\item{scm}{Input \code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{ranges}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
 
 \item{n_cpgs}{Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.}
 
-\item{pheno}{Column name of colData(m). Will be used as a factor to color different groups in the violin plot.}
+\item{pheno}{Row name of colData(m). Will be used as a factor to color different groups in the violin plot.}
 
 \item{col_palette}{Name of the RColorBrewer palette to use for plotting.}
 }

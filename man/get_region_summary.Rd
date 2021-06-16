@@ -17,7 +17,7 @@ get_region_summary(
 )
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{regions}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object}
 
@@ -33,7 +33,7 @@ get_region_summary(
 see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.}
 
-\item{verbose}{Boolean to output progress messages. Default TRUE}
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 
 \item{group}{a column name from sample annotation that defines groups. In this case, the number of min_samples will be
 tested group-wise.}

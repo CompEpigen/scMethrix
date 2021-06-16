@@ -13,13 +13,13 @@ get_matrix(
 )
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{add_loci}{Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table}
 
 \item{in_granges}{Do you want the outcome in \code{\link{GRanges}}?}
 
-\item{assay}{Which matrix to get}
+\item{assay}{string; name of an existing assay. Default = "score"}
 
 \item{order_by_sd}{Order output matrix by standard deviation}
 }

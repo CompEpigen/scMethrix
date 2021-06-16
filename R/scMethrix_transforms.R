@@ -1,11 +1,8 @@
 #------------------------------------------------------------------------------------------------------------
 #' Transforms an assay in an \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
-#' @param scm A \code{\link{scMethrix}} object
-#' @param assay String name of an existing assay
-#' @param new_assay String name of transformed assay
-#' @param trans The transformation function
-#' @param h5_temp temporary directory to store hdf5
+#' @inheritParams generic_scMethrix_function
+#' @param h5_temp string; temporary directory to store hdf5
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
@@ -64,7 +61,7 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
 #------------------------------------------------------------------------------------------------------------
 #' Bins the ranges of an \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
-#' @param scm A \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @param bin_size The size of each bin. First bin will begin at the start position of the first genomic
 #' region on the chromosome
 #' @param trans The transforms for each assay. Must be a named vector of functions (closure). 
@@ -134,11 +131,9 @@ bin_scMethrix <- function(scm, bin_size = 100000, trans = NULL, h5_dir = NULL) {
 #------------------------------------------------------------------------------------------------------------
 #' Imputes the NA values of a \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
-#' @param scm A \code{\link{scMethrix}} object
 #' @param threshold The value for cutoff in the "score" assay to determine methylated or unmethylated status. 
 #' Default = 50
-#' @param assay Which assay to impute
-#' @param new_assay Name of the newly imputed assay
+#' @inheritParams generic_scMethrix_function
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
@@ -214,12 +209,10 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #------------------------------------------------------------------------------------------------------------
 #' Imputes the an \code{\link{scMethrix}} object using a iterative PCA model
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
-#' @param scm A \code{\link{scMethrix}} object
-#' @param assay the assay to impute
-#' @param new_assay the new assay name
-#' @param n_pc The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value. 
+#' @param n_pc integer > 0; The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value. 
 #' For a range, the optimal value will be estimated; this is time-intensive.
 #' @param ... Additional arguments for missMDA::imputePCA
+#' @inheritParams transform_assay
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
@@ -238,6 +231,7 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = NULL, n_pc =
   }
   
   if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
+    if (new_assay == "score") stop("Cannot overwrite the score assay")
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   }
   
@@ -245,7 +239,7 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = NULL, n_pc =
     stop("HDF5-based objects cannot be imputed by iPCA", call. = FALSE)
   }
   
-  if (length(n_pc) == 2) {
+  if (length(n_pc) > 1) {
     warning("Caution: n_pc is given as range. This can be very time-intensive.")
     n_pc <- missMDA::estim_ncpPCA(get_matrix(scm,assay = assay),ncp.min = n_pc[1], ncp.max = n_pc[2], 
                          method.cv = "Kfold", verbose = TRUE)

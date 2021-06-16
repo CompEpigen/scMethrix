@@ -7,14 +7,14 @@
 impute_by_melissa(scm, threshold = 50, assay = "score", new_assay = NULL)
 }
 \arguments{
-\item{scm}{A \code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{threshold}{The value for cutoff in the "score" assay to determine methylated or unmethylated status.
 Default = 50}
 
-\item{assay}{Which assay to impute}
+\item{assay}{string; name of an existing assay. Default = "score"}
 
-\item{new_assay}{Name of the newly imputed assay}
+\item{new_assay}{string; name for transformed assay. Default = "new_assay"}
 }
 \value{
 An \code{\link{scMethrix}} object

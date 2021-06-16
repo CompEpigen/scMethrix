@@ -7,7 +7,7 @@
 plot_tsne(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE)
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}}; the experiment containing the PCA}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{col_anno}{Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object}
 

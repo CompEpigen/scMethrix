@@ -7,7 +7,7 @@
 convert_to_methrix(scm = NULL, h5_dir = NULL)
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{h5_dir}{Location to save the methrix H5 file}
 }

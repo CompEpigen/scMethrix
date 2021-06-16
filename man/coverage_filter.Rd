@@ -15,7 +15,7 @@ coverage_filter(
 )
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{cov_thr}{minimum coverage required to call a loci covered}
 
@@ -26,9 +26,9 @@ coverage_filter(
 \item{group}{a column name from sample annotation that defines groups. In this case, the number of min_samples will be
 tested group-wise.}
 
-\item{n_chunks}{Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.}
+\item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1}
 
-\item{n_threads}{Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. If \code{n_threads} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_threads}. Default = 1.}
+\item{n_threads}{integer; Number of parallel instances. \code{n_threads} must be less than or equal to \code{n_chunks}. Default = 1}
 }
 \value{
 An object of class \code{\link{scMethrix}}

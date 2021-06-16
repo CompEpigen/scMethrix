@@ -7,9 +7,9 @@
 save_HDF5_scMethrix(scm = NULL, h5_dir = NULL, replace = FALSE, ...)
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{h5_dir}{The directory to use. Created, if not existing. Default NULL}
+\item{h5_dir}{string; The directory to use. Will be created if it does not exist. Default = NULL}
 
 \item{replace}{Should it overwrite the pre-existing data? FALSE by default.}
 

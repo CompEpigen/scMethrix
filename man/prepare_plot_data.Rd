@@ -7,7 +7,7 @@
 prepare_plot_data(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL)
 }
 \arguments{
-\item{scm}{Input \code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{ranges}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
 

@@ -7,7 +7,7 @@
 convert_HDF5_scMethrix(scm = NULL)
 }
 \arguments{
-\item{scm}{An object of class \code{\link{scMethrix}}, HDF5 format}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 }
 \value{
 An object of class \code{\link{scMethrix}}
@@ -16,7 +16,7 @@ An object of class \code{\link{scMethrix}}
 Converts HDF5 \code{\link{scMethrix}} object to an in-memory \code{\link{scMethrix}} object.
 }
 \details{
-Takes a \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
+Takes an HDF\%-based \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
 }
 \examples{
 data('scMethrix_data')

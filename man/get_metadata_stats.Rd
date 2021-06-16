@@ -7,7 +7,7 @@
 get_metadata_stats(scm)
 }
 \arguments{
-\item{scm}{A \code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 }
 \value{
 An \code{\link{scMethrix}} object

@@ -14,17 +14,17 @@ subset_scMethrix(
 )
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{regions}{genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
 
-\item{contigs}{string of chromosome names to subset by}
+\item{contigs}{string; array of chromosome names to subset by}
 
-\item{samples}{string of sample names to subset by}
+\item{samples}{string; array of sample names to subset by}
 
 \item{by}{string to decide whether to "include" or "exclude" the given criteria from the subset}
 
-\item{verbose}{flag to output messages or not}
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 An object of class \code{\link{scMethrix}}

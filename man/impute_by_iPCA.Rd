@@ -7,13 +7,13 @@
 impute_by_iPCA(scm = NULL, assay = "score", new_assay = NULL, n_pc = 2, ...)
 }
 \arguments{
-\item{scm}{A \code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{assay}{the assay to impute}
+\item{assay}{string; name of an existing assay. Default = "score"}
 
-\item{new_assay}{the new assay name}
+\item{new_assay}{string; name for transformed assay. Default = "new_assay"}
 
-\item{n_pc}{The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value.
+\item{n_pc}{integer > 0; The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value.
 For a range, the optimal value will be estimated; this is time-intensive.}
 
 \item{...}{Additional arguments for missMDA::imputePCA}

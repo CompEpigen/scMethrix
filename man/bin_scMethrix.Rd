@@ -7,7 +7,7 @@
 bin_scMethrix(scm, bin_size = 1e+05, trans = NULL, h5_dir = NULL)
 }
 \arguments{
-\item{scm}{A \code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{bin_size}{The size of each bin. First bin will begin at the start position of the first genomic
 region on the chromosome}

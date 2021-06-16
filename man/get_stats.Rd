@@ -7,7 +7,7 @@
 get_stats(scm = NULL, per_chr = TRUE)
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{per_chr}{Estimate stats per chromosome. Default TRUE}
 }

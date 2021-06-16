@@ -7,9 +7,9 @@
 remove_assay(scm, assay)
 }
 \arguments{
-\item{scm}{A \code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{assay}{The name of an assay that exists in the \code{\link{scMethrix}} object}
+\item{assay}{string; name of an existing assay. Default = "score"}
 }
 \value{
 An \code{\link{scMethrix}} object

@@ -13,7 +13,7 @@ mask_scMethrix(
 )
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{low_count}{The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.}
 

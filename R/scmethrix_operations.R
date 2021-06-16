@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------------------------------------
 #' Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
 #' @details Adds the mean, median and SD for each region in an \code{\link{scMethrix}} object
-#' @param scm A \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
@@ -38,8 +38,7 @@ get_metadata_stats <- function(scm) {
 
 #------------------------------------------------------------------------------------------------------------
 #' Removes an assay from an \code{\link{scMethrix}} object
-#' @param scm A \code{\link{scMethrix}} object
-#' @param assay The name of an assay that exists in the \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
@@ -122,7 +121,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 #' Converts an \code{\link{scMethrix}} object to methrix object
 #' @details Removes extra slot data from an \code{\link{scMethrix}} object and changes structure to match
 #' \code{\link[methrix]{methrix}} format
-#' @param scm \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @param h5_dir Location to save the methrix H5 file
 #' @return a \code{\link[methrix]{methrix}} object
 #' @examples
@@ -161,7 +160,7 @@ convert_to_methrix <- function(scm = NULL, h5_dir = NULL) {
 
 #------------------------------------------------------------------------------------------------------------
 #' Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
-#' @param scm \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @param path the \code{\link{file.path}} of the directory to save the files
 #' @param suffix optional suffix to add to the exported bed files 
 #' @return nothing
@@ -203,7 +202,7 @@ export_bed <- function(scm = NULL, path = NULL, suffix = NULL) {
 #------------------------------------------------------------------------------------------------------------
 #' Extracts and summarizes methylation or coverage info by regions of interest
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
-#' @param scm \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object
 #' @param type matrix which needs to be summarized. Could be `M`, `C`. Default 'M'
 #' @param how mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'
@@ -212,7 +211,6 @@ export_bed <- function(scm = NULL, path = NULL, suffix = NULL) {
 #' #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.
 #' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
 #' @param n_threads Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
-#' @param verbose Boolean to output progress messages. Default TRUE
 #' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
 #' tested group-wise.
 #' @return table of summary statistic for the given region
@@ -358,14 +356,12 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
 #--------------------------------------------------------------------------------------------------------------------------
 #' Filter matrices by coverage
 #' @details Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
-#' @param scm \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @param cov_thr minimum coverage required to call a loci covered
 #' @param min_samples Minimum number of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
 #' @param prop_samples Minimum proportion of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
 #' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
 #' tested group-wise.
-#' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
-#' @param n_threads Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. If \code{n_threads} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_threads}. Default = 1.
 #' @importFrom methods is as new
 #' @examples
 #' data('scMethrix_data')
@@ -476,8 +472,7 @@ coverage_filter <- function(scm = NULL, cov_thr = 1, min_samples = NULL, prop_sa
 #--------------------------------------------------------------------------------------------------------------------------
 #' Saves an HDF5 \code{\link{scMethrix}} object
 #' @details Takes \code{\link{scMethrix}} object and saves it in the specified directory
-#' @param scm \code{\link{scMethrix}} object
-#' @param h5_dir The directory to use. Created, if not existing. Default NULL
+#' @inheritParams generic_scMethrix_function
 #' @param replace Should it overwrite the pre-existing data? FALSE by default.
 #' @param ... Parameters to pass to saveHDF5SummarizedExperiment
 #' @importFrom SummarizedExperiment assays
@@ -537,8 +532,8 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Converts HDF5 \code{\link{scMethrix}} object to an in-memory \code{\link{scMethrix}} object.
-#' @details Takes a \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
-#' @param scm An object of class \code{\link{scMethrix}}, HDF5 format
+#' @details Takes an HDF%-based \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
+#' @inheritParams generic_scMethrix_function
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
@@ -571,9 +566,7 @@ convert_HDF5_scMethrix <- function(scm = NULL) {
 #' Converts an in-memory \code{\link{scMethrix}} to an HDF5 \code{\link{scMethrix}}
 #' @details Takes a \code{\link{scMethrix}} object and returns with the same object with delayed array assay slots
 #' with HDF5 backend. Might take long time!
-#' @param scm An object of class \code{\link{scMethrix}}
-#' @param h5_dir Directory for the HDF5 object to be stored
-#' @param verbose flag to output messages or not
+#' @inheritParams generic_scMethrix_function
 #' @return An object of class \code{\link{scMethrix}}, HDF5 format
 #' @importFrom SummarizedExperiment assays
 #' @examples
@@ -625,12 +618,11 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 #' Subsets an \code{\link{scMethrix}} object based on \code{regions}, \code{contigs} and/or \code{samples}.
 #' @details Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can 
 #' either subset (\code{include}) to or filter (\code{exclude}) the specified parameters.
-#' @param scm \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param contigs string of chromosome names to subset by
-#' @param samples string of sample names to subset by
+#' @param contigs string; array of chromosome names to subset by
+#' @param samples string; array of sample names to subset by
 #' @param by string to decide whether to "include" or "exclude" the given criteria from the subset
-#' @param verbose flag to output messages or not
 #' @importFrom IRanges subsetByOverlaps
 #' @examples
 #' data('scMethrix_data')
@@ -717,7 +709,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #--------------------------------------------------------------------------------------------------------------------------
 #' Estimate descriptive statistics for each sample
 #' @details Calculate descriptive statistics (mean, median, SD) either by sample or \code{per_chr}
-#' @param scm \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @param per_chr Estimate stats per chromosome. Default TRUE
 #' @examples
 #' data('scMethrix_data')
@@ -797,10 +789,9 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
 
 #' Extract assays from an \code{\link{scMethrix}} object
 #' @details Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
-#' @param scm \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
 #' @param in_granges Do you want the outcome in \code{\link{GRanges}}?
-#' @param assay Which matrix to get
 #' @param order_by_sd Order output matrix by standard deviation
 #' @return HDF5Matrix or matrix
 #' @examples
@@ -865,7 +856,7 @@ get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, assay = "
 
 #' Remove loci that are uncovered across all samples
 #' @details Takes \code{\link{scMethrix}} object and removes loci that are uncovered across all samples
-#' @param scm \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @return An object of class \code{\link{scMethrix}}
 #' @examples
 #' data('scMethrix_data')
@@ -899,7 +890,7 @@ remove_uncovered <- function(scm = NULL) {
 #' Masks high or low coverage \code{count} or \code{cell} count
 #' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
 #'  by putting NA for coverage and beta value. The sites will remain in the object. 
-#' @param scm \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @param low_count The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.
 #' @param high_quantile The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
 #' higher quantile than the defined will be masked. Default = 0.99.

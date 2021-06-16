@@ -7,11 +7,11 @@
 convert_scMethrix(scm = NULL, h5_dir = NULL, verbose = TRUE)
 }
 \arguments{
-\item{scm}{An object of class \code{\link{scMethrix}}}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{h5_dir}{Directory for the HDF5 object to be stored}
+\item{h5_dir}{string; The directory to use. Will be created if it does not exist. Default = NULL}
 
-\item{verbose}{flag to output messages or not}
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 An object of class \code{\link{scMethrix}}, HDF5 format

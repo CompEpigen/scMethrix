@@ -7,7 +7,7 @@
 remove_uncovered(scm = NULL)
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 }
 \value{
 An object of class \code{\link{scMethrix}}

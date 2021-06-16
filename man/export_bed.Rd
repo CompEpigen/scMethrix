@@ -7,7 +7,7 @@
 export_bed(scm = NULL, path = NULL, suffix = NULL)
 }
 \arguments{
-\item{scm}{\code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{path}{the \code{\link{file.path}} of the directory to save the files}
 

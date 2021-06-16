@@ -15,11 +15,11 @@ plot_coverage(
 )
 }
 \arguments{
-\item{scm}{Input \code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{type}{Choose between 'hist' (histogram) or 'dens' (density plot).}
 
-\item{pheno}{Column name of colData(m). Will be used as a factor to color different groups in the plot.}
+\item{pheno}{Row name of colData(m). Will be used as a factor to color different groups in the violin plot.}
 
 \item{perGroup}{Color the plots in a sample-wise manner?}
 

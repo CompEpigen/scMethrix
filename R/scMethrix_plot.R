@@ -1,5 +1,5 @@
 #' Format \code{\link{scMethrix}} matrix to long form data for plotting
-#' @param scm Input \code{\link{scMethrix}} object
+#' @inheritParams generic_scMethrix_function
 #' @param n_cpgs Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.
 #' @param ranges genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param pheno Row name of colData(m). Will be used as a factor to color different groups in the violin plot.
@@ -73,11 +73,7 @@ get_palette <- function(n_row, col_palette){
 }
 
 #' Violin Plot for \eqn{\beta}-Values
-#'
-#' @param scm Input \code{\link{scMethrix}} object
-#' @param n_cpgs Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.
-#' @param ranges genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param pheno Column name of colData(m). Will be used as a factor to color different groups in the violin plot.
+#' @inheritParams prepare_plot_data
 #' @param col_palette Name of the RColorBrewer palette to use for plotting.
 #' @return ggplot2 object
 #' @export
@@ -111,11 +107,7 @@ plot_violin <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL,
 #--------------------------------------------------------------------------------------------------------------------------
 #' Density Plot of \eqn{\beta}-Values
 #'
-#' @param scm Input \code{\link{scMethrix}} object
-#' @param n_cpgs Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.
-#' @param ranges genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param pheno Column name of colData(m). Will be used as a factor to color different groups in the violin plot.
-#' @param col_palette Name of the RColorBrewer palette to use for plotting.
+#' @inheritParams plot_violin
 #' @return ggplot2 object
 #' @export
 #' @examples
@@ -150,14 +142,12 @@ plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL
 #--------------------------------------------------------------------------------------------------------------------------
 #' Coverage QC Plots
 #'
-#' @param scm Input \code{\link{scMethrix}} object
-#' @param type Choose between 'hist' (histogram) or 'dens' (density plot).
-#' @param pheno Column name of colData(m). Will be used as a factor to color different groups in the plot.
+#' @inheritParams plot_violin
 #' @param perGroup Color the plots in a sample-wise manner?
 #' @param lim Maximum coverage value to be plotted.
+#' @param type Choose between 'hist' (histogram) or 'dens' (density plot).
 #' @param size.lim The maximum number of observarions (sites*samples) to use. If the dataset is larger that this,
 #' random sites will be selected from the genome.
-#' @param col_palette Name of the RColorBrewer palette to use for plotting.
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
@@ -437,10 +427,10 @@ plot_dim_red <- function(dim_red, col_anno = NULL, shape_anno = NULL, axis_label
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Plot PCA results
-#' @param scm \code{\link{scMethrix}}; the experiment containing the PCA
+#' @inheritParams generic_scMethrix_function
+#' @inheritParams plot_dim_red 
 #' @param plot_vars Plot the variance explanation too
 #' @param show_labels Show cell names on each data point. Default FLASE
-#' @inheritParams plot_dim_red 
 #' @return ggplot2 object
 #' @seealso [pca_scMethrix()] for dimensionality reduction
 #' @importFrom graphics par mtext lines axis legend title barplot points

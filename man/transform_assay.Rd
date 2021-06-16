@@ -13,15 +13,15 @@ transform_assay(
 )
 }
 \arguments{
-\item{scm}{A \code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{assay}{String name of an existing assay}
+\item{assay}{string; name of an existing assay. Default = "score"}
 
-\item{new_assay}{String name of transformed assay}
+\item{new_assay}{string; name for transformed assay. Default = "new_assay"}
 
-\item{trans}{The transformation function}
+\item{trans}{closure; The transformation function. Default = mean}
 
-\item{h5_temp}{temporary directory to store hdf5}
+\item{h5_temp}{string; temporary directory to store hdf5}
 }
 \value{
 An \code{\link{scMethrix}} object
