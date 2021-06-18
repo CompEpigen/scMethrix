@@ -555,7 +555,45 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = 0.5,
   ggplot(results,aes(x=Sparsity, y=NRMSE, color=Imputation)) +
     geom_line() + geom_point() + 
     xlab("Sparsity (proportion)") + ylab("NRMSE") + labs(fill = "Imputation") +
-    scale_x_continuous(breaks=seq(0,1,.05)) + theme_classic(base_size = 12) +  
-    theme(axis.text.x = element_text(colour = "black", size = 12),
-          axis.text.y = element_text(colour = "black", size = 12))
+    scale_x_continuous(breaks=seq(0,1,.05)) + 
+    scMethrix_theme() 
+}
+
+#------------------------------------------------------------------------------------------------------------
+#' Theme for ggplot
+#' @param base_size numeric; A sparsity proportion between 0 and 1. E.g. 0.1 replaces 10% of the matrix with NA
+#' @param base_family closure; The imputation methods to compare.
+#' @return list; data for the ggplot theme
+#' @export
+scMethrix_theme <- function(base_size = 12, base_family = "") {
+
+  update_geom_defaults("line", list(size = 1.2))
+  update_geom_defaults("point", list(size = 3))
+
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      line =              element_line(colour = '#DADADA', size = 0.75, 
+                                       linetype = 1, lineend = "butt"),
+      rect =              element_rect(fill = "#F0F0F0", colour = "#F0F0F0", 
+                                       size = 0.5, linetype = 1),
+      text =              element_text(family = base_family, face = "plain",
+                                       colour = "#656565", size = base_size,
+                                       hjust = 0.5, vjust = 0.5, angle = 0, 
+                                       lineheight = 0.9),
+      plot.title =        element_text(size = rel(1.5), family = '' , 
+                                       face = 'bold', hjust = -0.05, 
+                                       vjust = 1.5, colour = '#3B3B3B'),
+      axis.text =         element_text(),
+      axis.ticks =        element_line(),
+      axis.ticks.length.x = unit(.25, "cm"),
+      axis.line =         element_line(colour = '#969696', size = 1, #TODO: Prefer only bottom line
+                                       linetype = 1, lineend = "butt"),
+      panel.grid.major =  element_line(colour = '#DADADA', size = 0.75, 
+                                       linetype = 1, lineend = "butt"),
+      panel.grid.minor =  element_blank(),
+      plot.background =   element_rect(),
+      panel.background =  element_rect(),
+      legend.key =        element_rect(colour = '#DADADA'),
+      complete = TRUE
+    )
 }
