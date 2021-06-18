@@ -52,6 +52,7 @@ reference:
 - contents:
   - impute_by_iPCA
   - impute_by_melissa
+  - impute_by_RF
 - subtitle: "Dimensionality Reduction"
 - contents:
   - pca_scMethrix

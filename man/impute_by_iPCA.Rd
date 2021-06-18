@@ -2,7 +2,7 @@
 % Please edit documentation in R/scMethrix_transforms.R
 \name{impute_by_iPCA}
 \alias{impute_by_iPCA}
-\title{Imputes the an \code{\link{scMethrix}} object using a iterative PCA model}
+\title{Imputes the an \code{\link{scMethrix}}object using a iterative PCA model}
 \usage{
 impute_by_iPCA(scm = NULL, assay = "score", new_assay = NULL, n_pc = 2, ...)
 }
@@ -22,7 +22,7 @@ For a range, the optimal value will be estimated; this is time-intensive.}
 An \code{\link{scMethrix}} object
 }
 \description{
-Imputes the an \code{\link{scMethrix}} object using a iterative PCA model
+Imputes the an \code{\link{scMethrix}}object using a iterative PCA model
 }
 \details{
 Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.

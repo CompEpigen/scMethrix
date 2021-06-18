@@ -33,6 +33,8 @@ Imports:
     Melissa,
     missMDA,
     Rtsne,
+    missForest,
+    impute
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: 

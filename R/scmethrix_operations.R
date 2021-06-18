@@ -883,8 +883,6 @@ remove_uncovered <- function(scm = NULL) {
   return(scm)
 }
 
-
-
 #--------------------------------------------------------------------------------------------------------------------------
 
 #' Masks high or low coverage \code{count} or \code{cell} count

@@ -36,6 +36,10 @@ test_that("impute_by_RF", {
   imputation_test_helper(impute_by_RF)
 })
 
+test_that("impute_by_kNN", {
+  imputation_test_helper(impute_by_kNN)
+})
+
 test_that("generate_training_set", {
   
   expect_error(generate_training_set("not scMethrix"))

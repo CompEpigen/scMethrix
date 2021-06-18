@@ -138,6 +138,7 @@ bin_scMethrix <- function(scm, bin_size = 100000, trans = NULL, h5_dir = NULL) {
 #' @examples
 #' data('scMethrix_data')
 #' @export
+#' @import Melissa
 impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay = NULL) {
   
   . <- NULL
@@ -195,7 +196,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   
   # Do the imputation
   basis_obj <- BPRMeth::create_rbf_object(M = 4)
-  test_obj <- partition_dataset(melissa_obj)
+  test_obj <- Melissa::partition_dataset(melissa_obj)
   
   set.seed(123)
   melissa_obj <- Melissa::melissa(X = melissa_obj$met, basis = basis_obj,K = min(ncol(scm)-1,2))#,
@@ -206,7 +207,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   
   
   
-  imputation_obj <- impute_test_met(obj = melissa_obj, test = test_obj)
+  imputation_obj <- Melissa::impute_test_met(obj = melissa_obj, test = test_obj)
                                     
   return(scm)
 }
@@ -293,16 +294,56 @@ impute_by_RF <- function(scm = NULL, assay = "score", new_assay = NULL, ...) {
   return(scm)
 }
 
+
+#------------------------------------------------------------------------------------------------------------
+#' Imputes the an \code{\link{scMethrix}}object using a random forest model
+#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
+#' @param ... Additional arguments for missForest::missForest
+#' @inheritParams impute::impute.knn
+#' @inheritParams transform_assay
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
+#' @export
+#' @import impute
+impute_by_kNN <- function(scm = NULL, assay = "score", new_assay = NULL, k = 10, ...) {
+  
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
+    stop("Assay does not exist in the object", call. = FALSE)
+  }
+  
+  if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
+    if (new_assay == "score") stop("Cannot overwrite the score assay")
+    warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
+  }
+  
+  if (is_h5(scm)) {
+    stop("HDF5-based objects cannot be imputed by RF", call. = FALSE)
+  }
+  
+  
+  impute <- impute::impute.knn(get_matrix(scm,assay = assay), k = min(k,ncol(scm)), 
+                       rowmax = 1.0, colmax = 1.0, maxp = 1500, rng.seed=123)
+  assays(scm)[[new_assay]] <- as(impute$data,class(get_matrix(scm,assay=assay))[[1]])
+  
+  return(scm)
+}
+
 #------------------------------------------------------------------------------------------------------------
 #' Splits an experiment into two for use as a training and test set
 #' @details Does stuff
-#' @param training_prop number within [0-1]; The size of the training set as a proportion of the experiment 
+#' @param training_prop numeric; The size of the training set as a proportion of the experiment (0 to 1)
 #' For a range, the optimal value will be estimated; this is time-intensive.
 #' @inheritParams generic_scMethrix_function
 #' @return list; two \code{\link{scMethrix}} objects names 'training' and 'test'
 #' @examples
 #' data('scMethrix_data')
-#' generate_learning_set(scMethrix_data, training_prop = 0.2)
+#' generate_training_set(scMethrix_data, training_prop = 0.2)
 #' @export
 generate_training_set <- function(scm = NULL, training_prop = 0.2) {
   if (!is(scm, "scMethrix")) {
@@ -320,3 +361,4 @@ generate_training_set <- function(scm = NULL, training_prop = 0.2) {
   
   return(list(training = training,test = test))
 }
+
