@@ -4,7 +4,13 @@
 \alias{impute_by_iPCA}
 \title{Imputes the an \code{\link{scMethrix}}object using a iterative PCA model}
 \usage{
-impute_by_iPCA(scm = NULL, assay = "score", new_assay = NULL, n_pc = 2, ...)
+impute_by_iPCA(
+  scm = NULL,
+  assay = "score",
+  new_assay = "impute",
+  n_pc = 2,
+  ...
+)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}

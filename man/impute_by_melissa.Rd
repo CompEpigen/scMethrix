@@ -4,7 +4,7 @@
 \alias{impute_by_melissa}
 \title{Imputes the NA values of a \code{\link{scMethrix}} object.}
 \usage{
-impute_by_melissa(scm, threshold = 50, assay = "score", new_assay = NULL)
+impute_by_melissa(scm, threshold = 50, assay = "score", new_assay = "impute")
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}

@@ -139,7 +139,7 @@ bin_scMethrix <- function(scm, bin_size = 100000, trans = NULL, h5_dir = NULL) {
 #' data('scMethrix_data')
 #' @export
 #' @import Melissa
-impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay = NULL) {
+impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay = "impute") {
   
   . <- NULL
   
@@ -226,7 +226,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @export
 #' @references Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
 #' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
-impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = NULL, n_pc = 2, ...) {
+impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = "impute", n_pc = 2, ...) {
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -269,7 +269,7 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = NULL, n_pc =
 #' impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
 #' @export
 #' @import missForest
-impute_by_RF <- function(scm = NULL, assay = "score", new_assay = NULL, ...) {
+impute_by_RF <- function(scm = NULL, assay = "score", new_assay = "impute", ...) {
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -307,7 +307,7 @@ impute_by_RF <- function(scm = NULL, assay = "score", new_assay = NULL, ...) {
 #' impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
 #' @export
 #' @import impute
-impute_by_kNN <- function(scm = NULL, assay = "score", new_assay = NULL, k = 10, ...) {
+impute_by_kNN <- function(scm = NULL, assay = "score", new_assay = "impute", k = 10, ...) {
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -325,7 +325,6 @@ impute_by_kNN <- function(scm = NULL, assay = "score", new_assay = NULL, k = 10,
   if (is_h5(scm)) {
     stop("HDF5-based objects cannot be imputed by RF", call. = FALSE)
   }
-  
   
   impute <- impute::impute.knn(get_matrix(scm,assay = assay), k = min(k,ncol(scm)), 
                        rowmax = 1.0, colmax = 1.0, maxp = 1500, rng.seed=123)
@@ -361,4 +360,5 @@ generate_training_set <- function(scm = NULL, training_prop = 0.2) {
   
   return(list(training = training,test = test))
 }
+
 

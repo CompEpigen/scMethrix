@@ -520,3 +520,42 @@ plot_umap <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_label
                show_dp_labels = show_labels, axis_labels = NULL)
   
 }
+
+#------------------------------------------------------------------------------------------------------------
+#' Evaluates imputations methods by NRMSE
+#' @details Does stuff
+#' @param sparse_prop numeric; A sparsity proportion between 0 and 1. E.g. 0.1 replaces 10% of the matrix with NA
+#' @param imp_methods closure; The imputation methods to compare.
+#' @param iterations integer; Number of iterations to test
+#' @inheritParams generic_scMethrix_function
+#' @return ggplot; The graph showing the NRMSE for each imputation method at each sparsity
+#' @examples
+#' data('scMethrix_data')
+#' scMethrix_data <- impute_by_RF(scMethrix_data, new_assay="impute")
+#' benchmark_imputation(scMethrix_data, assay="impute", sparse_prop = c(0.1,0.5,0.85))
+#' @export
+#' @import SimDesign
+benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = 0.5, iterations = 5,
+                                 imp_methods = c(iPCA = impute_by_iPCA, RF = impute_by_RF, kNN = impute_by_kNN)) {
+  
+  results <- Sparsity <- NRMSE <- Imputation <- NULL
+  
+  for (prop in sparse_prop) {
+    assays(scm)[["sparse"]] <- missForest::prodNA(get_matrix(scm,assay=assay),noNA=prop)
+    
+    for (i in 1:length(imp_methods)) {
+      scm <- do.call(imp_methods[[i]], list(scm = scm,assay="sparse",new_assay="temp"))
+      rmse <- SimDesign::RMSE(as.vector(get_matrix(scm,assay="temp")),
+                              as.vector(get_matrix(scm,assay=assay)),
+                              type = "NRMSE")
+      results = rbind(results,data.frame(Imputation=names(imp_methods)[i],Sparsity=prop,NRMSE=rmse))
+    }
+  }
+  
+  ggplot(results,aes(x=Sparsity, y=NRMSE, color=Imputation)) +
+    geom_line() + geom_point() + 
+    xlab("Sparsity (proportion)") + ylab("NRMSE") + labs(fill = "Imputation") +
+    scale_x_continuous(breaks=seq(0,1,.05)) + theme_classic(base_size = 12) +  
+    theme(axis.text.x = element_text(colour = "black", size = 12),
+          axis.text.y = element_text(colour = "black", size = 12))
+}

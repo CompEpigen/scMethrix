@@ -4,7 +4,7 @@
 \alias{impute_by_kNN}
 \title{Imputes the an \code{\link{scMethrix}}object using a random forest model}
 \usage{
-impute_by_kNN(scm = NULL, assay = "score", new_assay = NULL, k = 10, ...)
+impute_by_kNN(scm = NULL, assay = "score", new_assay = "impute", k = 10, ...)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}

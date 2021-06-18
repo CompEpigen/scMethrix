@@ -4,7 +4,7 @@
 \alias{impute_by_RF}
 \title{Imputes the an \code{\link{scMethrix}}object using a random forest model}
 \usage{
-impute_by_RF(scm = NULL, assay = "score", new_assay = NULL, ...)
+impute_by_RF(scm = NULL, assay = "score", new_assay = "impute", ...)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
