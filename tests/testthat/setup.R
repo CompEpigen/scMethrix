@@ -17,3 +17,26 @@ scm.mem <- read_beds(files,h5=FALSE,cov_idx=5)
 # usethis::use_data(scMethrix_data,overwrite=TRUE)
 
 message("Test setup completed")
+
+imputation_test_helper <- function(func) {
+  expect_error(func("not scMethrix"))
+  
+  #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+  invisible(lapply(list(scm.mem), function(scm) {
+    expect_error(func(scm,assay = "not an assay"))
+    expect_error(func(scm,new_assay = "score"))
+    expect_warning(func(scm,new_assay = "counts"))
+    
+    impute = func(scm,new_assay="impute")
+    expect_true("impute" %in% SummarizedExperiment::assayNames(impute))
+    
+    sco <- get_matrix(impute,assay="score")
+    imp <- get_matrix(impute,assay="impute")
+    NAs <- which(is.na(sco))
+    nonNAs <- which(!is.na(sco))
+    
+    expect_true(anyNA(sco) && !anyNA(imp))
+    expect_equivalent(sco[nonNAs],imp[nonNAs])
+    expect_false(all(sco[NAs] %in% imp[NAs]))
+  }))
+}

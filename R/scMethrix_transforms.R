@@ -195,19 +195,24 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   
   # Do the imputation
   basis_obj <- BPRMeth::create_rbf_object(M = 4)
+  test_obj <- partition_dataset(melissa_obj)
   
   set.seed(123)
-  melissa_obj <- Melissa::melissa(X = melissa_obj$met, basis = basis_obj,K = 4,
-                                  vb_max_iter = 30, vb_init_nstart = 1, 
-                                  is_parallel = FALSE)
+  melissa_obj <- Melissa::melissa(X = melissa_obj$met, basis = basis_obj,K = min(ncol(scm)-1,2))#,
+                                  #vb_max_iter = 30, vb_init_nstart = 1, 
+                                  #is_parallel = FALSE)
   # plot_melissa_profiles(melissa_obj = melissa_obj, region = 1, 
   #                       title = "Methylation profiles for region 25")
   
+  
+  
+  imputation_obj <- impute_test_met(obj = melissa_obj, test = test_obj)
+                                    
   return(scm)
 }
 
 #------------------------------------------------------------------------------------------------------------
-#' Imputes the an \code{\link{scMethrix}} object using a iterative PCA model
+#' Imputes the an \code{\link{scMethrix}}object using a iterative PCA model
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
 #' @param n_pc integer > 0; The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value. 
 #' For a range, the optimal value will be estimated; this is time-intensive.
@@ -248,6 +253,42 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = NULL, n_pc =
   
   impute <- missMDA::imputePCA(get_matrix(scm,assay = assay), ncp = n_pc, ...)
   assays(scm)[[new_assay]] <- as(impute$completeObs,class(get_matrix(scm,assay=assay))[[1]])
+  
+  return(scm)
+}
+
+#------------------------------------------------------------------------------------------------------------
+#' Imputes the an \code{\link{scMethrix}}object using a random forest model
+#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
+#' @param ... Additional arguments for missForest::missForest
+#' @inheritParams transform_assay
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
+#' @export
+#' @import missForest
+impute_by_RF <- function(scm = NULL, assay = "score", new_assay = NULL, ...) {
+  
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
+    stop("Assay does not exist in the object", call. = FALSE)
+  }
+  
+  if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
+    if (new_assay == "score") stop("Cannot overwrite the score assay")
+    warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
+  }
+  
+  if (is_h5(scm)) {
+    stop("HDF5-based objects cannot be imputed by RF", call. = FALSE)
+  }
+  
+  impute <- missForest::missForest(get_matrix(scm,assay = assay))#, ...)
+  assays(scm)[[new_assay]] <- as(impute$ximp,class(get_matrix(scm,assay=assay))[[1]])
   
   return(scm)
 }
