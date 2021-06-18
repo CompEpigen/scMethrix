@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Imputes the an scMethrixobject using a iterative PCA model — impute_by_iPCA • scMethrix</title>
+<title>Evaluates imputations methods by NRMSE — benchmark_imputation • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Imputes the an scMethrixobject using a iterative PCA model — impute_by_iPCA" />
-<meta property="og:description" content="Imputes the an scMethrixobject using a iterative PCA model" />
+<meta property="og:title" content="Evaluates imputations methods by NRMSE — benchmark_imputation" />
+<meta property="og:description" content="Evaluates imputations methods by NRMSE" />
 
 
 
@@ -111,21 +111,21 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Imputes the an <code><a href='scMethrix-class.html'>scMethrix</a></code>object using a iterative PCA model</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_transforms.R'><code>R/scMethrix_transforms.R</code></a></small>
-    <div class="hidden name"><code>impute_by_iPCA.Rd</code></div>
+    <h1>Evaluates imputations methods by NRMSE</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_plot.R'><code>R/scMethrix_plot.R</code></a></small>
+    <div class="hidden name"><code>benchmark_imputation.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Imputes the an <code><a href='scMethrix-class.html'>scMethrix</a></code>object using a iterative PCA model</p>
+    <p>Evaluates imputations methods by NRMSE</p>
     </div>
 
-    <pre class="usage"><span class='fu'>impute_by_iPCA</span><span class='op'>(</span>
+    <pre class="usage"><span class='fu'>benchmark_imputation</span><span class='op'>(</span>
   scm <span class='op'>=</span> <span class='cn'>NULL</span>,
   assay <span class='op'>=</span> <span class='st'>"score"</span>,
-  new_assay <span class='op'>=</span> <span class='st'>"impute"</span>,
-  n_pc <span class='op'>=</span> <span class='fl'>2</span>,
-  <span class='va'>...</span>
+  sparse_prop <span class='op'>=</span> <span class='fl'>0.5</span>,
+  iterations <span class='op'>=</span> <span class='fl'>5</span>,
+  imp_methods <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>iPCA <span class='op'>=</span> <span class='va'>impute_by_iPCA</span>, RF <span class='op'>=</span> <span class='va'>impute_by_RF</span>, kNN <span class='op'>=</span> <span class='va'>impute_by_kNN</span><span class='op'>)</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -140,42 +140,44 @@
       <td><p>string; name of an existing assay. Default = "score"</p></td>
     </tr>
     <tr>
-      <th>new_assay</th>
-      <td><p>string; name for transformed assay. Default = "new_assay"</p></td>
+      <th>sparse_prop</th>
+      <td><p>numeric; A sparsity proportion between 0 and 1. E.g. 0.1 replaces 10% of the matrix with NA</p></td>
     </tr>
     <tr>
-      <th>n_pc</th>
-      <td><p>integer &gt; 0; The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value.
-For a range, the optimal value will be estimated; this is time-intensive.</p></td>
+      <th>iterations</th>
+      <td><p>integer; Number of iterations to test</p></td>
     </tr>
     <tr>
-      <th>...</th>
-      <td><p>Additional arguments for missMDA::imputePCA</p></td>
+      <th>imp_methods</th>
+      <td><p>closure; The imputation methods to compare.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p>
+    <p>ggplot; The graph showing the NRMSE for each imputation method at each sparsity</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Uses the inputted function to transform an assay in the <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</p>
-    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
-
-    <p>Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.</p>
-<p>Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.</p>
+    <p>Does stuff</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>impute_by_iPCA</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, assay <span class='op'>=</span> <span class='st'>"score"</span>, new_assay <span class='op'>=</span> <span class='st'>"impute"</span>, n_pc <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 100
-#&gt;    n_samples: 4
-#&gt;    assays: score, counts, impute
-#&gt;    reduced dims: 
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 40.9 Kb</div></pre>
+<span class='va'>scMethrix_data</span> <span class='op'>&lt;-</span> <span class='fu'><a href='impute_by_RF.html'>impute_by_RF</a></span><span class='op'>(</span><span class='va'>scMethrix_data</span>, new_assay<span class='op'>=</span><span class='st'>"impute"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;   missForest iteration 1 in progress...done!
+#&gt;   missForest iteration 2 in progress...done!
+#&gt;   missForest iteration 3 in progress...done!
+#&gt;   missForest iteration 4 in progress...done!
+#&gt;   missForest iteration 5 in progress...done!</div><div class='input'><span class='fu'>benchmark_imputation</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, assay<span class='op'>=</span><span class='st'>"impute"</span>, sparse_prop <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0.1</span>,<span class='fl'>0.5</span>,<span class='fl'>0.85</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='warning'>Warning: Name already exists in assay. It will be overwritten.</span></div><div class='output co'>#&gt;   missForest iteration 1 in progress...done!
+#&gt;   missForest iteration 2 in progress...done!
+#&gt;   missForest iteration 3 in progress...done!
+#&gt;   missForest iteration 4 in progress...done!
+#&gt;   missForest iteration 5 in progress...done!
+#&gt;   missForest iteration 6 in progress...done!</div><div class='output co'>#&gt; <span class='warning'>Warning: Name already exists in assay. It will be overwritten.</span></div><div class='output co'>#&gt; <span class='warning'>Warning: Name already exists in assay. It will be overwritten.</span></div><div class='output co'>#&gt; <span class='warning'>Warning: Name already exists in assay. It will be overwritten.</span></div><div class='output co'>#&gt;   missForest iteration 1 in progress...done!
+#&gt;   missForest iteration 2 in progress...done!
+#&gt;   missForest iteration 3 in progress...done!</div><div class='output co'>#&gt; <span class='warning'>Warning: Name already exists in assay. It will be overwritten.</span></div><div class='output co'>#&gt; <span class='warning'>Warning: Name already exists in assay. It will be overwritten.</span></div><div class='output co'>#&gt; <span class='warning'>Warning: Stopped after  1000  iterations</span></div><div class='output co'>#&gt; <span class='warning'>Warning: Name already exists in assay. It will be overwritten.</span></div><div class='output co'>#&gt;   missForest iteration 1 in progress...</div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; done!
+#&gt;   missForest iteration 2 in progress...</div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; done!
+#&gt;   missForest iteration 3 in progress...</div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; done!</div><div class='output co'>#&gt; <span class='warning'>Warning: Name already exists in assay. It will be overwritten.</span></div><div class='img'><img src='benchmark_imputation-1.png' alt='' width='700' height='433' /></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
