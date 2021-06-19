@@ -9,7 +9,8 @@ benchmark_imputation(
   assay = "score",
   sparse_prop = 0.5,
   iterations = 5,
-  imp_methods = c(iPCA = impute_by_iPCA, RF = impute_by_RF, kNN = impute_by_kNN)
+  imp_methods = c(iPCA = impute_by_iPCA, RF = impute_by_RF, kNN = impute_by_kNN),
+  type = "RMSE"
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ benchmark_imputation(
 \item{iterations}{integer; Number of iterations to test}
 
 \item{imp_methods}{closure; The imputation methods to compare.}
+
+\item{type}{character; descriptive statistic. Can be either "AUC" or "RMSE". Default "RMSE"}
 }
 \value{
 ggplot; The graph showing the NRMSE for each imputation method at each sparsity

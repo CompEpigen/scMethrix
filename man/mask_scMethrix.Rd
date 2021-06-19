@@ -6,14 +6,17 @@
 \usage{
 mask_scMethrix(
   scm = NULL,
+  assay = "score",
   low_count = 0,
-  high_quantile = NULL,
+  high_quantile = 0.99,
   n_threads = 1,
   type = "counts"
 )
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
+
+\item{assay}{string; name of an existing assay. Default = "score"}
 
 \item{low_count}{The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.}
 

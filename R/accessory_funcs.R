@@ -219,7 +219,10 @@ start_time <- function() {
 #' @export
 split_time <- function() {
   time <- get("time.split", envir=globalenv())
-  if (!is.numeric(time)) stop("start_time() not set")
+  if (!is.numeric(time)) {
+    warning("start_time() not set")
+    return("[unknown time]")
+  }
   time <- proc.time()["elapsed"]-time
   assign("time.split", proc.time()["elapsed"], envir=globalenv())
   return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
@@ -232,7 +235,10 @@ split_time <- function() {
 #' @export
 stop_time <- function() {
   time <- get("time.all", envir=globalenv())
-  if (!is.numeric(time)) stop("start_time() not set")
+  if (!is.numeric(time)) {
+    warning("start_time() not set")
+    return("[unknown time]")
+  }
   time <- proc.time()["elapsed"]-get("time.all", envir=globalenv())
   assign("time.split", NA, envir=globalenv())
   assign("time.all", NA, envir=globalenv())

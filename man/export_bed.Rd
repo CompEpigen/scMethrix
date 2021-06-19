@@ -4,7 +4,7 @@
 \alias{export_bed}
 \title{Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files}
 \usage{
-export_bed(scm = NULL, path = NULL, suffix = NULL)
+export_bed(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
@@ -12,6 +12,8 @@ export_bed(scm = NULL, path = NULL, suffix = NULL)
 \item{path}{the \code{\link{file.path}} of the directory to save the files}
 
 \item{suffix}{optional suffix to add to the exported bed files}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 nothing

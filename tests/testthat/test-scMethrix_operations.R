@@ -197,7 +197,7 @@ test_that("mask_scMethrix", {
     expect_error(mask_scMethrix(scm,high_quantile=1,type="cells"))
     expect_error(mask_scMethrix(scm,high_quantile=5,type="counts"))
     
-    m <- mask_scMethrix(scm,low_count=2,type="cells")
+    m <- mask_scMethrix(scm,low_count=2,high_quantile=NULL,type="cells")
     
     expect_equivalent(dim(m),c(100,4))
     expect_equivalent(dim(remove_uncovered(m)),c(75,4))

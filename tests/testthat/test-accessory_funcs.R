@@ -39,8 +39,8 @@ test_that("split_granges",{
 })
 
 test_that("start,split,stop_time",{
-  expect_error(split_time())
-  expect_error(stop_time())
+  expect_warning(split_time())
+  expect_warning(stop_time())
   
   start_time()
   
@@ -61,8 +61,6 @@ test_that("start,split,stop_time",{
   elapsed_time <- as.numeric(strsplit(elapsed_time, "s")[[1]][1])
   expect_equal(elapsed_time, 6, tolerance = 0.5)
   
-  expect_error(split_time())
-  expect_error(stop_time())
 })
 
 test_that("split_vector",{

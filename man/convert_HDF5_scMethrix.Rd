@@ -4,10 +4,12 @@
 \alias{convert_HDF5_scMethrix}
 \title{Converts HDF5 \code{\link{scMethrix}} object to an in-memory \code{\link{scMethrix}} object.}
 \usage{
-convert_HDF5_scMethrix(scm = NULL)
+convert_HDF5_scMethrix(scm = NULL, verbose = TRUE)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 An object of class \code{\link{scMethrix}}
@@ -21,6 +23,6 @@ Takes an HDF\%-based \code{\link{scMethrix}} object and returns with the same ob
 \examples{
 data('scMethrix_data')
 dir <- paste0(tempdir(),"/h5")
-scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
+scm <- convert_scMethrix(scMethrix_data)
 convert_HDF5_scMethrix(scm)
 }

@@ -198,7 +198,7 @@ export_bed <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE) {
       rrng[,cov := val]
     }
 
-    fwrite(na.omit(rrng, cols="meth", invert=FALSE), paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t",
+    fwrite(stats::na.omit(rrng, cols="meth", invert=FALSE), paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t",
                 row.names = FALSE, col.names = FALSE, quote = FALSE)
     
     if (verbose) message("Exported ",i," of ",length(files)," (",split_time(), ")")
@@ -549,9 +549,9 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
-#' scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
+#' scm <- convert_scMethrix(scMethrix_data)
 #' convert_HDF5_scMethrix(scm)
-#' @exportd
+#' @export
 convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
   
   if (!is(scm, "scMethrix")){
@@ -796,7 +796,6 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
-
 #' Extract assays from an \code{\link{scMethrix}} object
 #' @details Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
 #' @inheritParams generic_scMethrix_function
@@ -875,14 +874,13 @@ get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, assay = "
 #' @export
 remove_uncovered <- function(scm = NULL) {
   
-  
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
   
   message("Removing uncovered CpGs...", start_time())
   
-  row_idx <- rowSums(!is.na(get_matrix(scm)))==0
+  row_idx <- DelayedMatrixStats::rowSums2(!is.na(get_matrix(scm)))==0
   
   message(paste0("Removed ", format(sum(row_idx), big.mark = ","),
                  " [", round(sum(row_idx)/nrow(scm) * 100, digits = 2), "%] uncovered loci of ",
@@ -894,7 +892,6 @@ remove_uncovered <- function(scm = NULL) {
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
-
 #' Masks high or low coverage \code{count} or \code{cell} count
 #' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
 #'  by putting NA for coverage and beta value. The sites will remain in the object. 
@@ -910,7 +907,7 @@ remove_uncovered <- function(scm = NULL) {
 #' data('scMethrix_data')
 #' mask_scMethrix(scMethrix_data,low_count=4,type="counts")
 #' @export
-mask_scMethrix <- function(scm = NULL, low_count = 0, high_quantile = NULL, n_threads=1 ,type="counts") {
+mask_scMethrix <- function(scm = NULL, assay = "score", low_count = 0, high_quantile = 0.99, n_threads=1 ,type="counts") {
   
   if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
@@ -946,17 +943,16 @@ mask_scMethrix <- function(scm = NULL, low_count = 0, high_quantile = NULL, n_th
     
     if (sum(row_idx) == 0) stop("No CpGs found with low_count")
     
-    row_idx <- which(row_idx)  
-    emp <- array(as.integer(NA),c(length(row_idx), nrow(colData(scm))))
+    row_idx <- which(row_idx)
     
-    assays(scm)[[1]][row_idx,] <- emp
-    if (type == "counts") assays(scm)[[2]][row_idx,] <- emp 
-    
+    assays(scm)[[1]][row_idx,] <- as.integer(NA)
+    if (has_cov(scm)) assays(scm)[[2]][row_idx,] <- as.integer(NA)
+
     n <- n-(nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)))
     
     for (i in seq_along(colnames(scm))) {
       if (n[i]==0) next
-      message(paste0("   Masked ", n[i], " CpGs due to too low cells in sample ",  colnames(scm)[i], "."))
+      message(paste0("   Masked ", n[i], " CpGs due to too low numbers in sample ",  colnames(scm)[i], "."))
     }
   }
   
