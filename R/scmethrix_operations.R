@@ -168,11 +168,15 @@ convert_to_methrix <- function(scm = NULL, h5_dir = NULL) {
 #' data('scMethrix_data')
 #' export_bed(scMethrix_data,path=paste0(tempdir(),"/export"))
 #' @export
-export_bed <- function(scm = NULL, path = NULL, suffix = NULL) {
+export_bed <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE) {
+  
   meth <- cov <- NULL
+  
   if (!is(scm, "scMethrix") || is.null(path)){
     stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
   }
+  
+  if (verbose) message("Exporting beds to ",path,start_time())
   
   dir.create(path, showWarnings = FALSE)
   
@@ -182,7 +186,9 @@ export_bed <- function(scm = NULL, path = NULL, suffix = NULL) {
   
   if (is.null(suffix)) suffix <- "" #TODO: Should switch to some kind of regex input
   
-  for (file in files) {
+  for (i in 1:length(files)) {
+    
+    file = files[i]
     
     val <- as.data.table(get_matrix(scm,assay="score"))[, file, with=FALSE] 
     rrng[,meth := val]
@@ -191,10 +197,14 @@ export_bed <- function(scm = NULL, path = NULL, suffix = NULL) {
       val <- as.data.table(get_matrix(scm,assay="counts"))[, file, with=FALSE] 
       rrng[,cov := val]
     }
-    
-    write.table(rrng[which(!is.na(val)),], paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t",
+
+    fwrite(na.omit(rrng, cols="meth", invert=FALSE), paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t",
                 row.names = FALSE, col.names = FALSE, quote = FALSE)
+    
+    if (verbose) message("Exported ",i," of ",length(files)," (",split_time(), ")")
   }
+  
+  if (verbose) message("BEDs exported in in ",stop_time())
   
   invisible()
 }
@@ -541,8 +551,8 @@ load_HDF5_scMethrix <- function(dir = NULL, ...) {
 #' dir <- paste0(tempdir(),"/h5")
 #' scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
 #' convert_HDF5_scMethrix(scm)
-#' @export
-convert_HDF5_scMethrix <- function(scm = NULL) {
+#' @exportd
+convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -552,12 +562,12 @@ convert_HDF5_scMethrix <- function(scm = NULL) {
     stop("Input scMethrix must be in HDF5 format.")
   }
   
-  message("Converting in-memory scMethrix to HDF5")#,start_time())
+  if (verbose) message("Converting HDF5 scMethrix to in-memory", start_time())
   
   assays(scm)[[1]] <- as.matrix(assays(scm)[[1]])
   scm@metadata$is_h5 <- FALSE
   
-  # message("Converted in ",stop_time())
+  if (verbose) message("Converted in ", stop_time())
   
   return(scm)
 }
@@ -583,14 +593,14 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
     stop("Input scMethrix is already in HDF5 format.")
   }
   
- # if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
+  if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
 
   scm <- create_scMethrix(assays = assays(scm), h5_dir = h5_dir,
                       rowRanges = rowRanges(scm), is_hdf5 = TRUE, genome_name = scm@metadata$genome,
                       colData = scm@colData, chrom_size = scm@metadata$chrom_sizes, 
                       desc = scm@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
 
- # if (verbose) message("Converted in ", stop_time())
+  if (verbose) message("Converted in ", stop_time())
 
   return(scm)
 }

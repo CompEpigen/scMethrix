@@ -360,5 +360,3 @@ generate_training_set <- function(scm = NULL, training_prop = 0.2) {
   
   return(list(training = training,test = test))
 }
-
-

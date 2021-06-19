@@ -59,7 +59,12 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     if(dir.exists(h5_dir) && !replace) stop("h5_dir already exists! Use 'replace=TRUE' to replace it. All 
                                             existing data in that directory will be deleted.") 
     
-    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,n_threads,batch_size = batch_size, zero_based = zero_based)
+    if (is.null(ref_cpgs)) {
+      ref_cpgs <- read_index(files,n_threads = n_threads, batch_size = batch_size, zero_based = zero_based)
+    } else {
+      ref_cpgs <- subset_ref_cpgs(ref_cpgs, 
+                                  read_index(files,n_threads,batch_size = batch_size, zero_based = zero_based))
+    }
     
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     if (is.null(reads)) reads <- read_hdf5_data(files, ref_cpgs, n_threads, h5_temp, zero_based, verbose,
