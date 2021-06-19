@@ -125,7 +125,8 @@
   assay <span class='op'>=</span> <span class='st'>"score"</span>,
   sparse_prop <span class='op'>=</span> <span class='fl'>0.5</span>,
   iterations <span class='op'>=</span> <span class='fl'>5</span>,
-  imp_methods <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>iPCA <span class='op'>=</span> <span class='va'>impute_by_iPCA</span>, RF <span class='op'>=</span> <span class='va'>impute_by_RF</span>, kNN <span class='op'>=</span> <span class='va'>impute_by_kNN</span><span class='op'>)</span>
+  imp_methods <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>iPCA <span class='op'>=</span> <span class='va'>impute_by_iPCA</span>, RF <span class='op'>=</span> <span class='va'>impute_by_RF</span>, kNN <span class='op'>=</span> <span class='va'>impute_by_kNN</span><span class='op'>)</span>,
+  type <span class='op'>=</span> <span class='st'>"RMSE"</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -150,6 +151,10 @@
     <tr>
       <th>imp_methods</th>
       <td><p>closure; The imputation methods to compare.</p></td>
+    </tr>
+    <tr>
+      <th>type</th>
+      <td><p>character; descriptive statistic. Can be either "AUC" or "RMSE". Default "RMSE"</p></td>
     </tr>
     </table>
 
