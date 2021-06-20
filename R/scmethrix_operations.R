@@ -16,9 +16,10 @@ get_metadata_stats <- function(scm) {
   if (is_h5(scm)) {
     stats <-
       data.table::data.table(
-        mean_meth = DelayedMatrixStats::rowMeans2(get_matrix(scm), na.rm = TRUE),
-        median_meth = DelayedMatrixStats::rowMedians(get_matrix(scm), na.rm = TRUE),
-        sd_meth = DelayedMatrixStats::rowSds(get_matrix(scm), na.rm = TRUE)
+        mean_meth = DelayedMatrixStats::rowMeans2(score(scm), na.rm = TRUE),
+        median_meth = DelayedMatrixStats::rowMedians(score(scm), na.rm = TRUE),
+        sd_meth = DelayedMatrixStats::rowSds(score(scm), na.rm = TRUE),
+        cells = ncol(scm)-DelayedMatrixStats::rowCounts(score(scm), value = NA)
       )
     
     if(has_cov(scm)) stats[,"counts" := DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"), na.rm = TRUE)] 
@@ -27,7 +28,8 @@ get_metadata_stats <- function(scm) {
     stats <- data.table::data.table(
         mean_meth = matrixStats::rowMeans2(get_matrix(scm), na.rm = TRUE),
         median_meth = matrixStats::rowMedians(get_matrix(scm), na.rm = TRUE),
-        sd_meth = matrixStats::rowSds(get_matrix(scm), na.rm = TRUE)
+        sd_meth = matrixStats::rowSds(get_matrix(scm), na.rm = TRUE),
+        cells = ncol(scm)-matrixStats::rowCounts(score(scm), value = NA)
     )
     
     if(has_cov(scm)) stats[,"counts" := matrixStats::rowSums2(get_matrix(scm,assay="counts"), na.rm = TRUE)] 
