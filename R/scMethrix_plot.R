@@ -4,6 +4,7 @@
 #' @param ranges genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param pheno Row name of colData(m). Will be used as a factor to color different groups in the violin plot.
 #' @return 'Long' matrix for methylation
+#' @export
 prepare_plot_data <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL){
   
   if (!is(scm, "scMethrix")){
@@ -82,26 +83,28 @@ get_palette <- function(n_row, col_palette){
 #' data('scMethrix_data')
 #' plot_violin(scm = scMethrix_data)
 plot_violin <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL,
-                        col_palette = "RdYlGn") {
+                        col_palette = "RdYlGn", show_legend = TRUE) {
   variable <- Meth <- NULL
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
   
+  if (is.null(ranges)) ranges = rowRanges(scm)
+  
   plot.data <- prepare_plot_data(scm=scm, ranges = ranges, n_cpgs = n_cpgs, pheno = pheno)
   
   col_palette <- get_palette(ncol(scm), col_palette)
   # generate the violin plot
-  p <- ggplot2::ggplot(plot.data, ggplot2::aes(x = variable, y = Meth,
-                                               fill = variable)) + ggplot2::geom_violin(alpha = 0.8) + ggplot2::theme_classic(base_size = 14) +
+  p <- ggplot2::ggplot(plot.data, ggplot2::aes(x = variable, y = Meth, fill = variable)) + 
+    ggplot2::geom_violin(alpha = 0.8, show.legend = show_legend) + ggplot2::theme_classic(base_size = 14) +
     ggplot2::scale_fill_manual(values = col_palette) +
     ggplot2::xlab(pheno) + ggplot2::ylab(expression(beta * "-Value")) +
     theme(axis.title.x = element_blank(), axis.text.x = element_text(size = 12,
                                                                      colour = "black"), axis.text.y = element_text(size = 12, colour = "black"),
           axis.title.y = element_blank(), legend.title = element_blank())
   
-  return(p)
+  return(p + scMethrix_theme())
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
@@ -114,7 +117,7 @@ plot_violin <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL,
 #' data('scMethrix_data')
 #' plot_density(scm = scMethrix_data)
 plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL,
-                         col_palette = "RdYlGn") {
+                         col_palette = "RdYlGn", show_legend = TRUE) {
   
   variable <- Meth <- NULL
   
@@ -122,12 +125,14 @@ plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL
     stop("A valid scMethrix object needs to be supplied.")
   }
   
+  if (is.null(ranges)) ranges = rowRanges(scm)
+  
   plot.data <- prepare_plot_data(scm=scm, ranges = ranges, n_cpgs = n_cpgs, pheno = pheno)
   col_palette <- get_palette(ncol(scm), col_palette)
   
   # generate the density plot
   p <- ggplot2::ggplot(plot.data, ggplot2::aes(Meth, color = variable)) +
-    geom_density(lwd = 1, position = "identity") + ggplot2::theme_classic() +
+    geom_density(lwd = 1, position = "identity", show.legend = show_legend) + ggplot2::theme_classic() +
     ggplot2::xlab("Methylation") + ggplot2::theme_classic(base_size = 14) +
     ggplot2::scale_fill_manual(values = col_palette) +
     ggplot2::xlab(expression(beta * "-Value")) + theme(axis.title.x = element_blank(),
@@ -136,7 +141,7 @@ plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL
   
   gc(verbose = FALSE)
   
-  return(p)
+  return(p + scMethrix_theme())
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
@@ -155,7 +160,7 @@ plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL
 #' @export
 
 plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, perGroup = FALSE,
-                          lim = 100, size.lim = 1e+06, col_palette = "RdYlGn") {
+                          lim = 100, size.lim = 1e+06, col_palette = "RdYlGn", show_legend = TRUE) {
   
   value <- variable <- NULL
   
@@ -201,13 +206,14 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
   if (!perGroup) {
     if (type == "dens") {
       p <- ggplot2::ggplot(plot.data, aes(value, color = variable)) +
-        ggplot2::geom_density(alpha = 0.5, adjust = 1.5, lwd = 1,
+        ggplot2::geom_density(alpha = 0.5, adjust = 1.5, lwd = 1, show.legend = show_legend,
                               position = "identity") + ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
         ggplot2::scale_fill_manual(values = colors_palette)
       
     } else if (type == "hist") {
       p <- ggplot2::ggplot(plot.data, ggplot2::aes(value, fill = variable)) + 
-        ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black") + ggplot2::theme_classic() +
+        ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black", show.legend = show_legend) + 
+        ggplot2::theme_classic() +
         ggplot2::xlab("Coverage")+
         ggplot2::scale_fill_manual(values = colors_palette)
       # print(p)
@@ -215,14 +221,14 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
   } else {
     if (type == "dens") {
       p <- ggplot2::ggplot(plot.data, ggplot2::aes(value, color = variable)) +
-        ggplot2::geom_density(alpha = 0.6, adjust = 1.5, lwd = 1,
+        ggplot2::geom_density(alpha = 0.6, adjust = 1.5, lwd = 1, show.legend = show_legend,
                               position = "identity") + ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
         ggplot2::labs(fill = "Groups") +
         ggplot2::scale_fill_manual(values = colors_palette)
       # print(p)
     } else if (type == "hist") {
       p <- ggplot2::ggplot(plot.data, ggplot2::aes(value, fill = variable)) +
-        ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black") + 
+        ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black", show.legend = show_legend) + 
         ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
         ggplot2::labs(fill = "Groups") +
         ggplot2::scale_fill_manual(values = colors_palette)
@@ -236,7 +242,7 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
                                                                        colour = "black"), axis.text.y = element_text(size = 12, colour = "black"),
             axis.title.y = element_blank(), legend.title = element_blank())
   
-  return(p)
+  return(p + scMethrix_theme())
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
@@ -259,6 +265,8 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
 #'
 plot_stats <- function(plot_dat, what = "Score", stat = "mean", ignore_chr = NULL,
                        samples = NULL, n_col = NULL, n_row = NULL) {
+  
+  if (is(plot_dat, "scMethrix")) plot_dat = get_stats(plot_dat)
   
   Chromosome <- . <- Sample_Name <- mean_meth <- sd_meth <- median_meth <- mean_cov <- sd_cov <- NULL
   median_cov <- measurement <- sd_low <- sd_high <- NULL
@@ -290,10 +298,12 @@ plot_stats <- function(plot_dat, what = "Score", stat = "mean", ignore_chr = NUL
     
     plot_dat_gg <- ggplot(data = plot_dat, aes(x = Chromosome, y = measurement)) +
       geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray70") +
-      geom_point(col = "maroon") + facet_wrap(~Sample_Name, nrow = n_row,
-                                              ncol = n_col) + theme_minimal(base_size = 12) + theme(axis.title.x = element_blank(),
-                                                                                                    axis.text.x = element_text(hjust = 1, size = 10, colour = "black"),
-                                                                                                    axis.text.y = element_text(size = 10, colour = "black"), axis.title.y = element_blank())
+      geom_point(col = "maroon") + 
+      facet_wrap(~Sample_Name, nrow = n_row, ncol = n_col) + 
+      theme_minimal(base_size = 12) + 
+      theme(axis.title.x = element_blank(), 
+            axis.text.x = element_text(hjust = 1, size = 10, colour = "black"),
+            axis.text.y = element_text(size = 10, colour = "black"), axis.title.y = element_blank())
   } else {
     if (stat == "mean") {
       plot_dat[, which(grepl("^median", colnames(plot_dat))):=NULL]
@@ -312,15 +322,17 @@ plot_stats <- function(plot_dat, what = "Score", stat = "mean", ignore_chr = NUL
                               no = plot_dat$sd_low)
     
     plot_dat_gg <- ggplot(data = plot_dat, aes(x = Sample_Name, y = measurement)) +
-      geom_point(col = "maroon", size = 2) + geom_errorbar(aes(ymin = sd_low,
-                                                               ymax = sd_high), col = "gray70") + geom_point(col = "maroon") +
-      theme_minimal(base_size = 12) + theme(axis.title.x = element_blank(),
-                                            axis.text.x = element_text(angle = 45, hjust = 1, size = 12,
-                                                                       colour = "black"), axis.text.y = element_text(size = 12,
-                                                                                                                     colour = "black"), axis.title.y = element_blank()) + ggtitle(label = plot_title)
+      geom_point(col = "maroon", size = 2) + 
+      geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray70") + 
+      geom_point(col = "maroon") + theme_minimal(base_size = 12) + 
+      theme(axis.title.x = element_blank(),
+            axis.text.x = element_text(angle = 45, hjust = 1, size = 12, colour = "black"), 
+            axis.text.y = element_text(size = 12, colour = "black"), 
+            axis.title.y = element_blank()) + 
+      ggtitle(label = plot_title)
   }
   
-  plot_dat_gg
+  return(plot_dat_gg +  + scMethrix_theme())
 }
 
 plot_melissa <- function() {

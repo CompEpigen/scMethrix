@@ -15,7 +15,7 @@ source("D:/Git/scMethrix/R/scMethrix_object.R")
 source("D:/Git/scMethrix/R/read_beds.R")
 source("D:/Git/scMethrix/R/scMethrix_dimensionality.R")
 source("D:/Git/scMethrix/R/scMethrix_transforms.R")
-source("D:/Git/scMethrix/R/scMethrix_transforms.R")
+source("D:/Git/scMethrix/R/scMethrix_plot.R")
 source("D:/Git/scMethrix/tests/testthat/setup.R")
 
 BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")
@@ -34,6 +34,8 @@ setwd("D:/Git/sampleData/Yunhee.GSE97179")
 
 setwd("D:/Git/sampleData/test_data")
 
+setwd("D:/Git/sampleData/100cell")
+
 files <- list.files (getwd(),full.names = TRUE)
 
 files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
@@ -45,7 +47,7 @@ scm.big.mem <- read_beds(files=files,h5=FALSE)
 
 scm.big.mem <- read_beds(files=files,h5=FALSE, ref_cpgs = mm10_cpgs$cpgs)
 
-scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5,6),
+scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5),
                         replace=TRUE, ref_cpgs = mm10_cpgs$cpgs)
 
 scm.20.mem <- readRDS(file = "D:/Git/sampleData/scm.20.mem.rds")
