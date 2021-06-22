@@ -332,7 +332,7 @@ plot_stats <- function(plot_dat, what = "Score", stat = "mean", ignore_chr = NUL
       ggtitle(label = plot_title)
   }
   
-  return(plot_dat_gg +  + scMethrix_theme())
+  return(plot_dat_gg  + scMethrix_theme())
 }
 
 plot_melissa <- function() {
@@ -548,7 +548,7 @@ plot_umap <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_label
 #' benchmark_imputation(scMethrix_data, assay="impute", sparse_prop = c(0.1,0.5,0.85))
 #' @export
 #' @import Metrics
-benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = 0.5, iterations = 5,
+benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = c(0.1,0.25,0.5,0.75,0.9), iterations = 5,
                                  imp_methods = c(iPCA = impute_by_iPCA, RF = impute_by_RF, kNN = impute_by_kNN),
                                  type = "RMSE") {
   
