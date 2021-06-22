@@ -534,7 +534,7 @@ plot_umap <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_label
 }
 
 #------------------------------------------------------------------------------------------------------------
-#' Evaluates imputations methods by NRMSE
+#' Evaluates imputations methods by NRMSE or AUC
 #' @details Does stuff
 #' @param sparse_prop numeric; A sparsity proportion between 0 and 1. E.g. 0.1 replaces 10% of the matrix with NA
 #' @param imp_methods closure; The imputation methods to compare.
@@ -548,7 +548,7 @@ plot_umap <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_label
 #' benchmark_imputation(scMethrix_data, assay="impute", sparse_prop = c(0.1,0.5,0.85))
 #' @export
 #' @import Metrics
-benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = c(0.1,0.25,0.5,0.75,0.9), iterations = 5,
+benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(0.1, 0.9, 0.1), iterations = 3,
                                  imp_methods = c(iPCA = impute_by_iPCA, RF = impute_by_RF, kNN = impute_by_kNN),
                                  type = "RMSE") {
   
@@ -560,19 +560,29 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = c(0.
     eq = Metrics::rmse
   }
   
+  
   for (prop in sparse_prop) {
     assays(scm)[["sparse"]] <- missForest::prodNA(get_matrix(scm,assay=assay),noNA=prop)
-    
+      
     for (i in 1:length(imp_methods)) {
-      scm <- do.call(imp_methods[[i]], list(scm = scm,assay="sparse",new_assay="temp"))
-      val <- do.call(eq,list(as.vector(get_matrix(scm,assay="temp")),
-                              as.vector(get_matrix(scm,assay=assay))))
-      results = rbind(results,data.frame(Imputation=names(imp_methods)[i],Sparsity=prop,val=val))
-    }
+      for (n in 1:iterations) {
+          scm <- do.call(imp_methods[[i]], list(scm = scm,assay="sparse",new_assay="temp"))
+          val <- do.call(eq,list(as.vector(get_matrix(scm,assay="temp")),
+                                  as.vector(get_matrix(scm,assay=assay))))
+          results = rbind(results,data.frame(Imputation=names(imp_methods)[i],Sparsity=prop,val=val))
+    }}
   }
 
-  ggplot(results,aes(x=Sparsity, y=val, color=Imputation)) +
+  results <- data.table(results)
+
+  results = results[, .("mean" = mean(val), 
+                         "sd" = sd(val)), 
+                     by = c("Imputation", "Sparsity")]
+  
+  
+  ggplot(results,aes(x=Sparsity, y=mean, color=Imputation)) +
     geom_line() + geom_point() + 
+    geom_pointrange(aes(ymin=mean-sd, ymax=mean+sd)) +
     xlab("Sparsity (proportion)") + ylab(type) + labs(fill = "Imputation") +
     scale_x_continuous(breaks=seq(0,1,.05)) + 
     scMethrix_theme() 
