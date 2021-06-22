@@ -147,6 +147,20 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
+  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
+    stop("Assay does not exist in the object", call. = FALSE)
+  }
+  
+  if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
+    if (new_assay == "score") stop("Cannot overwrite the score assay")
+    warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
+  }
+  
+  if (is_h5(scm)) {
+    warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
+  }
+  
   scm <- transform_assay(scm, assay = assay, new_assay = "binary", trans = binarize)
 
   # Convert Granges to genomic interval [-1,1]
@@ -169,7 +183,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   
   for (n in 1:ncol(scm)) {
     
-    met <- matrix(c(mcols(scm)$interval,get_matrix(scm[,n],assay="binary")),
+    met <- matrix(c(mcols(scm)$interval,as.matrix(get_matrix(scm[,n],assay="binary"))),
                   ncol = 2,dimnames = list(rownames(loc),NULL))
     mets <- lapply(rowRanges(scm)@seqnames@values, function(x) met[which(loc == x),,drop=FALSE])
     mets <- lapply(mets, function (m) m[-which(m[,2]==-1),,drop=FALSE])
@@ -242,17 +256,17 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = "impute", n_
   }
   
   if (is_h5(scm)) {
-    stop("HDF5-based objects cannot be imputed by iPCA", call. = FALSE)
+    warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
   }
   
   if (length(n_pc) > 1) {
     warning("Caution: n_pc is given as range. This can be very time-intensive.")
-    n_pc <- missMDA::estim_ncpPCA(get_matrix(scm,assay = assay),ncp.min = n_pc[1], ncp.max = n_pc[2], 
+    n_pc <- missMDA::estim_ncpPCA(as.matrix(get_matrix(scm,assay = assay)),ncp.min = n_pc[1], ncp.max = n_pc[2], 
                          method.cv = "Kfold", verbose = TRUE)
     n_pc <- n_pc$ncp
   }
   
-  impute <- missMDA::imputePCA(get_matrix(scm,assay = assay), ncp = n_pc, ...)
+  impute <- missMDA::imputePCA(as.matrix(get_matrix(scm,assay = assay)), ncp = n_pc, ...)
   assays(scm)[[new_assay]] <- as(impute$completeObs,class(get_matrix(scm,assay=assay))[[1]])
   
   return(scm)
@@ -285,10 +299,10 @@ impute_by_RF <- function(scm = NULL, assay = "score", new_assay = "impute", ...)
   }
   
   if (is_h5(scm)) {
-    stop("HDF5-based objects cannot be imputed by RF", call. = FALSE)
+    warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
   }
   
-  impute <- missForest::missForest(get_matrix(scm,assay = assay))#, ...)
+  impute <- missForest::missForest(as.matrix(get_matrix(scm,assay = assay)))#, ...)
   assays(scm)[[new_assay]] <- as(impute$ximp,class(get_matrix(scm,assay=assay))[[1]])
   
   return(scm)
@@ -323,10 +337,10 @@ impute_by_kNN <- function(scm = NULL, assay = "score", new_assay = "impute", k =
   }
   
   if (is_h5(scm)) {
-    stop("HDF5-based objects cannot be imputed by RF", call. = FALSE)
+    warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
   }
   
-  impute <- impute::impute.knn(get_matrix(scm,assay = assay), k = min(k,ncol(scm)), 
+  impute <- impute::impute.knn(as.matrix(get_matrix(scm,assay = assay)), k = min(k,ncol(scm)), 
                        rowmax = 1.0, colmax = 1.0, maxp = 1500, rng.seed=123)
   assays(scm)[[new_assay]] <- as(impute$data,class(get_matrix(scm,assay=assay))[[1]])
   
