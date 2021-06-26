@@ -39,4 +39,13 @@ imputation_test_helper <- function(func) {
     expect_equivalent(sco[nonNAs],imp[nonNAs])
     expect_false(all(sco[NAs] %in% imp[NAs]))
   }))
+  
+  graph_test_helper <- function(func, indiv_samples = TRUE) {
+    expect_error(func("not scMethrix"))
+    invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+      plot <- func(scm)
+      expect_true("ggplot" %in% class(plot))
+      if (indiv_samples) expect_equivalent(levels(plot$data$variable),colnames(scm))
+    }))
+  }
 }

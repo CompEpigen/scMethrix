@@ -2,7 +2,7 @@
 #' @inheritParams generic_scMethrix_function
 #' @param n_cpgs Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.
 #' @param ranges genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param pheno Row name of colData(m). Will be used as a factor to color different groups in the violin plot.
+#' @param pheno Row name of colData(m). Will be used as a factor to color different groups
 #' @return 'Long' matrix for methylation
 #' @export
 prepare_plot_data <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL){
@@ -146,7 +146,6 @@ plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Coverage QC Plots
-#'
 #' @inheritParams plot_violin
 #' @param perGroup Color the plots in a sample-wise manner?
 #' @param lim Maximum coverage value to be plotted.
@@ -158,7 +157,6 @@ plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL
 #' data('scMethrix_data')
 #' plot_coverage(scm = scMethrix_data)
 #' @export
-
 plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, perGroup = FALSE,
                           lim = 100, size.lim = 1e+06, col_palette = "RdYlGn", show_legend = TRUE) {
   
@@ -243,6 +241,40 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
             axis.title.y = element_blank(), legend.title = element_blank())
   
   return(p + scMethrix_theme())
+}
+
+#--------------------------------------------------------------------------------------------------------------------------
+#' Sparsity of sample
+#'
+#' @inheritParams generic_scMethrix_function
+#' @param type Choose between 'box' (boxplot) or 'scatter' (scatterplot).
+#' @return ggplot2 object
+#' @examples
+#' data('scMethrix_data')
+#' plot_sparsity(scm = scMethrix_data)
+#' @export
+plot_sparsity <- function(scm = NULL, type = c("box", "scatter")) {
+  
+  if (!is(scm, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.")
+  }
+  
+  type <- match.arg(arg = type, choices = c("box", "scatter"), several.ok = FALSE)
+  
+  sparsity <- DelayedMatrixStats::colCounts(score(scm),value=NA)
+  sparsity <- data.frame(variable = rownames(colData(scm)), Sparsity = sparsity/nrow(scm))
+  
+  if (type == "box") {
+    p <- ggplot(sparsity, aes(x="", y=Sparsity)) + geom_boxplot() 
+  }
+  
+  if (type = "scatter") {
+    p <- ggplot(sparsity, aes(x="", y=Sparsity, color = variable)) + geom_point() 
+  }
+
+  p <- scMethrix_theme() + theme(axis.title.x = element_blank())
+
+  return(p)
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
