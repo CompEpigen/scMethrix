@@ -1,6 +1,6 @@
-#' WGBS for single cell methylome of murine neuronal cells 
+#' Single cell methylome of murine neuronal cells 
 #'
-#' This is a subset of the original converted to `scMethrix` format
+#' This is a subset of the original converted to `scMethrix` format. See data_gen.R for subset details
 #'
 #' @docType data
 #'

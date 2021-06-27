@@ -428,13 +428,31 @@
         <td>
           <p><code><a href="impute_by_iPCA.html">impute_by_iPCA()</a></code> </p>
         </td>
-        <td><p>Imputes the an <code>scMethrix</code> object using a iterative PCA model</p></td>
+        <td><p>Imputes the an <code>scMethrix</code>object using a iterative PCA model</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="impute_by_melissa.html">impute_by_melissa()</a></code> </p>
         </td>
         <td><p>Imputes the NA values of a <code>scMethrix</code> object.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="impute_by_RF.html">impute_by_RF()</a></code> </p>
+        </td>
+        <td><p>Imputes the an <code>scMethrix</code>object using a random forest model</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="impute_by_kNN.html">impute_by_kNN()</a></code> </p>
+        </td>
+        <td><p>Imputes the an <code>scMethrix</code>object using a random forest model</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="generate_training_set.html">generate_training_set()</a></code> </p>
+        </td>
+        <td><p>Splits an experiment into two for use as a training and test set</p></td>
       </tr>
     </tbody><tbody>
       
@@ -469,7 +487,7 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="reduce_matrix.html">reduce_matrix()</a></code> </p>
+          <p><code><a href="reduce_cpgs.html">reduce_cpgs()</a></code> </p>
         </td>
         <td><p>Reduces a matrix</p></td>
       </tr>
@@ -488,6 +506,12 @@
       <tr>
         
         <td>
+          <p><code><a href="prepare_plot_data.html">prepare_plot_data()</a></code> </p>
+        </td>
+        <td><p>Format <code>scMethrix</code> matrix to long form data for plotting</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="plot_violin.html">plot_violin()</a></code> </p>
         </td>
         <td><p>Violin Plot for \(\beta\)-Values</p></td>
@@ -500,15 +524,15 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="plot_pca.html">plot_pca()</a></code> </p>
-        </td>
-        <td><p>Plot PCA results</p></td>
-      </tr><tr>
-        
-        <td>
           <p><code><a href="plot_coverage.html">plot_coverage()</a></code> </p>
         </td>
         <td><p>Coverage QC Plots</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="plot_sparsity.html">plot_sparsity()</a></code> </p>
+        </td>
+        <td><p>Sparsity of sample</p></td>
       </tr><tr>
         
         <td>
@@ -518,15 +542,39 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="prepare_plot_data.html">prepare_plot_data()</a></code> </p>
+          <p><code><a href="plot_dim_red.html">plot_dim_red()</a></code> </p>
         </td>
-        <td><p>Format <code>scMethrix</code> matrix to long form data for plotting</p></td>
+        <td><p>Plot dimensionality reduction</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="plot_pca.html">plot_pca()</a></code> </p>
+        </td>
+        <td><p>Plot PCA results</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="plot_umap.html">plot_umap()</a></code> </p>
+        </td>
+        <td><p>Plot UMAP results</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="plot_tsne.html">plot_tsne()</a></code> </p>
+        </td>
+        <td><p>Plot tSNE results</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="get_palette.html">get_palette()</a></code> </p>
         </td>
         <td><p>Getter for plot palette colors</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="benchmark_imputation.html">benchmark_imputation()</a></code> </p>
+        </td>
+        <td><p>Evaluates imputations methods by NRMSE or AUC</p></td>
       </tr>
     </tbody><tbody>
       <tr>

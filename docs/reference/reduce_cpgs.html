@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Exports all samples in an scMethrix objects into individual bedgraph files — export_bed • scMethrix</title>
+<title>Reduces a matrix — reduce_cpgs • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Exports all samples in an scMethrix objects into individual bedgraph files — export_bed" />
-<meta property="og:description" content="Exports all samples in an scMethrix objects into individual bedgraph files" />
+<meta property="og:title" content="Reduces a matrix — reduce_cpgs" />
+<meta property="og:description" content="Reduces a matrix" />
 
 
 
@@ -111,46 +111,161 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Exports all samples in an <code><a href='scMethrix-class.html'>scMethrix</a></code> objects into individual bedgraph files</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>export_bed.Rd</code></div>
+    <h1>Reduces a matrix</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_dimensionality.R'><code>R/scMethrix_dimensionality.R</code></a></small>
+    <div class="hidden name"><code>reduce_cpgs.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Exports all samples in an <code><a href='scMethrix-class.html'>scMethrix</a></code> objects into individual bedgraph files</p>
+    <p>Reduces a matrix</p>
     </div>
 
-    <pre class="usage"><span class='fu'>export_bed</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, path <span class='op'>=</span> <span class='cn'>NULL</span>, suffix <span class='op'>=</span> <span class='cn'>NULL</span>, verbose <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>reduce_cpgs</span><span class='op'>(</span>
+  <span class='va'>scm</span>,
+  assay <span class='op'>=</span> <span class='st'>"score"</span>,
+  var <span class='op'>=</span> <span class='st'>"top"</span>,
+  top_var <span class='op'>=</span> <span class='fl'>1000</span>,
+  na.rm <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  verbose <span class='op'>=</span> <span class='cn'>FALSE</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>scm</th>
-      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
+      <td><p>Input <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
     </tr>
     <tr>
-      <th>path</th>
-      <td><p>the <code><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></code> of the directory to save the files</p></td>
+      <th>assay</th>
+      <td><p>The assay to use. Default is 'score'</p></td>
     </tr>
     <tr>
-      <th>suffix</th>
-      <td><p>optional suffix to add to the exported bed files</p></td>
+      <th>var</th>
+      <td><p>Choose between random CpG sites ('rand') or most variable CpGs ('top').</p></td>
+    </tr>
+    <tr>
+      <th>top_var</th>
+      <td><p>Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with <code>ranges</code>.</p></td>
+    </tr>
+    <tr>
+      <th>na.rm</th>
+      <td><p>Remove NA values</p></td>
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>boolean; Flag for outputting function status messages. Default = TRUE</p></td>
+      <td><p>flag to output messages or not</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>nothing</p>
+    <p>Reduced matrix</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>export_bed</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,path<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/paste.html'>paste0</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span><span class='op'>(</span><span class='op'>)</span>,<span class='st'>"/export"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Exporting beds to C:\Users\geekb\AppData\Local\Temp\RtmpuMOtXE/export</span></div><div class='output co'>#&gt; <span class='message'>Exported 1 of 4 (0.02s)</span></div><div class='output co'>#&gt; <span class='message'>Exported 2 of 4 (0.01s)</span></div><div class='output co'>#&gt; <span class='message'>Exported 3 of 4 (0.02s)</span></div><div class='output co'>#&gt; <span class='message'>Exported 4 of 4 (0.02s)</span></div><div class='output co'>#&gt; <span class='message'>BEDs exported in in 0.07s</span></div></pre>
+<span class='fu'>reduce_cpgs</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Taking top 1000 most variable CpGs for the reduction</span></div><div class='output co'>#&gt;         C1  C2  C3  C4
+#&gt;   [1,]  NA   0 100  NA
+#&gt;   [2,] 100   0  NA  NA
+#&gt;   [3,]  NA   0 100  NA
+#&gt;   [4,] 100  NA  NA   0
+#&gt;   [5,] 100  NA  NA   0
+#&gt;   [6,] 100  NA   0 100
+#&gt;   [7,]   0 100 100  NA
+#&gt;   [8,] 100  NA 100   0
+#&gt;   [9,]   0 100   0  NA
+#&gt;  [10,]  NA 100 100   0
+#&gt;  [11,]   0   0 100 100
+#&gt;  [12,] 100  NA 100   0
+#&gt;  [13,] 100   0  NA   0
+#&gt;  [14,]   0 100  NA   0
+#&gt;  [15,] 100 100   0   0
+#&gt;  [16,] 100   0 100 100
+#&gt;  [17,] 100   0   0   0
+#&gt;  [18,]  50 100  50 100
+#&gt;  [19,]  50 100 100 100
+#&gt;  [20,] 100 100 100  50
+#&gt;  [21,]  42  33  32   0
+#&gt;  [22,]  16  33  33   0
+#&gt;  [23,]   0  20  25  33
+#&gt;  [24,]  31   3  13   6
+#&gt;  [25,]  21  30   6  34
+#&gt;  [26,]  16  20   0   0
+#&gt;  [27,]   0   0   0  15
+#&gt;  [28,]  14   0   0   0
+#&gt;  [29,]  NA 100 100 100
+#&gt;  [30,]  NA 100 100 100
+#&gt;  [31,]  NA 100 100 100
+#&gt;  [32,]   0  NA   0   0
+#&gt;  [33,]   0  NA   0   0
+#&gt;  [34,] 100 100 100 100
+#&gt;  [35,] 100 100 100 100
+#&gt;  [36,]  NA 100  NA 100
+#&gt;  [37,]   0  NA  NA   0
+#&gt;  [38,] 100 100 100  NA
+#&gt;  [39,] 100 100 100  NA
+#&gt;  [40,]  NA  NA 100 100
+#&gt;  [41,] 100 100  NA  NA
+#&gt;  [42,] 100 100  NA  NA
+#&gt;  [43,]   0   0   0   0
+#&gt;  [44,] 100 100 100 100
+#&gt;  [45,] 100  NA 100  NA
+#&gt;  [46,]  NA 100 100 100
+#&gt;  [47,] 100 100 100  NA
+#&gt;  [48,] 100 100  NA 100
+#&gt;  [49,]   0  NA   0  NA
+#&gt;  [50,] 100 100 100 100
+#&gt;  [51,]  NA 100  NA 100
+#&gt;  [52,]   0  NA  NA   0
+#&gt;  [53,]  NA  NA 100 100
+#&gt;  [54,] 100 100 100 100
+#&gt;  [55,]   0  NA   0  NA
+#&gt;  [56,] 100 100 100 100
+#&gt;  [57,]  NA 100 100  NA
+#&gt;  [58,]   0   0   0   0
+#&gt;  [59,] 100  NA 100 100
+#&gt;  [60,] 100 100 100  NA
+#&gt;  [61,]  NA  NA 100 100
+#&gt;  [62,]  NA  NA   0   0
+#&gt;  [63,] 100 100  NA  NA
+#&gt;  [64,]  NA  NA   0   0
+#&gt;  [65,] 100 100 100 100
+#&gt;  [66,] 100  NA 100 100
+#&gt;  [67,] 100 100 100 100
+#&gt;  [68,]  NA 100 100  NA
+#&gt;  [69,] 100 100 100  NA
+#&gt;  [70,]  NA  NA   0   0
+#&gt;  [71,]  NA   0   0   0
+#&gt;  [72,]  NA 100 100  NA
+#&gt;  [73,] 100  NA 100 100
+#&gt;  [74,] 100 100  NA 100
+#&gt;  [75,] 100  NA 100  NA
+#&gt;  [76,]  NA  NA  NA 100
+#&gt;  [77,] 100  NA  NA  NA
+#&gt;  [78,] 100  NA  NA  NA
+#&gt;  [79,]  NA  NA 100  NA
+#&gt;  [80,]  NA  NA  NA   0
+#&gt;  [81,] 100  NA  NA  NA
+#&gt;  [82,]  NA  NA  NA 100
+#&gt;  [83,]  NA  NA  NA 100
+#&gt;  [84,]   0  NA  NA  NA
+#&gt;  [85,]  NA 100  NA  NA
+#&gt;  [86,]  NA  NA  NA 100
+#&gt;  [87,]  NA  NA  NA 100
+#&gt;  [88,]  NA  NA   0  NA
+#&gt;  [89,]   0  NA  NA  NA
+#&gt;  [90,]  NA  NA   0  NA
+#&gt;  [91,]  NA  NA  NA 100
+#&gt;  [92,]  NA  NA 100  NA
+#&gt;  [93,] 100  NA  NA  NA
+#&gt;  [94,]  NA 100  NA  NA
+#&gt;  [95,]  NA  NA  NA   0
+#&gt;  [96,]  NA  NA  NA 100
+#&gt;  [97,]  NA 100  NA  NA
+#&gt;  [98,] 100  NA  NA  NA
+#&gt;  [99,]  NA 100  NA  NA
+#&gt; [100,]  NA   0  NA  NA</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

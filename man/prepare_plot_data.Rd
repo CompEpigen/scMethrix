@@ -13,7 +13,7 @@ prepare_plot_data(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL)
 
 \item{n_cpgs}{Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.}
 
-\item{pheno}{Row name of colData(m). Will be used as a factor to color different groups in the violin plot.}
+\item{pheno}{Row name of colData(m). Will be used as a factor to color different groups}
 }
 \value{
 'Long' matrix for methylation

@@ -2,13 +2,13 @@
 % Please edit documentation in R/scMethrix_plot.R
 \name{benchmark_imputation}
 \alias{benchmark_imputation}
-\title{Evaluates imputations methods by NRMSE}
+\title{Evaluates imputations methods by NRMSE or AUC}
 \usage{
 benchmark_imputation(
   scm = NULL,
   assay = "score",
-  sparse_prop = 0.5,
-  iterations = 5,
+  sparse_prop = seq(0.1, 0.9, 0.1),
+  iterations = 3,
   imp_methods = c(iPCA = impute_by_iPCA, RF = impute_by_RF, kNN = impute_by_kNN),
   type = "RMSE"
 )
@@ -30,7 +30,7 @@ benchmark_imputation(
 ggplot; The graph showing the NRMSE for each imputation method at each sparsity
 }
 \description{
-Evaluates imputations methods by NRMSE
+Evaluates imputations methods by NRMSE or AUC
 }
 \details{
 Does stuff

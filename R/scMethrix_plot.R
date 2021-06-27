@@ -268,11 +268,11 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter")) {
     p <- ggplot(sparsity, aes(x="", y=Sparsity)) + geom_boxplot() 
   }
   
-  if (type = "scatter") {
+  if (type == "scatter") {
     p <- ggplot(sparsity, aes(x="", y=Sparsity, color = variable)) + geom_point() 
   }
 
-  p <- scMethrix_theme() + theme(axis.title.x = element_blank())
+  p <- p + scMethrix_theme() + theme(axis.title.x = element_blank())
 
   return(p)
 }
@@ -622,9 +622,9 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
 
 #------------------------------------------------------------------------------------------------------------
 #' Theme for ggplot
-#' @param base_size numeric; A sparsity proportion between 0 and 1. E.g. 0.1 replaces 10% of the matrix with NA
-#' @param base_family closure; The imputation methods to compare.
-#' @return list; data for the ggplot theme
+#' @param base_size Size of text
+#' @param base_family Family of text
+#' @return ggplot element; data for the ggplot theme
 #' @export
 scMethrix_theme <- function(base_size = 12, base_family = "") {
 

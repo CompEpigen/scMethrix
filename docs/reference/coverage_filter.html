@@ -135,7 +135,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>scm</th>
-      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
       <th>cov_thr</th>
@@ -156,11 +156,11 @@ tested group-wise.</p></td>
     </tr>
     <tr>
       <th>n_chunks</th>
-      <td><p>Number of chunks to split the <code><a href='scMethrix-class.html'>scMethrix</a></code> object in case it is very large. Default = 1.</p></td>
+      <td><p>integer; Number of chunks to split the <code><a href='scMethrix-class.html'>scMethrix</a></code> object in case it is very large. Default = 1</p></td>
     </tr>
     <tr>
       <th>n_threads</th>
-      <td><p>Number of parallel instances. <code>n_threads</code> should be less than or equal to <code>n_chunks</code>. If <code>n_threads</code> is not specified, then <code>n_chunks</code> is initialized to be equal to <code>n_threads</code>. Default = 1.</p></td>
+      <td><p>integer; Number of parallel instances. <code>n_threads</code> must be less than or equal to <code>n_chunks</code>. Default = 1</p></td>
     </tr>
     </table>
 
@@ -174,7 +174,7 @@ tested group-wise.</p></td>
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
 <span class='fu'>coverage_filter</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, min_sample<span class='op'>=</span><span class='fl'>2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Filtering by coverage...</span></div><div class='output co'>#&gt; <span class='message'>Retained 75 of 100 sites</span></div><div class='output co'>#&gt; <span class='message'>Filtered in 0.36s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Filtering by coverage...</span></div><div class='output co'>#&gt; <span class='message'>Retained 75 of 100 sites</span></div><div class='output co'>#&gt; <span class='message'>Filtered in 0.41s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 75
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts
