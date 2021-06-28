@@ -13,6 +13,9 @@ h5_dir <- paste0(tempdir(),"/sse")
 scm.h5 <- read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE,cov_idx=5)
 scm.mem <- read_beds(files,h5=FALSE,cov_idx=5)
 
+n_cpg <- 286
+n_samples <- 4
+
 # scMethrix_data <- scm.mem
 # usethis::use_data(scMethrix_data,overwrite=TRUE)
 
@@ -40,12 +43,13 @@ imputation_test_helper <- function(func) {
     expect_false(all(sco[NAs] %in% imp[NAs]))
   }))
   
-  graph_test_helper <- function(func, indiv_samples = TRUE) {
-    expect_error(func("not scMethrix"))
-    invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-      plot <- func(scm)
-      expect_true("ggplot" %in% class(plot))
-      if (indiv_samples) expect_equivalent(levels(plot$data$variable),colnames(scm))
-    }))
-  }
+}
+
+graph_test_helper <- function(func, indiv_samples = TRUE) {
+  expect_error(func("not scMethrix"))
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    plot <- func(scm)
+    expect_true("ggplot" %in% class(plot))
+    if (indiv_samples) expect_equivalent(levels(plot$data$variable),colnames(scm))
+  }))
 }

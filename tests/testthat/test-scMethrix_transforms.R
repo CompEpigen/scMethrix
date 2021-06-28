@@ -6,7 +6,7 @@ test_that("bin_scMethrix", {
   #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   invisible(lapply(list(scm.mem), function(scm) {
     bin <- bin_scMethrix(scm,bin_size = 10000000, h5_dir = paste0(tempdir(),"/bin"))
-    expect_equivalent(dim(bin),c(77,4))
+    expect_equivalent(dim(bin),c(37,4))
     rm(bin)
   }))
 })
@@ -49,8 +49,8 @@ test_that("generate_training_set", {
     expect_error(generate_training_set(scm,training_prop = 2))
     
     set <- generate_training_set(scm,training_prop = 0.2)
-    expect_equivalent(nrow(set$training),20)
-    expect_equivalent(nrow(set$test),80)
+    expect_equivalent(nrow(set$training),57)
+    expect_equivalent(nrow(set$test),229)
     
     expect_equivalent(scm,merge_scMethrix(set$training,set$test)) #TODO: validate this better
   }))
