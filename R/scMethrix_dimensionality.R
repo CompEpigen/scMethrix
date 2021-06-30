@@ -73,7 +73,7 @@ reduce_cpgs <- function(scm, assay = "score", var = "top", top_var = 1000, na.rm
 #--------------------------------------------------------------------------------------------------------------
 #' Principal Component Analysis
 #' @details Do PCA stuff. NA values will be removed.
-#' @param n_pc Number of principal components to use
+#' @param n_components Number of components to use
 #' @inheritParams reduce_cpgs 
 #' @inheritParams stats::prcomp
 #' @return \code{\link{scMethrix}} object with reducedDim 'PCA'
@@ -84,7 +84,7 @@ reduce_cpgs <- function(scm, assay = "score", var = "top", top_var = 1000, na.rm
 #' pca_scMethrix(scMethrix_data)
 #' @export
 #'
-pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbose = FALSE, n_pc = 2, ...) {
+pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbose = FALSE, n_components = 2, ...) {
   
   if (verbose) message("Starting PCA ",start_time())
   
@@ -96,8 +96,8 @@ pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbo
   names(pc_vars) <- colnames(meth$x)
   pc_vars <- round(pc_vars, digits = 2)
   
-  reducedDim(scm, "PCA") <- meth$x[,1:n_pc]
-  scm@metadata$PCA_vars <- pc_vars[1:n_pc]
+  reducedDim(scm, "PCA") <- meth$x[,1:n_components]
+  scm@metadata$PCA_vars <- pc_vars[1:n_components]
 
   if (verbose) {
     message("PCA vars (saved in metadata$PCA_vars):")
@@ -114,6 +114,7 @@ pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbo
 #' Generates UMAP for scMethrix
 #' @details Does UMAP stuff
 #' @param n_neighbors integer; number of nearest neighbors
+#' @param n_components Number of components to use
 #' @inheritParams reduce_cpgs 
 #' @inheritParams umap::umap
 #' @return \code{\link{scMethrix}} object with reducedDim 'UMAP'
@@ -123,12 +124,12 @@ pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbo
 #' data('scMethrix_data')
 #' umap_scMethrix(scMethrix_data)
 #' @export
-umap_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbose = FALSE, n_neighbors = 15, ...) {
+umap_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbose = FALSE, n_neighbors = 15, n_components = 2, ...) {
   
   if (verbose) message("Starting UMAP",start_time())
   
   meth <- reduce_cpgs(scm,assay = assay, var = var, top_var = top_var, verbose = verbose, na.rm=TRUE)
-  umap <- umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)))#, ...)
+  umap <- umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)),n_components=n_components)#, ...)
   
   reducedDim(scm, "UMAP") <- umap$layout
   
@@ -142,6 +143,7 @@ umap_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verb
 #------------------------------------------------------------------------------------------------------------
 #' Generates tSNE for scMethrix
 #' @details Does tSNE stuff
+#' @param n_components Number of components to use
 #' @inheritParams reduce_cpgs 
 #' @inheritParams Rtsne::Rtsne
 #' @return \code{\link{scMethrix}} object with reducedDim 'tSNE'
@@ -151,12 +153,12 @@ umap_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verb
 #' data('scMethrix_data')
 #' umap_scMethrix(scMethrix_data)
 #' @export
-tsne_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, perplexity = 30, verbose = FALSE, ...) {
+tsne_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, perplexity = 30, verbose = FALSE, n_components = 2, ...) {
   
   if (verbose) message("Starting tSNE",start_time())
   
   meth <- reduce_cpgs(scm,assay = assay, var = var, top_var = top_var, verbose = verbose, na.rm = TRUE)
-  meth_sub <- Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)))#, ...)
+  meth_sub <- Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), k = n_components)#, ...)
   
   reducedDim(scm, "tSNE") <- meth_sub$Y
   
