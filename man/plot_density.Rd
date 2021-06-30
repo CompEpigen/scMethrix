@@ -23,6 +23,8 @@ plot_density(
 \item{pheno}{Row name of colData(m). Will be used as a factor to color different groups}
 
 \item{col_palette}{Name of the RColorBrewer palette to use for plotting.}
+
+\item{show_legend}{Display the legend on the plot}
 }
 \value{
 ggplot2 object

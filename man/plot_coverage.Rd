@@ -30,6 +30,8 @@ plot_coverage(
 random sites will be selected from the genome.}
 
 \item{col_palette}{Name of the RColorBrewer palette to use for plotting.}
+
+\item{show_legend}{Display the legend on the plot}
 }
 \value{
 ggplot2 object

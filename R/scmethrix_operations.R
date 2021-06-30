@@ -907,7 +907,7 @@ remove_uncovered <- function(scm = NULL) {
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
 #' data('scMethrix_data')
-#' mask_scMethrix(scMethrix_data,low_count=4,type="counts")
+#' mask_scMethrix(scMethrix_data,low_count=2,high_quantile=NULL,type="counts")
 #' @export
 mask_scMethrix <- function(scm = NULL, assay = "score", low_count = 0, high_quantile = 0.99, n_threads=1 ,type="counts") {
   

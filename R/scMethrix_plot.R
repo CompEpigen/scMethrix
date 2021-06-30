@@ -76,6 +76,7 @@ get_palette <- function(n_row, col_palette){
 #' Violin Plot for \eqn{\beta}-Values
 #' @inheritParams prepare_plot_data
 #' @param col_palette Name of the RColorBrewer palette to use for plotting.
+#' @param show_legend Display the legend on the plot
 #' @return ggplot2 object
 #' @export
 #' @import ggplot2
@@ -255,6 +256,8 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
 #' @export
 plot_sparsity <- function(scm = NULL, type = c("box", "scatter")) {
   
+  Sparsity <- variable <- NULL
+  
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
@@ -373,7 +376,6 @@ plot_melissa <- function() {
   
 }
 
-
 plot_imap <- function(scm) {
   # 
   # x <- y <- NULL
@@ -387,7 +389,6 @@ plot_imap <- function(scm) {
   #   geom_point()
   # 
 }
-
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Plot dimensionality reduction
@@ -584,7 +585,7 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
                                  imp_methods = c(iPCA = impute_by_iPCA, RF = impute_by_RF, kNN = impute_by_kNN),
                                  type = "RMSE") {
   
-  results <- Sparsity <- NRMSE <- Imputation <- AUC <- NULL
+  . <- results <- Sparsity <- NRMSE <- Imputation <- AUC <- NULL
   
   if (type == "AUC") {
     eq = Metrics::auc

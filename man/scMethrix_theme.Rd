@@ -7,12 +7,12 @@
 scMethrix_theme(base_size = 12, base_family = "")
 }
 \arguments{
-\item{base_size}{numeric; A sparsity proportion between 0 and 1. E.g. 0.1 replaces 10\% of the matrix with NA}
+\item{base_size}{Size of text}
 
-\item{base_family}{closure; The imputation methods to compare.}
+\item{base_family}{Family of text}
 }
 \value{
-list; data for the ggplot theme
+ggplot element; data for the ggplot theme
 }
 \description{
 Theme for ggplot
