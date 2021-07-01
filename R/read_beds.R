@@ -73,7 +73,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     
-    colData <- data.frame()[1:(length(files)), ]
+    if (is.null(colData)) colData <- data.frame()[1:(length(files)), ]
     row.names(colData) <- unlist(lapply(files,get_sample_name))
     
     chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
@@ -100,7 +100,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     message("Building scMethrix object")
     
-    colData <- data.frame()[1:(length(files)), ]
+    if (is.null(colData)) colData <- data.frame()[1:(length(files)), ]
     row.names(colData) <- unlist(lapply(files,get_sample_name))
     
     chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})

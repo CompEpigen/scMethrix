@@ -246,15 +246,16 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Sparsity of sample
-#'
+#' inheritParams generic_plot_function
 #' @inheritParams generic_scMethrix_function
 #' @param type Choose between 'box' (boxplot) or 'scatter' (scatterplot).
+#' @param pheno phenotype columns
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
 #' plot_sparsity(scm = scMethrix_data)
 #' @export
-plot_sparsity <- function(scm = NULL, type = c("box", "scatter")) {
+plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) {
   
   Sparsity <- variable <- NULL
   
@@ -265,15 +266,22 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter")) {
   type <- match.arg(arg = type, choices = c("box", "scatter"), several.ok = FALSE)
   
   sparsity <- DelayedMatrixStats::colCounts(score(scm),value=NA)
-  sparsity <- data.frame(variable = rownames(colData(scm)), Sparsity = sparsity/nrow(scm))
   
-  if (type == "box") {
-    p <- ggplot(sparsity, aes(x="", y=Sparsity)) + geom_boxplot() 
+  if (!is.null(pheno)) {
+    if (pheno %in% colnames(colData(scm))) {
+      pheno <- as.character(scm@colData[, pheno])
+      sparsity <- data.frame(Phenotype = pheno, Sparsity = sparsity/nrow(scm))
+      p <- ggplot(sparsity, aes(x=pheno, y=Sparsity, color = pheno))
+    } else {
+      stop("Please provide a valid phenotype annotation column.")
+    }
+  } else {
+    sparsity <- data.frame(Sparsity = sparsity/nrow(scm))
+    p <- ggplot(sparsity, aes(x="", y=Sparsity))
   }
-  
-  if (type == "scatter") {
-    p <- ggplot(sparsity, aes(x="", y=Sparsity, color = variable)) + geom_point() 
-  }
+
+  if (type == "box") {p <- p + geom_boxplot()
+  } else if (type == "scatter") {p <- p + geom_point() }
 
   p <- p + scMethrix_theme() + theme(axis.title.x = element_blank())
 

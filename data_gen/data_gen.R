@@ -32,4 +32,5 @@ files <- list.files (dir,full.names = TRUE)
 files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
 files <- setdiff(files, src_files)
 
-m <- read_beds(files=files,h5=FALSE,cov_idx=5)
+colData <- data.frame(phenotype = c(rep("C",2),rep("N",2)))
+m <- read_beds(files=files,h5=FALSE,cov_idx=5,colData = colData)
