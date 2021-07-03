@@ -2,20 +2,24 @@
 % Please edit documentation in R/scMethrix_plot.R
 \name{plot_sparsity}
 \alias{plot_sparsity}
-\title{Sparsity of sample}
+\title{Sparsity of sample
+inheritParams generic_plot_function}
 \usage{
-plot_sparsity(scm = NULL, type = c("box", "scatter"))
+plot_sparsity(scm = NULL, type = c("box", "scatter"), pheno = NULL)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{type}{Choose between 'box' (boxplot) or 'scatter' (scatterplot).}
+
+\item{pheno}{phenotype columns}
 }
 \value{
 ggplot2 object
 }
 \description{
 Sparsity of sample
+inheritParams generic_plot_function
 }
 \examples{
 data('scMethrix_data')
