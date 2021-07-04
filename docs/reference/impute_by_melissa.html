@@ -120,14 +120,14 @@
     <p>Imputes the NA values of a <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>impute_by_melissa</span><span class='op'>(</span><span class='va'>scm</span>, threshold <span class='op'>=</span> <span class='fl'>50</span>, assay <span class='op'>=</span> <span class='st'>"score"</span>, new_assay <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>impute_by_melissa</span><span class='op'>(</span><span class='va'>scm</span>, threshold <span class='op'>=</span> <span class='fl'>50</span>, assay <span class='op'>=</span> <span class='st'>"score"</span>, new_assay <span class='op'>=</span> <span class='st'>"impute"</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>scm</th>
-      <td><p>A <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
       <th>threshold</th>
@@ -136,11 +136,11 @@ Default = 50</p></td>
     </tr>
     <tr>
       <th>assay</th>
-      <td><p>Which assay to impute</p></td>
+      <td><p>string; name of an existing assay. Default = "score"</p></td>
     </tr>
     <tr>
       <th>new_assay</th>
-      <td><p>Name of the newly imputed assay</p></td>
+      <td><p>string; name for transformed assay. Default = "new_assay"</p></td>
     </tr>
     </table>
 

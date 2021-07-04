@@ -24,34 +24,23 @@ test_that("get_palette", {
 })
 
 test_that("plot_violin", {
-  expect_error(plot_violin("not scMethrix"))
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    plot = plot_violin(scm)
-    expect_true("ggplot" %in% class(plot))
-    expect_equivalent(levels(plot$data$variable),colnames(scm))
-  }))
+  graph_test_helper(plot_violin)
 })
 
 test_that("plot_density", {
-  expect_error(plot_density("not scMethrix"))
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    plot = plot_density(scm)
-    expect_true("ggplot" %in% class(plot))
-    expect_equivalent(levels(plot$data$variable),colnames(scm))
-  }))
+  graph_test_helper(plot_density)
 })
 
 test_that("plot_coverage", {
-  expect_error(plot_coverage("not scMethrix"))
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    plot = plot_coverage(scm)
-    expect_true("ggplot" %in% class(plot))
-    expect_equivalent(levels(plot$data$variable),colnames(scm))
-  }))
+  graph_test_helper(plot_coverage)
+})
+
+test_that("plot_sparsity", {
+  graph_test_helper(plot_sparsity,indiv_samples = FALSE)
 })
 
 test_that("plot_stats", {
-  expect_error(plot_stats("not scMethrix"))
+  expect_error(plot_pca("not scMethrix"))
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     plot = plot_stats(get_stats(scm))
     expect_true("ggplot" %in% class(plot))

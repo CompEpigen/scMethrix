@@ -2,7 +2,7 @@
 #' @inheritParams generic_scMethrix_function
 #' @param n_cpgs Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.
 #' @param ranges genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param pheno Row name of colData(m). Will be used as a factor to color different groups in the violin plot.
+#' @param pheno Row name of colData(m). Will be used as a factor to color different groups
 #' @return 'Long' matrix for methylation
 #' @export
 prepare_plot_data <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL){
@@ -76,6 +76,7 @@ get_palette <- function(n_row, col_palette){
 #' Violin Plot for \eqn{\beta}-Values
 #' @inheritParams prepare_plot_data
 #' @param col_palette Name of the RColorBrewer palette to use for plotting.
+#' @param show_legend Display the legend on the plot
 #' @return ggplot2 object
 #' @export
 #' @import ggplot2
@@ -146,7 +147,6 @@ plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Coverage QC Plots
-#'
 #' @inheritParams plot_violin
 #' @param perGroup Color the plots in a sample-wise manner?
 #' @param lim Maximum coverage value to be plotted.
@@ -158,7 +158,6 @@ plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL
 #' data('scMethrix_data')
 #' plot_coverage(scm = scMethrix_data)
 #' @export
-
 plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, perGroup = FALSE,
                           lim = 100, size.lim = 1e+06, col_palette = "RdYlGn", show_legend = TRUE) {
   
@@ -243,6 +242,50 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
             axis.title.y = element_blank(), legend.title = element_blank())
   
   return(p + scMethrix_theme())
+}
+
+#--------------------------------------------------------------------------------------------------------------------------
+#' Sparsity of sample
+#' inheritParams generic_plot_function
+#' @inheritParams generic_scMethrix_function
+#' @param type Choose between 'box' (boxplot) or 'scatter' (scatterplot).
+#' @param pheno phenotype columns
+#' @return ggplot2 object
+#' @examples
+#' data('scMethrix_data')
+#' plot_sparsity(scm = scMethrix_data)
+#' @export
+plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) {
+  
+  Sparsity <- variable <- NULL
+  
+  if (!is(scm, "scMethrix")){
+    stop("A valid scMethrix object needs to be supplied.")
+  }
+  
+  type <- match.arg(arg = type, choices = c("box", "scatter"), several.ok = FALSE)
+  
+  sparsity <- DelayedMatrixStats::colCounts(score(scm),value=NA)
+  
+  if (!is.null(pheno)) {
+    if (pheno %in% colnames(colData(scm))) {
+      pheno <- as.character(scm@colData[, pheno])
+      sparsity <- data.frame(Phenotype = pheno, Sparsity = sparsity/nrow(scm))
+      p <- ggplot(sparsity, aes(x=pheno, y=Sparsity, color = pheno))
+    } else {
+      stop("Please provide a valid phenotype annotation column.")
+    }
+  } else {
+    sparsity <- data.frame(Sparsity = sparsity/nrow(scm))
+    p <- ggplot(sparsity, aes(x="", y=Sparsity))
+  }
+
+  if (type == "box") {p <- p + geom_boxplot()
+  } else if (type == "scatter") {p <- p + geom_point() }
+
+  p <- p + scMethrix_theme() + theme(axis.title.x = element_blank())
+
+  return(p)
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
@@ -341,7 +384,6 @@ plot_melissa <- function() {
   
 }
 
-
 plot_imap <- function(scm) {
   # 
   # x <- y <- NULL
@@ -355,7 +397,6 @@ plot_imap <- function(scm) {
   #   geom_point()
   # 
 }
-
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Plot dimensionality reduction
@@ -552,7 +593,7 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
                                  imp_methods = c(iPCA = impute_by_iPCA, RF = impute_by_RF, kNN = impute_by_kNN),
                                  type = "RMSE") {
   
-  results <- Sparsity <- NRMSE <- Imputation <- AUC <- NULL
+  . <- results <- Sparsity <- NRMSE <- Imputation <- AUC <- NULL
   
   if (type == "AUC") {
     eq = Metrics::auc
@@ -590,9 +631,9 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
 
 #------------------------------------------------------------------------------------------------------------
 #' Theme for ggplot
-#' @param base_size numeric; A sparsity proportion between 0 and 1. E.g. 0.1 replaces 10% of the matrix with NA
-#' @param base_family closure; The imputation methods to compare.
-#' @return list; data for the ggplot theme
+#' @param base_size Size of text
+#' @param base_family Family of text
+#' @return ggplot element; data for the ggplot theme
 #' @export
 scMethrix_theme <- function(base_size = 12, base_family = "") {
 

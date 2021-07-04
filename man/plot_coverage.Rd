@@ -11,7 +11,8 @@ plot_coverage(
   perGroup = FALSE,
   lim = 100,
   size.lim = 1e+06,
-  col_palette = "RdYlGn"
+  col_palette = "RdYlGn",
+  show_legend = TRUE
 )
 }
 \arguments{
@@ -19,7 +20,7 @@ plot_coverage(
 
 \item{type}{Choose between 'hist' (histogram) or 'dens' (density plot).}
 
-\item{pheno}{Row name of colData(m). Will be used as a factor to color different groups in the violin plot.}
+\item{pheno}{Row name of colData(m). Will be used as a factor to color different groups}
 
 \item{perGroup}{Color the plots in a sample-wise manner?}
 
@@ -29,6 +30,8 @@ plot_coverage(
 random sites will be selected from the genome.}
 
 \item{col_palette}{Name of the RColorBrewer palette to use for plotting.}
+
+\item{show_legend}{Display the legend on the plot}
 }
 \value{
 ggplot2 object

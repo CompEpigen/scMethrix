@@ -3,7 +3,7 @@
 \docType{data}
 \name{scMethrix_data}
 \alias{scMethrix_data}
-\title{WGBS for single cell methylome of murine neuronal cells}
+\title{Single cell methylome of murine neuronal cells}
 \format{
 A object of class \code{'scMethrix'}, in-memory format.
 }
@@ -11,7 +11,7 @@ A object of class \code{'scMethrix'}, in-memory format.
 data('scMethrix_data')
 }
 \description{
-This is a subset of the original converted to \code{scMethrix} format
+This is a subset of the original converted to \code{scMethrix} format. See data_gen.R for subset details
 }
 \examples{
 data('scMethrix_data')

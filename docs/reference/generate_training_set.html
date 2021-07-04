@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Exports all samples in an scMethrix objects into individual bedgraph files — export_bed • scMethrix</title>
+<title>Splits an experiment into two for use as a training and test set — generate_training_set • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Exports all samples in an scMethrix objects into individual bedgraph files — export_bed" />
-<meta property="og:description" content="Exports all samples in an scMethrix objects into individual bedgraph files" />
+<meta property="og:title" content="Splits an experiment into two for use as a training and test set — generate_training_set" />
+<meta property="og:description" content="Splits an experiment into two for use as a training and test set" />
 
 
 
@@ -111,16 +111,16 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Exports all samples in an <code><a href='scMethrix-class.html'>scMethrix</a></code> objects into individual bedgraph files</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>export_bed.Rd</code></div>
+    <h1>Splits an experiment into two for use as a training and test set</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_transforms.R'><code>R/scMethrix_transforms.R</code></a></small>
+    <div class="hidden name"><code>generate_training_set.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Exports all samples in an <code><a href='scMethrix-class.html'>scMethrix</a></code> objects into individual bedgraph files</p>
+    <p>Splits an experiment into two for use as a training and test set</p>
     </div>
 
-    <pre class="usage"><span class='fu'>export_bed</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, path <span class='op'>=</span> <span class='cn'>NULL</span>, suffix <span class='op'>=</span> <span class='cn'>NULL</span>, verbose <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>generate_training_set</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, training_prop <span class='op'>=</span> <span class='fl'>0.2</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -130,27 +130,42 @@
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
-      <th>path</th>
-      <td><p>the <code><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></code> of the directory to save the files</p></td>
-    </tr>
-    <tr>
-      <th>suffix</th>
-      <td><p>optional suffix to add to the exported bed files</p></td>
-    </tr>
-    <tr>
-      <th>verbose</th>
-      <td><p>boolean; Flag for outputting function status messages. Default = TRUE</p></td>
+      <th>training_prop</th>
+      <td><p>numeric; The size of the training set as a proportion of the experiment (0 to 1)
+For a range, the optimal value will be estimated; this is time-intensive.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>nothing</p>
+    <p>list; two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects names 'training' and 'test'</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Does stuff</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>export_bed</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,path<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/paste.html'>paste0</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span><span class='op'>(</span><span class='op'>)</span>,<span class='st'>"/export"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Exporting beds to C:\Users\geekb\AppData\Local\Temp\RtmpuMOtXE/export</span></div><div class='output co'>#&gt; <span class='message'>Exported 1 of 4 (0.02s)</span></div><div class='output co'>#&gt; <span class='message'>Exported 2 of 4 (0.01s)</span></div><div class='output co'>#&gt; <span class='message'>Exported 3 of 4 (0.02s)</span></div><div class='output co'>#&gt; <span class='message'>Exported 4 of 4 (0.02s)</span></div><div class='output co'>#&gt; <span class='message'>BEDs exported in in 0.07s</span></div></pre>
+<span class='fu'>generate_training_set</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, training_prop <span class='op'>=</span> <span class='fl'>0.2</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; $training
+#&gt; An object of class scMethrix
+#&gt;    n_CpGs: 20
+#&gt;    n_samples: 4
+#&gt;    assays: score, counts
+#&gt;    reduced dims: 
+#&gt;    is_h5: FALSE
+#&gt;    Reference: hg19
+#&gt;    Physical size: 33.8 Kb
+#&gt; 
+#&gt; $test
+#&gt; An object of class scMethrix
+#&gt;    n_CpGs: 80
+#&gt;    n_samples: 4
+#&gt;    assays: score, counts
+#&gt;    reduced dims: 
+#&gt;    is_h5: FALSE
+#&gt;    Reference: hg19
+#&gt;    Physical size: 36.2 Kb
+#&gt; </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

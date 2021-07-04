@@ -11,6 +11,7 @@ umap_scMethrix(
   top_var = 1000,
   verbose = FALSE,
   n_neighbors = 15,
+  n_components = 2,
   ...
 )
 }
@@ -26,6 +27,8 @@ umap_scMethrix(
 \item{verbose}{flag to output messages or not}
 
 \item{n_neighbors}{integer; number of nearest neighbors}
+
+\item{n_components}{Number of components to use}
 
 \item{...}{list of settings; values overwrite defaults from config;
 see documentation of umap.default for details about available settings}

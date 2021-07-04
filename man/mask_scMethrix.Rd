@@ -39,5 +39,5 @@ by putting NA for coverage and beta value. The sites will remain in the object.
 }
 \examples{
 data('scMethrix_data')
-mask_scMethrix(scMethrix_data,low_count=4,type="counts")
+mask_scMethrix(scMethrix_data,low_count=2,high_quantile=NULL,type="counts")
 }

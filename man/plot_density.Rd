@@ -9,7 +9,8 @@ plot_density(
   ranges = NULL,
   n_cpgs = 25000,
   pheno = NULL,
-  col_palette = "RdYlGn"
+  col_palette = "RdYlGn",
+  show_legend = TRUE
 )
 }
 \arguments{
@@ -19,9 +20,11 @@ plot_density(
 
 \item{n_cpgs}{Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.}
 
-\item{pheno}{Row name of colData(m). Will be used as a factor to color different groups in the violin plot.}
+\item{pheno}{Row name of colData(m). Will be used as a factor to color different groups}
 
 \item{col_palette}{Name of the RColorBrewer palette to use for plotting.}
+
+\item{show_legend}{Display the legend on the plot}
 }
 \value{
 ggplot2 object

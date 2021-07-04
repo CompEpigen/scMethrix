@@ -11,6 +11,7 @@ tsne_scMethrix(
   top_var = 1000,
   perplexity = 30,
   verbose = FALSE,
+  n_components = 2,
   ...
 )
 }
@@ -26,6 +27,8 @@ tsne_scMethrix(
 \item{perplexity}{numeric; Perplexity parameter (should not be bigger than 3 * perplexity < nrow(X) - 1, see details for interpretation)}
 
 \item{verbose}{flag to output messages or not}
+
+\item{n_components}{Number of components to use}
 
 \item{...}{Other arguments that can be passed to Rtsne}
 }

@@ -53,24 +53,28 @@ reference:
   - impute_by_iPCA
   - impute_by_melissa
   - impute_by_RF
+  - impute_by_kNN
+  - generate_training_set
 - subtitle: "Dimensionality Reduction"
 - contents:
   - pca_scMethrix
   - umap_scMethrix
   - tsne_scMethrix
-  - reduce_matrix
+  - reduce_cpgs
 - title: "Plotting"
 - contents: 
   - prepare_plot_data
   - plot_violin
   - plot_density
   - plot_coverage
+  - plot_sparsity
   - plot_stats
   - plot_dim_red
   - plot_pca
   - plot_umap
   - plot_tsne
   - get_palette
+  - benchmark_imputation
 - title: "Misc functions"
 - subtitle: "Transforms"
 - contents: 
@@ -88,3 +92,4 @@ reference:
   - start_time
   - split_time
   - stop_time
+  

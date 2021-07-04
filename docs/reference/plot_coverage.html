@@ -121,13 +121,14 @@
     </div>
 
     <pre class="usage"><span class='fu'>plot_coverage</span><span class='op'>(</span>
-  <span class='va'>scm</span>,
+  scm <span class='op'>=</span> <span class='cn'>NULL</span>,
   type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"hist"</span>, <span class='st'>"dens"</span><span class='op'>)</span>,
   pheno <span class='op'>=</span> <span class='cn'>NULL</span>,
   perGroup <span class='op'>=</span> <span class='cn'>FALSE</span>,
   lim <span class='op'>=</span> <span class='fl'>100</span>,
   size.lim <span class='op'>=</span> <span class='fl'>1e+06</span>,
-  col_palette <span class='op'>=</span> <span class='st'>"RdYlGn"</span>
+  col_palette <span class='op'>=</span> <span class='st'>"RdYlGn"</span>,
+  show_legend <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -135,7 +136,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>scm</th>
-      <td><p>Input <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
       <th>type</th>
@@ -143,7 +144,7 @@
     </tr>
     <tr>
       <th>pheno</th>
-      <td><p>Column name of colData(m). Will be used as a factor to color different groups in the plot.</p></td>
+      <td><p>Row name of colData(m). Will be used as a factor to color different groups</p></td>
     </tr>
     <tr>
       <th>perGroup</th>
