@@ -896,11 +896,16 @@ remove_uncovered <- function(scm = NULL) {
 #--------------------------------------------------------------------------------------------------------------------------
 #' Masks high or low coverage \code{count} or \code{cell} count
 #' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
-#'  by putting NA for coverage and beta value. The sites will remain in the object. 
+#'  by putting NA for assay values. The sites will remain in the object. 
+#'  
+#'  \code{low_total_count} is used to mask sites with low overall counts. A site represented by a single
+#'  sample is typically not useful.
+#'  \code{max_avg_count} is used to mask sites with high aberrant counts. For single cell data, this is typically CpG
+#'  sites with an average count > 2, as there are only two strands in a cell to sequence.'  
+#'  
 #' @inheritParams generic_scMethrix_function
-#' @param low_count The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.
-#' @param high_quantile The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
-#' higher quantile than the defined will be masked. Default = 0.99.
+#' @param low_total_count The minimal count allowed. Everything below will get masked. Default = NULL, nothing gets masked.
+#' @param max_avg_count The max average coverage. Default = 2.
 #' @param n_threads Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
 #' @param type Whether to use the "counts" coverage matrix or "cells" count when masking
 #' @return An object of class \code{\link{scMethrix}}
@@ -909,7 +914,7 @@ remove_uncovered <- function(scm = NULL) {
 #' data('scMethrix_data')
 #' mask_scMethrix(scMethrix_data,low_count=4,type="counts")
 #' @export
-mask_scMethrix <- function(scm = NULL, assay = "score", low_count = 0, high_quantile = 0.99, n_threads=1 ,type="counts") {
+mask_scMethrix <- function(scm = NULL, assay = "score", low_total_count = 0, max_avg_count = 2, n_threads=1 ,type="counts") {
   
   if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
@@ -921,18 +926,17 @@ mask_scMethrix <- function(scm = NULL, assay = "score", low_count = 0, high_quan
   if (!has_cov(scm) && type == "counts") stop("No coverage matrix is present in the object. 
                                               Retry with type='cells'")
   
-  if (!is.null(high_quantile)) {
-    if (type == 'cells') stop("high_quantile cannot be used with 'cells' ")
-    if (high_quantile >= 1 | high_quantile <= 0) stop("High quantile should be between 0 and 1. ")
+  if (!is.null(max_avg_count) && type == 'cells') stop("max_avg_count cannot be used with 'cells' ")
+  
+  if(!is.numeric(low_count)){
+    stop("low_count must be a numeric value.")
   }
   
-  message("Masking CpG sites in ",high_quantile," quintile and ",type, " < ",low_count, start_time())
+  #message("Masking CpG sites...", start_time())
   
   if (!is.null(low_count)) {
-    
-    if(!is.numeric(low_count)){
-      stop("low_count must be a numeric value.")
-    }
+ 
+    if (verbose) message("Masking low count CpG sites...")
     
     n <- nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
     
@@ -943,47 +947,62 @@ mask_scMethrix <- function(scm = NULL, assay = "score", low_count = 0, high_quan
       row_idx <- DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"),na.rm=TRUE) < low_count
     }
     
-    if (sum(row_idx) == 0) stop("No CpGs found with low_count")
-    
     row_idx <- which(row_idx)
     
-    assays(scm)[[1]][row_idx,] <- as.integer(NA)
-    if (has_cov(scm)) assays(scm)[[2]][row_idx,] <- as.integer(NA)
+    if (length(row_idx) == 0) {
+      warning("   No CpGs found with",type,"below",low_total_count)
+      break()
+    } else if (length(row_idx) == nrow(scm)) {
+      warning("   No CpGs were masked with",type,"below",low_total_count)
+      break()
+    } else {
+      #if (verbose) message("   Found",length(row_idx),"CpG sites with count > ", low_total_count)
+    }
+    
+    for (i in length(assays(scm))) {
+      assays(scm)[[i]][row_idx,] <- as.integer(NA)
+    } 
+    
+    n <- n - (nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)))
+    
+    for (i in seq_along(colnames(scm))) {
+      if (n[i]==0) next
+      if (verbose) message(paste0("   Masked ", n[i], " CpGs due to too low numbers in sample ",  colnames(scm)[i], "."))
+    }
+  }
+  
+  if (!is.null(max_avg_count)) {
+    
+    if (verbose) message("   Masking high average count CpG sites...")
+    
+    n <- nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+    
+    row_idx <- which(DelayedMatrixStats::rowMeans2(
+      get_matrix(scm, type="coverage"), na.rm = TRUE) > max_coverage)
 
+    if (length(row_idx) == 0) {
+      warning("No CpGs found with average coverage >",max_avg_count)
+      break()
+    } if (length(row_idx) == nrow(scm)) {
+      warning("No CpGs were masked with average count <",max_avg_count)
+      break()
+    } else {
+      #if (verbose) message("Found",length(row_idx),"CpG sites with average coverage > ", max_coverage)
+    }
+    
+    for (i in length(assays(scm))) {
+      assays(scm)[[i]][row_idx,] <- as.integer(NA)
+    }
+    
     n <- n-(nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)))
     
     for (i in seq_along(colnames(scm))) {
       if (n[i]==0) next
-      message(paste0("   Masked ", n[i], " CpGs due to too low numbers in sample ",  colnames(scm)[i], "."))
+      if (verbose) message(paste0("   Masked ", n[i], " CpGs due to high average coverage in sample ",  colnames(scm)[i], "."))
     }
   }
   
-  if (!is.null(high_quantile)) {
-    
-    message("Masking coverage higher than ",high_quantile * 100," percentile")
-    
-    quantiles <- DelayedMatrixStats::colQuantiles(assays(scm)[[2]], probs = high_quantile,
-                                                  na.rm = TRUE, drop = F)
-    quantiles <- as.vector(quantiles)
-    names(quantiles) <- rownames(scm@colData)
-    
-    row_idx2 <- t(t(assays(scm)[[2]]) > quantiles)
-    
-    if (sum(row_idx2, na.rm = TRUE) == 0) stop("No samples found within in the quantile")
-    
-    assays(scm)[[1]][row_idx2] <- as.integer(NA)
-    assays(scm)[[2]][row_idx2] <- as.integer(NA)
-    
-    n <- DelayedMatrixStats::colSums2(row_idx2, na.rm = T)
-    
-    for (i in seq_along(colnames(scm))) {
-      if (n[i]==0) next
-      message(paste0("Masked ", n[i], " CpGs due to too high coverage in sample ",
-                     colnames(row_idx2)[i], "."))
-    }
-  }
-  
-  message("Masked in ",stop_time())
+  if (verbose) message("Masked in ",stop_time())
   
   return(scm)
 }
