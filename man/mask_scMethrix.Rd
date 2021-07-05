@@ -7,10 +7,11 @@
 mask_scMethrix(
   scm = NULL,
   assay = "score",
-  low_count = 0,
-  high_quantile = 0.99,
+  low_total_count = 0,
+  max_avg_count = 2,
   n_threads = 1,
-  type = "counts"
+  type = "counts",
+  verbose = TRUE
 )
 }
 \arguments{
@@ -18,14 +19,15 @@ mask_scMethrix(
 
 \item{assay}{string; name of an existing assay. Default = "score"}
 
-\item{low_count}{The minimal coverage allowed. Everything below, will get masked. Default = NULL, nothing gets masked.}
+\item{low_total_count}{The minimal count allowed. Everything below will get masked. Default = NULL, nothing gets masked.}
 
-\item{high_quantile}{The quantile limit of coverage. Quantiles are calculated for each sample and everything that belongs to a
-higher quantile than the defined will be masked. Default = 0.99.}
+\item{max_avg_count}{The max average coverage. Default = 2.}
 
 \item{n_threads}{Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.}
 
 \item{type}{Whether to use the "counts" coverage matrix or "cells" count when masking}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 An object of class \code{\link{scMethrix}}
@@ -35,9 +37,14 @@ Masks high or low coverage \code{count} or \code{cell} count
 }
 \details{
 Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
-by putting NA for coverage and beta value. The sites will remain in the object.
+by putting NA for assay values. The sites will remain in the object.
+
+\code{low_total_count} is used to mask sites with low overall counts. A site represented by a single
+sample is typically not useful.
+\code{max_avg_count} is used to mask sites with high aberrant counts. For single cell data, this is typically CpG
+sites with an average count > 2, as there are only two strands in a cell to sequence.'
 }
 \examples{
 data('scMethrix_data')
-mask_scMethrix(scMethrix_data,low_count=2,high_quantile=NULL,type="counts")
+mask_scMethrix(scMethrix_data,low_total_count=2,type="counts")
 }

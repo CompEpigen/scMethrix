@@ -196,10 +196,9 @@ test_that("mask_scMethrix", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(mask_scMethrix(scm))
     expect_error(mask_scMethrix(scm,n_threads=2))
-    expect_error(mask_scMethrix(scm,high_quantile=1,type="cells"))
-    expect_error(mask_scMethrix(scm,high_quantile=5,type="counts"))
+    expect_error(mask_scMethrix(scm,max_avg_count=1,type="cells"))
     
-    m <- mask_scMethrix(scm,low_count=2,high_quantile=NULL,type="cells")
+    m <- mask_scMethrix(scm,low_total_count=5,max_avg_count=2,type="counts")
     
     expect_equivalent(dim(m),c(n_cpg,n_samples))
     expect_equivalent(dim(remove_uncovered(m)),c(219,n_samples))

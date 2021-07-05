@@ -912,9 +912,9 @@ remove_uncovered <- function(scm = NULL) {
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
 #' data('scMethrix_data')
-#' mask_scMethrix(scMethrix_data,low_count=2,high_quantile=NULL,type="counts")
+#' mask_scMethrix(scMethrix_data,low_total_count=2,type="counts")
 #' @export
-mask_scMethrix <- function(scm = NULL, assay = "score", low_total_count = 0, max_avg_count = 2, n_threads=1 ,type="counts") {
+mask_scMethrix <- function(scm = NULL, assay = "score", low_total_count = 0, max_avg_count = 2, n_threads=1 ,type="counts", verbose = TRUE) {
   
   if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
@@ -928,77 +928,82 @@ mask_scMethrix <- function(scm = NULL, assay = "score", low_total_count = 0, max
   
   if (!is.null(max_avg_count) && type == 'cells') stop("max_avg_count cannot be used with 'cells' ")
   
-  if(!is.numeric(low_count)){
-    stop("low_count must be a numeric value.")
+  if(!is.numeric(low_total_count)){
+    stop("low_total_count must be a numeric value.")
   }
   
   #message("Masking CpG sites...", start_time())
   
-  if (!is.null(low_count)) {
+  if (!is.null(low_total_count)) {
  
-    if (verbose) message("Masking low count CpG sites...")
+    if (verbose) message("Masking low count CpG sites...",start_time())
     
     n <- nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
     
     if (type == "cells") {
       row_idx <- DelayedMatrixStats::rowCounts(get_matrix(scm), 
-                                               value = as.integer(NA)) > (nrow(colData(scm))-low_count)
+                                               value = as.integer(NA)) > (nrow(colData(scm))-low_total_count)
     } else {
-      row_idx <- DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"),na.rm=TRUE) < low_count
+      row_idx <- DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"),na.rm=TRUE) < low_total_count
     }
     
     row_idx <- which(row_idx)
     
     if (length(row_idx) == 0) {
-      warning("   No CpGs found with",type,"below",low_total_count)
-      break()
+      message("   No CpGs found with",type,"below",low_total_count)
+      stop = TRUE
     } else if (length(row_idx) == nrow(scm)) {
-      warning("   No CpGs were masked with",type,"below",low_total_count)
-      break()
+      message("   No CpGs were masked with",type,"below",low_total_count)
+      stop = TRUE
     } else {
+      stop = FALSE
       #if (verbose) message("   Found",length(row_idx),"CpG sites with count > ", low_total_count)
     }
-    
-    for (i in length(assays(scm))) {
-      assays(scm)[[i]][row_idx,] <- as.integer(NA)
-    } 
-    
-    n <- n - (nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)))
-    
-    for (i in seq_along(colnames(scm))) {
-      if (n[i]==0) next
-      if (verbose) message(paste0("   Masked ", n[i], " CpGs due to too low numbers in sample ",  colnames(scm)[i], "."))
+
+    if (!stop) {
+      for (i in length(assays(scm))) {
+        assays(scm)[[i]][row_idx,] <- as.integer(NA)
+      } 
+      
+      n <- n - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+      
+      for (i in seq_along(colnames(scm))) {
+        if (n[i]==0) next
+        if (verbose) message(paste0("   Masked ", n[i], " CpGs due to low count in sample ",  colnames(scm)[i], "."))
+      }
     }
   }
   
   if (!is.null(max_avg_count)) {
     
-    if (verbose) message("   Masking high average count CpG sites...")
+    if (verbose) message("Masking high average count CpG sites...")
     
     n <- nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
     
-    row_idx <- which(DelayedMatrixStats::rowMeans2(
-      get_matrix(scm, type="coverage"), na.rm = TRUE) > max_coverage)
+    row_idx <- which(DelayedMatrixStats::rowMeans2(counts(scm), na.rm = TRUE) > max_avg_count)
 
+    stop = FALSE
     if (length(row_idx) == 0) {
-      warning("No CpGs found with average coverage >",max_avg_count)
-      break()
-    } if (length(row_idx) == nrow(scm)) {
-      warning("No CpGs were masked with average count <",max_avg_count)
-      break()
+      message("No CpGs found with average coverage > ",max_avg_count)
+      stop = TRUE
+    } else if (length(row_idx) == nrow(scm)) {
+      message("No CpGs were masked with average count < ",max_avg_count)
+      stop = TRUE
     } else {
-      #if (verbose) message("Found",length(row_idx),"CpG sites with average coverage > ", max_coverage)
+      #if (verbose) message("Found",length(row_idx),"CpG sites with average coverage > ", max_avg_count)
     }
     
-    for (i in length(assays(scm))) {
-      assays(scm)[[i]][row_idx,] <- as.integer(NA)
-    }
-    
-    n <- n-(nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)))
-    
-    for (i in seq_along(colnames(scm))) {
-      if (n[i]==0) next
-      if (verbose) message(paste0("   Masked ", n[i], " CpGs due to high average coverage in sample ",  colnames(scm)[i], "."))
+    if (!stop) {
+      for (i in length(assays(scm))) {
+        assays(scm)[[i]][row_idx,] <- as.integer(NA)
+      }
+      
+      n <- n - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+      
+      for (i in seq_along(colnames(scm))) {
+        if (n[i]==0) next
+        if (verbose) message(paste0("   Masked ", n[i], " CpGs due to high average coverage in sample ",  colnames(scm)[i], "."))
+      }
     }
   }
   
