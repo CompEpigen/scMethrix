@@ -194,13 +194,20 @@ test_that("mask_scMethrix", {
   expect_error(mask_scMethrix("not scMethrix"))
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(mask_scMethrix(scm))
-    expect_error(mask_scMethrix(scm,n_threads=2))
-    expect_error(mask_scMethrix(scm,max_avg_count=1,type="cells"))
+    #expect_error(mask_scMethrix(scm,n_threads=2))
+    #expect_error(mask_scMethrix(scm,max_avg_count=1,type="cells"))
     
-    m <- mask_scMethrix(scm,low_total_count=5,max_avg_count=2,type="counts")
+    m <- mask_scMethrix(scm,low_total_count=2, type="counts")
+    expect_equivalent(dim(m),c(n_cpg,n_samples))
+    expect_equivalent(dim(remove_uncovered(m)),c(232,n_samples))
     
+    m <- mask_scMethrix(scm,max_avg_count=1,type="counts")
+    expect_equivalent(dim(m),c(n_cpg,n_samples))
+    expect_equivalent(dim(remove_uncovered(m)),c(170,n_samples))
+    
+    m <- mask_scMethrix(scm,low_total_count=2,type="cells")
     expect_equivalent(dim(m),c(n_cpg,n_samples))
     expect_equivalent(dim(remove_uncovered(m)),c(219,n_samples))
+    
   }))
 })

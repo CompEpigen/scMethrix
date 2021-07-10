@@ -1,6 +1,7 @@
 #------------------------------------------------------------------------------------------------------------
 #' Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
-#' @details Adds the mean, median and SD for each region in an \code{\link{scMethrix}} object
+#' @details Adds the mean, median, SD, and sample count and coverage (if present) for 
+#' each region in an \code{\link{scMethrix}} object. This can be accessed using mcols().
 #' @inheritParams generic_scMethrix_function
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -40,6 +41,10 @@ get_metadata_stats <- function(scm) {
 
 #------------------------------------------------------------------------------------------------------------
 #' Removes an assay from an \code{\link{scMethrix}} object
+#' @details This will remove an assay from the scMethrix experiment object. All transformed assays
+#' may be removed, as well as the coverage assay (since it is less useful when compared to normal
+#' WGBS data), but the score assay cannot be removed. Reduced dimensionality data will be retained
+#' even if the parent assay is removed.
 #' @inheritParams generic_scMethrix_function
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -67,8 +72,13 @@ remove_assay <- function(scm,assay) {
 
 #------------------------------------------------------------------------------------------------------------
 #' Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
-#' @details Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot
-#' data is not supported at this time. Non-common assays between objects will be dropped
+#' @details Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays
+#' will be dropped, as well as all reduced dimensionality data.
+#' 
+#' If merging by rows, all CpG sites must be unique and samples must be identical
+#' If merging by columns, all samples must be unique and CpG sites must be identical
+#' 
+#' TODO: Check if metadata is saved correctly
 #' @param scm1 A \code{\link{scMethrix}} object
 #' @param scm2 A \code{\link{scMethrix}} object
 #' @param by Merge by columns or rows
@@ -122,7 +132,9 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 #------------------------------------------------------------------------------------------------------------
 #' Converts an \code{\link{scMethrix}} object to methrix object
 #' @details Removes extra slot data from an \code{\link{scMethrix}} object and changes structure to match
-#' \code{\link[methrix]{methrix}} format
+#' \code{\link[methrix]{methrix}} format. A 'counts' assay for coverage values must be present. 
+#' Functionality not supported by methrix (e.g. reduced dimensionality)
+#' will be discarded.
 #' @inheritParams generic_scMethrix_function
 #' @param h5_dir Location to save the methrix H5 file
 #' @return a \code{\link[methrix]{methrix}} object
@@ -162,16 +174,24 @@ convert_to_methrix <- function(scm = NULL, h5_dir = NULL) {
 
 #------------------------------------------------------------------------------------------------------------
 #' Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
+#' @details The structure of the bedgraph files will be a tab-deliminated structure of:
+#' Chromosome | CpG start site | CpG end site | methylation score | coverage | Additional assays (if include)
+#' 
+#' If additional assays are used, and headers enabled, it is up to the user to ensure that assay names are
+#' not protected in any downstream analysis of the bedgraph files
 #' @inheritParams generic_scMethrix_function
-#' @param path the \code{\link{file.path}} of the directory to save the files
-#' @param suffix optional suffix to add to the exported bed files 
+#' @param path character; the \code{\link{file.path}} of the directory to save the files
+#' @param suffix character; optional suffix to add to the exported bed files 
+#' @param include boolean; flag to include the values of non-standard assays in the bedgraph file
+#' @param header boolean; flag to add the header onto each column
+#' @param na.rm boolean; flag to remove the NA values from the output data
 #' @return nothing
 #' @examples
 #' data('scMethrix_data')
 #' export_bed(scMethrix_data,path=paste0(tempdir(),"/export"))
 #' @export
-export_bed <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE) {
-  
+export_bed <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE, include = FALSE, na.rm = TRUE, header = FALSE) {
+
   meth <- cov <- NULL
   
   if (!is(scm, "scMethrix") || is.null(path)){
@@ -192,17 +212,24 @@ export_bed <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE) {
     
     file = files[i]
     
-    val <- as.data.table(get_matrix(scm,assay="score"))[, file, with=FALSE] 
+    val <- score(scm)[, file] 
     rrng[,meth := val]
     
     if (has_cov(scm)) {
-      val <- as.data.table(get_matrix(scm,assay="counts"))[, file, with=FALSE] 
+      val <- counts(scm)[, file] 
       rrng[,cov := val]
     }
-
-    fwrite(stats::na.omit(rrng, cols="meth", invert=FALSE), paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t",
-                row.names = FALSE, col.names = FALSE, quote = FALSE)
     
+    if (include) {
+      assays <- assays(scm)
+    }
+
+    if (na.rm) {  out <- stats::na.omit(rrng, cols="meth", invert=FALSE)
+    } else {      out <- rrng}
+
+    fwrite(out, paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t", row.names = FALSE, 
+           col.names = FALSE, quote = FALSE)
+
     if (verbose) message("Exported ",i," of ",length(files)," (",split_time(), ")")
   }
   
@@ -372,8 +399,8 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
 #' @param cov_thr minimum coverage required to call a loci covered
 #' @param min_samples Minimum number of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
 #' @param prop_samples Minimum proportion of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
-#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
-#' tested group-wise.
+#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be tested group-wise.
+					 
 #' @importFrom methods is as new
 #' @examples
 #' data('scMethrix_data')
@@ -896,7 +923,7 @@ remove_uncovered <- function(scm = NULL) {
 #--------------------------------------------------------------------------------------------------------------------------
 #' Masks high or low coverage \code{count} or \code{cell} count
 #' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
-#'  by putting NA for assay values. The sites will remain in the object. 
+#'  by putting NA for assay values. The sites will remain in the object and all assays will be affected.
 #'  
 #'  \code{low_total_count} is used to mask sites with low overall counts. A site represented by a single
 #'  sample is typically not useful.
@@ -905,7 +932,7 @@ remove_uncovered <- function(scm = NULL) {
 #'  
 #' @inheritParams generic_scMethrix_function
 #' @param low_total_count The minimal count allowed. Everything below will get masked. Default = NULL, nothing gets masked.
-#' @param max_avg_count The max average coverage. Default = 2.
+#' @param max_avg_count The max average coverage. Default = 2. If type="cells" this is ignored.
 #' @param n_threads Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
 #' @param type Whether to use the "counts" coverage matrix or "cells" count when masking
 #' @return An object of class \code{\link{scMethrix}}
@@ -926,8 +953,10 @@ mask_scMethrix <- function(scm = NULL, assay = "score", low_total_count = 0, max
   if (!has_cov(scm) && type == "counts") stop("No coverage matrix is present in the object. 
                                               Retry with type='cells'")
   
-  if (!is.null(max_avg_count) && type == 'cells') stop("max_avg_count cannot be used with 'cells' ")
-  
+  if (!is.null(max_avg_count) && type == 'cells') {
+      max_avg_count = NULL
+  }
+
   if(!is.numeric(low_total_count)){
     stop("low_total_count must be a numeric value.")
   }
@@ -938,7 +967,7 @@ mask_scMethrix <- function(scm = NULL, assay = "score", low_total_count = 0, max
  
     if (verbose) message("Masking low count CpG sites...",start_time())
     
-    n <- nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+    n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
     
     if (type == "cells") {
       row_idx <- DelayedMatrixStats::rowCounts(get_matrix(scm), 
@@ -950,22 +979,15 @@ mask_scMethrix <- function(scm = NULL, assay = "score", low_total_count = 0, max
     row_idx <- which(row_idx)
     
     if (length(row_idx) == 0) {
-      message("   No CpGs found with",type,"below",low_total_count)
-      stop = TRUE
+      message("   No CpGs found with ",type," below ",low_total_count)
     } else if (length(row_idx) == nrow(scm)) {
-      message("   No CpGs were masked with",type,"below",low_total_count)
-      stop = TRUE
+      message("   No CpGs were masked with ",type," below ",low_total_count)
     } else {
-      stop = FALSE
-      #if (verbose) message("   Found",length(row_idx),"CpG sites with count > ", low_total_count)
-    }
-
-    if (!stop) {
-      for (i in length(assays(scm))) {
+      for (i in 1:length(assays(scm))) {
         assays(scm)[[i]][row_idx,] <- as.integer(NA)
       } 
       
-      n <- n - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+      n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)) - n
       
       for (i in seq_along(colnames(scm))) {
         if (n[i]==0) next
@@ -978,27 +1000,20 @@ mask_scMethrix <- function(scm = NULL, assay = "score", low_total_count = 0, max
     
     if (verbose) message("Masking high average count CpG sites...")
     
-    n <- nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+    n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
     
     row_idx <- which(DelayedMatrixStats::rowMeans2(counts(scm), na.rm = TRUE) > max_avg_count)
 
-    stop = FALSE
     if (length(row_idx) == 0) {
-      message("No CpGs found with average coverage > ",max_avg_count)
-      stop = TRUE
+      message("   No CpGs found with average coverage > ",max_avg_count)
     } else if (length(row_idx) == nrow(scm)) {
-      message("No CpGs were masked with average count < ",max_avg_count)
-      stop = TRUE
+      message("   No CpGs were masked with average count < ",max_avg_count)
     } else {
-      #if (verbose) message("Found",length(row_idx),"CpG sites with average coverage > ", max_avg_count)
-    }
-    
-    if (!stop) {
-      for (i in length(assays(scm))) {
+      for (i in 1:length(assays(scm))) {
         assays(scm)[[i]][row_idx,] <- as.integer(NA)
       }
       
-      n <- n - DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+      n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)) - n
       
       for (i in seq_along(colnames(scm))) {
         if (n[i]==0) next

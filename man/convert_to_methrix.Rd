@@ -19,7 +19,9 @@ Converts an \code{\link{scMethrix}} object to methrix object
 }
 \details{
 Removes extra slot data from an \code{\link{scMethrix}} object and changes structure to match
-\code{\link[methrix]{methrix}} format
+\code{\link[methrix]{methrix}} format. A 'counts' assay for coverage values must be present.
+Functionality not supported by methrix (e.g. reduced dimensionality)
+will be discarded.
 }
 \examples{
 data('scMethrix_data')

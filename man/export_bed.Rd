@@ -4,22 +4,43 @@
 \alias{export_bed}
 \title{Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files}
 \usage{
-export_bed(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE)
+export_bed(
+  scm = NULL,
+  path = NULL,
+  suffix = NULL,
+  verbose = TRUE,
+  include = FALSE,
+  na.rm = TRUE,
+  header = FALSE
+)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{path}{the \code{\link{file.path}} of the directory to save the files}
+\item{path}{character; the \code{\link{file.path}} of the directory to save the files}
 
-\item{suffix}{optional suffix to add to the exported bed files}
+\item{suffix}{character; optional suffix to add to the exported bed files}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
+
+\item{include}{boolean; flag to include the values of non-standard assays in the bedgraph file}
+
+\item{na.rm}{boolean; flag to remove the NA values from the output data}
+
+\item{header}{boolean; flag to add the header onto each column}
 }
 \value{
 nothing
 }
 \description{
 Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
+}
+\details{
+The structure of the bedgraph files will be a tab-deliminated structure of:
+Chromosome | CpG start site | CpG end site | methylation score | coverage | Additional assays (if include)
+
+If additional assays are used, and headers enabled, it is up to the user to ensure that assay names are
+not protected in any downstream analysis of the bedgraph files
 }
 \examples{
 data('scMethrix_data')

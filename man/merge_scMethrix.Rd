@@ -20,8 +20,13 @@ A merged \code{\link{scMethrix}} object
 Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
 }
 \details{
-Merges the base assay data from two \code{\link{scMethrix}} objects. Merging of additional slot
-data is not supported at this time. Non-common assays between objects will be dropped
+Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays
+will be dropped, as well as all reduced dimensionality data.
+
+If merging by rows, all CpG sites must be unique and samples must be identical
+If merging by columns, all samples must be unique and CpG sites must be identical
+
+TODO: Check if metadata is saved correctly
 }
 \examples{
 data('scMethrix_data')

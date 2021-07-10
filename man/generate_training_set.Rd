@@ -4,13 +4,15 @@
 \alias{generate_training_set}
 \title{Splits an experiment into two for use as a training and test set}
 \usage{
-generate_training_set(scm = NULL, training_prop = 0.2)
+generate_training_set(scm = NULL, training_prop = 0.2, seed = "123")
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{training_prop}{numeric; The size of the training set as a proportion of the experiment (0 to 1)
 For a range, the optimal value will be estimated; this is time-intensive.}
+
+\item{seed}{string; value to use for sampling}
 }
 \value{
 list; two \code{\link{scMethrix}} objects names 'training' and 'test'

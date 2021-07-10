@@ -23,8 +23,7 @@ coverage_filter(
 
 \item{prop_samples}{Minimum proportion of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.}
 
-\item{group}{a column name from sample annotation that defines groups. In this case, the number of min_samples will be
-tested group-wise.}
+\item{group}{a column name from sample annotation that defines groups. In this case, the number of min_samples will be tested group-wise.}
 
 \item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1}
 

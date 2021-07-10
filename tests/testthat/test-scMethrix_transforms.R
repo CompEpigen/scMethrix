@@ -33,7 +33,7 @@ test_that("impute_by_iPCA", {
 })
 
 test_that("impute_by_RF", {
-  imputation_test_helper(impute_by_RF)
+  expect_warning(imputation_test_helper(impute_by_RF))
 })
 
 test_that("impute_by_kNN", {

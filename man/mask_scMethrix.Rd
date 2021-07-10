@@ -21,7 +21,7 @@ mask_scMethrix(
 
 \item{low_total_count}{The minimal count allowed. Everything below will get masked. Default = NULL, nothing gets masked.}
 
-\item{max_avg_count}{The max average coverage. Default = 2.}
+\item{max_avg_count}{The max average coverage. Default = 2. If type="cells" this is ignored.}
 
 \item{n_threads}{Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.}
 
@@ -37,7 +37,7 @@ Masks high or low coverage \code{count} or \code{cell} count
 }
 \details{
 Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
-by putting NA for assay values. The sites will remain in the object.
+by putting NA for assay values. The sites will remain in the object and all assays will be affected.
 
 \code{low_total_count} is used to mask sites with low overall counts. A site represented by a single
 sample is typically not useful.
