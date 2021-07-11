@@ -141,7 +141,6 @@ test_that("get_matrix", {
       
       s <- get_matrix(scm,order_by_sd = TRUE)
       expect_false(is.unsorted(rev(rowSds(s,na.rm=TRUE)),na.rm=TRUE))
-      
   }))
 })
 
@@ -199,10 +198,12 @@ test_that("mask_scMethrix", {
     
     m <- mask_scMethrix(scm,low_total_count=2, type="counts")
     expect_equivalent(dim(m),c(n_cpg,n_samples))
+    expect_equivalent(dim(score(m)),dim(counts(m)))
     expect_equivalent(dim(remove_uncovered(m)),c(232,n_samples))
     
     m <- mask_scMethrix(scm,max_avg_count=1,type="counts")
     expect_equivalent(dim(m),c(n_cpg,n_samples))
+    expect_equivalent(dim(score(m)),dim(counts(m)))
     expect_equivalent(dim(remove_uncovered(m)),c(170,n_samples))
     
     m <- mask_scMethrix(scm,low_total_count=2,type="cells")
