@@ -4,16 +4,32 @@
 \alias{bin_scMethrix}
 \title{Bins the ranges of an \code{\link{scMethrix}} object.}
 \usage{
-bin_scMethrix(scm, bin_size = 1e+05, trans = NULL, h5_dir = NULL)
+bin_scMethrix(
+  scm,
+  regions = NULL,
+  bin_size = 1e+05,
+  bin_by = "cpg",
+  trans = NULL,
+  overlap_type = "within",
+  h5_dir = NULL
+)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{bin_size}{The size of each bin. First bin will begin at the start position of the first genomic
-region on the chromosome}
+\item{regions}{The regions from which to make the bins}
 
-\item{trans}{The transforms for each assay. Must be a named vector of functions (closure).
-Default = mean(.., na.rm=TRUE)}
+\item{bin_size}{integer; The size of each bin. First bin will begin at the start position of the first genomic
+region on the chromosome. If NULL, there will be one bin per region. Default 100000.}
+
+\item{bin_by}{character; can create bins by # of base pairs ("bp") or by # of CpG sites ("cpg"). Default "bp"}
+
+\item{trans}{The transforms for each assay. Must be a named vector of functions (closure). Default NULL, meaning that
+operations for "counts" assay is sum(.., na.rm=TRUE), and for all other assays is mean(.., na.rm=TRUE)}
+
+\item{overlap_type}{character; defines the type of the overlap of the CpG sites with the target region.
+Default value is \code{within}. For detailed description,
+see the \code{findOverlaps} function of the \code{\link{IRanges}} package.}
 
 \item{h5_dir}{directory to store H5 based object}
 }
@@ -25,9 +41,12 @@ Bins the ranges of an \code{\link{scMethrix}} object.
 }
 \details{
 Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
+
+In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs
 }
 \examples{
 data('scMethrix_data')
-trans <- c(score = function(x) mean(x,na.rm=TRUE),counts = function(x) sum(x,na.rm=TRUE))
-bin_scMethrix(scMethrix_data,trans = trans)
+regions <- GRanges(seqnames = c("chr1"), ranges = IRanges(1,200000000)) 
+regions <- unlist(tile(regions,10))
+bin_scMethrix(scMethrix_data, regions = regions)
 }

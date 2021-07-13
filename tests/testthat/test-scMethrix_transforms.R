@@ -5,8 +5,8 @@ test_that("bin_scMethrix", {
   
   #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   invisible(lapply(list(scm.mem), function(scm) {
-    bin <- bin_scMethrix(scm,bin_size = 10000000, h5_dir = paste0(tempdir(),"/bin"))
-    expect_equivalent(dim(bin),c(37,4))
+    bin <- bin_scMethrix(scm,h5_dir = paste0(tempdir(),"/bin"))
+    expect_equivalent(dim(bin),c(2,4))
     rm(bin)
   }))
 })

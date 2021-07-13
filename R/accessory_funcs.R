@@ -114,14 +114,13 @@ split_vector = function(vec, num = 1, by = "chunks") {
 #' @examples
 #' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
 #' regions <- bin_granges(regions,bin_size=1)
-#' (regions)
 #' split_granges(regions, chunks=10)
 #' split_granges(regions, percent=10)
 #' split_granges(regions, size=10)
 #' @export
 split_granges = function(gr,chunks = NA, percent = NA, size = NA) { #=NULL, percent = NULL
 
-    if (sum(is.na(c(chunks,percent,size))) != 2) stop("Max 1 argument for chunking.")
+  if (sum(is.na(c(chunks,percent,size))) != 2) stop("Max 1 argument for chunking.")
   
   if (!is.na(percent)) {
     size <- floor(length(gr)*percent/(100))
@@ -280,4 +279,3 @@ subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   
   return(sub_cpgs)
 }
-

@@ -28,7 +28,6 @@ If \code{len(gr) \%\% number != 0}, then the last vector will have a length of l
 \examples{
 regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
 regions <- bin_granges(regions,bin_size=1)
-(regions)
 split_granges(regions, chunks=10)
 split_granges(regions, percent=10)
 split_granges(regions, size=10)

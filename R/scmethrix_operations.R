@@ -290,10 +290,6 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
     stop("No overlaps detected")
   }
   
-  if(nrow(overlap_indices) == 0){
-    stop("No overlaps detected")
-  }
-  
   colnames(overlap_indices) <- c("xid", "yid")
   overlap_indices[,yid := paste0("rid_", yid)]
   n_overlap_cpgs = overlap_indices[, .N, yid]
@@ -767,7 +763,7 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
   }
   
   message("Getting descriptive statistics...",start_time())
-  
+
   ends <- len <- seqnames(scm)@lengths
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
   starts <- head(c(1, ends + 1), -1)
