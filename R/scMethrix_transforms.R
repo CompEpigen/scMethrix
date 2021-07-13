@@ -81,7 +81,7 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
 #' regions <- unlist(tile(regions,10))
 #' bin_scMethrix(scMethrix_data, regions = regions)
 #' @export
-bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "cpg", trans = NULL, 
+bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp", trans = NULL, 
                           overlap_type = "within", h5_dir = NULL) {
 
   yid <- NULL
@@ -101,7 +101,7 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "cpg"
   if (!is.null(regions)) {
     regions = cast_granges(regions)
     scm <- subset_scMethrix(scm, regions = regions) 
-  } else {
+  } else { # If no region is specifed, use entire chromosomes
     regions = range(rowRanges(scm))
   }
  
@@ -115,88 +115,86 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "cpg"
 
   colnames(overlap_indices) <- c("xid", "yid")
   overlap_indices[,yid := paste0("rid_", yid)]
-  n_overlap_cpgs = overlap_indices[, .N, yid]
-  colnames(n_overlap_cpgs) = c('rid', 'n_overlap_CpGs')
-  regions$n_cpgs = n_overlap_cpgs$n_overlap_CpGs
   
+  if (!is.null(bin_size)) {
+
+      if (bin_by == "cpg") {
+
+        rrng <- lapply(regions$rid,function (rid) {  
+          
+          idx <- which(overlap_indices[,yid == rid])
+          idx <- split_vector(idx,num = bin_size, by = "size")
+        
+          rrng <- lapply(idx, function(i) {
+            rrng <- range(rowRanges(scm[c(i[1],i[length(i)]),]))
+            rrng$n_cpgs <- length(i)
+            rrng
+          })
+          
+          do.call("c", rrng)
+        })
+
+        rrng <- do.call("c", rrng)
+        
+      } else if (bin_by == "bp") {
+        
+        rrng <- tile(regions, width = bin_size) #TODO: Should switch this to using RLE lookup
+        rrng <- do.call("c", rrng)
+        
+        idx <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type))
+        
+        rrng <- rrng[unique(idx$subjectHits)]
+        rrng$n_cpgs <- rle(idx$subjectHits)$lengths
+        
+      }
+  } else { # If no bin_size is specified, use the entire region
+    rrng <- regions
+  }
+
   assays <- list()
   
+  rrng$rid <- paste0("rid_", 1:length(rrng))
+  overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type)) #GenomicRanges::findOverlaps(rowRanges(m), regions)@from
+  colnames(overlap_indices) <- c("xid", "yid")
+  overlap_indices[,yid := paste0("rid_", yid)]
+ 
   for (name in SummarizedExperiment::assayNames(scm)) {
 
-    assay <- lapply(regions$rid,function (rid) {  
+    assay <- lapply(rrng$rid,function (rid) {  
 
-      #browser()
-      
-      idx <- which(overlap_indices[,yid == rid])
-      
-      if (!is.null(bin_size)) {
-        if (bin_by == "cpg") {
-          
-          idx <- split_vector(idx,num = bin_size, by = "size")
-          
-        } else if (bin_by == "bp") {
-          
-        
-        }
-      } else {
-        idx <- list(idx)
-      }
-      
-      # Gets the operation from the trans list, or defaults to mean
-      
-      if (is.null(trans[[name]])) {
+      if (is.null(trans[[name]])) { # If no named vector is specified, default to mean
         op <- function(x) mean(x,na.rm=TRUE)
       } else {
         op <- trans[[name]]
       }
       
-      # op <- tryCatch(
-      #   expr = {trans[[name]]},
-      #   error = function(e) {function(x) mean(x,na.rm=TRUE)}
-      # )
-
       if (is_h5(scm)) {
-      
+        
         # Do things 
         
       } else {
-      
-        vals <- lapply(idx,function (i) {
-          as.data.table(get_matrix(scm[i,],assay=name))[, lapply(.SD, op)]
-        }) 
-        
-        vals <- rbindlist(lapply(vals, as.data.frame.list))
-  
+        idx <- which(overlap_indices[,yid == rid])
+        vals <- as.data.table(get_matrix(scm[idx,],assay=name))[, lapply(.SD, op)]
       }
       
       return (vals)
       
     })
     
-    assay <- rbindlist(lapply(assay, as.data.frame.list))
-      
-    assays[[name]] <- as(assay,class(get_matrix(scm,assay=name)))
+    assays[[name]] <- as(rbindlist(assay),class(get_matrix(scm,assay=name)))
       
   }
   
-  regions$rid <- NULL
+  rrng$rid <- NULL
   
   if (is_h5(scm)) {
-    
-    m_obj <- create_scMethrix(assays = assays, rowRanges=regions, is_hdf5 = TRUE, 
+    m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),
-                              replace = replace)
-    
-    
-    
+                              replace = replace)  
   } else {
-    
-    m_obj <- create_scMethrix(assays = assays, rowRanges=regions, is_hdf5 = FALSE, 
+    m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_hdf5 = FALSE, 
                               genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),)
-    
   }
-
-  
   
   return (m_obj)
 }
