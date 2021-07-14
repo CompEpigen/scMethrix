@@ -8,7 +8,7 @@ bin_scMethrix(
   scm,
   regions = NULL,
   bin_size = 1e+05,
-  bin_by = "cpg",
+  bin_by = "bp",
   trans = NULL,
   overlap_type = "within",
   h5_dir = NULL

@@ -87,7 +87,7 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
   yid <- NULL
   
   if (is.null(trans)) {
-    trans <- c(counts = function(x) sum(x,na.rm=TRUE))
+    trans <- c(counts = function(x) DelayedMatrixStats::colSums2(x,na.rm=TRUE))
   }
   
   if (!is(scm, "scMethrix")) {
@@ -115,38 +115,52 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
 
   colnames(overlap_indices) <- c("xid", "yid")
   overlap_indices[,yid := paste0("rid_", yid)]
-  
+
   if (!is.null(bin_size)) {
 
       if (bin_by == "cpg") {
 
-        rrng <- lapply(regions$rid,function (rid) {  
+        rrng = GRanges()
+        
+        for(rid in regions$rid) {
           
           idx <- which(overlap_indices[,yid == rid])
           idx <- split_vector(idx,num = bin_size, by = "size")
-        
-          rrng <- lapply(idx, function(i) {
-            rrng <- range(rowRanges(scm[c(i[1],i[length(i)]),]))
-            rrng$n_cpgs <- length(i)
-            rrng
-          })
           
-          do.call("c", rrng)
-        })
+          for(i in idx) {
+            gr <- range(rowRanges(scm[c(i[1],i[length(i)]),]))
+            gr$n_cpgs <- length(i)
+            rrng <- c(rrng,gr)
+          }
+        }
 
-        rrng <- do.call("c", rrng)
+        # rrng <- lapply(regions$rid,function (rid) {  
+        #   
+        #   idx <- which(overlap_indices[,yid == rid])
+        #   idx <- split_vector(idx,num = bin_size, by = "size")
+        #   
+        #   rrng <- lapply(idx, function(i) {
+        #     rrng <- range(rowRanges(scm[c(i[1],i[length(i)]),]))
+        #     rrng$n_cpgs <- length(i)
+        #     rrng
+        #   })
+        #   
+        #   
+        # })
+        # 
+        # rrng <- do.call("c", rrng)
+        # rrng <- do.call("c", rrng) #intentional to switch list of list of Granges to a single Granges
         
       } else if (bin_by == "bp") {
         
-        rrng <- tile(regions, width = bin_size) #TODO: Should switch this to using RLE lookup
-        rrng <- do.call("c", rrng)
+        rrng <- unlist(tile(regions, width = bin_size)) #TODO: Should switch this to using RLE lookup
         
         idx <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type))
         
         rrng <- rrng[unique(idx$subjectHits)]
         rrng$n_cpgs <- rle(idx$subjectHits)$lengths
-        
       }
+    
   } else { # If no bin_size is specified, use the entire region
     rrng <- regions
   }
@@ -159,25 +173,32 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
   overlap_indices[,yid := paste0("rid_", yid)]
  
   for (name in SummarizedExperiment::assayNames(scm)) {
-
+    
+    if (is.null(trans[[name]])) { # If no named vector is specified, default to mean
+      op <- function(x) DelayedMatrixStats::colMeans2(x,na.rm=TRUE)
+    } else {
+      op <- trans[[name]]
+    }
+    
     assay <- lapply(rrng$rid,function (rid) {  
 
-      if (is.null(trans[[name]])) { # If no named vector is specified, default to mean
-        op <- function(x) mean(x,na.rm=TRUE)
-      } else {
-        op <- trans[[name]]
-      }
-      
       if (is_h5(scm)) {
         
         # Do things 
         
       } else {
         idx <- which(overlap_indices[,yid == rid])
-        vals <- as.data.table(get_matrix(scm[idx,],assay=name))[, lapply(.SD, op)]
+        vals <- get_matrix(scm[idx,],assay=name)
+        names <- colnames(vals)
+
+        vals <- op(vals)
+        names(vals) <- names
       }
       
-      return (vals)
+      # message(rid,": ",vals)
+      # if (rid == "rid_2629") browser()
+      
+      return (data.frame(t(vals)))
       
     })
     
@@ -195,7 +216,7 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
     m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_hdf5 = FALSE, 
                               genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),)
   }
-  
+    
   return (m_obj)
 }
 

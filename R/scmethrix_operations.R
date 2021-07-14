@@ -252,6 +252,7 @@ export_bed <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE, i
 #' @param n_threads Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
 #' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
 #' tested group-wise.
+#' @importFrom methods setClass
 #' @return table of summary statistic for the given region
 #' @examples
 #' data('scMethrix_data')
