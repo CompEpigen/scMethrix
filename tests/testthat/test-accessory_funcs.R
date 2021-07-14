@@ -8,8 +8,7 @@ test_that("get_sample_name", {
 })
 
 test_that("binarize", {
-  expect_equal(binarize(75),1)
-  expect_equal(binarize(25),0)
+  expect_equal(binarize(c(0,0,100,100,75,NA)),c(0,0,1,1,1,NA))
 })
 
 test_that("bin_granges",{

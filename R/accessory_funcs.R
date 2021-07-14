@@ -35,28 +35,23 @@ get_sample_name = function(s) {
 #' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
 #'  If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as -1
 #' @param x A value to binarize
-#' @param threshold The threshold for binarizing
-#' @return 1 or 0, if above of below the threshold, or -1 if NA
+#' @param threshold The threshold for binarizing. Will default to the center number between max and min.
+#' @param rep_na The value to replace missing values with. Default NA. 
+#' @param verbose boolean; flag for whether to display threshold or not
+#' @return 1 or 0, if above of below the threshold, or 'rep.na' if NA
 #' @examples
 #' vals <- c(0,0.25,0.5,0.75,1,NA)
 #' binarize(vals, threshold=0.5)
 #' @export
-binarize = function(x,threshold = 50) {
-    ifelse(is.na(x),-1, ifelse(x > threshold,1,0))
-}
-
-#' Binarize an input value based on a \code{threshold}
-#' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
-#'  If \code{x} = \code{threshold}, \code{x} = 0.
-#' @param x A value to binarize
-#' @param threshold The threshold for binarizing
-#' @return 1 or 0, if above of below the threshold
-#' @examples
-#' vals <- c(0,0.25,0.5,0.75,1)
-#' binarize(vals, threshold=0.5)
-#' @export
-binarize2 = function(x,threshold = 50) {
-  ifelse(is.na(x),NA, ifelse(x > threshold,1,0))
+binarize = function(x,threshold = NULL, rep_na = NA, verbose = FALSE) {
+  if(is.null(threshold)) {
+    threshold <- (max(x,na.rm=TRUE)-min(x,na.rm=TRUE))/2
+    if (verbose) message("Threshold: ", threshold)
+  }
+  x[x <= threshold] <- 0
+  x[x  > threshold] <- 1
+  x[is.na(x)] <- rep_na
+  return(x)
 }
 
 #' Splits a vector into subvectors by \code{chunk} or \code{size}

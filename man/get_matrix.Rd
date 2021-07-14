@@ -6,20 +6,20 @@
 \usage{
 get_matrix(
   scm = NULL,
+  assay = "score",
   add_loci = FALSE,
   in_granges = FALSE,
-  assay = "score",
   order_by_sd = FALSE
 )
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
+\item{assay}{string; name of an existing assay. Default = "score"}
+
 \item{add_loci}{Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table}
 
 \item{in_granges}{Do you want the outcome in \code{\link{GRanges}}?}
-
-\item{assay}{string; name of an existing assay. Default = "score"}
 
 \item{order_by_sd}{Order output matrix by standard deviation}
 }

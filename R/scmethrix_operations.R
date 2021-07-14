@@ -416,7 +416,7 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
 #' get_matrix(scMethrix_data, order_by_sd = TRUE)
 #' @export
 #--------------------------------------------------------------------------------------------------------------------------
-get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, assay = "score", order_by_sd=FALSE) {
+get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges=FALSE, order_by_sd=FALSE) {
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)

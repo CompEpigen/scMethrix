@@ -4,15 +4,19 @@
 \alias{binarize}
 \title{Binarize an input value based on a \code{threshold}}
 \usage{
-binarize(x, threshold = 50)
+binarize(x, threshold = NULL, rep_na = NA, verbose = FALSE)
 }
 \arguments{
 \item{x}{A value to binarize}
 
-\item{threshold}{The threshold for binarizing}
+\item{threshold}{The threshold for binarizing. Will default to the center number between max and min.}
+
+\item{rep_na}{The value to replace missing values with. Default NA.}
+
+\item{verbose}{boolean; flag for whether to display threshold or not}
 }
 \value{
-1 or 0, if above of below the threshold, or -1 if NA
+1 or 0, if above of below the threshold, or 'rep.na' if NA
 }
 \description{
 Binarize an input value based on a \code{threshold}
