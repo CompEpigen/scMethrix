@@ -120,7 +120,7 @@
     <p>Splits an experiment into two for use as a training and test set</p>
     </div>
 
-    <pre class="usage"><span class='fu'>generate_training_set</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, training_prop <span class='op'>=</span> <span class='fl'>0.2</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>generate_training_set</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, training_prop <span class='op'>=</span> <span class='fl'>0.2</span>, seed <span class='op'>=</span> <span class='st'>"123"</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -133,6 +133,10 @@
       <th>training_prop</th>
       <td><p>numeric; The size of the training set as a proportion of the experiment (0 to 1)
 For a range, the optimal value will be estimated; this is time-intensive.</p></td>
+    </tr>
+    <tr>
+      <th>seed</th>
+      <td><p>string; value to use for sampling</p></td>
     </tr>
     </table>
 

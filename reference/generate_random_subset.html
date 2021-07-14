@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Merges two scMethrix objects by row or col — merge_scMethrix • scMethrix</title>
+<title>Generates a random subset of CpG sites — generate_random_subset • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Merges two scMethrix objects by row or col — merge_scMethrix" />
-<meta property="og:description" content="Merges two scMethrix objects by row or col" />
+<meta property="og:title" content="Generates a random subset of CpG sites — generate_random_subset" />
+<meta property="og:description" content="Generates a random subset of CpG sites" />
 
 
 
@@ -111,56 +111,52 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Merges two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects by <code>row</code> or <code>col</code></h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>merge_scMethrix.Rd</code></div>
+    <h1>Generates a random subset of CpG sites</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_transforms.R'><code>R/scMethrix_transforms.R</code></a></small>
+    <div class="hidden name"><code>generate_random_subset.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Merges two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects by <code>row</code> or <code>col</code></p>
+    <p>Generates a random subset of CpG sites</p>
     </div>
 
-    <pre class="usage"><span class='fu'>merge_scMethrix</span><span class='op'>(</span>scm1 <span class='op'>=</span> <span class='cn'>NULL</span>, scm2 <span class='op'>=</span> <span class='cn'>NULL</span>, by <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"row"</span>, <span class='st'>"col"</span><span class='op'>)</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>generate_random_subset</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, n_cpgs <span class='op'>=</span> <span class='fl'>10000</span>, seed <span class='op'>=</span> <span class='st'>"123"</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>scm1</th>
-      <td><p>A <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+      <th>scm</th>
+      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
-      <th>scm2</th>
-      <td><p>A <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+      <th>n_cpgs</th>
+      <td><p>numeric; The number of CpGs to include</p></td>
     </tr>
     <tr>
-      <th>by</th>
-      <td><p>Merge by columns or rows</p></td>
+      <th>seed</th>
+      <td><p>string; value to use for sampling</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A merged <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p>
+    <p>scMethrix; an experiment with n_cpgs</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Merges the assay data from two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects. Assays not shared between assays
-will be dropped, as well as all reduced dimensionality data.</p>
-<p>If merging by rows, all CpG sites must be unique and samples must be identical
-If merging by columns, all samples must be unique and CpG sites must be identical</p>
-<p>TODO: Check if metadata is saved correctly</p>
+    <p>Does stuff</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>merge_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>[</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>5</span><span class='op'>]</span>,<span class='va'>scMethrix_data</span><span class='op'>[</span><span class='fl'>6</span><span class='op'>:</span><span class='fl'>10</span><span class='op'>]</span>,by<span class='op'>=</span><span class='st'>"row"</span><span class='op'>)</span>
+<span class='fu'>generate_random_subset</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,n_cpgs <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Round.html'>round</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>)</span><span class='op'>/</span><span class='fl'>2</span><span class='op'>)</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 10
+#&gt;    n_CpGs: 143
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts
 #&gt;    reduced dims: 
 #&gt;    is_h5: FALSE
 #&gt;    Reference: hg19
-#&gt;    Physical size: 31.7 Kb</div></pre>
+#&gt;    Physical size: 35.7 Kb</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
