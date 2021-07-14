@@ -281,7 +281,12 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
   how = match.arg(arg = how, choices = c('mean', 'median', 'max', 'min', 'sum', 'sd'))
   yid  <- NULL
   
-  regions = cast_granges(regions)
+  if (!is.null(regions)) {
+    regions = cast_granges(regions)
+  } else { # If no region is specifed, use entire chromosomes
+    regions = range(rowRanges(scm))
+  }
+  
   regions$rid <- paste0("rid_", 1:length(regions))
   
   overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type)) #GenomicRanges::findOverlaps(rowRanges(m), regions)@from
@@ -303,40 +308,37 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
     }
   } else {
     
-    stop("Chunking not enabled")
-    
-    # if(nrow(overlap_indices) < n_chunks){
-    #   n_chunks <- nrow(overlap_indices)
-    #   warning("Fewer overlaps indicies than n_chunks. Defaulting to n_chunks = ",n_chunks)
-    # }
-    # 
-    # if (n_chunks < n_threads) {
-    #   n_threads <- n_chunks
-    #   warning("n_threads < n_chunks. Defaulting to n_threads = ",n_threads)
-    # }
-    # 
-    # cl <- parallel::makeCluster(n_threads)  
-    # doParallel::registerDoParallel(cl)  
-    # 
-    # parallel::clusterEvalQ(cl, c(library(data.table), sink(paste0("D:/Git/scMethrix/", Sys.getpid(), ".txt"))))
-    # parallel::clusterExport(cl,list('m','scMethrix','type', 'get_matrix','start_time','split_time','stop_time'))
-    # 
-    # chunk_overlaps <- split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid) /
-    #                                                     ceiling(length(overlap_indices$xid)/n_chunks)))
-    # 
-    # data = c(parallel::parLapply(cl,chunk_overlaps,fun=function(i) {
-    #   cat("Looking for i =",i,typeof(i))
-    #   get_matrix(m[i,], type = type, add_loci = TRUE) # TODO: object of type 'S4' is not subsettable
-    # }))
-    # 
-    # # data = lapply(chunk_overlaps,FUN=function(i) {
-    # #   cat("Looking for i =",toString(i))
-    # #   get_matrix(m[i,], type = type, add_loci = TRUE)
-    # # })
-    # 
-    # parallel::stopCluster(cl)
-    # 
-    # data <- rbindlist(data)
+    #stop("Chunking not enabled")
+
+    if(nrow(overlap_indices) < n_chunks){
+      n_chunks <- nrow(overlap_indices)
+      warning("Fewer overlaps indicies than n_chunks. Defaulting to n_chunks = ",n_chunks)
+    }
+
+    if (n_chunks < n_threads) {
+      n_threads <- n_chunks
+      warning("n_threads < n_chunks. Defaulting to n_threads = ",n_threads)
+    }
+
+    cl <- parallel::makeCluster(n_threads)
+    doParallel::registerDoParallel(cl)
+
+    parallel::clusterEvalQ(cl, c(library(data.table), library(SingleCellExperiment), sink(paste0("D:/Git/scMethrix/", Sys.getpid(), ".txt"))))
+    parallel::clusterEvalQ(cl, expr={
+      scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")
+    })
+    parallel::clusterExport(cl,list('scm','scMethrix','type','is_h5','get_matrix','start_time','split_time','stop_time'))
+
+    chunk_overlaps <- split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid) /
+                                                        ceiling(length(overlap_indices$xid)/n_chunks)))
+
+    data <- parallel::parLapply(cl,chunk_overlaps,fun=function(i) {
+      get_matrix(scm[i,], assay = type, add_loci = TRUE) # TODO: object of type 'S4' is not subsettable
+    })
+
+    parallel::stopCluster(cl)
+
+    data <- rbindlist(data)
     
   }
   
@@ -387,6 +389,74 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
   return(output)
 }
 
+
+#--------------------------------------------------------------------------------------------------------------------------
+#' Extract assays from an \code{\link{scMethrix}} object
+#' @details Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
+#' @inheritParams generic_scMethrix_function
+#' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
+#' @param in_granges Do you want the outcome in \code{\link{GRanges}}?
+#' @param order_by_sd Order output matrix by standard deviation
+#' @return HDF5Matrix or matrix
+#' @import SummarizedExperiment
+#' @examples
+#' data('scMethrix_data')
+#' 
+#' # Get methylation data
+#' get_matrix(scMethrix_data)
+#' 
+#' # Get methylation data with loci
+#' get_matrix(scMethrix_data, add_loci=TRUE)
+#' 
+#' # Get methylation data with loci inside a Granges object 
+#' get_matrix(scMethrix_data, add_loci=TRUE, in_granges=TRUE)
+#' 
+#' # Get methylation data sorted by SD
+#' get_matrix(scMethrix_data, order_by_sd = TRUE)
+#' @export
+#--------------------------------------------------------------------------------------------------------------------------
+get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, assay = "score", order_by_sd=FALSE) {
+  
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (add_loci == FALSE & in_granges == TRUE) {
+    warning("Without genomic locations (add_loci= FALSE), it is not possible to convert the results to GRanges, ", 
+            "the output will be a data.frame object. ")
+  }
+  
+  assay <- match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm))
+  mtx <- SummarizedExperiment::assay(x = scm, i = which(assay == SummarizedExperiment::assayNames(scm)))
+  
+  if (order_by_sd) {
+    if (is_h5(scm)) {
+      sds = DelayedMatrixStats::rowSds(mtx, na.rm = TRUE)
+    } else {
+      sds = matrixStats::rowSds(mtx, na.rm = TRUE)
+    }
+  }
+  
+  if (add_loci) {
+    
+    if (is_h5(scm)) mtx <- as.data.frame(mtx)
+    
+    mtx <- as.data.frame(cbind(as.data.frame(rowRanges(scm))[,1:3], mtx))
+    
+    if (in_granges) {
+      mtx <- GenomicRanges::makeGRangesFromDataFrame(mtx, keep.extra.columns = TRUE)
+      
+    } else {
+      data.table::setDT(x = mtx)
+      colnames(mtx)[1] <- "chr" #TODO: figure out why seqnames is used instead of chr
+    }
+    
+  }
+  
+  if (order_by_sd) mtx <- mtx[order(sds, decreasing = TRUE), ]
+  
+  return (mtx)
+}
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Filter matrices by coverage
@@ -820,71 +890,6 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
   return(stats)
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
-#' Extract assays from an \code{\link{scMethrix}} object
-#' @details Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
-#' @inheritParams generic_scMethrix_function
-#' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
-#' @param in_granges Do you want the outcome in \code{\link{GRanges}}?
-#' @param order_by_sd Order output matrix by standard deviation
-#' @return HDF5Matrix or matrix
-#' @examples
-#' data('scMethrix_data')
-#' 
-#' # Get methylation data
-#' get_matrix(scMethrix_data)
-#' 
-#' # Get methylation data with loci
-#' get_matrix(scMethrix_data, add_loci=TRUE)
-#' 
-#' # Get methylation data with loci inside a Granges object 
-#' get_matrix(scMethrix_data, add_loci=TRUE, in_granges=TRUE)
-#' 
-#' # Get methylation data sorted by SD
-#' get_matrix(scMethrix_data, order_by_sd = TRUE)
-#' @export
-get_matrix <- function(scm = NULL, add_loci = FALSE, in_granges=FALSE, assay = "score", order_by_sd=FALSE) {
-  
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (add_loci == FALSE & in_granges == TRUE) {
-    warning("Without genomic locations (add_loci= FALSE), it is not possible to convert the results to GRanges, ", 
-            "the output will be a data.frame object. ")
-  }
-  
-  assay <- match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm))
-  mtx <- SummarizedExperiment::assay(x = scm, i = which(assay == SummarizedExperiment::assayNames(scm)))
-  
-  if (order_by_sd) {
-    if (is_h5(scm)) {
-      sds = DelayedMatrixStats::rowSds(mtx, na.rm = TRUE)
-    } else {
-      sds = matrixStats::rowSds(mtx, na.rm = TRUE)
-    }
-  }
-  
-  if (add_loci) {
-    
-    if (is_h5(scm)) mtx <- as.data.frame(mtx)
-    
-    mtx <- as.data.frame(cbind(as.data.frame(rowRanges(scm))[,1:3], mtx))
-    
-    if (in_granges) {
-      mtx <- GenomicRanges::makeGRangesFromDataFrame(mtx, keep.extra.columns = TRUE)
-      
-    } else {
-      data.table::setDT(x = mtx)
-      colnames(mtx)[1] <- "chr" #TODO: figure out why seqnames is used instead of chr
-    }
-    
-  }
-  
-  if (order_by_sd) mtx <- mtx[order(sds, decreasing = TRUE), ]
-  
-  return (mtx)
-}
 
 #------------------------------------------------------------------------------------------------------------
 
