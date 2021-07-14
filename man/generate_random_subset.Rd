@@ -20,7 +20,9 @@ scMethrix; an experiment with n_cpgs
 Generates a random subset of CpG sites
 }
 \details{
-Does stuff
+From an \code{\link{scMethrix}} object, this will randomly select \code{n_cpgs} and create a new
+object containing only those CpGs. This is typically used for approximation or visualization. The seed
+can be specified for consistency.
 }
 \examples{
 data('scMethrix_data')

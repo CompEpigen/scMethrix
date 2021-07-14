@@ -16,7 +16,7 @@ impute_by_kNN(scm = NULL, assay = "score", new_assay = "impute", k = 10, ...)
 \item{k}{Number of neighbors to be used in the
     imputation (default=10)}
 
-\item{...}{Additional arguments for missForest::missForest}
+\item{...}{Additional arguments for \link[impute]{impute.knn}}
 }
 \value{
 An \code{\link{scMethrix}} object

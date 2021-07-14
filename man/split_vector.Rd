@@ -2,25 +2,25 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{split_vector}
 \alias{split_vector}
-\title{Splits a vector into subvectors by \code{chunk} or \code{size}}
+\title{Splits a vector into list of vectors by \code{chunk} or \code{size}}
 \usage{
 split_vector(vec, num = 1, by = "chunks")
 }
 \arguments{
-\item{vec}{The vector to split}
+\item{vec}{vector; The vector to split}
 
-\item{num}{The number to split by}
+\item{num}{integer; The number to split by}
 
-\item{by}{Whether to split by '\code{chunks}' or by '\code{size}'}
+\item{by}{string; Whether to split by '\code{chunks}' or by '\code{size}'}
 }
 \value{
-A vector of vectors
+A list of vectors
 }
 \description{
-Splits a vector into subvectors by \code{chunk} or \code{size}
+Splits a vector into list of vectors by \code{chunk} or \code{size}
 }
 \details{
-Splits a vector into \code{num} vectors or vectors of \code{n} size. If \code{len(vec)\%\%num != 0},
+Splits a vector into a list of \code{num} vectors or vectors of \code{n} size. If \code{len(vec)\%\%num != 0},
 then the last vector will have a length of less than size \code{num}
 }
 \examples{

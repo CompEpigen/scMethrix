@@ -23,7 +23,7 @@ Binarize an input value based on a \code{threshold}
 }
 \details{
 Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
-If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as -1
+If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}
 }
 \examples{
 vals <- c(0,0.25,0.5,0.75,1,NA)

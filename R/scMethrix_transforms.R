@@ -1,6 +1,7 @@
 #------------------------------------------------------------------------------------------------------------
 #' Transforms an assay in an \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
+#' If HDF5 objects are used, transform functions should be from \pkg{DelayedMatrixStats}.
 #' @inheritParams generic_scMethrix_function
 #' @param h5_temp string; temporary directory to store hdf5
 #' @return An \code{\link{scMethrix}} object
@@ -60,20 +61,23 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
 
 #------------------------------------------------------------------------------------------------------------
 #' Bins the ranges of an \code{\link{scMethrix}} object.
-#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
+#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. Typically,
+#' most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise
+#' to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be 
+#' from \pkg{DelayedMatrixStats}.
 #' 
-#' In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs
+#' In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs.
 #' @inheritParams generic_scMethrix_function
 #' @param regions The regions from which to make the bins
 #' @param bin_size integer; The size of each bin. First bin will begin at the start position of the first genomic
 #' region on the chromosome. If NULL, there will be one bin per region. Default 100000.
-#' @param bin_by character; can create bins by # of base pairs ("bp") or by # of CpG sites ("cpg"). Default "bp"
-#' @param trans The transforms for each assay. Must be a named vector of functions (closure). Default NULL, meaning that 
-#' operations for "counts" assay is sum(.., na.rm=TRUE), and for all other assays is mean(.., na.rm=TRUE)
+#' @param bin_by character; can create bins by # of base pairs "bp" or by # of CpG sites "cpg". Default "bp"
+#' @param trans named vector of closures; The transforms for each assay in a named vector. Default NULL, meaning that 
+#' operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is mean(x, na.rm=TRUE)
 #' @param overlap_type character; defines the type of the overlap of the CpG sites with the target region. 
-#' Default value is `within`. For detailed description,
-#' see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
-#' @param h5_dir directory to store H5 based object
+#' Default value is `within`. For detailed description, see the \code{findOverlaps} function of the 
+#' \code{\link{IRanges}} package.
+#' @param h5_dir directory to store an H5 based object
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
@@ -134,23 +138,6 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
           }
         }
 
-        # rrng <- lapply(regions$rid,function (rid) {  
-        #   
-        #   idx <- which(overlap_indices[,yid == rid])
-        #   idx <- split_vector(idx,num = bin_size, by = "size")
-        #   
-        #   rrng <- lapply(idx, function(i) {
-        #     rrng <- range(rowRanges(scm[c(i[1],i[length(i)]),]))
-        #     rrng$n_cpgs <- length(i)
-        #     rrng
-        #   })
-        #   
-        #   
-        # })
-        # 
-        # rrng <- do.call("c", rrng)
-        # rrng <- do.call("c", rrng) #intentional to switch list of list of Granges to a single Granges
-        
       } else if (bin_by == "bp") {
         
         rrng <- unlist(tile(regions, width = bin_size)) #TODO: Should switch this to using RLE lookup
@@ -194,10 +181,7 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
         vals <- op(vals)
         names(vals) <- names
       }
-      
-      # message(rid,": ",vals)
-      # if (rid == "rid_2629") browser()
-      
+
       return (data.frame(t(vals)))
       
     })
@@ -231,6 +215,7 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
 #' data('scMethrix_data')
 #' @export
 #' @import Melissa
+#' @refereance Kapourani CA, Sanguinetti G (2019). “Melissa: Bayesian clustering and imputation of single cell methylomes.” Genome Biology, 20, 61. doi: 10.1186/s13059-019-1665-8.
 impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay = "impute") {
   
   . <- NULL
@@ -323,8 +308,9 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
 #' @param n_pc integer > 0; The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value. 
 #' For a range, the optimal value will be estimated; this is time-intensive.
-#' @param ... Additional arguments for missMDA::imputePCA
+#' @param ... Additional arguments for \link[missMDA]{imputePCA}
 #' @inheritParams transform_assay
+#' @inheritParams missMDA::imputePCA
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
@@ -367,14 +353,16 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = "impute", n_
 #------------------------------------------------------------------------------------------------------------
 #' Imputes the an \code{\link{scMethrix}}object using a random forest model
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
-#' @param ... Additional arguments for missForest::missForest
+#' @param ... Additional arguments for \link[missForest]{missForest}
 #' @inheritParams transform_assay
+#' @inheritParams missForest::missForest
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
 #' impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
 #' @export
 #' @import missForest
+#' @references Stekhoven, D. J., & Bühlmann, P. (2012). MissForest—non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.
 impute_by_RF <- function(scm = NULL, assay = "score", new_assay = "impute", ...) {
   
   if (!is(scm, "scMethrix")) {
@@ -404,15 +392,16 @@ impute_by_RF <- function(scm = NULL, assay = "score", new_assay = "impute", ...)
 #------------------------------------------------------------------------------------------------------------
 #' Imputes the an \code{\link{scMethrix}}object using a random forest model
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
-#' @param ... Additional arguments for missForest::missForest
-#' @inheritParams impute::impute.knn
+#' @param ... Additional arguments for \link[impute]{impute.knn}
 #' @inheritParams transform_assay
+#' @inheritParams impute::impute.knn
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
 #' impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
 #' @export
 #' @import impute
+#' @referencesHastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
 impute_by_kNN <- function(scm = NULL, assay = "score", new_assay = "impute", k = 10, ...) {
   
   if (!is(scm, "scMethrix")) {
@@ -440,8 +429,8 @@ impute_by_kNN <- function(scm = NULL, assay = "score", new_assay = "impute", k =
 }
 
 #------------------------------------------------------------------------------------------------------------
-#' Splits an experiment into two for use as a training and test set
-#' @details Does stuff
+#' Splits an scMethrix object into two for use as a training and test set
+#' @details Typically used for teaching classification algorithms. The seed can be set for consistency.
 #' @param training_prop numeric; The size of the training set as a proportion of the experiment (0 to 1)
 #' For a range, the optimal value will be estimated; this is time-intensive.
 #' @param seed string; value to use for sampling
@@ -470,7 +459,9 @@ generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123")
 
 #------------------------------------------------------------------------------------------------------------
 #' Generates a random subset of CpG sites
-#' @details Does stuff
+#' @details From an \code{\link{scMethrix}} object, this will randomly select \code{n_cpgs} and create a new
+#' object containing only those CpGs. This is typically used for approximation or visualization. The seed
+#' can be specified for consistency. 
 #' @param n_cpgs numeric; The number of CpGs to include
 #' @param seed string; value to use for sampling
 #' @inheritParams generic_scMethrix_function

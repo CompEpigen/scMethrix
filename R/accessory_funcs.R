@@ -33,7 +33,7 @@ get_sample_name = function(s) {
 
 #' Binarize an input value based on a \code{threshold}
 #' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
-#'  If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as -1
+#'  If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}
 #' @param x A value to binarize
 #' @param threshold The threshold for binarizing. Will default to the center number between max and min.
 #' @param rep_na The value to replace missing values with. Default NA. 
@@ -54,13 +54,13 @@ binarize = function(x,threshold = NULL, rep_na = NA, verbose = FALSE) {
   return(x)
 }
 
-#' Splits a vector into subvectors by \code{chunk} or \code{size}
-#' @details Splits a vector into \code{num} vectors or vectors of \code{n} size. If \code{len(vec)%%num != 0},
+#' Splits a vector into list of vectors by \code{chunk} or \code{size}
+#' @details Splits a vector into a list of \code{num} vectors or vectors of \code{n} size. If \code{len(vec)%%num != 0},
 #' then the last vector will have a length of less than size \code{num}
-#' @param vec The vector to split
-#' @param num The number to split by
-#' @param by Whether to split by '\code{chunks}' or by '\code{size}'
-#' @return A vector of vectors
+#' @param vec vector; The vector to split
+#' @param num integer; The number to split by
+#' @param by string; Whether to split by '\code{chunks}' or by '\code{size}'
+#' @return A list of vectors
 #' @examples
 #' # Split vector into 4 sub vectors
 #' split_vector(c(1,2,3,4,5,6,7,8),4,by="chunk")
@@ -174,10 +174,8 @@ bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
   return(rngs)
   
   #TODO: implement enforce_size to make the minimum IRange for each chr be the length(bin_size)
-  
 }
 
-#--- cast_granges -------------------------------------------------------------------------------------------
 #' Casts genomic regions into \code{\link{GRanges}} format
 #' @details Casts the input as a \code{\link{GRanges}} object. Input can be \code{\link{GRanges}} or a 
 #' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input BED format

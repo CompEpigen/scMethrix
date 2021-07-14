@@ -22,7 +22,7 @@ impute_by_iPCA(
 \item{n_pc}{integer > 0; The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value.
 For a range, the optimal value will be estimated; this is time-intensive.}
 
-\item{...}{Additional arguments for missMDA::imputePCA}
+\item{...}{Additional arguments for \link[missMDA]{imputePCA}}
 }
 \value{
 An \code{\link{scMethrix}} object

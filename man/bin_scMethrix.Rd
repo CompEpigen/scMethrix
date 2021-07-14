@@ -22,16 +22,16 @@ bin_scMethrix(
 \item{bin_size}{integer; The size of each bin. First bin will begin at the start position of the first genomic
 region on the chromosome. If NULL, there will be one bin per region. Default 100000.}
 
-\item{bin_by}{character; can create bins by # of base pairs ("bp") or by # of CpG sites ("cpg"). Default "bp"}
+\item{bin_by}{character; can create bins by # of base pairs "bp" or by # of CpG sites "cpg". Default "bp"}
 
-\item{trans}{The transforms for each assay. Must be a named vector of functions (closure). Default NULL, meaning that
-operations for "counts" assay is sum(.., na.rm=TRUE), and for all other assays is mean(.., na.rm=TRUE)}
+\item{trans}{named vector of closures; The transforms for each assay in a named vector. Default NULL, meaning that
+operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is mean(x, na.rm=TRUE)}
 
 \item{overlap_type}{character; defines the type of the overlap of the CpG sites with the target region.
-Default value is \code{within}. For detailed description,
-see the \code{findOverlaps} function of the \code{\link{IRanges}} package.}
+Default value is \code{within}. For detailed description, see the \code{findOverlaps} function of the
+\code{\link{IRanges}} package.}
 
-\item{h5_dir}{directory to store H5 based object}
+\item{h5_dir}{directory to store an H5 based object}
 }
 \value{
 An \code{\link{scMethrix}} object
@@ -40,9 +40,12 @@ An \code{\link{scMethrix}} object
 Bins the ranges of an \code{\link{scMethrix}} object.
 }
 \details{
-Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
+Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. Typically,
+most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise
+to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be
+from \pkg{DelayedMatrixStats}.
 
-In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs
+In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs.
 }
 \examples{
 data('scMethrix_data')

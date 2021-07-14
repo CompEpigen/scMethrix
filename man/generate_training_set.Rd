@@ -2,7 +2,7 @@
 % Please edit documentation in R/scMethrix_transforms.R
 \name{generate_training_set}
 \alias{generate_training_set}
-\title{Splits an experiment into two for use as a training and test set}
+\title{Splits an scMethrix object into two for use as a training and test set}
 \usage{
 generate_training_set(scm = NULL, training_prop = 0.2, seed = "123")
 }
@@ -18,10 +18,10 @@ For a range, the optimal value will be estimated; this is time-intensive.}
 list; two \code{\link{scMethrix}} objects names 'training' and 'test'
 }
 \description{
-Splits an experiment into two for use as a training and test set
+Splits an scMethrix object into two for use as a training and test set
 }
 \details{
-Does stuff
+Typically used for teaching classification algorithms. The seed can be set for consistency.
 }
 \examples{
 data('scMethrix_data')

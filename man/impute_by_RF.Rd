@@ -13,7 +13,7 @@ impute_by_RF(scm = NULL, assay = "score", new_assay = "impute", ...)
 
 \item{new_assay}{string; name for transformed assay. Default = "new_assay"}
 
-\item{...}{Additional arguments for missForest::missForest}
+\item{...}{Additional arguments for \link[missForest]{missForest}}
 }
 \value{
 An \code{\link{scMethrix}} object
@@ -27,4 +27,7 @@ Uses the inputted function to transform an assay in the \code{\link{scMethrix}} 
 \examples{
 data('scMethrix_data')
 impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
+}
+\references{
+Stekhoven, D. J., & Bühlmann, P. (2012). MissForest—non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.
 }
