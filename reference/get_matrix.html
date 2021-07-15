@@ -122,9 +122,9 @@
 
     <pre class="usage"><span class='fu'>get_matrix</span><span class='op'>(</span>
   scm <span class='op'>=</span> <span class='cn'>NULL</span>,
+  assay <span class='op'>=</span> <span class='st'>"score"</span>,
   add_loci <span class='op'>=</span> <span class='cn'>FALSE</span>,
   in_granges <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  assay <span class='op'>=</span> <span class='st'>"score"</span>,
   order_by_sd <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
@@ -136,16 +136,16 @@
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
+      <th>assay</th>
+      <td><p>string; name of an existing assay. Default = "score"</p></td>
+    </tr>
+    <tr>
       <th>add_loci</th>
       <td><p>Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table</p></td>
     </tr>
     <tr>
       <th>in_granges</th>
       <td><p>Do you want the outcome in <code>GRanges</code>?</p></td>
-    </tr>
-    <tr>
-      <th>assay</th>
-      <td><p>string; name of an existing assay. Default = "score"</p></td>
     </tr>
     <tr>
       <th>order_by_sd</th>

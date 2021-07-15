@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Splits an experiment into two for use as a training and test set — generate_training_set • scMethrix</title>
+<title>Splits an scMethrix object into two for use as a training and test set — generate_training_set • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Splits an experiment into two for use as a training and test set — generate_training_set" />
-<meta property="og:description" content="Splits an experiment into two for use as a training and test set" />
+<meta property="og:title" content="Splits an scMethrix object into two for use as a training and test set — generate_training_set" />
+<meta property="og:description" content="Splits an scMethrix object into two for use as a training and test set" />
 
 
 
@@ -111,13 +111,13 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Splits an experiment into two for use as a training and test set</h1>
+    <h1>Splits an scMethrix object into two for use as a training and test set</h1>
     <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_transforms.R'><code>R/scMethrix_transforms.R</code></a></small>
     <div class="hidden name"><code>generate_training_set.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Splits an experiment into two for use as a training and test set</p>
+    <p>Splits an scMethrix object into two for use as a training and test set</p>
     </div>
 
     <pre class="usage"><span class='fu'>generate_training_set</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, training_prop <span class='op'>=</span> <span class='fl'>0.2</span>, seed <span class='op'>=</span> <span class='st'>"123"</span><span class='op'>)</span></pre>
@@ -145,7 +145,7 @@ For a range, the optimal value will be estimated; this is time-intensive.</p></t
     <p>list; two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects names 'training' and 'test'</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Does stuff</p>
+    <p>Typically used for teaching classification algorithms. The seed can be set for consistency.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
