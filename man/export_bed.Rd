@@ -37,10 +37,9 @@ Exports all samples in an \code{\link{scMethrix}} objects into individual bedgra
 }
 \details{
 The structure of the bedgraph files will be a tab-deliminated structure of:
-Chromosome | CpG start site | CpG end site | methylation score | coverage | Additional assays (if include)
+Chromosome | CpG start site | CpG end site | methylation score | coverage | Additional assays (if include = TRUE)
 
-If additional assays are used, and headers enabled, it is up to the user to ensure that assay names are
-not protected in any downstream analysis of the bedgraph files
+If additional assays are used, and headers enabled, it is up to the user to ensure that assay names are not protected in any downstream analysis of the bedgraph files
 }
 \examples{
 data('scMethrix_data')

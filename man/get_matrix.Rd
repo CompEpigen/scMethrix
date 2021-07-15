@@ -30,7 +30,7 @@ HDF5Matrix or matrix
 Extract assays from an \code{\link{scMethrix}} object
 }
 \details{
-Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
+Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix. This will return in the format used by the object (matrix or HDF5matrix).
 }
 \examples{
 data('scMethrix_data')

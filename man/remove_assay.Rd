@@ -18,10 +18,7 @@ An \code{\link{scMethrix}} object
 Removes an assay from an \code{\link{scMethrix}} object
 }
 \details{
-This will remove an assay from the scMethrix experiment object. All transformed assays
-may be removed, as well as the coverage assay (since it is less useful when compared to normal
-WGBS data), but the score assay cannot be removed. Reduced dimensionality data will be retained
-even if the parent assay is removed.
+This will remove an assay from the scMethrix experiment object. All transformed assays may be removed, as well as the coverage assay (since it is less useful when compared to normal WGBS data), but the score assay cannot be removed. Reduced dimensionality data will be retained even if the parent assay is removed.
 }
 \examples{
 data('scMethrix_data')

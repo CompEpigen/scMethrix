@@ -21,7 +21,7 @@ transform_assay(
 
 \item{trans}{closure; The transformation function. Default = mean}
 
-\item{h5_temp}{string; temporary directory to store hdf5}
+\item{h5_temp}{string; temporary directory to store the temporary HDF5 files}
 }
 \value{
 An \code{\link{scMethrix}} object
@@ -30,7 +30,7 @@ An \code{\link{scMethrix}} object
 Transforms an assay in an \code{\link{scMethrix}} object.
 }
 \details{
-Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
+Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. It is typically used for The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be from \pkg{DelayedMatrixStats}.
 }
 \examples{
 data('scMethrix_data')

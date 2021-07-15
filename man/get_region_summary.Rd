@@ -25,18 +25,16 @@ get_region_summary(
 
 \item{n_threads}{Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.}
 
-\item{type}{matrix which needs to be summarized. Could be \code{M}, \code{C}. Default 'M'}
+\item{type}{string; the assay to be summarized. Default 'score'}
 
-\item{how}{mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'}
+\item{how}{closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'}
 
-\item{overlap_type}{defines the type of the overlap of the CpG sites with the target region. Default value is \code{within}. For detailed description,
-see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
+\item{overlap_type}{string; defines the type of the overlap of the CpG sites with the target region. Default value is \code{within}. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 
-\item{group}{a column name from sample annotation that defines groups. In this case, the number of min_samples will be
-tested group-wise.}
+\item{group}{a column name from sample annotation that defines groups. In this case, the number of min_samples will be tested group-wise.}
 }
 \value{
 table of summary statistic for the given region

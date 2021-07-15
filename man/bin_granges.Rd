@@ -18,8 +18,7 @@ bin_granges(gr, bin_size = 1e+05)
 Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size}
 }
 \details{
-Bins a single region in \code{\link{GRanges}} format into multiple regions with a specified
-\code{bin_size}. If \code{length(gr) \%\% bin_size != 0}, then the last GRange will have a length < \code{bin_size}
+Bins a single region in \code{\link{GRanges}} format into multiple regions with a specified \code{bin_size}. If \code{length(gr) \%\% bin_size != 0}, then the last GRange will have a length < \code{bin_size}. This is used instead of tile when you need consistently sized bins with the last bin being smaller
 }
 \examples{
 regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,10000))

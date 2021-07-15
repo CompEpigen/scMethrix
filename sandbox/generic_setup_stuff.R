@@ -40,15 +40,15 @@ files <- list.files (getwd(),full.names = TRUE)
 
 files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
 
-files <- files[1:100]
+files <- files[1:20]
 
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5,6),replace=TRUE)
 scm.big.mem <- read_beds(files=files,h5=FALSE)
 
-scm.big.mem <- read_beds(files=files,h5=FALSE, ref_cpgs = mm10_cpgs$cpgs)
+scm.big.mem <- read_beds(files=files,h5=FALSE, ref_cpgs = mm10_cpgs$cpgs, n_threads = 8)
 
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5),
-                        replace=TRUE, ref_cpgs = mm10_cpgs$cpgs)
+                        replace=TRUE, ref_cpgs = mm10_cpgs$cpgs, n_threads = 8)
 
 scm.20.mem <- readRDS(file = "D:/Git/sampleData/scm.20.mem.rds")
 

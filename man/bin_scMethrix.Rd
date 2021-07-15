@@ -11,7 +11,8 @@ bin_scMethrix(
   bin_by = "bp",
   trans = NULL,
   overlap_type = "within",
-  h5_dir = NULL
+  h5_dir = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ Default value is \code{within}. For detailed description, see the \code{findOver
 \code{\link{IRanges}} package.}
 
 \item{h5_dir}{directory to store an H5 based object}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 An \code{\link{scMethrix}} object
@@ -40,10 +43,7 @@ An \code{\link{scMethrix}} object
 Bins the ranges of an \code{\link{scMethrix}} object.
 }
 \details{
-Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. Typically,
-most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise
-to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be
-from \pkg{DelayedMatrixStats}.
+Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. Typically, most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be  from \pkg{DelayedMatrixStats}.
 
 In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs.
 }

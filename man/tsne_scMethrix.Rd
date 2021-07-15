@@ -20,9 +20,9 @@ tsne_scMethrix(
 
 \item{assay}{The assay to use. Default is 'score'}
 
-\item{var}{Choose between random CpG sites ('rand') or most variable CpGs ('top').}
+\item{var}{Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'}
 
-\item{top_var}{Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with \code{ranges}.}
+\item{top_var}{Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements).}
 
 \item{perplexity}{numeric; Perplexity parameter (should not be bigger than 3 * perplexity < nrow(X) - 1, see details for interpretation)}
 

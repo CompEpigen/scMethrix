@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------------------------------------
 #' Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
 #' @details Adds the mean, median, SD, and sample count and coverage (if present) for 
-#' each region in an \code{\link{scMethrix}} object. This can be accessed using mcols().
+#' the \code{\link{GenomicRanges}} in an \code{\link{scMethrix}} object. This can be accessed using mcols().
 #' @inheritParams generic_scMethrix_function
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -41,10 +41,7 @@ get_metadata_stats <- function(scm) {
 
 #------------------------------------------------------------------------------------------------------------
 #' Removes an assay from an \code{\link{scMethrix}} object
-#' @details This will remove an assay from the scMethrix experiment object. All transformed assays
-#' may be removed, as well as the coverage assay (since it is less useful when compared to normal
-#' WGBS data), but the score assay cannot be removed. Reduced dimensionality data will be retained
-#' even if the parent assay is removed.
+#' @details This will remove an assay from the scMethrix experiment object. All transformed assays may be removed, as well as the coverage assay (since it is less useful when compared to normal WGBS data), but the score assay cannot be removed. Reduced dimensionality data will be retained even if the parent assay is removed.
 #' @inheritParams generic_scMethrix_function
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -175,10 +172,9 @@ convert_to_methrix <- function(scm = NULL, h5_dir = NULL) {
 #------------------------------------------------------------------------------------------------------------
 #' Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
 #' @details The structure of the bedgraph files will be a tab-deliminated structure of:
-#' Chromosome | CpG start site | CpG end site | methylation score | coverage | Additional assays (if include)
+#' Chromosome | CpG start site | CpG end site | methylation score | coverage | Additional assays (if include = TRUE)
 #' 
-#' If additional assays are used, and headers enabled, it is up to the user to ensure that assay names are
-#' not protected in any downstream analysis of the bedgraph files
+#' If additional assays are used, and headers enabled, it is up to the user to ensure that assay names are not protected in any downstream analysis of the bedgraph files
 #' @inheritParams generic_scMethrix_function
 #' @param path character; the \code{\link{file.path}} of the directory to save the files
 #' @param suffix character; optional suffix to add to the exported bed files 
@@ -243,15 +239,13 @@ export_bed <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE, i
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
 #' @inheritParams generic_scMethrix_function
 #' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object
-#' @param type matrix which needs to be summarized. Could be `M`, `C`. Default 'M'
-#' @param how mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'
-#' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description,
-#' see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
+#' @param type string; the assay to be summarized. Default 'score'
+#' @param how closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'
+#' @param overlap_type string; defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #' #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.
 #' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
 #' @param n_threads Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
-#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be
-#' tested group-wise.
+#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be tested group-wise.
 #' @importFrom methods setClass
 #' @return table of summary statistic for the given region
 #' @examples
@@ -393,7 +387,7 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Extract assays from an \code{\link{scMethrix}} object
-#' @details Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix
+#' @details Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix. This will return in the format used by the object (matrix or HDF5matrix).
 #' @inheritParams generic_scMethrix_function
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
 #' @param in_granges Do you want the outcome in \code{\link{GRanges}}?
@@ -701,26 +695,6 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
   return(scm)
 }
 
-# 
-# #' Order \code{\link{scMethrix}} object by SD
-# #' @details Takes \code{\link{scMethrix}} object and reorganizes the data by standard deviation
-# #' @param scm \code{\link{scMethrix}} object
-# #' @param zero.rm Removes zero values from equations (the default empty value for sparse matrices)
-# #' @param na.rm Removes the NA values from equations
-# #' @return An object of class \code{\link{scMethrix}}
-# #' @export
-# order_by_sd <- function (scm, zero.rm = FALSE, na.rm = FALSE) {
-#   # 
-#   # if (!is(m, "scMethrix")){
-#   #   stop("A valid scMethrix object needs to be supplied.")
-#   # }
-#   # 
-#   # sds <- DelayedMatrixStats::rowSds(x = get_matrix(m),na.rm=TRUE)
-#   # 
-#   # m$sd <- sds
-#   
-# }
-
 #' Subsets an \code{\link{scMethrix}} object based on \code{regions}, \code{contigs} and/or \code{samples}.
 #' @details Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can 
 #' either subset (\code{include}) to or filter (\code{exclude}) the specified parameters.
@@ -893,7 +867,6 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
 
 
 #------------------------------------------------------------------------------------------------------------
-
 #' Remove loci that are uncovered across all samples
 #' @details Takes \code{\link{scMethrix}} object and removes loci that are uncovered across all samples
 #' @inheritParams generic_scMethrix_function

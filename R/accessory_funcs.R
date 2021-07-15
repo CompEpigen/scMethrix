@@ -142,8 +142,7 @@ split_granges = function(gr,chunks = NA, percent = NA, size = NA) { #=NULL, perc
 }
 
 #' Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size} 
-#' @details Bins a single region in \code{\link{GRanges}} format into multiple regions with a specified
-#' \code{bin_size}. If \code{length(gr) %% bin_size != 0}, then the last GRange will have a length < \code{bin_size}
+#' @details Bins a single region in \code{\link{GRanges}} format into multiple regions with a specified \code{bin_size}. If \code{length(gr) %% bin_size != 0}, then the last GRange will have a length < \code{bin_size}. This is used instead of tile when you need consistently sized bins with the last bin being smaller
 #' @param gr The \code{\link{GRanges}} object
 #' @param bin_size The length of region in each bin
 #' @return \code{\link{GRangesList}} containing all the binned \code{\link{GRanges}}
@@ -238,9 +237,7 @@ stop_time <- function() {
 }
 
 #' Subsets a given list of CpGs by another list of CpGs
-#' @details Typically used to reduce the number of potential CpG sites to include only those present 
-#' in the input files so as to maximize performance and minimize resources. Can also be used for quality
-#' control to see if there is excessive number of CpG sites that are not present in the reference genome.
+#' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
 #' @param ref_cpgs A reference set of CpG sites (e.g. Hg19 or mm10) in bedgraph format
 #' @param gen_cpgs A subset of CpG sites. Usually obtained from \code{\link{read_index}}.
 #' @param verbose flag to output messages or not

@@ -2,7 +2,7 @@
 % Please edit documentation in R/scMethrix_dimensionality.R
 \name{reduce_cpgs}
 \alias{reduce_cpgs}
-\title{Reduces a matrix}
+\title{Reduces a assay to a representative matrix}
 \usage{
 reduce_cpgs(
   scm,
@@ -18,19 +18,19 @@ reduce_cpgs(
 
 \item{assay}{The assay to use. Default is 'score'}
 
-\item{var}{Choose between random CpG sites ('rand') or most variable CpGs ('top').}
+\item{var}{Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'}
 
-\item{top_var}{Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements). This option is mutually exclusive with \code{ranges}.}
+\item{top_var}{Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements).}
 
 \item{na.rm}{Remove NA values}
 
 \item{verbose}{flag to output messages or not}
 }
 \value{
-Reduced matrix
+matrix; the reduced form of the input assay
 }
 \description{
-Reduces a matrix
+Reduces a assay to a representative matrix
 }
 \examples{
 data('scMethrix_data')
