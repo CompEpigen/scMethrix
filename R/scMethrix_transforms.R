@@ -81,8 +81,8 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
 #' regions <- unlist(tile(regions,10))
 #' bin_scMethrix(scMethrix_data, regions = regions)
 #' @export
-bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp", trans = NULL, 
-                          overlap_type = "within", h5_dir = NULL, verbose = TRUE) {
+bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by = "bp", trans = NULL, 
+                          overlap_type = "within", h5_dir = NULL, verbose = TRUE, n_threads = 1, n_chunks = 1) {
 
   yid <- NULL
   
@@ -106,7 +106,8 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
   } else { # If no region is specifed, use entire chromosomes
     regions = range(rowRanges(scm))
   }
- 
+
+
   regions$rid <- paste0("rid_", 1:length(regions))
   
   overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type)) 
@@ -139,7 +140,7 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
             rrng <- c(rrng,gr)
           }
         }
-
+        
       } else if (bin_by == "bp") {
         
         rrng <- unlist(tile(regions, width = bin_size)) #TODO: Should switch this to using RLE lookup
@@ -162,9 +163,9 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
   overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type))
   colnames(overlap_indices) <- c("xid", "yid")
   overlap_indices[,yid := paste0("rid_", yid)]
- 
+
   for (name in SummarizedExperiment::assayNames(scm)) {
- 
+
     if (verbose) message("   Filling bins for the ",name," assay...")
        
     if (is.null(trans[[name]])) { # If no named vector is specified, default to mean
@@ -173,27 +174,35 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
       op <- trans[[name]]
     }
     
-    assay <- lapply(rrng$rid,function (rid) {  
+    rid_list <- split_vector(rrng$rid,num = n_threads)
+    mtx <- get_matrix(scm,assay=name)
+    
+    cl <- parallel::makeCluster(n_threads)  
+    doParallel::registerDoParallel(cl) 
+    parallel::clusterEvalQ(cl, c(library(data.table)))
+    parallel::clusterExport(cl,list('overlap_indices','op','mtx','yid'), envir = environment())
 
-      if (is_h5(scm)) {
-        
-        # Do things 
-        
-      } else {
-        idx <- which(overlap_indices[,yid == rid])
-        vals <- get_matrix(scm[idx,],assay=name)
-        names <- colnames(vals)
-
-        vals <- op(vals)
-        names(vals) <- names
-      }
-
-      return (data.frame(t(vals)))
+    assay <- c(parallel::parLapply(cl,rid_list,fun=function(rids) {
       
-    })
+      rbindlist(lapply(as.list(rids),function (rid) {  
+        
+        idx <- which(overlap_indices[,yid == rid])
+        vals <- mtx[idx,,drop=FALSE]
+        names <- colnames(vals)
+        
+        if (length(idx > 1)) {  
+          vals <- op(vals)
+          names(vals) <- names
+        }
+        
+        return (data.frame(t(vals)))
+        
+      }))
+
+    }))
     
     assays[[name]] <- as(rbindlist(assay),class(get_matrix(scm,assay=name)))
-      
+
     if (verbose) message("Bins filled in ",split_time())
   }
   
@@ -210,8 +219,11 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
                               genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),)
   }
   
-  if (verbose) message("Experiment binned for ",length(regions)," containing ",length(m_obj)," total bins in",stop_time())
-    
+  if (verbose) message("Experiment binned for ",length(regions)," containing ",length(m_obj)," total bins in ",stop_time())
+  
+  parallel::stopCluster(cl)
+  rm(cl)
+  
   return (m_obj)
 }
 
@@ -226,7 +238,7 @@ bin_scMethrix <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp",
 #' data('scMethrix_data')
 #' @export
 #' @import Melissa
-#' @refereance Kapourani CA, Sanguinetti G (2019). “Melissa: Bayesian clustering and imputation of single cell methylomes.” Genome Biology, 20, 61. doi: 10.1186/s13059-019-1665-8.
+#' @references Kapourani CA, Sanguinetti G (2019). “Melissa: Bayesian clustering and imputation of single cell methylomes.” Genome Biology, 20, 61. doi: 10.1186/s13059-019-1665-8.
 impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay = "impute") {
   
   . <- NULL
@@ -412,7 +424,7 @@ impute_by_RF <- function(scm = NULL, assay = "score", new_assay = "impute", ...)
 #' impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
 #' @export
 #' @import impute
-#' @referencesHastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
+#' @references Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
 impute_by_kNN <- function(scm = NULL, assay = "score", new_assay = "impute", k = 10, ...) {
   
   if (!is(scm, "scMethrix")) {

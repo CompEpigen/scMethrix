@@ -1,11 +1,11 @@
 test_that("bin_scMethrix", {
-  
+
   expect_error(bin_scMethrix("not scMethrix"))
   expect_error(bin_scMethrix(scm.h5))
-  
+
   #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   invisible(lapply(list(scm.mem), function(scm) {
-    bin <- bin_scMethrix(scm,h5_dir = paste0(tempdir(),"/bin"))
+    bin <- bin_scMethrix(scm, h5_dir = paste0(tempdir(),"/bin"), n_threads = 2)
     expect_equivalent(dim(bin),c(258,4))
     rm(bin)
   }))
