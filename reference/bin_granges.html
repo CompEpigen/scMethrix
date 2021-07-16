@@ -140,8 +140,7 @@
     <p><code>GRangesList</code> containing all the binned <code>GRanges</code></p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Bins a single region in <code>GRanges</code> format into multiple regions with a specified
-<code>bin_size</code>. If <code>length(gr) %% bin_size != 0</code>, then the last GRange will have a length &lt; <code>bin_size</code></p>
+    <p>Bins a single region in <code>GRanges</code> format into multiple regions with a specified <code>bin_size</code>. If <code>length(gr) %% bin_size != 0</code>, then the last GRange will have a length &lt; <code>bin_size</code>. This is used instead of tile when you need consistently sized bins with the last bin being smaller</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='va'>regions</span> <span class='op'>&lt;-</span> <span class='fu'>GenomicRanges</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html'>GRanges</a></span><span class='op'>(</span>seqnames <span class='op'>=</span> <span class='st'>"chr1"</span>, ranges <span class='op'>=</span> <span class='fu'>IRanges</span><span class='op'>(</span><span class='fl'>1</span>,<span class='fl'>10000</span><span class='op'>)</span><span class='op'>)</span>

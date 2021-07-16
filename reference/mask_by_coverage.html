@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Saves an HDF5 scMethrix object — save_HDF5_scMethrix • scMethrix</title>
+<title>Masks CpGs by coverage — mask_by_coverage • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Saves an HDF5 scMethrix object — save_HDF5_scMethrix" />
-<meta property="og:description" content="Saves an HDF5 scMethrix object" />
+<meta property="og:title" content="Masks CpGs by coverage — mask_by_coverage" />
+<meta property="og:description" content="Masks CpGs by coverage" />
 
 
 
@@ -111,16 +111,23 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Saves an HDF5 <code><a href='scMethrix-class.html'>scMethrix</a></code> object</h1>
+    <h1>Masks CpGs by coverage</h1>
     <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>save_HDF5_scMethrix.Rd</code></div>
+    <div class="hidden name"><code>mask_by_coverage.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Saves an HDF5 <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p>
+    <p>Masks CpGs by coverage</p>
     </div>
 
-    <pre class="usage"><span class='fu'>save_HDF5_scMethrix</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, h5_dir <span class='op'>=</span> <span class='cn'>NULL</span>, replace <span class='op'>=</span> <span class='cn'>FALSE</span>, <span class='va'>...</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>mask_by_coverage</span><span class='op'>(</span>
+  scm <span class='op'>=</span> <span class='cn'>NULL</span>,
+  assay <span class='op'>=</span> <span class='st'>"score"</span>,
+  low_threshold <span class='op'>=</span> <span class='fl'>0</span>,
+  avg_threshold <span class='op'>=</span> <span class='fl'>2</span>,
+  n_threads <span class='op'>=</span> <span class='fl'>1</span>,
+  verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -130,37 +137,40 @@
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
-      <th>h5_dir</th>
-      <td><p>string; The directory to use. Will be created if it does not exist. Default = NULL</p></td>
+      <th>assay</th>
+      <td><p>string; name of an existing assay. Default = "score"</p></td>
     </tr>
     <tr>
-      <th>replace</th>
-      <td><p>Should it overwrite the pre-existing data? FALSE by default.</p></td>
+      <th>low_threshold</th>
+      <td><p>numeric; The minimal coverage allowed. Everything below will get masked. Default = 0</p></td>
     </tr>
     <tr>
-      <th>...</th>
-      <td><p>Parameters to pass to saveHDF5SummarizedExperiment</p></td>
+      <th>avg_threshold</th>
+      <td><p>numeric; The max average coverage. Default = 2</p></td>
+    </tr>
+    <tr>
+      <th>n_threads</th>
+      <td><p>Number of parallel instances. Can only be used if <code><a href='scMethrix-class.html'>scMethrix</a></code> is in HDF5 format. Default = 1</p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>boolean; Flag for outputting function status messages. Default = TRUE</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>Nothing</p>
+    <p>An object of class <code><a href='scMethrix-class.html'>scMethrix</a></code></p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Takes <code><a href='scMethrix-class.html'>scMethrix</a></code> object and saves it in the specified directory</p>
+    <p>Takes <code><a href='scMethrix-class.html'>scMethrix</a></code> object and masks sites with low overall or high average coverage by putting NA for assay values. The sites will remain in the object and all assays will be affected.</p>
+<p><code>low_threshold</code> is used to mask sites with low overall coverage.
+<code>avg_threshold</code> is used to mask sites with high aberrant counts. For single cell data, this is typically CpG sites with an average count &gt; 2, as there are only two strands in a cell to sequence.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='va'>dir</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/paste.html'>paste0</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span><span class='op'>(</span><span class='op'>)</span>,<span class='st'>"/h5"</span><span class='op'>)</span>
-<span class='va'>scm</span> <span class='op'>&lt;-</span> <span class='fu'><a href='convert_scMethrix.html'>convert_scMethrix</a></span><span class='op'>(</span><span class='va'>scMethrix_data</span>, h5_dir<span class='op'>=</span><span class='va'>dir</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Converting in-memory scMethrix to HDF5</span></div><div class='output co'>#&gt; <span class='message'>Writing to disk...</span></div><div class='output co'>#&gt; <span class='message'>Start writing assay 1/2 to HDF5 file:</span>
-#&gt; <span class='message'>  /var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpCXZeeM/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>/ Reading and realizing block 1/1 ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>\ Writing it ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>Finished writing assay 1/2 to HDF5 file:</span>
-#&gt; <span class='message'>  /var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpCXZeeM/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>Start writing assay 2/2 to HDF5 file:</span>
-#&gt; <span class='message'>  /var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpCXZeeM/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>/ Reading and realizing block 1/1 ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>\ Writing it ... </span></div><div class='output co'>#&gt; <span class='message'>OK</span></div><div class='output co'>#&gt; <span class='message'>Finished writing assay 2/2 to HDF5 file:</span>
-#&gt; <span class='message'>  /var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpCXZeeM/h5/assays.h5</span></div><div class='output co'>#&gt; <span class='message'>Serialize SingleCellExperiment object to RDS file:</span>
-#&gt; <span class='message'>  /var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpCXZeeM/h5/se.rds</span></div><div class='output co'>#&gt; <span class='message'>Written in 0.14s</span></div><div class='output co'>#&gt; <span class='warning'>Warning: start_time() not set</span></div><div class='output co'>#&gt; <span class='message'>Converted in [unknown time]</span></div><div class='input'><span class='fu'>save_HDF5_scMethrix</span><span class='op'>(</span><span class='va'>scm</span>, h5_dir <span class='op'>=</span> <span class='va'>dir</span>, replace <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
-</div></pre>
+<span class='fu'>mask_by_coverage</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,low_threshold<span class='op'>=</span><span class='fl'>2</span>, avg_threshold<span class='op'>=</span><span class='fl'>2</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Masking CpG sites by coverage...</span></div><div class='output co'>#&gt; <span class='message'>   Masked 20 CpGs due to low coverage in sample C1.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 9 CpGs due to low coverage in sample C2.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 17 CpGs due to low coverage in sample C3.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 8 CpGs due to low coverage in sample C4.</span></div><div class='output co'>#&gt; <span class='message'>Masked 54 CpGs with coverage &lt; 2</span></div><div class='output co'>#&gt; <span class='message'>Masking high average count CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   No CpGs found with average coverage &gt; 2</span></div><div class='output co'>#&gt; <span class='message'>Masking finished in 0.12s</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
