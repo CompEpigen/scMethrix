@@ -5,12 +5,12 @@ test_that("prepare_plot_data", {
     expect_error(prepare_plot_data(scm, ranges = "not a range"))
     
     d <- prepare_plot_data(scm)
-    expect_equivalent(dim(d),c(nrow(scm)*ncol(scm),2))
-    expect_equivalent(colnames(d),c("variable","Meth"))
+    expect_equal(dim(d),c(nrow(scm)*ncol(scm),2))
+    expect_equal(colnames(d),c("variable","Meth"))
     
     n_cpgs = 50
     d <- prepare_plot_data(scm,n_cpgs = n_cpgs)
-    expect_equivalent(dim(d),c(n_cpgs*ncol(scm),2))
+    expect_equal(dim(d),c(n_cpgs*ncol(scm),2))
     
   }))
 })
@@ -44,8 +44,8 @@ test_that("plot_stats", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     plot = plot_stats(get_stats(scm))
     expect_true("ggplot" %in% class(plot))
-    expect_equivalent(sort(unique(plot$data$Sample_Name)),sort(colnames(scm)))
-    expect_equivalent(sort(unique(plot$data$Chromosome)),sort(levels(seqnames(scm))))
+    expect_equal(sort(unique(plot$data$Sample_Name)),sort(colnames(scm)))
+    expect_equal(sort(unique(plot$data$Chromosome)),sort(levels(seqnames(scm))))
   }))
 })
 
@@ -54,7 +54,7 @@ test_that("plot_pca", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     plot <- plot_pca(pca_scMethrix(scm))
     expect_true("ggplot" %in% class(plot))
-    expect_equivalent(plot$data$row_names,colnames(scm))
+    expect_equal(plot$data$row_names,colnames(scm))
   }))
 })
 
@@ -63,7 +63,7 @@ test_that("plot_tsne", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     plot <- plot_tsne(tsne_scMethrix(scm))
     expect_true("ggplot" %in% class(plot))
-    expect_equivalent(plot$data$row_names,colnames(scm))
+    expect_equal(plot$data$row_names,colnames(scm))
   }))
 })
 
@@ -72,6 +72,6 @@ test_that("plot_umap", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     plot <- plot_umap(umap_scMethrix(scm))
     expect_true("ggplot" %in% class(plot))
-    expect_equivalent(plot$data$row_names,colnames(scm))
+    expect_equal(plot$data$row_names,colnames(scm))
   }))
 })

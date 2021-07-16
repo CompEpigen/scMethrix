@@ -31,3 +31,6 @@ Uses the inputted function to transform an assay in the \code{\link{scMethrix}} 
 data('scMethrix_data')
 impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
 }
+\references{
+Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
+}

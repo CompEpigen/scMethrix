@@ -28,3 +28,6 @@ Uses the inputted function to transform an assay in the \code{\link{scMethrix}} 
 \examples{
 data('scMethrix_data')
 }
+\references{
+Kapourani CA, Sanguinetti G (2019). “Melissa: Bayesian clustering and imputation of single cell methylomes.” Genome Biology, 20, 61. doi: 10.1186/s13059-019-1665-8.
+}

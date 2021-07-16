@@ -5,14 +5,16 @@
 \title{Bins the ranges of an \code{\link{scMethrix}} object.}
 \usage{
 bin_scMethrix(
-  scm,
+  scm = NULL,
   regions = NULL,
   bin_size = 1e+05,
   bin_by = "bp",
   trans = NULL,
   overlap_type = "within",
   h5_dir = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  n_threads = 1,
+  n_chunks = 1
 )
 }
 \arguments{
@@ -35,6 +37,10 @@ Default value is \code{within}. For detailed description, see the \code{findOver
 \item{h5_dir}{directory to store an H5 based object}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
+
+\item{n_threads}{integer; Number of parallel instances. \code{n_threads} must be less than or equal to \code{n_chunks}. Default = 1}
+
+\item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1}
 }
 \value{
 An \code{\link{scMethrix}} object

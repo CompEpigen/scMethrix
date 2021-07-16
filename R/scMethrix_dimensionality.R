@@ -1,6 +1,6 @@
-#--------------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------
 #' Reduces a assay to a representative matrix
-#' @detail For the purposes of dimensionality reduction, this function selects either random CpGs or those with the highest variability. 
+#' @details For the purposes of dimensionality reduction, this function selects either random CpGs or those with the highest variability. 
 #' @param scm Input \code{\link{scMethrix}} object
 #' @param assay The assay to use. Default is 'score'
 #' @param top_var Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements).

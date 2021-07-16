@@ -32,6 +32,9 @@ matrix; the reduced form of the input assay
 \description{
 Reduces a assay to a representative matrix
 }
+\details{
+For the purposes of dimensionality reduction, this function selects either random CpGs or those with the highest variability.
+}
 \examples{
 data('scMethrix_data')
 reduce_cpgs(scMethrix_data)

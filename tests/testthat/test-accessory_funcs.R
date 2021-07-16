@@ -13,8 +13,8 @@ test_that("binarize", {
 
 test_that("bin_granges",{
   regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
-  expect_equivalent(length(bin_granges(regions,bin_size=10)),10) 
-  expect_equivalent(reduce(bin_granges(regions,bin_size=10)),regions)
+  expect_equal(length(bin_granges(regions,bin_size=10)),10) 
+  expect_equal(reduce(bin_granges(regions,bin_size=10)),regions)
 })
 
 test_that("split_granges",{
@@ -29,10 +29,10 @@ test_that("split_granges",{
   percent = 33
   size = 33
   
-  expect_equivalent(length(split_granges(regions,chunks=chunks)),3)
-  expect_equivalent(length(split_granges(regions,percent=percent)),4)
-  expect_equivalent(length(split_granges(regions,percent=percent)[[4]]),1)
-  expect_equivalent(split_granges(regions,percent=percent),split_granges(regions,size=size))
+  expect_equal(length(split_granges(regions,chunks=chunks)),3)
+  expect_equal(length(split_granges(regions,percent=percent)),4)
+  expect_equal(length(split_granges(regions,percent=percent)[[4]]),1)
+  expect_equal(split_granges(regions,percent=percent),split_granges(regions,size=size))
   expect_true(all(regions == unlist(split_granges(regions,size=size))))
 
 })
@@ -64,17 +64,17 @@ test_that("start,split,stop_time",{
 
 test_that("split_vector",{
   vec <- c(1,2,3,4,5,6,7,8)
-  expect_equivalent(split_vector(vec,4,by="size"),split_vector(vec,2,by="chunk"))
+  expect_equal(split_vector(vec,4,by="size"),split_vector(vec,2,by="chunk"))
 })
 
 test_that("cast_granges",{
   expect_error(cast_granges("not a Granges"))
   
   gr <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
-  expect_equivalent(gr,cast_granges(gr))
+  expect_equal(gr,cast_granges(gr))
   
   df <- data.frame(chr=as.character(gr@seqnames),start=gr@ranges@start,end=gr@ranges@width)
-  expect_equivalent(gr,cast_granges(df))
+  expect_equal(gr,cast_granges(df))
 })
 
 test_that("subset_ref_cpgs",{
@@ -87,6 +87,6 @@ test_that("subset_ref_cpgs",{
   
   sub_cpgs = subset_ref_cpgs(ref_cpgs, gen_cpgs)
   
-  expect_equivalent(ref_cpgs[1:3,],sub_cpgs)
+  expect_equal(ref_cpgs[1:3,],sub_cpgs)
   
 })
