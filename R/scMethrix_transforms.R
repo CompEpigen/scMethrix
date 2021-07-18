@@ -82,7 +82,7 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
 #' bin_scMethrix(scMethrix_data, regions = regions)
 #' @export
 bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by = "bp", trans = NULL, 
-                          overlap_type = "within", h5_dir = NULL, verbose = TRUE, n_threads = 1, n_chunks = 1) {
+                          overlap_type = "within", h5_dir = NULL, verbose = TRUE, n_threads = 1) {
 
   yid <- NULL
   
@@ -98,8 +98,6 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
   bin_by = match.arg(arg = bin_by, choices = c("bp","cpg"))
   
-  if (verbose) message("Subsetting for ",length(regions)," input regions...",start_time())
-  
   if (!is.null(regions)) {
     regions = cast_granges(regions)
     scm <- subset_scMethrix(scm, regions = regions) 
@@ -107,7 +105,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
     regions = range(rowRanges(scm))
   }
 
-
+  if (verbose) message("Subsetting for ",length(regions)," input regions...",start_time())
+  
   regions$rid <- paste0("rid_", 1:length(regions))
   
   overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type)) 
@@ -219,13 +218,171 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
                               genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),)
   }
   
-  if (verbose) message("Experiment binned for ",length(regions)," containing ",length(m_obj)," total bins in ",stop_time())
+  if (verbose) message("Experiment binned for ",length(regions)," regions containing ",length(m_obj)," total bins in ",stop_time())
   
   parallel::stopCluster(cl)
   rm(cl)
   
   return (m_obj)
 }
+
+#------------------------------------------------------------------------------------------------------------
+#' Bins the ranges of an \code{\link{scMethrix}} object.
+#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. Typically, most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be  from \pkg{DelayedMatrixStats}.
+#' 
+#' In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs.
+#' @inheritParams generic_scMethrix_function
+#' @param regions The regions from which to make the bins
+#' @param bin_size integer; The size of each bin. First bin will begin at the start position of the first genomic
+#' region on the chromosome. If NULL, there will be one bin per region. Default 100000.
+#' @param bin_by character; can create bins by # of base pairs "bp" or by # of CpG sites "cpg". Default "bp"
+#' @param trans named vector of closures; The transforms for each assay in a named vector. Default NULL, meaning that 
+#' operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is mean(x, na.rm=TRUE)
+#' @param overlap_type character; defines the type of the overlap of the CpG sites with the target region. 
+#' Default value is `within`. For detailed description, see the \code{findOverlaps} function of the 
+#' \code{\link{IRanges}} package.
+#' @param h5_dir directory to store an H5 based object
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' regions <- GRanges(seqnames = c("chr1"), ranges = IRanges(1,200000000)) 
+#' regions <- unlist(tile(regions,10))
+#' bin_scMethrix(scMethrix_data, regions = regions)
+#' @export
+bin_scMethrix2 <- function(scm, regions = NULL, bin_size = 100000, bin_by = "bp", trans = NULL, 
+                          overlap_type = "within", h5_dir = NULL, verbose = TRUE) {
+  
+  yid <- NULL
+  
+  if (is.null(trans)) {
+    trans <- c(counts = function(x) DelayedMatrixStats::colSums2(x,na.rm=TRUE))
+  }
+  
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (is_h5(scm) && is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
+  
+  bin_by = match.arg(arg = bin_by, choices = c("bp","cpg"))
+  
+  if (!is.null(regions)) {
+    regions = cast_granges(regions)
+    scm <- subset_scMethrix(scm, regions = regions) 
+  } else { # If no region is specifed, use entire chromosomes
+    regions = range(rowRanges(scm))
+  }
+  
+  if (verbose) message("Subsetting for ",length(regions)," input regions...",start_time())
+  
+  regions$rid <- paste0("rid_", 1:length(regions))
+  
+  overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type)) 
+  
+  if(nrow(overlap_indices) == 0){
+    stop("No overlaps detected")
+  }
+  
+  colnames(overlap_indices) <- c("xid", "yid")
+  overlap_indices[,yid := paste0("rid_", yid)]
+  
+  if (!is.null(bin_size)) {
+    
+    if (verbose) message("Binning by ",bin_by," with size of ",bin_size,"...")
+    
+    if (bin_by == "cpg") {
+      
+      rrng = GRanges()
+      
+      for(rid in 1:length(regions$rid)) {
+        
+        #if (verbose) message("   Processing region ",rid,"/",length(regions$rid))
+        
+        idx <- which(overlap_indices[,yid == regions$rid[rid]])
+        idx <- split_vector(idx,num = bin_size, by = "size")
+        
+        for(i in idx) {
+          gr <- range(rowRanges(scm[c(i[1],i[length(i)]),]))
+          gr$n_cpgs <- length(i)
+          rrng <- c(rrng,gr)
+        }
+      }
+      
+    } else if (bin_by == "bp") {
+      
+      rrng <- unlist(tile(regions, width = bin_size)) #TODO: Should switch this to using RLE lookup
+      
+      idx <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type))
+      
+      rrng <- rrng[unique(idx$subjectHits)]
+      rrng$n_cpgs <- rle(idx$subjectHits)$lengths
+    }
+    
+  } else { # If no bin_size is specified, use the entire region
+    rrng <- regions
+  }
+  
+  if (verbose) message("Generated ",length(rrng)," bins in ",split_time())
+  
+  assays <- list()
+  
+  rrng$rid <- paste0("rid_", 1:length(rrng))
+  overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type))
+  colnames(overlap_indices) <- c("xid", "yid")
+  overlap_indices[,yid := paste0("rid_", yid)]
+  
+  for (name in SummarizedExperiment::assayNames(scm)) {
+    
+    if (verbose) message("   Filling bins for the ",name," assay...")
+    
+    if (is.null(trans[[name]])) { # If no named vector is specified, default to mean
+      op <- function(x) DelayedMatrixStats::colMeans2(x,na.rm=TRUE)
+    } else {
+      op <- trans[[name]]
+    }
+    
+    assay <- lapply(rrng$rid,function (rid) {  
+      
+      if (is_h5(scm)) {
+        
+        # Do things 
+        
+      } else {
+        idx <- which(overlap_indices[,yid == rid])
+        vals <- get_matrix(scm[idx,],assay=name)
+        names <- colnames(vals)
+        
+        vals <- op(vals)
+        names(vals) <- names
+      }
+      
+      return (data.frame(t(vals)))
+      
+    })
+    
+    assays[[name]] <- as(rbindlist(assay),class(get_matrix(scm,assay=name)))
+    
+    if (verbose) message("Bins filled in ",split_time())
+  }
+  
+  rrng$rid <- NULL
+  
+  if (verbose) message("Rebuilding experiment...")
+  
+  if (is_h5(scm)) {
+    m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_hdf5 = TRUE, 
+                              h5_dir = h5_dir, genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),
+                              replace = replace)  
+  } else {
+    m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_hdf5 = FALSE, 
+                              genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),)
+  }
+  
+  if (verbose) message("Experiment binned for ",length(regions)," regions containing ",length(m_obj)," total bins in ",stop_time())
+  
+  return (m_obj)
+}
+
 
 #------------------------------------------------------------------------------------------------------------
 #' Imputes the NA values of a \code{\link{scMethrix}} object.
@@ -500,9 +657,14 @@ generate_random_subset <- function(scm = NULL, n_cpgs = 10000, seed = "123") {
   }
   
   if (n_cpgs > nrow(scm) || n_cpgs < 1) {
-    stop("Invalid n_cpgs. Must be between 1 and",nrow(scm))
+    n_cpgs = max(1,n_cpgs)
+    n_cpgs = min(nrow(scm),n_cpgs)
+    warning("Invalid n_cpgs. Must be between 1 and ",nrow(scm),". Defaulted to ",n_cpgs)
   }
 
+  
+  
+  
   set.seed(seed)
   idx <- sort(sample(1:nrow(scm),n_cpgs))
   

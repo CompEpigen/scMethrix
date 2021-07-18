@@ -62,8 +62,8 @@ test_that("generate_random_subset", {
   
   #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(generate_random_subset(scm,n_cpgs = nrow(scm)+1))
-    expect_error(generate_random_subset(scm,n_cpgs = -1))
+    expect_warning(generate_random_subset(scm,n_cpgs = nrow(scm)+1))
+    expect_warning(generate_random_subset(scm,n_cpgs = -1))
     
     m <- generate_random_subset(scm,n_cpgs = 100)
     expect_equal(nrow(m),100)
