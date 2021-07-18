@@ -306,125 +306,92 @@ get_source_idx = function(protocol = NULL) {
 
 #' Subsets a given list of CpGs by another list of CpGs
 #' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
-#' @param chr integer; column of the chromosome
-#' @param start integer; column of the CpG start site
-#' @param end integer; column of the CpG end site
-#' @param strand integer; column of the strand
-#' @param beta integer; column of the beta value
-#' @param n_meth integer; column of the # of methylated reads
-#' @param n_unmeth integer; column of the # of unmethylated reads
-#' @param cov integer; column of the coverage
+#' @param chr_idx integer; column of the chromosome
+#' @param start_idx integer; column of the CpG start site
+#' @param end_idx integer; column of the CpG end site
+#' @param strand_idx integer; column of the strand
+#' @param beta_idx integer; column of the beta value
+#' @param M_idx integer; column of the # of methylated reads
+#' @param U_idx integer; column of the # of unmethylated reads
+#' @param cov_idx integer; column of the coverage
 #' @param beta_fract double; fraction of methylated bases TODO: check this
 #' @param verbose flag to output messages or not
 #' @return List of column names and indexes
 #' @examples
 #' @export
-parse_source_idx = function(chr = NULL, start = NULL, end = NULL, strand = NULL,
-                            beta = NULL, n_meth = NULL, n_unmeth = NULL,
-                            cov = NULL, beta_fract = FALSE,
+parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, strand_idx = NULL,
+                            beta_idx = NULL, M_idx = NULL, U_idx = NULL,
+                            cov_idx = NULL, beta_fract = FALSE,
                             verbose = TRUE) {
   
   # mandatory chr and start field
-  if (is.null(chr) | is.null(start)) {
+  if (is.null(chr_idx) | is.null(start_idx)) {
     stop("missing chromosome/start indices\nUse pipeline argument if the files are from Bismark, MethyDeckal, or MethylcTools",
          call. = FALSE)
   }
   
   # See if any indices are duplicated
-  if (length(which(duplicated(c(chr, start, end, strand, beta, n_meth,
-                                n_unmeth, cov)))) > 0) {
+  if (length(which(duplicated(c(chr_idx, start_idx, end_idx, strand_idx, beta_idx, M_idx,
+                                U_idx, cov_idx)))) > 0) {
     stop("Duplicated indices.", call. = FALSE)
   }
   
   # Check maximum betavalues (Can be 1 or 100)
   fix_missing = vector()
-  if (is.null(strand)) {
+  if (is.null(strand_idx)) {
     fix_missing = "strand := '*'"
   }
   
-  # If beta and cov are missing
-  if (all(is.null(beta), is.null(cov))) {
-    if (is.null(n_meth) | is.null(n_unmeth)) {
-      stop("Missing beta or coverage values.\nU and M are not available either!",
-           call. = FALSE)
+  has_cov <- TRUE
+  
+  if (is.null(beta_idx)) {                                                             
+    if (is.null(M_idx) && is.null(U_idx)) {
+      stop("Missing beta and cannot derive due to missing M and U.", call. = FALSE)
+    } else if (is.null(cov_idx)){
+      if(is.null(M_idx) || is.null(U_idx)) { 
+        stop("Missing beta and cannot derive due to missing cov and one of M or U.", call. = FALSE)
+      } else {
+        if (verbose) message("Estimating beta and cov from M and U")
+        fix_missing = c(fix_missing, "cov := M+U", "beta := M/cov")
+      } 
+    } else if (!is.null(M_idx)) {
+      if (verbose) message("Estimating beta and U from M and cov")
+      fix_missing = c(fix_missing, "U := cov-M", "beta := M/cov")
+    } else if (!is.null(U_idx)) {
+      if (verbose) message("Estimating beta and M from U and cov")
+      fix_missing = c(fix_missing, "M := cov-U", "beta := M/cov")
     } else {
-      if (verbose) {
-        message("--Missing beta and coverage info. Estimating them from M and U values")
+       stop("This should never happen...")
+    }
+  } else { 
+    if (is.null(cov_idx)) {
+      if(!is.null(M_idx) && !is.null(U_idx)) { 
+        if (verbose) message("Estimating cov from M and U")
+        fix_missing = c(fix_missing, "cov := M+U") # Has: beta,M,U   No: cov
+      # } else if (is.null(U_idx)) {
+      #   if (verbose) message("Estimating cov and U from M and beta")
+      #   fix_missing = c(fix_missing, "cov := as.integer(M/beta)", # Has: beta,M,U   No: cov
+      #                   "U := cov-M"
+      # } else if (is.null(M_idx)) {
+      #   if (verbose) message("Estimating cov and M from U and beta")
+      #   fix_missing = c(fix_missing, "cov := as.integer(U*(1-beta))", # Has: beta,M,U   No: cov
+      #                   "M := cov-U")
+      # 
+      } else {
+        has_cov = FALSE
       }
-      
-      return(list(col_idx = c(chr = chr, start = start, end = end,
-                              strand = strand, beta = beta, M = n_meth,
-                              U = n_unmeth,
-                              cov = cov),
-                  fix_missing = c(fix_missing, "cov := M+U",
-                                  "beta := M/(M+U)"), select = FALSE))
-    }
-  } else if (is.null(beta) & !is.null(cov)) {
-    # If anyone of them is present (case-1: coverage available, estimate
-    # beta)
-    if (all(is.null(n_meth), is.null(n_unmeth))) {
-      stop("Missing beta values but coverage info available.\nEither U or M are required for estimating beta values!",
-           call. = FALSE)
-    } else if (all(!is.null(n_meth), !is.null(n_unmeth))) {
-      message("--Estimating beta values from M and U")
-      return(list(col_idx = c(chr = chr, start = start, end = end,
-                              strand = strand, beta = beta, M = n_meth,
-                              U = n_unmeth,  cov = cov),
-                  fix_missing = c(fix_missing, "beta := M/(M+U"), select = FALSE))
-    } else if (!is.null(n_meth)) {
-      # M available
-      message("--Estimating beta values from M and coverage")
-      return(list(col_idx = c(chr = chr, start = start, end = end,
-                              strand = strand, beta = beta, M = n_meth,
-                              U = n_unmeth, cov = cov),
-                  fix_missing = c(fix_missing, "beta := M/cov",
-                                  "U := cov - M"), select = FALSE))
-    } else if (!is.null(n_unmeth)) {
-      # U available
-      message("--Estimating beta values from U and coverage")
-      return(list(col_idx = c(chr = chr, start = start, end = end,
-                              strand = strand, beta = beta,M = n_meth,
-                              U = n_unmeth, cov = cov),
-                  fix_missing = c(fix_missing, paste0("beta := 1- (U/cov)"),
-                                  "M := cov - U"), select = FALSE))
-    }
-  } else if (!is.null(beta) & is.null(cov)) {
-    # If anyone of them is present (case-2: beta available, estimate
-    # coverage)
-    if (all(is.null(n_meth), is.null(n_unmeth))) {
-      stop("Missing coverage info but beta values are available.\nU and M are required for estimating coverage values!",
-           call. = FALSE)
     } else {
-      if (verbose) {
-        message("--Estimating coverage from M and U")
-      }
-      
-      return(list(col_idx = c(chr = chr, start = start, end = end,
-                              strand = strand, beta = beta, M = n_meth,
-                              U = n_unmeth, cov = cov),
-                  fix_missing = c(fix_missing, "cov := M+U"), select = FALSE))
-    }
-  } else if (!is.null(beta) & !is.null(cov)) {
-    # If both present (case-3: beta and coverage available, but missing M
-    # and U)
-    if (all(is.null(n_meth), is.null(n_unmeth))) {
-      if (verbose) {
-        message("--Estimating M and U from coverage and beta values")
-      }
-      
-      return(list(col_idx = c(chr = chr, start = start, end = end,
-                              strand = strand, beta = beta, cov = cov),
-                  fix_missing = c("M := as.integer(cov * beta)",
-                                  "U := cov - M"), select = FALSE))
-    } else {
-      if (verbose) {
-        message("--All fields are present. Nice.")
-      }
-      
-      return(list(col_idx = c(chr = chr, start = start, end = end,
-                              strand = strand, beta = beta, cov = cov, M = n_meth,
-                              U = n_unmeth),
-                  fix_missing = NULL, select = FALSE))
+      if (verbose) message("Estimating M and U from beta and cov")
+      fix_missing = c(fix_missing,"M := as.integer(cov * beta)",
+                      "U := cov - M")
     }
   }
+   
+  return(list(col_idx = c(chr = chr_idx, start = start_idx, end = end_idx, 
+                            strand = strand_idx, beta = beta_idx, M = M_idx, 
+                            U = U_idx,                                       
+                            cov = cov_idx),
+                fix_missing = fix_missing,
+                has_cov = has_cov,
+                select = FALSE))
 }

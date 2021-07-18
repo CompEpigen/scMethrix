@@ -5,34 +5,34 @@
 \title{Subsets a given list of CpGs by another list of CpGs}
 \usage{
 parse_source_idx(
-  chr = NULL,
-  start = NULL,
-  end = NULL,
-  strand = NULL,
-  beta = NULL,
-  n_meth = NULL,
-  n_unmeth = NULL,
-  cov = NULL,
+  chr_idx = NULL,
+  start_idx = NULL,
+  end_idx = NULL,
+  strand_idx = NULL,
+  beta_idx = NULL,
+  M_idx = NULL,
+  U_idx = NULL,
+  cov_idx = NULL,
   beta_fract = FALSE,
   verbose = TRUE
 )
 }
 \arguments{
-\item{chr}{integer; column of the chromosome}
+\item{chr_idx}{integer; column of the chromosome}
 
-\item{start}{integer; column of the CpG start site}
+\item{start_idx}{integer; column of the CpG start site}
 
-\item{end}{integer; column of the CpG end site}
+\item{end_idx}{integer; column of the CpG end site}
 
-\item{strand}{integer; column of the strand}
+\item{strand_idx}{integer; column of the strand}
 
-\item{beta}{integer; column of the beta value}
+\item{beta_idx}{integer; column of the beta value}
 
-\item{n_meth}{integer; column of the # of methylated reads}
+\item{M_idx}{integer; column of the # of methylated reads}
 
-\item{n_unmeth}{integer; column of the # of unmethylated reads}
+\item{U_idx}{integer; column of the # of unmethylated reads}
 
-\item{cov}{integer; column of the coverage}
+\item{cov_idx}{integer; column of the coverage}
 
 \item{beta_fract}{double; fraction of methylated bases TODO: check this}
 

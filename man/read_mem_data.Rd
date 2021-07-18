@@ -7,7 +7,7 @@
 read_mem_data(
   files,
   ref_cpgs,
-  col_idx,
+  col_list,
   batch_size = 200,
   n_threads = 0,
   zero_based = FALSE,
@@ -19,7 +19,7 @@ read_mem_data(
 
 \item{ref_cpgs}{The index of all unique coordinates from the input BED files}
 
-\item{col_idx}{The column index for the input BED files}
+\item{col_list}{The column index object for the input BED files}
 
 \item{batch_size}{The number of files to hold in memory at once}
 

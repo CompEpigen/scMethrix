@@ -1,18 +1,18 @@
 test_that("read_index", {
 
-  index <- read_index(files, col_idx = col_idx)
+  index <- read_index(files, col_list = col_list)
   expect_equal(names(index),c("chr","start","end"))
   expect_equal(dim(index),c(n_cpg,3))
-  expect_equal(index,read_index(files,n_threads=2, col_idx = col_idx))
+  expect_equal(index,read_index(files,n_threads=2, col_list = col_list))
   
 })
 
 test_that("read_bed_by_index", {
   
   file <- files[1]
-  index <- read_index(files, col_idx)
+  index <- read_index(files, col_list = col_list)
   C1 <- data.table::fread(file = file, sep = '\t', header = FALSE)
-  bed <- read_bed_by_index(file,index,col_idx=col_idx)[[1]]
+  bed <- read_bed_by_index(file,index,col_list=col_list)[[1]]
   expect_equal(dim(bed),c(nrow(index),1))
   expect_equal(dim(na.omit(bed)),c(nrow(C1),1))
 
@@ -31,7 +31,7 @@ test_that("read_bed - HDF5, no coverage", {
   
   path <- paste0(h5_dir,"HDF5mem")
   
-  scm1 <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
+  scm1 <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
   scm2 <- load_HDF5_scMethrix(dir=path)
     
   expect_true(is_h5(scm1))
@@ -47,7 +47,7 @@ test_that("read_bed - HDF5, no coverage", {
 
 test_that("read_bed - in-memory, no coverage", {
   
-  scm <- read_beds(files,h5=FALSE, chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx = 5)
+  scm <- read_beds(files,h5=FALSE, chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
   
   expect_equal(class(scm)[1],"scMethrix")
   expect_equal(class(get_matrix(scm))[[1]],"matrix")
@@ -91,8 +91,8 @@ test_that("read_bed - HDF5 and in-memory equivalence, no coverage", {
   
   path <- paste0(h5_dir,"HDF5equiv")
   
-  scm.hdf <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
-  scm.mem <- read_beds(files,h5=FALSE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
+  scm.hdf <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
+  scm.mem <- read_beds(files,h5=FALSE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
   
   expect_equal(as.matrix(score(scm.hdf)),score(scm.mem))
   expect_equal(rowRanges(scm.hdf),rowRanges(scm.mem))

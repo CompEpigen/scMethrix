@@ -64,9 +64,9 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   # Get the correct indexes of the input beds
   if (is.null(pipeline)) {
     message(paste0("-Preset:        Custom"))
-    col_idx <- parse_source_idx(chr = chr_idx, start = start_idx, end = end_idx,
-                                beta = beta_idx, cov = cov_idx, strand = strand_idx, n_meth = M_idx,
-                                n_unmeth = U_idx, verbose = verbose)
+    col_list <- parse_source_idx(chr_idx = chr_idx, start_idx = start_idx, end_idx = end_idx,
+                                 beta_idx = beta_idx, cov_idx = cov_idx, strand_idx = strand_idx, 
+                                 M_idx = M_idx, U_idx = U_idx, verbose = verbose)
   } else {
     pipeline <- match.arg(arg = pipeline, choices = c("Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"))
     if (verbose) {
@@ -82,7 +82,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     }
   }
   
-  col_idx <<- col_idx
+  col_list <<- col_list
   #col_idx <- col_idx$col_idx
   
   if (h5) {
@@ -93,15 +93,15 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
                                             existing data in that directory will be deleted.") 
     
     if (is.null(ref_cpgs)) {
-      ref_cpgs <- read_index(files = files, col_idx = col_idx, n_threads = n_threads, 
+      ref_cpgs <- read_index(files = files, col_list = col_list, n_threads = n_threads, 
                              batch_size = batch_size, zero_based = zero_based)
     } else {
-      ref_cpgs <- subset_ref_cpgs(ref_cpgs, read_index(files=files,col_idx = col_idx,n_threads,
+      ref_cpgs <- subset_ref_cpgs(ref_cpgs, read_index(files=files,col_list = col_list,n_threads,
                                                        batch_size = batch_size, zero_based = zero_based))
     }
 
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
-    if (is.null(reads)) reads <- read_hdf5_data(files = files, ref_cpgs = ref_cpgs, col_idx = col_idx, 
+    if (is.null(reads)) reads <- read_hdf5_data(files = files, ref_cpgs = ref_cpgs, col_list = col_list, 
                                                 n_threads = n_threads, h5_temp = h5_temp, 
                                                 zero_based = zero_based, verbose = verbose)
     message("Building scMethrix object")
@@ -124,8 +124,8 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 
     message("Reading in BED files") 
     
-    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,col_idx = col_idx, n_threads = n_threads,zero_based = zero_based)
-    reads <- read_mem_data(files, ref_cpgs, col_idx = col_idx, batch_size = batch_size, n_threads = n_threads,
+    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,col_list = col_list, n_threads = n_threads,zero_based = zero_based)
+    reads <- read_mem_data(files, ref_cpgs, col_list = col_list, batch_size = batch_size, n_threads = n_threads,
                            zero_based = zero_based,verbose = verbose)
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     
@@ -157,7 +157,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 #' @param n_threads integer for number of threads to use
 #' @param batch_size Number of files to process before running unique. Default of 30.
 #' @param zero_based Whether the input data is 0 or 1 based
-#' @param col_idx The column indexes for the input BED files
+#' @param col_list The column index object for the input BED files
 #' @param verbose flag to output messages or not.
 #' @return data.table containing all unique genomic coordinates
 #' @import parallel doParallel
@@ -166,7 +166,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 #' #Do Nothing
 #' }
 #' @export
-read_index <- function(files, col_idx, n_threads = 0, zero_based = FALSE, batch_size = 200, verbose = TRUE) {
+read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch_size = 200, verbose = TRUE) {
 
   # Parallel functionality
   if (n_threads != 0) {
@@ -187,7 +187,7 @@ read_index <- function(files, col_idx, n_threads = 0, zero_based = FALSE, batch_
     chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
     
     rrng <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
-                                  batch_size=round(batch_size/n_threads), col_idx = col_idx,
+                                  batch_size=round(batch_size/n_threads), col_list = col_list,
                                   n_threads = 0, zero_based = zero_based, verbose = FALSE))
     
     parallel::stopCluster(cl)
@@ -208,7 +208,7 @@ read_index <- function(files, col_idx, n_threads = 0, zero_based = FALSE, batch_
   for (i in 1:length(files)) {
     if (verbose) message("   Parsing: ",get_sample_name(files[i]),appendLF=FALSE)
     
-    data <- data.table::fread(files[i], header=FALSE, select = unname(col_idx$col_idx[c("chr","start")]))
+    data <- data.table::fread(files[i], header=FALSE, select = unname(col_list$col_idx[c("chr","start")]))
     
     # Concat the batch list if last element, otherwise save and iterate
     if (i%%batch_size == 0) {
@@ -248,28 +248,30 @@ read_index <- function(files, col_idx, n_threads = 0, zero_based = FALSE, batch_
 #' @param file The BED file to parse
 #' @param ref_cpgs The index of all unique coordinates from the input BED files
 #' @param zero_based Whether the input data is 0 or 1 based
-#' @param col_idx The column indexes for the input BED files
+#' @param col_list The column index object for the input BED files
 #' @return data.table containing vector of all indexed methylation values for the input BED
 #' @examples
 #' \dontrun{
 #' #Do Nothing
 #' }
 #' @export
-read_bed_by_index <- function(file, ref_cpgs, col_idx = NULL, zero_based=FALSE) {
+read_bed_by_index <- function(file, ref_cpgs, col_list = NULL, zero_based=FALSE) {
 
   . <- chr <- start <- beta <- meth1 <- meth2 <- cov <- cov1 <- cov2 <- NULL
 
-  col_idx <- col_idx$col_idx
-  
   # Format will be: chr | start | meth | cov
-  data <- data.table::fread(file, select = unname(col_idx), col.names = names(col_idx),
-                                             key = c("chr", "start"))
+  data <- suppressWarnings(data.table::fread(file, select = unname(col_list$col_idx), 
+                                             col.names = names(col_list$col_idx), key = c("chr", "start")))
+  
+  if (!is.null(col_list$fix_missing)) {
+    for (cmd in col_list$fix_missing) {
+      data[, eval(parse(text = cmd))]
+    }
+  }
   
   #if (zero_based) data[,start] <- data[,start]+1L
-  
-  cov_idx = col_idx["cov"]
-  
-  if (!is.na(cov_idx)) {
+
+  if (col_list$has_cov) {
     
     #Do the search
     sample <- cbind(data[.(ref_cpgs$chr, ref_cpgs$start)][,.(beta,cov)],
@@ -300,17 +302,17 @@ read_bed_by_index <- function(file, ref_cpgs, col_idx = NULL, zero_based=FALSE) 
   {warning(paste0("Only ",round(s/d*100,1) ,"% of CpG sites in '",basename(file),"' are present in ref_cpgs"))}
   
   # Save the sample name data
-  if (!is.null(cov_idx)) {
+  if (col_list$has_cov) {
     sample <- data.table(sapply(sample, as.integer))
-    sample <- list(meth = sample[,.(beta)], cov = sample[,.(cov)])
-    names(sample$meth) <- get_sample_name(file)
+    sample <- list(beta = sample[,.(beta)], cov = sample[,.(cov)])
+    names(sample$beta) <- get_sample_name(file)
     names(sample$cov) <- get_sample_name(file)
   } else {
     sample <- data.table(as.integer(sample))
     names(sample) <- get_sample_name(file)
-    sample <- list(sample)
+    sample <- list(beta = sample)
   }
-  
+
   return(sample)
 }
 
@@ -322,7 +324,7 @@ read_bed_by_index <- function(file, ref_cpgs, col_idx = NULL, zero_based=FALSE) 
 #' @param n_threads The number of threads to use. 0 is the default thread with no cluster built.
 #' @param h5_temp The file location to store the \code{\link{RealizationSink}} object
 #' @param zero_based Boolean flag for whether the input data is zero-based or not
-#' @param col_idx The column indexes for the input BED files
+#' @param col_list The column index object for the input BED files
 #' @param verbose flag to output messages or not.
 #' @return List of \code{\link{HDF5Array}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
 #' @import DelayedArray HDF5Array parallel doParallel
@@ -330,15 +332,12 @@ read_bed_by_index <- function(file, ref_cpgs, col_idx = NULL, zero_based=FALSE) 
 #' \dontrun{
 #' #Do Nothing
 #' }
-read_hdf5_data <- function(files, ref_cpgs, col_idx, n_threads = 0, h5_temp = NULL, zero_based = FALSE, 
+read_hdf5_data <- function(files, ref_cpgs, col_list, n_threads = 0, h5_temp = NULL, zero_based = FALSE, 
                            verbose = TRUE) {
 
   if (verbose) message("Starting HDF5 object",start_time()) 
   
   if (is.null(h5_temp)) {h5_temp <- tempdir()}
-  
-  
-  has_cov <- !is.na(col_idx$col_idx["cov"])
   
   # Generate the realization sinks
   dimension <- as.integer(nrow(ref_cpgs))
@@ -349,7 +348,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_idx, n_threads = 0, h5_temp = NU
                                            filepath = tempfile(pattern="M_sink_",tmpdir=h5_temp),
                                            name = "M", level = 6)
   
-  cov_sink <- if(!has_cov) NULL else 
+  cov_sink <- if(!col_list$has_cov) NULL else 
               HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
                                              dimnames = list(NULL, colData), type = "integer",
                                              filepath = tempfile(pattern = "cov_sink_", tmpdir = h5_temp),
@@ -377,22 +376,22 @@ read_hdf5_data <- function(files, ref_cpgs, col_idx, n_threads = 0, h5_temp = NU
     if (n_threads == 0) {
       if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
       
-      bed <- read_bed_by_index(files[i], ref_cpgs, col_idx = col_idx, zero_based = zero_based)
+      bed <- read_bed_by_index(files[i], ref_cpgs, col_list = col_list, zero_based = zero_based)
       
-      DelayedArray::write_block(block = as.matrix(bed[["meth"]]), viewport = grid[[i]], sink = M_sink)
+      DelayedArray::write_block(block = as.matrix(bed[["beta"]]), viewport = grid[[i]], sink = M_sink)
       
-      if (has_cov) DelayedArray::write_block(block = as.matrix(bed[["cov"]]),
+      if (col_list$has_cov) DelayedArray::write_block(block = as.matrix(bed[["cov"]]),
                                                        viewport = grid[[i]], sink = cov_sink)
     } else {
       if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
       bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index, ref_cpgs = ref_cpgs,
-                                 col_idx = col_idx, zero_based = zero_based)
+                                 col_list = col_list, zero_based = zero_based)
 
-      DelayedArray::write_block(block = as.matrix(cbind(lapply(bed, `[[`, 1))), 
+      DelayedArray::write_block(block = as.matrix(cbind(lapply(bed, `[[`, "beta"))), 
                                 viewport = grid[[i]], sink = M_sink)      
       
-      if (!is.null(col_idx$cov)) {
-        DelayedArray::write_block(block = as.matrix(cbind(lapply(bed, `[[`, 2))), 
+      if (!is.null(col_list$cov)) {
+        DelayedArray::write_block(block = as.matrix(cbind(lapply(bed, `[[`, "cov"))), 
                                   viewport = grid[[i]], sink = cov_sink)
       }
     }
@@ -405,7 +404,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_idx, n_threads = 0, h5_temp = NU
   if (n_threads != 0) parallel::stopCluster(cl)
   if (verbose) message("Object created in ",stop_time()) 
   
-  if (has_cov) {
+  if (col_list$has_cov) {
     reads = list(score = M_sink, counts = cov_sink)
   } else {
     reads = list(score = M_sink)
@@ -424,7 +423,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_idx, n_threads = 0, h5_temp = NU
 #' @param batch_size The number of files to hold in memory at once
 #' @param n_threads The number of threads to use. 0 is the default thread with no cluster built.
 #' @param zero_based Boolean flag for whether the input data is zero-based or not
-#' @param col_idx The column index for the input BED files
+#' @param col_list The column index object for the input BED files
 #' @param verbose flag to output messages or not.
 #' @return matrix of the methylation values for input BED files
 #' @import parallel doParallel
@@ -432,13 +431,13 @@ read_hdf5_data <- function(files, ref_cpgs, col_idx, n_threads = 0, h5_temp = NU
 #' \dontrun{
 #' #Do Nothing
 #' }
-read_mem_data <- function(files, ref_cpgs, col_idx, batch_size = 200, n_threads = 0, zero_based = FALSE, 
+read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 200, n_threads = 0, zero_based = FALSE, 
                           verbose = TRUE) {
+
+
   
   if (verbose) message("Reading BED data...",start_time()) 
-  
-  has_cov <- !is.na(col_idx$col_idx["cov"])
-  
+
   if (n_threads != 0) {
     # Parallel functionality
     if (verbose) message("Starting cluster with ",n_threads," threads.")
@@ -452,23 +451,24 @@ read_mem_data <- function(files, ref_cpgs, col_idx, batch_size = 200, n_threads 
     chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
     
     reads <- c(parallel::parLapply(cl,files,fun=read_bed_by_index, ref_cpgs = ref_cpgs, 
-                                   zero_based = zero_based, col_idx = col_idx))
+                                   zero_based = zero_based, col_list = col_list))
     
     parallel::stopCluster(cl)
   
   } else {
     # Single thread functionality
     # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
-    reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based, col_idx = col_idx)
+    reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based, col_list = col_list)
   }
-    if (has_cov) {
-      reads <- list(score = cbind(lapply(reads, `[[`, 1)),
-                    counts = cbind(lapply(reads, `[[`, 2)))
-    } else {
-      reads <- list(score = cbind(lapply(reads, `[[`, 1)))
-    }
+
+  if (col_list$has_cov) {
+    reads <- list(score = cbind(lapply(reads, `[[`, "beta")),
+                  counts = cbind(lapply(reads, `[[`, "cov")))
+  } else {
+    reads <- list(score = cbind(lapply(reads, `[[`, "beta")))
+  }
     
-    reads <- lapply(reads,function(x) as.matrix(do.call(cbind, x)))
+  reads <- lapply(reads,function(x) as.matrix(do.call(cbind, x)))
     
     # if (verbose) message(" (",split_time(),")")
   

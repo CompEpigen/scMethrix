@@ -37,7 +37,6 @@ bench <- microbenchmark(
   times = 1,unit = "s"
 )
 
-
 ### Benchmark the indexing #######################################
 read.index <- microbenchmark(
   # "base" = {

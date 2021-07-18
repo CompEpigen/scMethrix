@@ -7,7 +7,7 @@
 read_hdf5_data(
   files,
   ref_cpgs,
-  col_idx,
+  col_list,
   n_threads = 0,
   h5_temp = NULL,
   zero_based = FALSE,
@@ -19,7 +19,7 @@ read_hdf5_data(
 
 \item{ref_cpgs}{The index of all unique coordinates from the input BED files}
 
-\item{col_idx}{The column indexes for the input BED files}
+\item{col_list}{The column index object for the input BED files}
 
 \item{n_threads}{The number of threads to use. 0 is the default thread with no cluster built.}
 
