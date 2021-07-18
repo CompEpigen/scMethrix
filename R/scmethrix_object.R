@@ -13,6 +13,7 @@
 #' @exportClass scMethrix
 #' @importFrom stats median quantile sd
 #' @importFrom utils data head write.table
+#' @importFrom methods is as new
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #'
 scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")

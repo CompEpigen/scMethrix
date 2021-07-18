@@ -452,122 +452,6 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Filter matrices by coverage
-#' @details Takes \code{\link{scMethrix}} object and filters CpGs based on coverage statistics
-#' @inheritParams generic_scMethrix_function
-#' @param cov_thr minimum coverage required to call a loci covered
-#' @param min_samples Minimum number of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
-#' @param prop_samples Minimum proportion of samples that should have a loci with coverage >= \code{cov_thr}. If \code{group} is given, then this applies per group. Only need one of \code{prop_samples} or \code{min_samples}.
-#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be tested group-wise.
-					 
-#' @importFrom methods is as new
-#' @examples
-#' data('scMethrix_data')
-#' coverage_filter(scMethrix_data, min_sample=2)
-#' @return An object of class \code{\link{scMethrix}}
-#' @export
-coverage_filter <- function(scm = NULL, cov_thr = 1, min_samples = NULL, prop_samples=NULL, group = NULL, n_chunks=1, n_threads=1) {
-  
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
-  }
-  
-  if (!is.null(min_samples) && !is.null(prop_samples)) {
-    warning("Both min_samples and prop_samples set. Defaulting to min_samples")
-    prop_samples <- NULL
-  } else if (is.null(min_samples) && is.null(prop_samples)) {
-    stop("Neither min_samples and prop_samples is defined")
-  }
-  
-  if (!is.numeric(cov_thr)) stop("cov_thr is not numeric") 
-  
-  if (!(is.numeric(min_samples) | is.numeric(prop_samples))){
-    stop("min_samples and prop_samples variables must be numeric or NULL")
-  }
-  
-  if (!is.null(group) && !(group %in% colnames(scm@colData))){
-    stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
-  }
-  
-  if (n_threads > n_chunks){
-    n_chunks <- n_threads
-    message("n_threads should be set to be less than or equal to n_chunks.", "\n", "n_chunks has been set 
-            to be equal to n_threads = ", n_threads)
-  }
-  
-  message("Filtering by coverage...",start_time())
-  
-  if (is_h5(scm)) {
-    if (n_chunks == 1) {
-      cov_dat = get_matrix(scm, assay = "counts")
-      if (!is.null(group)) {
-        stop("Groups not implemented yet")
-        # row_idx <- sapply(unique(m@colData[, group]), function(c) {
-        #   res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[, 
-        #                                                           group] == c] >= cov_thr, na.rm = TRUE)
-        #   row_idx <- (res >= max(min_samples, ceiling(prop_samples * 
-        #                                                 sum(m@colData[, group] == c))))
-        # })
-        # row_idx <- DelayedMatrixStats::rowAlls(row_idx)
-      } else {
-        res <- DelayedMatrixStats::rowSums2(cov_dat >= cov_thr, na.rm = TRUE)
-        row_idx <- (res >= max(min_samples, ceiling(prop_samples * 
-                                                      ncol(cov_dat))))
-        # row_idx <- (res >= (if (is.null(min_samples)) min_samples else ceiling(prop_samples * 
-        #  
-      }
-    } else {
-      message("Only 1 chunk supported for now")
-      # 
-      # 
-      # if (!is.null(group)) {
-      #   row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
-      #                              function(i) {
-      #                                cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
-      #                                                     type = "C")
-      #                                row_idx <- sapply(unique(m@colData[, group]), function(c) {
-      #                                  res <- DelayedMatrixStats::rowSums2(cov_dat[, m@colData[,group] == c] >= cov_thr, na.rm = TRUE)
-      #                                  row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
-      #                                })
-      #                                row_idx <- DelayedMatrixStats::rowAlls(row_idx)
-      #                              }))
-      # } else {
-      #   row_idx <- unlist(mclapply(mc.cores = n_cores, 1:n_chunks, 
-      #                              function(i) {
-      #                                cov_dat = get_matrix(m[((i - 1) * ceiling(nrow(m)/n_chunks) + 1):min(i * ceiling(nrow(m)/n_chunks), nrow(m)), ], 
-      #                                                     type = "C")
-      #                                res <- DelayedMatrixStats::rowSums2(cov_dat >= cov_thr, na.rm = TRUE)
-      #                                row_idx <- (res >= max(min_samples, ceiling(prop_samples * ncol(cov_dat))))
-      #                              }))
-      # }
-    }
-  } else {
-    cov_dat = get_matrix(scm, assay = "counts")
-    if (!is.null(group)) {
-      stop("Groups not implemented yet")
-      # row_idx <- sapply(unique(m@colData[, group]), function(c) {
-      #   res <- matrixStats::rowSums2(cov_dat[, m@colData[, group] == 
-      #                                          c] >= cov_thr, na.rm = TRUE)
-      #   row_idx <- (res >= max(min_samples, ceiling(prop_samples * sum(m@colData[, group] == c))))
-      # })
-      # row_idx <- matrixStats::rowAlls(row_idx)
-    } else {
-      res <- matrixStats::rowSums2(cov_dat >= cov_thr, na.rm = T)
-      row_idx <- (res >= max(min_samples, ceiling(prop_samples * ncol(cov_dat))))
-    }
-  }
-  
-  gc()
-  message(paste0("Retained ", format(sum(row_idx), big.mark = ","),
-                 " of ", format(nrow(scm), big.mark = ","), " sites"))
-  
-  message("Filtered in ",stop_time())
-  
-  return(scm[row_idx, ])
-  
-}
-
-#--------------------------------------------------------------------------------------------------------------------------
 #' Saves an HDF5 \code{\link{scMethrix}} object
 #' @details Takes \code{\link{scMethrix}} object and saves it in the specified directory
 #' @inheritParams generic_scMethrix_function
@@ -915,14 +799,14 @@ remove_uncovered <- function(scm = NULL) {
 mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = 0, avg_threshold = 2, n_threads=1 , verbose = TRUE) {
   if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
-  if (!is_h5(scm) & n_threads != 1) 
+  if (!is_h5(scm) && n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
   
   if (!has_cov(scm)) stop("Cannot mask as no coverage matrix is present in the object.")
   
-  if(!is.numeric(low_threshold) || !is.numeric(low_threshold)){
-    stop("Thresholds must be a numeric value.")
-  }
+  # if(!is.numeric(low_threshold) || !is.numeric(low_threshold)){
+  #   stop("Thresholds must be a numeric value.")
+  # }
  
   if (verbose) message("Masking CpG sites by coverage...",start_time())
   
@@ -981,8 +865,9 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = 0, avg
   }
   
   if (verbose) message("Masking finished in ",stop_time())
+  
+  return(scm)
 }
-
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Masks CpGs by cell count
@@ -1076,112 +961,6 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = 0, prop_
   }
   
   if (verbose) message("Masking finished in ",stop_time())
-}
-
-#--------------------------------------------------------------------------------------------------------------------------
-#' Masks high or low coverage \code{count} or \code{cell} count
-#' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
-#'  by putting NA for assay values. The sites will remain in the object and all assays will be affected.
-#'  
-#'  \code{low_total_count} is used to mask sites with low overall counts. A site represented by a single
-#'  sample is typically not useful.
-#'  \code{max_avg_count} is used to mask sites with high aberrant counts. For single cell data, this is typically CpG
-#'  sites with an average count > 2, as there are only two strands in a cell to sequence.'  
-#'  
-#' @inheritParams generic_scMethrix_function
-#' @param low_total_count The minimal count allowed. Everything below will get masked. Default = NULL, nothing gets masked.
-#' @param max_avg_count The max average coverage. Default = 2. If type="cells" this is ignored.
-#' @param n_threads Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
-#' @param type Whether to use the "counts" coverage matrix or "cells" count when masking
-#' @return An object of class \code{\link{scMethrix}}
-#' @importFrom SummarizedExperiment assays assays<-
-#' @examples
-#' data('scMethrix_data')
-#' mask_scMethrix(scMethrix_data,low_total_count=2,type="counts")
-#' @export
-mask_scMethrix <- function(scm = NULL, assay = "score", low_total_count = 0, max_avg_count = 2, n_threads=1 ,type="counts", verbose = TRUE) {
-  
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
-  
-  if (!is_h5(scm) & n_threads != 1) 
-    stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
-  
-  type = match.arg(arg = type, choices = c('cells', 'counts'))
-  
-  if (!has_cov(scm) && type == "counts") stop("No coverage matrix is present in the object. 
-                                              Retry with type='cells'")
-  
-  if (!is.null(max_avg_count) && type == 'cells') {
-      warning("max_avg_count cannot be used with type == 'cells'. This will be ignored.")
-      max_avg_count = NULL
-  }
-
-  if(!is.numeric(low_total_count)){
-    stop("low_total_count must be a numeric value.")
-  }
-  
-  #message("Masking CpG sites...", start_time())
-  
-  if (!is.null(low_total_count)) {
- 
-    if (verbose) message("Masking low count CpG sites...",start_time())
-    
-    n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
-    
-    if (type == "cells") {
-      row_idx <- DelayedMatrixStats::rowCounts(get_matrix(scm), 
-                                               value = as.integer(NA)) > (ncol(scm)-low_total_count)
-    } else {
-      row_idx <- DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"),na.rm=TRUE) < low_total_count
-    }
-    
-    row_idx <- which(row_idx)
-    
-    if (length(row_idx) == 0) {
-      message("   No CpGs found with ",type," below ",low_total_count)
-    } else if (length(row_idx) == nrow(scm)) {
-      message("   No CpGs were masked with ",type," below ",low_total_count)
-    } else {
-      for (i in 1:length(assays(scm))) {
-        assays(scm)[[i]][row_idx,] <- as.integer(NA)
-      } 
-      
-      n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)) - n
-      
-      for (i in seq_along(colnames(scm))) {
-        if (n[i]==0) next
-        if (verbose) message(paste0("   Masked ", n[i], " CpGs due to low count in sample ",  colnames(scm)[i], "."))
-      }
-    }
-  }
-  
-  if (!is.null(max_avg_count)) {
-    
-    if (verbose) message("Masking high average count CpG sites...")
-    
-    n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
-    
-    row_idx <- which(DelayedMatrixStats::rowMeans2(counts(scm), na.rm = TRUE) > max_avg_count)
-
-    if (length(row_idx) == 0) {
-      message("   No CpGs found with average coverage > ",max_avg_count)
-    } else if (length(row_idx) == nrow(scm)) {
-      message("   No CpGs were masked with average count < ",max_avg_count)
-    } else {
-      for (i in 1:length(assays(scm))) {
-        assays(scm)[[i]][row_idx,] <- as.integer(NA)
-      }
-      
-      n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)) - n
-      
-      for (i in seq_along(colnames(scm))) {
-        if (n[i]==0) next
-        if (verbose) message(paste0("   Masked ", n[i], " CpGs due to high average coverage in sample ",  colnames(scm)[i], "."))
-      }
-    }
-  }
-  
-  if (verbose) message("Masked in ",stop_time())
   
   return(scm)
 }

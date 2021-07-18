@@ -295,7 +295,8 @@ get_source_idx = function(protocol = NULL) {
   }else if(protocol ==  "BSseeker2"){
     return(list(col_idx = list(character = 1, numeric = 3, character = 4, numeric = 6, numeric = 8),
                 col_names = c("chr", "start", "context", "beta", "cov"),
-                fix_missing = c("context %in% 'CG'"), select = TRUE))
+                fix_missing = c("context %in% 'CG'","M := as.integer(cov * beta)",
+                                "U := cov - M"), select = TRUE))
   } else {
     # Bismark and methyldackel have same output format
     return(list(col_idx = list(character = 1, numeric = 2, numeric = 4, numeric = 5, numeric = 6),
