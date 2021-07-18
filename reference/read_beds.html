@@ -135,8 +135,15 @@
   zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>,
   reads <span class='op'>=</span> <span class='cn'>NULL</span>,
   replace <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  pipeline <span class='op'>=</span> <span class='cn'>NULL</span>,
   stranded <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  meth_idx <span class='op'>=</span> <span class='fl'>4</span>,
+  chr_idx <span class='op'>=</span> <span class='cn'>NULL</span>,
+  start_idx <span class='op'>=</span> <span class='cn'>NULL</span>,
+  end_idx <span class='op'>=</span> <span class='cn'>NULL</span>,
+  beta_idx <span class='op'>=</span> <span class='cn'>NULL</span>,
+  M_idx <span class='op'>=</span> <span class='cn'>NULL</span>,
+  U_idx <span class='op'>=</span> <span class='cn'>NULL</span>,
+  strand_idx <span class='op'>=</span> <span class='cn'>NULL</span>,
   cov_idx <span class='op'>=</span> <span class='cn'>NULL</span>
 <span class='op'>)</span></pre>
 
@@ -201,16 +208,45 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
       <td><p>Boolean flag for whether to delete the contents of h5_dir before saving</p></td>
     </tr>
     <tr>
+      <th>pipeline</th>
+      <td><p>Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
+If not known use idx arguments for manual column assignments.</p></td>
+    </tr>
+    <tr>
       <th>stranded</th>
       <td><p>Default c</p></td>
     </tr>
     <tr>
-      <th>meth_idx</th>
-      <td><p>The column index of the methylation value for the read</p></td>
+      <th>chr_idx</th>
+      <td><p>integer; column index for chromosome in bedgraph files</p></td>
+    </tr>
+    <tr>
+      <th>start_idx</th>
+      <td><p>integer; column index for start position in bedgraph files</p></td>
+    </tr>
+    <tr>
+      <th>end_idx</th>
+      <td><p>integer; column index for end position in bedgraph files</p></td>
+    </tr>
+    <tr>
+      <th>beta_idx</th>
+      <td><p>integer; column index for beta values in bedgraph files</p></td>
+    </tr>
+    <tr>
+      <th>M_idx</th>
+      <td><p>integer; column index for read counts supporting Methylation in bedgraph files</p></td>
+    </tr>
+    <tr>
+      <th>U_idx</th>
+      <td><p>integer; column index for read counts supporting Un-methylation in bedgraph files</p></td>
+    </tr>
+    <tr>
+      <th>strand_idx</th>
+      <td><p>integer; column index for strand information in bedgraph files</p></td>
     </tr>
     <tr>
       <th>cov_idx</th>
-      <td><p>The column index(es) of the read count. If not present, no coverage matrix is built</p></td>
+      <td><p>integer; column index for total-coverage in bedgraph files</p></td>
     </tr>
     </table>
 

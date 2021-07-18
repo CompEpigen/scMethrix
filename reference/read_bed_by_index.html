@@ -120,13 +120,7 @@
     <p>Parses BED files for methylation values using previously generated index genomic coordinates</p>
     </div>
 
-    <pre class="usage"><span class='fu'>read_bed_by_index</span><span class='op'>(</span>
-  <span class='va'>file</span>,
-  <span class='va'>ref_cpgs</span>,
-  meth_idx <span class='op'>=</span> <span class='fl'>4</span>,
-  cov_idx <span class='op'>=</span> <span class='cn'>NULL</span>,
-  zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>read_bed_by_index</span><span class='op'>(</span><span class='va'>file</span>, <span class='va'>ref_cpgs</span>, col_list <span class='op'>=</span> <span class='cn'>NULL</span>, zero_based <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -140,12 +134,8 @@
       <td><p>The index of all unique coordinates from the input BED files</p></td>
     </tr>
     <tr>
-      <th>meth_idx</th>
-      <td><p>The column index of the methylation value for the read</p></td>
-    </tr>
-    <tr>
-      <th>cov_idx</th>
-      <td><p>The column index(es) of the read count</p></td>
+      <th>col_list</th>
+      <td><p>The column index object for the input BED files</p></td>
     </tr>
     <tr>
       <th>zero_based</th>
