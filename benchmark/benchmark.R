@@ -1,6 +1,43 @@
 
 save_dir <- "D:/Git/sampleData/benchmark/"
 
+### Overall function benchmarks #######################################
+
+scm <- scm.big.mem
+
+bench <- microbenchmark(
+  ### Operations
+  "get_metadata_stats"={get_metadata_stats(scm)},
+  "remove_assay"={remove_assay(scm,assay="counts")},
+  "merge_scMethrix"={merge_scMethrix(scm[1:(nrow(scm)/2)-1,],scm[((nrow(scm)/2)+1):nrow(scm),],by="row")},
+  "export_bed"={export_bed(scm,path=paste0(tempdir(),"/exp"))},
+  # "get_region_summary"={get_region_summary(scm,n_chunks = 8,n_threads=8)},
+  "get_matrix"={get_matrix(scm)},
+  "convert_scMethrix"={convert_scMethrix(scm,h5_dir=paste0(tempdir(),"/out"))},
+  "subset_scMethrix"={subset_scMethrix(scm,regions=rowRanges(scm)[1:floor(nrow(scm)/2),])},
+  "get_stats"={get_stats(scm)},
+  "remove_uncovered"={remove_uncovered(scm)},
+  "mask_by_coverage"={mask_by_coverage(scm,low_threshold=2,avg_threshold = 1)},
+  "mask_by_sample"={mask_by_sample(scm,low_threshold=2)},
+  
+  ### Transformations
+  "transform_assay"={transform_assay(scm,assay="score",new_assay="binarize",trans=binarize)},
+  "bin_scMethrix"={bin_scMethrix(scm,n_threads = 8)},
+  #"impute_by_melissa"={impute_by_melissa(scm)},
+  "impute_by_iPCA"={impute_by_iPCA(scm)},
+  "impute_by_RF"={impute_by_RF(scm)},
+  "impute_by_kNN"={impute_by_kNN(scm)},
+  "generate_training_set"={generate_training_set(scm)},
+  "generate_random_subset"={generate_random_subset(scm)},
+  # ""={},
+  # ""={},
+  # ""={},
+  # ""={},
+  # ""={},
+  times = 1,unit = "s"
+)
+
+
 ### Benchmark the indexing #######################################
 read.index <- microbenchmark(
   # "base" = {
