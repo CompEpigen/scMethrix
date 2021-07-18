@@ -6,6 +6,7 @@
 \usage{
 read_index(
   files,
+  col_idx,
   n_threads = 0,
   zero_based = FALSE,
   batch_size = 200,
@@ -14,6 +15,8 @@ read_index(
 }
 \arguments{
 \item{files}{List of BED files}
+
+\item{col_idx}{The column indexes for the input BED files}
 
 \item{n_threads}{integer for number of threads to use}
 

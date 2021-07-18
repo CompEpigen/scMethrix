@@ -19,8 +19,15 @@ read_beds(
   zero_based = FALSE,
   reads = NULL,
   replace = FALSE,
+  pipeline = NULL,
   stranded = FALSE,
-  meth_idx = 4,
+  chr_idx = NULL,
+  start_idx = NULL,
+  end_idx = NULL,
+  beta_idx = NULL,
+  M_idx = NULL,
+  U_idx = NULL,
+  strand_idx = NULL,
   cov_idx = NULL
 )
 }
@@ -54,11 +61,26 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 
 \item{replace}{Boolean flag for whether to delete the contents of h5_dir before saving}
 
+\item{pipeline}{Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
+If not known use idx arguments for manual column assignments.}
+
 \item{stranded}{Default c}
 
-\item{meth_idx}{The column index of the methylation value for the read}
+\item{chr_idx}{integer; column index for chromosome in bedgraph files}
 
-\item{cov_idx}{The column index(es) of the read count. If not present, no coverage matrix is built}
+\item{start_idx}{integer; column index for start position in bedgraph files}
+
+\item{end_idx}{integer; column index for end position in bedgraph files}
+
+\item{beta_idx}{integer; column index for beta values in bedgraph files}
+
+\item{M_idx}{integer; column index for read counts supporting Methylation in bedgraph files}
+
+\item{U_idx}{integer; column index for read counts supporting Un-methylation in bedgraph files}
+
+\item{strand_idx}{integer; column index for strand information in bedgraph files}
+
+\item{cov_idx}{integer; column index for total-coverage in bedgraph files}
 }
 \value{
 An object of class \code{\link{scMethrix}}

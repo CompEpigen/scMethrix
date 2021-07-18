@@ -7,18 +7,19 @@
 read_hdf5_data(
   files,
   ref_cpgs,
+  col_idx,
   n_threads = 0,
   h5_temp = NULL,
   zero_based = FALSE,
-  verbose = TRUE,
-  meth_idx = 4,
-  cov_idx = NULL
+  verbose = TRUE
 )
 }
 \arguments{
 \item{files}{The BED files to parse}
 
 \item{ref_cpgs}{The index of all unique coordinates from the input BED files}
+
+\item{col_idx}{The column indexes for the input BED files}
 
 \item{n_threads}{The number of threads to use. 0 is the default thread with no cluster built.}
 
@@ -27,10 +28,6 @@ read_hdf5_data(
 \item{zero_based}{Boolean flag for whether the input data is zero-based or not}
 
 \item{verbose}{flag to output messages or not.}
-
-\item{meth_idx}{The column index of the methylation value for the read}
-
-\item{cov_idx}{The column index(es) of the read count}
 }
 \value{
 List of \code{\link{HDF5Array}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL

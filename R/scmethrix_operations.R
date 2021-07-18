@@ -1,7 +1,6 @@
 #------------------------------------------------------------------------------------------------------------
 #' Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
-#' @details Adds the mean, median, SD, and sample count and coverage (if present) for 
-#' the \code{\link{GenomicRanges}} in an \code{\link{scMethrix}} object. This can be accessed using mcols().
+#' @details Adds the mean, median, SD, and sample count and coverage (if present) for  the \code{\link{GenomicRanges}} in an \code{\link{scMethrix}} object. This can be accessed using mcols().
 #' @inheritParams generic_scMethrix_function
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -48,7 +47,7 @@ get_metadata_stats <- function(scm) {
 #' data('scMethrix_data')
 #' remove_assay(scMethrix_data,assay="counts")
 #' @export
-remove_assay <- function(scm,assay) {
+remove_assay <- function(scm=NULL, assay=NULL) {
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -69,8 +68,7 @@ remove_assay <- function(scm,assay) {
 
 #------------------------------------------------------------------------------------------------------------
 #' Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
-#' @details Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays
-#' will be dropped, as well as all reduced dimensionality data.
+#' @details Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.
 #' 
 #' If merging by rows, all CpG sites must be unique and samples must be identical
 #' If merging by columns, all samples must be unique and CpG sites must be identical

@@ -4,7 +4,7 @@
 \alias{remove_assay}
 \title{Removes an assay from an \code{\link{scMethrix}} object}
 \usage{
-remove_assay(scm, assay)
+remove_assay(scm = NULL, assay = NULL)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}

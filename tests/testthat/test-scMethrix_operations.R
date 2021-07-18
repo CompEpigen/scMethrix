@@ -188,27 +188,27 @@ test_that("get_region_summary", {
   }))
 })
 
-test_that("mask_scMethrix", {
-  
-  expect_error(mask_scMethrix("not scMethrix"))
-  
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    #expect_error(mask_scMethrix(scm,n_threads=2))
-    #expect_error(mask_scMethrix(scm,max_avg_count=1,type="cells"))
-    
-    m <- mask_scMethrix(scm,low_total_count=2, type="counts")
-    expect_equal(dim(m),c(n_cpg,n_samples))
-    expect_equal(dim(score(m)),dim(counts(m)))
-    expect_equal(dim(remove_uncovered(m)),c(232,n_samples))
-    
-    m <- mask_scMethrix(scm,max_avg_count=1,type="counts")
-    expect_equal(dim(m),c(n_cpg,n_samples))
-    expect_equal(dim(score(m)),dim(counts(m)))
-    expect_equal(dim(remove_uncovered(m)),c(170,n_samples))
-    
-    m <- mask_scMethrix(scm,low_total_count=2,type="cells")
-    expect_equal(dim(m),c(n_cpg,n_samples))
-    expect_equal(dim(remove_uncovered(m)),c(219,n_samples))
-    
-  }))
-})
+# test_that("mask_scMethrix", {
+#   
+#   expect_error(mask_scMethrix("not scMethrix"))
+#   
+#   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+#     #expect_error(mask_scMethrix(scm,n_threads=2))
+#     #expect_error(mask_scMethrix(scm,max_avg_count=1,type="cells"))
+#     
+#     m <- mask_scMethrix(scm,low_total_count=2, type="counts")
+#     expect_equal(dim(m),c(n_cpg,n_samples))
+#     expect_equal(dim(score(m)),dim(counts(m)))
+#     expect_equal(dim(remove_uncovered(m)),c(232,n_samples))
+#     
+#     m <- mask_scMethrix(scm,max_avg_count=1,type="counts")
+#     expect_equal(dim(m),c(n_cpg,n_samples))
+#     expect_equal(dim(score(m)),dim(counts(m)))
+#     expect_equal(dim(remove_uncovered(m)),c(170,n_samples))
+#     
+#     m <- mask_scMethrix(scm,low_total_count=2,type="cells")
+#     expect_equal(dim(m),c(n_cpg,n_samples))
+#     expect_equal(dim(remove_uncovered(m)),c(219,n_samples))
+#     
+#   }))
+# })

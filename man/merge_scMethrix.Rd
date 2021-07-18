@@ -20,8 +20,7 @@ A merged \code{\link{scMethrix}} object
 Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
 }
 \details{
-Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays
-will be dropped, as well as all reduced dimensionality data.
+Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.
 
 If merging by rows, all CpG sites must be unique and samples must be identical
 If merging by columns, all samples must be unique and CpG sites must be identical

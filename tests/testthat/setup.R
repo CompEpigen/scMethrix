@@ -10,8 +10,9 @@ files <- c("D:/Git/scMethrix/inst/extdata/C1.bedgraph","D:/Git/scMethrix/inst/ex
 
 h5_dir <- paste0(tempdir(),"/sse")
 
-scm.h5 <- read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE,cov_idx=5)
-scm.mem <- read_beds(files,h5=FALSE,cov_idx=5)
+col_idx <- parse_source_idx(chr=1, start=2, end=3, beta=4, cov=5)
+scm.h5 <- read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
+scm.mem <- read_beds(files,h5=FALSE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
 
 n_cpg <- 286
 n_samples <- 4
