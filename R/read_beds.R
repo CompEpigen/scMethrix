@@ -73,7 +73,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
       message(paste0("-Preset:        ", pipeline))
     }
     
-    col_idx <- get_source_idx(protocol = pipeline)
+    col_list <- get_source_idx(protocol = pipeline)
     
     if (any(pipeline %in% c("Bismark_cov"))) {
       if (zero_based) {
@@ -81,9 +81,17 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
       }
     }
   }
+
+  if (is.null(ref_cpgs)) {
+    ref_cpgs <- read_index(files = files, col_list = col_list, n_threads = n_threads, 
+                           batch_size = batch_size, zero_based = zero_based)
+  } else {
+    ref_cpgs <- subset_ref_cpgs(ref_cpgs, read_index(files=files,col_list = col_list,n_threads,
+                                                     batch_size = batch_size, zero_based = zero_based))
+  }
   
-  col_list <<- col_list
-  #col_idx <- col_idx$col_idx
+  col_list$max_value = max(read_bed_by_index(file = files[1], ref_cpgs,col_list=col_list)$beta,na.rm = TRUE)
+  
   
   if (h5) {
     
@@ -92,25 +100,16 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     if(dir.exists(h5_dir) && !replace) stop("h5_dir already exists! Use 'replace=TRUE' to replace it. All 
                                             existing data in that directory will be deleted.") 
     
-    if (is.null(ref_cpgs)) {
-      ref_cpgs <- read_index(files = files, col_list = col_list, n_threads = n_threads, 
-                             batch_size = batch_size, zero_based = zero_based)
-    } else {
-      ref_cpgs <- subset_ref_cpgs(ref_cpgs, read_index(files=files,col_list = col_list,n_threads,
-                                                       batch_size = batch_size, zero_based = zero_based))
-    }
-
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     if (is.null(reads)) reads <- read_hdf5_data(files = files, ref_cpgs = ref_cpgs, col_list = col_list, 
                                                 n_threads = n_threads, h5_temp = h5_temp, 
                                                 zero_based = zero_based, verbose = verbose)
     message("Building scMethrix object")
 
-    ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
-    
     if (is.null(colData)) colData <- data.frame()[1:(length(files)), ]
     row.names(colData) <- unlist(lapply(files,get_sample_name))
     
+    ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
     
     m_obj <- create_scMethrix(assays = reads, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
@@ -123,12 +122,10 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   } else {
 
     message("Reading in BED files") 
-    
-    if (is.null(ref_cpgs)) ref_cpgs <- read_index(files,col_list = col_list, n_threads = n_threads,zero_based = zero_based)
+
     reads <- read_mem_data(files, ref_cpgs, col_list = col_list, batch_size = batch_size, n_threads = n_threads,
                            zero_based = zero_based,verbose = verbose)
-    ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
-    
+
     #colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
     #colData <- t(unlist(lapply(files,get_sample_name)))
     
@@ -137,6 +134,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     if (is.null(colData)) colData <- data.frame()[1:(length(files)), ]
     row.names(colData) <- unlist(lapply(files,get_sample_name))
     
+    ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
     
     m_obj <- create_scMethrix(assays = reads, 
@@ -262,13 +260,17 @@ read_bed_by_index <- function(file, ref_cpgs, col_list = NULL, zero_based=FALSE)
   # Format will be: chr | start | meth | cov
   data <- suppressWarnings(data.table::fread(file, select = unname(col_list$col_idx), 
                                              col.names = names(col_list$col_idx), key = c("chr", "start")))
+
+  if (!is.null(col_list$col_idx["beta"]) && !is.null(col_list$max_value) && col_list$max_value != 1) {
+    data[,beta := (beta/col_list$max_value)]
+  }
   
   if (!is.null(col_list$fix_missing)) {
     for (cmd in col_list$fix_missing) {
       data[, eval(parse(text = cmd))]
     }
   }
-  
+
   #if (zero_based) data[,start] <- data[,start]+1L
 
   if (col_list$has_cov) {
@@ -276,12 +278,12 @@ read_bed_by_index <- function(file, ref_cpgs, col_list = NULL, zero_based=FALSE)
     #Do the search
     sample <- cbind(data[.(ref_cpgs$chr, ref_cpgs$start)][,.(beta,cov)],
                     data[.(ref_cpgs$chr, ref_cpgs$end)][,.(beta,cov)])
-    colnames(sample) <- c("meth1", "cov1", "meth2","cov2")
+    colnames(sample) <- c("beta1", "cov1", "beta2","cov2")
     
     #Get the meth values from start and end CpG by weighted mean for both reads (meth*cov)
     sample[,meth1 := meth1 * cov1]
     sample[,meth2 := meth2 * cov2]
-    sample[,beta := rowSums(.SD, na.rm = TRUE), .SDcols = c("meth1", "meth2")]
+    sample[,beta := rowSums(.SD, na.rm = TRUE), .SDcols = c("beta1", "beta2")]
     sample[,cov := rowSums(.SD, na.rm = TRUE), .SDcols = c("cov1", "cov2")]
     sample[cov == 0, cov := NA] #since above line evals NA+NA as 0
     sample[,beta := beta / cov]

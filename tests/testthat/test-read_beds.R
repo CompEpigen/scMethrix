@@ -27,7 +27,7 @@ test_that("read_bed - Input errors", {
 
 test_that("read_bed - HDF5, no coverage", {
   
-  expect_error(read_beds(files,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5, h5=TRUE,h5_dir=NULL))
+  expect_error(read_beds(files,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, h5=TRUE,h5_dir=NULL))
   
   path <- paste0(h5_dir,"HDF5mem")
   

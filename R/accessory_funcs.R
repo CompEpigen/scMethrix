@@ -314,15 +314,13 @@ get_source_idx = function(protocol = NULL) {
 #' @param M_idx integer; column of the # of methylated reads
 #' @param U_idx integer; column of the # of unmethylated reads
 #' @param cov_idx integer; column of the coverage
-#' @param beta_fract double; fraction of methylated bases TODO: check this
 #' @param verbose flag to output messages or not
 #' @return List of column names and indexes
 #' @examples
 #' @export
 parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, strand_idx = NULL,
                             beta_idx = NULL, M_idx = NULL, U_idx = NULL,
-                            cov_idx = NULL, beta_fract = FALSE,
-                            verbose = TRUE) {
+                            cov_idx = NULL, verbose = TRUE) {
   
   # mandatory chr and start field
   if (is.null(chr_idx) | is.null(start_idx)) {
@@ -344,46 +342,47 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
   
   has_cov <- TRUE
   
-  if (is.null(beta_idx)) {                                                             
-    if (is.null(M_idx) && is.null(U_idx)) {
-      stop("Missing beta and cannot derive due to missing M and U.", call. = FALSE)
-    } else if (is.null(cov_idx)){
-      if(is.null(M_idx) || is.null(U_idx)) { 
-        stop("Missing beta and cannot derive due to missing cov and one of M or U.", call. = FALSE)
-      } else {
-        if (verbose) message("Estimating beta and cov from M and U")
-        fix_missing = c(fix_missing, "cov := M+U", "beta := M/cov")
-      } 
-    } else if (!is.null(M_idx)) {
-      if (verbose) message("Estimating beta and U from M and cov")
-      fix_missing = c(fix_missing, "U := cov-M", "beta := M/cov")
-    } else if (!is.null(U_idx)) {
-      if (verbose) message("Estimating beta and M from U and cov")
-      fix_missing = c(fix_missing, "M := cov-U", "beta := M/cov")
-    } else {
-       stop("This should never happen...")
-    }
-  } else { 
-    if (is.null(cov_idx)) {
-      if(!is.null(M_idx) && !is.null(U_idx)) { 
-        if (verbose) message("Estimating cov from M and U")
-        fix_missing = c(fix_missing, "cov := M+U") # Has: beta,M,U   No: cov
-      # } else if (is.null(U_idx)) {
-      #   if (verbose) message("Estimating cov and U from M and beta")
-      #   fix_missing = c(fix_missing, "cov := as.integer(M/beta)", # Has: beta,M,U   No: cov
-      #                   "U := cov-M"
-      # } else if (is.null(M_idx)) {
-      #   if (verbose) message("Estimating cov and M from U and beta")
-      #   fix_missing = c(fix_missing, "cov := as.integer(U*(1-beta))", # Has: beta,M,U   No: cov
-      #                   "M := cov-U")
-      # 
-      } else {
-        has_cov = FALSE
-      }
-    } else {
+  has <- function(x) {!is.null(x)}
+
+  if (has(beta_idx)) {
+    if (has(cov_idx)) {
       if (verbose) message("Estimating M and U from beta and cov")
       fix_missing = c(fix_missing,"M := as.integer(cov * beta)",
                       "U := cov - M")
+    } else {
+      if(has(M_idx) && has(U_idx)) { 
+        if (verbose) message("Estimating cov from M and U")
+        fix_missing = c(fix_missing, "cov := M+U") # Has: beta,M,U   No: cov
+      } else if (has(M_idx)) {
+        if (verbose) message("Estimating cov and U from M and beta")
+        fix_missing = c(fix_missing, "cov := as.integer(M/beta)", # Has: beta,M,U   No: cov
+                        "U := cov-M")
+      } else if (has(U_idx)) {
+        if (verbose) message("Estimating cov and M from U and beta")
+        fix_missing = c(fix_missing, "cov := as.integer(U*(1-beta))", # Has: beta,M,U   No: cov
+                        "M := cov-U")
+      } else {
+        has_cov = FALSE
+      }
+    }
+  } else { 
+    if (has(cov_idx)) {
+      if (has(M_idx)) {
+        if (verbose) message("Estimating beta and U from M and cov. Beta will be [0,1]")
+        fix_missing = c(fix_missing, "U := cov-M", "beta := M/cov")
+      } else if (has(U_idx)) {
+        if (verbose) message("Estimating beta and M from U and cov. Beta will be [0,1]")
+        fix_missing = c(fix_missing, "M := cov-U", "beta := M/cov")
+      } else {
+        stop("Missing beta and cannot derive due to missing M and U.", call. = FALSE)
+      }
+    } else {
+      if (is.null(M_idx) || is.null(U_idx)) {
+        stop("Missing beta and cannot derive due to missing cov and one of M or U.", call. = FALSE)
+      } else {
+        if (verbose) message("Estimating beta and cov from M and U. Beta will be [0,1]")
+        fix_missing = c(fix_missing, "cov := M+U", "beta := M/cov")
+      }
     }
   }
    

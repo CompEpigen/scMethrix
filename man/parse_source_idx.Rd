@@ -13,7 +13,6 @@ parse_source_idx(
   M_idx = NULL,
   U_idx = NULL,
   cov_idx = NULL,
-  beta_fract = FALSE,
   verbose = TRUE
 )
 }
@@ -33,8 +32,6 @@ parse_source_idx(
 \item{U_idx}{integer; column of the # of unmethylated reads}
 
 \item{cov_idx}{integer; column of the coverage}
-
-\item{beta_fract}{double; fraction of methylated bases TODO: check this}
 
 \item{verbose}{flag to output messages or not}
 }
