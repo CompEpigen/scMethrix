@@ -5,6 +5,19 @@ save_dir <- "D:/Git/sampleData/benchmark/"
 
 scm <- scm.big.mem
 
+bench.old <- microbenchmark(
+  "old"= old <<- bin_scMethrix_st(scm),times = 1,unit = "s")
+
+bench.new <- microbenchmark(
+  "new"= bin_scMethrix_test(scm),
+  times = 1,unit = "s"
+)
+
+old <- bin_scMethrix_st(scm)
+new <- bin_scMethrix_test(scm)
+
+
+
 bench <- microbenchmark(
   ### Operations
   "get_metadata_stats"={get_metadata_stats(scm)},

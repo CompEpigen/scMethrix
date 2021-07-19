@@ -3,7 +3,6 @@
 export(benchmark_imputation)
 export(bin_granges)
 export(bin_scMethrix)
-export(bin_scMethrix2)
 export(binarize)
 export(cast_granges)
 export(convert_HDF5_scMethrix)
