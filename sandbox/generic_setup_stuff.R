@@ -3,9 +3,12 @@ list.of.packages <- c("SingleCellExperiment","data.table","plyr","HDF5Array","ti
                       "tools","microbenchmark","measurements","magrittr","doParallel","parallel",
                       "Cairo","ggplot2","methrix","BSgenome","BSgenome.Hsapiens.UCSC.hg19","usethis",
                       "BSgenome.Mmusculus.UCSC.mm10","pkgdown","umap","stringi","missMDA","Rtsne","missForest",
-                      "impute","profvis")
+                      "impute","profvis",'Melissa','Metrics','SimDesign')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
+if(length(new.packages)) {
+  install.packages(new.packages)
+  BiocManager::install(new.packages)
+}
 lapply(list.of.packages, require, character.only = TRUE)
 rm(list.of.packages,new.packages)
 
@@ -40,15 +43,17 @@ files <- list.files (getwd(),full.names = TRUE)
 
 files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
 
-files <- files[1:3]
+files <- files[1:10]
 
 col_idx <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5,6),replace=TRUE)
-scm.big.mem <- read_beds(files=files,h5=FALSE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
+scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 8,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
-scm.big.mem <- read_beds(files=files,h5=FALSE, ref_cpgs = mm10_cpgs$cpgs, n_threads = 8)
 
+profvis({
+scm.big.mem <- read_beds(files=files,h5=FALSE, ref_cpgs = mm10_cpgs$cpgs, n_threads = 8,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
+})
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5),
                         replace=TRUE, ref_cpgs = mm10_cpgs$cpgs, n_threads = 8)
 

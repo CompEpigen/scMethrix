@@ -18,6 +18,17 @@ new <- bin_scMethrix_test(scm)
 
 
 
+b <- microbenchmark(
+  "old" = read_index(files,col_list),
+  "new" = read_index2(files,col_list),
+  times = 1,unit = "ms")
+
+
+
+
+
+
+
 bench <- microbenchmark(
   ### Operations
   "get_metadata_stats"={get_metadata_stats(scm)},
@@ -37,9 +48,9 @@ bench <- microbenchmark(
   "transform_assay"={transform_assay(scm,assay="score",new_assay="binarize",trans=binarize)},
   "bin_scMethrix"={bin_scMethrix(scm,n_threads = 8)},
   #"impute_by_melissa"={impute_by_melissa(scm)},
-  "impute_by_iPCA"={impute_by_iPCA(scm)},
-  "impute_by_RF"={impute_by_RF(scm)},
-  "impute_by_kNN"={impute_by_kNN(scm)},
+  #"impute_by_iPCA"={impute_by_iPCA(scm)},
+  #"impute_by_RF"={impute_by_RF(scm)},
+  #"impute_by_kNN"={impute_by_kNN(scm)},
   "generate_training_set"={generate_training_set(scm)},
   "generate_random_subset"={generate_random_subset(scm)},
   # ""={},

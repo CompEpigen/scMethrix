@@ -323,36 +323,22 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @export
 #' @references Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
 #' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
-impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = "impute", n_pc = 2, ...) {
-  
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
-    stop("Assay does not exist in the object", call. = FALSE)
-  }
-  
-  if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
-    if (new_assay == "score") stop("Cannot overwrite the score assay")
-    warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
-  }
-  
-  if (is_h5(scm)) {
-    warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
-  }
-  
+impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = "iPCA", n_pc = 2, ...) {
+
   if (length(n_pc) > 1) {
     warning("Caution: n_pc is given as range. This can be very time-intensive.")
     n_pc <- missMDA::estim_ncpPCA(as.matrix(get_matrix(scm,assay = assay)),ncp.min = n_pc[1], ncp.max = n_pc[2], 
-                         method.cv = "Kfold", verbose = TRUE)
+                                  method.cv = "Kfold", verbose = TRUE)
     n_pc <- n_pc$ncp
   }
-  
-  impute <- missMDA::imputePCA(as.matrix(get_matrix(scm,assay = assay)), ncp = n_pc, ...)
-  assays(scm)[[new_assay]] <- as(impute$completeObs,class(get_matrix(scm,assay=assay))[[1]])
-  
+
+  op <- function(mtx) missMDA::imputePCA(mtx, ncp = n_pc, ...)$completeObs
+    
+  scm <- get_impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
+                       n_chunks = n_chunks, n_threads = n_threads, overlap_type = overlap_type)
+    
   return(scm)
+    
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -368,28 +354,16 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = "impute", n_
 #' @export
 #' @import missForest
 #' @references Stekhoven, D. J., & Bühlmann, P. (2012). MissForest—non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.
-impute_by_RF <- function(scm = NULL, assay = "score", new_assay = "impute", ...) {
+impute_by_RF <- function(scm = NULL, assay = "score", new_assay = "RF", ...) {
+
+  # impute <- missForest::missForest(as.matrix(get_matrix(scm,assay = assay)))#, ...)
+  # assays(scm)[[new_assay]] <- as(impute$ximp,class(get_matrix(scm,assay=assay))[[1]])
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
+  op <- function(mtx) missForest::missForest(mtx, ...)$ximp
   
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
-    stop("Assay does not exist in the object", call. = FALSE)
-  }
-  
-  if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
-    if (new_assay == "score") stop("Cannot overwrite the score assay")
-    warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
-  }
-  
-  if (is_h5(scm)) {
-    warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
-  }
-  
-  impute <- missForest::missForest(as.matrix(get_matrix(scm,assay = assay)))#, ...)
-  assays(scm)[[new_assay]] <- as(impute$ximp,class(get_matrix(scm,assay=assay))[[1]])
-  
+  scm <- get_impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
+                     n_chunks = n_chunks, n_threads = n_threads, overlap_type = overlap_type)
+
   return(scm)
 }
 
@@ -403,11 +377,42 @@ impute_by_RF <- function(scm = NULL, assay = "score", new_assay = "impute", ...)
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
-#' impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
+#' impute_by_kNN(scMethrix_data)
 #' @export
 #' @import impute
 #' @references Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
-impute_by_kNN <- function(scm = NULL, assay = "score", new_assay = "impute", k = 10, ...) {
+impute_by_kNN <- function(scm = NULL, regions = NULL, assay = "score", new_assay = "kNN", 
+                          n_chunks = 1, n_threads = 1, overlap_type = "within", seed = "123",
+                          k = 10, ...) {
+  
+  op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
+                           rowmax = 1.0, colmax = 1.0, maxp = 1500, rng.seed=seed, ...)$data
+  
+  scm <- get_impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
+                     n_chunks = n_chunks, n_threads = n_threads, overlap_type = overlap_type)
+
+  # impute <- impute::impute.knn(as.matrix(get_matrix(scm,assay = assay)), k = min(k,ncol(scm)), 
+  #                      rowmax = 1.0, colmax = 1.0, maxp = 1500, rng.seed=123)
+  # 
+  # assays(scm)[[new_assay]] <- as(impute$data,class(get_matrix(scm,assay=assay))[[1]])
+  # 
+  return(scm)
+}
+
+#------------------------------------------------------------------------------------------------------------
+#' Generic imputation return function
+#' @details Uses the specified imputation operation to evaluation an scMethrix object.
+#' @param training_prop numeric; The size of the training set as a proportion of the experiment (0 to 1)
+#' For a range, the optimal value will be estimated; this is time-intensive.
+#' @param seed string; value to use for sampling
+#' @inheritParams transform_assay
+#' @return list; two \code{\link{scMethrix}} objects names 'training' and 'test'
+#' @examples
+#' data('scMethrix_data')
+#' generate_training_set(scMethrix_data, training_prop = 0.2)
+#' @export
+get_impute_regions <- function(scm = NULL, assay="score", new_assay = NULL, regions = NULL, op = NULL, n_chunks = 1, 
+                               n_threads = 1, overlap_type="within") {
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -426,10 +431,31 @@ impute_by_kNN <- function(scm = NULL, assay = "score", new_assay = "impute", k =
     warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
   }
   
-  impute <- impute::impute.knn(as.matrix(get_matrix(scm,assay = assay)), k = min(k,ncol(scm)), 
-                       rowmax = 1.0, colmax = 1.0, maxp = 1500, rng.seed=123)
-  assays(scm)[[new_assay]] <- as(impute$data,class(get_matrix(scm,assay=assay))[[1]])
+  if (!is.null(regions)) {
+    regions = cast_granges(regions)
+    scm <- subset_scMethrix(scm, regions = regions) 
+  } else { # If no region is specifed, use entire chromosomes
+    regions = range(rowRanges(scm))
+  }
   
+  assays(scm)[[new_assay]] <- assays(scm)[[assay]]
+  
+  regions$rid <- paste0("rid_", 1:length(regions))
+  overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type))
+  colnames(overlap_indices) <- c("xid", "yid")
+  overlap_indices[,yid := paste0("rid_", yid)]
+  rid_list <- split_vector(regions$rid,num = n_chunks)
+  rid_list <- lapply(rid_list, function(rids) {split_vector(rids,num = n_threads)})
+
+  for (rids in rid_list) {
+   
+    idx <- lapply(rids,FUN = function(rid) overlap_indices[overlap_indices$yid %in% rid]$xid)
+    impute <- lapply(idx,function(i) op(get_matrix(scm[i,],assay))) # This is in parallel later
+    
+    for (i in 1:length(idx)) assays(scm)[[new_assay]][idx[[i]],] <- impute[[i]]
+    
+  }
+   
   return(scm)
 }
 

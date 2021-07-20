@@ -44,6 +44,8 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
                       chr_idx = NULL, start_idx = NULL, end_idx = NULL, beta_idx = NULL,
                       M_idx = NULL, U_idx = NULL, strand_idx = NULL, cov_idx = NULL) {
 
+  if (verbose) message("File import starting...")
+  
   if (is.null(files)) {
     stop("Missing input files.", call. = FALSE)
   }
@@ -63,21 +65,19 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   
   # Get the correct indexes of the input beds
   if (is.null(pipeline)) {
-    message(paste0("-Preset:        Custom"))
+    if (verbose) message(paste0("BED column format:  Custom"))
     col_list <- parse_source_idx(chr_idx = chr_idx, start_idx = start_idx, end_idx = end_idx,
                                  beta_idx = beta_idx, cov_idx = cov_idx, strand_idx = strand_idx, 
                                  M_idx = M_idx, U_idx = U_idx, verbose = verbose)
   } else {
     pipeline <- match.arg(arg = pipeline, choices = c("Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"))
-    if (verbose) {
-      message(paste0("-Preset:        ", pipeline))
-    }
+    if (verbose) message(paste0("BED column format:  ", pipeline))
     
     col_list <- get_source_idx(protocol = pipeline)
     
     if (any(pipeline %in% c("Bismark_cov"))) {
       if (zero_based) {
-        message("*BismarkCov files are one based. You may want to re-run with zero_based=FALSE")
+        warning("*BismarkCov files are one based. You may want to re-run with zero_based=FALSE")
       }
     }
   }
@@ -91,7 +91,6 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   }
   
   col_list$max_value = max(read_bed_by_index(file = files[1], ref_cpgs,col_list=col_list)$beta,na.rm = TRUE)
-  
   
   if (h5) {
     
@@ -118,14 +117,13 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     message("Object built!\n")
 
-    
   } else {
 
     message("Reading in BED files") 
 
     reads <- read_mem_data(files, ref_cpgs, col_list = col_list, batch_size = batch_size, n_threads = n_threads,
                            zero_based = zero_based,verbose = verbose)
-
+    
     #colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
     #colData <- t(unlist(lapply(files,get_sample_name)))
     
@@ -436,8 +434,6 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, n_threads = 0, h5_temp = N
 read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 200, n_threads = 0, zero_based = FALSE, 
                           verbose = TRUE) {
 
-
-  
   if (verbose) message("Reading BED data...",start_time()) 
 
   if (n_threads != 0) {
@@ -477,4 +473,5 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 200, n_threads
   if (verbose) message("Data read in ",stop_time()) 
   
   return (reads)
+
 }

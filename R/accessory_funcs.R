@@ -68,8 +68,8 @@ binarize = function(x,threshold = NULL, rep_na = NA, verbose = FALSE) {
 #' # Split vector into sub-vectors with a size of 2
 #' split_vector(c(1,2,3,4,5,6,7,8),2,by="size")
 #' @export
-split_vector = function(vec, num = 1, by = "chunks") {
-  
+split_vector = function(vec, num = 1, by = c('chunks', 'size')) {
+
   if (!is.numeric(num)) {
     stop("num must be numeric")
   }
@@ -84,8 +84,10 @@ split_vector = function(vec, num = 1, by = "chunks") {
   } else {
     
     len <- length(vec)
+
+    if (len < num) num <- len
     
-    if (len/num < 2) stop("Length of input vector must be at least 2x greater than the number of chunks")
+    #if (len/num < 2) stop("Length of input vector must be at least 2x greater than the number of chunks")
     
     chunks <- ceiling(len/num)*(1:(num-1))
     idx <- c(0,chunks+1)
