@@ -198,8 +198,10 @@ cast_granges <- function(regions) {
 #' @return NULL
 #' @export
 start_time <- function() {
-  assign("time.all", proc.time()["elapsed"], envir=globalenv())
-  assign("time.split", proc.time()["elapsed"], envir=globalenv())
+  unlockBinding("time.all",env=topenv()) #TODO: This looks hacky. Fix later
+  unlockBinding("time.split",env=topenv())
+  assign("time.all", proc.time()["elapsed"], envir=topenv())
+  assign("time.split", proc.time()["elapsed"], envir=topenv())
   invisible(NULL)
 }
 
@@ -209,13 +211,13 @@ start_time <- function() {
 #' @return Returns formatted elapsed time since \code{\link{start_time}} or last \code{\link{split_time}}
 #' @export
 split_time <- function() {
-  time <- get("time.split", envir=globalenv())
+  time <- get("time.split", envir=topenv())
   if (!is.numeric(time)) {
     warning("start_time() not set")
     return("[unknown time]")
   }
   time <- proc.time()["elapsed"]-time
-  assign("time.split", proc.time()["elapsed"], envir=globalenv())
+  assign("time.split", proc.time()["elapsed"], envir=topenv())
   return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
 }
 
@@ -225,14 +227,14 @@ split_time <- function() {
 #' @return Returns formatted elapsed time since \code{\link{start_time}}
 #' @export
 stop_time <- function() {
-  time <- get("time.all", envir=globalenv())
+  time <- get("time.all", envir=topenv())
   if (!is.numeric(time)) {
     warning("start_time() not set")
     return("[unknown time]")
   }
-  time <- proc.time()["elapsed"]-get("time.all", envir=globalenv())
-  assign("time.split", NA, envir=globalenv())
-  assign("time.all", NA, envir=globalenv())
+  time <- proc.time()["elapsed"]-get("time.all", envir=topenv())
+  assign("time.split", NA, envir=topenv())
+  assign("time.all", NA, envir=topenv())
   return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
 }
 
