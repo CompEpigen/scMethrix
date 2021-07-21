@@ -83,8 +83,7 @@ setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
 #' @param trans closure; The transformation function. Default = mean
 #' @param verbose boolean; Flag for outputting function status messages. Default = TRUE 
 #' @param n_chunks integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1
-#' @param n_threads integer; Number of parallel instances. \code{n_threads} must be less than or equal to \code{n_chunks}. Default = 1
+#' @param n_threads integer; Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. Default = 1
 #' @param h5_dir string; The directory to use. Will be created if it does not exist. Default = NULL
-generic_scMethrix_function <- function(scm, assay, new_assay, trans, verbose, n_chunks, n_threads, h5_dir) {}
-
-
+#' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
+generic_scMethrix_function <- function(scm, assay, new_assay, trans, verbose, n_chunks, n_threads, h5_dir, overlap_type) {}

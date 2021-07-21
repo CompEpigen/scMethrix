@@ -11,6 +11,8 @@ reference:
   - read_mem_data
   - subset_ref_cpgs
   - get_sample_name
+  - parse_source_idx
+  - get_source_idx
 - title: "Base object and data"
 - contents:
   - scMethrix-class
@@ -36,8 +38,8 @@ reference:
 - contents:
   - merge_scMethrix
   - subset_scMethrix
-  - mask_scMethrix
-  - coverage_filter
+  - mask_by_sample
+  - mask_by_coverage
   - remove_uncovered
 - subtitle: "Statistics"
 - contents:
@@ -48,13 +50,17 @@ reference:
 - subtitle: "Assay transform"
 - contents:
   - transform_assay
+  - bin_scMethrix
+  - binarize
 - subtitle: "Imputation"
 - contents:
   - impute_by_iPCA
   - impute_by_melissa
   - impute_by_RF
   - impute_by_kNN
+  - impute_regions
   - generate_training_set
+  - generate_random_subset
 - subtitle: "Dimensionality Reduction"
 - contents:
   - pca_scMethrix
@@ -75,12 +81,8 @@ reference:
   - plot_tsne
   - get_palette
   - benchmark_imputation
+  - scMethrix_theme
 - title: "Misc functions"
-- subtitle: "Transforms"
-- contents: 
-  - binarize
-  - binarize2
-  - bin_scMethrix
 - subtitle: "GRanges/List"
 - contents:
   - bin_granges

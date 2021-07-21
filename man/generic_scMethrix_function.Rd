@@ -12,7 +12,8 @@ generic_scMethrix_function(
   verbose,
   n_chunks,
   n_threads,
-  h5_dir
+  h5_dir,
+  overlap_type
 )
 }
 \arguments{
@@ -28,9 +29,11 @@ generic_scMethrix_function(
 
 \item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1}
 
-\item{n_threads}{integer; Number of parallel instances. \code{n_threads} must be less than or equal to \code{n_chunks}. Default = 1}
+\item{n_threads}{integer; Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. Default = 1}
 
 \item{h5_dir}{string; The directory to use. Will be created if it does not exist. Default = NULL}
+
+\item{overlap_type}{defines the type of the overlap of the CpG sites with the target region. Default value is \code{within}. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.}
 }
 \description{
 Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package

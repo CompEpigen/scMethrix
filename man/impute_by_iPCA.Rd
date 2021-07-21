@@ -6,8 +6,12 @@
 \usage{
 impute_by_iPCA(
   scm = NULL,
+  regions = NULL,
   assay = "score",
-  new_assay = "impute",
+  new_assay = "iPCA",
+  n_chunks = 1,
+  n_threads = 1,
+  overlap_type = "within",
   n_pc = 2,
   ...
 )
@@ -15,9 +19,17 @@ impute_by_iPCA(
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
+\item{regions}{Granges; the regions to impute. Default is by chromosome.}
+
 \item{assay}{string; name of an existing assay. Default = "score"}
 
 \item{new_assay}{string; name for transformed assay. Default = "new_assay"}
+
+\item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1}
+
+\item{n_threads}{integer; Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. Default = 1}
+
+\item{overlap_type}{string;}
 
 \item{n_pc}{integer > 0; The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value.
 For a range, the optimal value will be estimated; this is time-intensive.}

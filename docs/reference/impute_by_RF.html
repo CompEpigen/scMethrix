@@ -120,7 +120,16 @@
     <p>Imputes the an <code><a href='scMethrix-class.html'>scMethrix</a></code>object using a random forest model</p>
     </div>
 
-    <pre class="usage"><span class='fu'>impute_by_RF</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, assay <span class='op'>=</span> <span class='st'>"score"</span>, new_assay <span class='op'>=</span> <span class='st'>"impute"</span>, <span class='va'>...</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>impute_by_RF</span><span class='op'>(</span>
+  scm <span class='op'>=</span> <span class='cn'>NULL</span>,
+  regions <span class='op'>=</span> <span class='cn'>NULL</span>,
+  assay <span class='op'>=</span> <span class='st'>"score"</span>,
+  new_assay <span class='op'>=</span> <span class='st'>"RF"</span>,
+  n_chunks <span class='op'>=</span> <span class='fl'>1</span>,
+  n_threads <span class='op'>=</span> <span class='fl'>1</span>,
+  overlap_type <span class='op'>=</span> <span class='st'>"within"</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -128,6 +137,10 @@
     <tr>
       <th>scm</th>
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
+    </tr>
+    <tr>
+      <th>regions</th>
+      <td><p>Granges; the regions to impute. Default is by chromosome.</p></td>
     </tr>
     <tr>
       <th>assay</th>
@@ -138,8 +151,20 @@
       <td><p>string; name for transformed assay. Default = "new_assay"</p></td>
     </tr>
     <tr>
+      <th>n_chunks</th>
+      <td><p>integer; Number of chunks to split the <code><a href='scMethrix-class.html'>scMethrix</a></code> object in case it is very large. Default = 1</p></td>
+    </tr>
+    <tr>
+      <th>n_threads</th>
+      <td><p>integer; Number of parallel instances. <code>n_threads</code> should be less than or equal to <code>n_chunks</code>. Default = 1</p></td>
+    </tr>
+    <tr>
+      <th>overlap_type</th>
+      <td><p>string;</p></td>
+    </tr>
+    <tr>
       <th>...</th>
-      <td><p>Additional arguments for missForest::missForest</p></td>
+      <td><p>Additional arguments for <a href='https://rdrr.io/pkg/missForest/man/missForest.html'>missForest</a></p></td>
     </tr>
     </table>
 
@@ -149,6 +174,9 @@
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>Uses the inputted function to transform an assay in the <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</p>
+    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
+
+    <p>Stekhoven, D. J., &amp; Bühlmann, P. (2012). MissForest—non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
@@ -157,7 +185,9 @@
 #&gt;   missForest iteration 2 in progress...</div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; done!
 #&gt;   missForest iteration 3 in progress...</div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; done!
 #&gt;   missForest iteration 4 in progress...</div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; done!
-#&gt;   missForest iteration 5 in progress...</div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; done!</div><div class='output co'>#&gt; An object of class scMethrix
+#&gt;   missForest iteration 5 in progress...</div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; done!
+#&gt;   missForest iteration 6 in progress...</div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; done!
+#&gt;   missForest iteration 7 in progress...</div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The response has five or fewer unique values.  Are you sure you want to do regression?</span></div><div class='output co'>#&gt; done!</div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 286
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts, impute

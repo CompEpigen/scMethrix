@@ -314,7 +314,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @param n_pc integer > 0; The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value. 
 #' For a range, the optimal value will be estimated; this is time-intensive.
 #' @param ... Additional arguments for \link[missMDA]{imputePCA}
-#' @inheritParams transform_assay
+#' @inheritParams impute_regions
 #' @inheritParams missMDA::imputePCA
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -323,7 +323,8 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @export
 #' @references Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
 #' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
-impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = "iPCA", n_pc = 2, ...) {
+impute_by_iPCA <- function(scm = NULL, regions = NULL, assay = "score", new_assay = "iPCA", 
+                           n_chunks = 1, n_threads = 1, overlap_type = "within", n_pc = 2, ...) {
 
   if (length(n_pc) > 1) {
     warning("Caution: n_pc is given as range. This can be very time-intensive.")
@@ -334,7 +335,7 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = "iPCA", n_pc
 
   op <- function(mtx) missMDA::imputePCA(mtx, ncp = n_pc, ...)$completeObs
     
-  scm <- get_impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
+  scm <- impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
                        n_chunks = n_chunks, n_threads = n_threads, overlap_type = overlap_type)
     
   return(scm)
@@ -345,7 +346,7 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = "iPCA", n_pc
 #' Imputes the an \code{\link{scMethrix}}object using a random forest model
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
 #' @param ... Additional arguments for \link[missForest]{missForest}
-#' @inheritParams transform_assay
+#' @inheritParams impute_regions
 #' @inheritParams missForest::missForest
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -354,14 +355,15 @@ impute_by_iPCA <- function(scm = NULL, assay = "score", new_assay = "iPCA", n_pc
 #' @export
 #' @import missForest
 #' @references Stekhoven, D. J., & Bühlmann, P. (2012). MissForest—non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.
-impute_by_RF <- function(scm = NULL, assay = "score", new_assay = "RF", ...) {
+impute_by_RF <- function(scm = NULL, regions = NULL, assay = "score", new_assay = "RF", 
+                         n_chunks = 1, n_threads = 1, overlap_type = "within", ...) {
 
   # impute <- missForest::missForest(as.matrix(get_matrix(scm,assay = assay)))#, ...)
   # assays(scm)[[new_assay]] <- as(impute$ximp,class(get_matrix(scm,assay=assay))[[1]])
   
   op <- function(mtx) missForest::missForest(mtx, ...)$ximp
   
-  scm <- get_impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
+  scm <- impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
                      n_chunks = n_chunks, n_threads = n_threads, overlap_type = overlap_type)
 
   return(scm)
@@ -372,7 +374,7 @@ impute_by_RF <- function(scm = NULL, assay = "score", new_assay = "RF", ...) {
 #' Imputes the an \code{\link{scMethrix}}object using a random forest model
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
 #' @param ... Additional arguments for \link[impute]{impute.knn}
-#' @inheritParams transform_assay
+#' @inheritParams impute_regions
 #' @inheritParams impute::impute.knn
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -382,13 +384,12 @@ impute_by_RF <- function(scm = NULL, assay = "score", new_assay = "RF", ...) {
 #' @import impute
 #' @references Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
 impute_by_kNN <- function(scm = NULL, regions = NULL, assay = "score", new_assay = "kNN", 
-                          n_chunks = 1, n_threads = 1, overlap_type = "within", seed = "123",
-                          k = 10, ...) {
+                          n_chunks = 1, n_threads = 1, overlap_type = "within", k = 10, ...) {
   
   op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
-                           rowmax = 1.0, colmax = 1.0, maxp = 1500, rng.seed=seed, ...)$data
+                           rowmax = 1.0, colmax = 1.0, maxp = 1500, ...)$data
   
-  scm <- get_impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
+  scm <- impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
                      n_chunks = n_chunks, n_threads = n_threads, overlap_type = overlap_type)
 
   # impute <- impute::impute.knn(as.matrix(get_matrix(scm,assay = assay)), k = min(k,ncol(scm)), 
@@ -402,17 +403,19 @@ impute_by_kNN <- function(scm = NULL, regions = NULL, assay = "score", new_assay
 #------------------------------------------------------------------------------------------------------------
 #' Generic imputation return function
 #' @details Uses the specified imputation operation to evaluation an scMethrix object.
-#' @param training_prop numeric; The size of the training set as a proportion of the experiment (0 to 1)
-#' For a range, the optimal value will be estimated; this is time-intensive.
-#' @param seed string; value to use for sampling
-#' @inheritParams transform_assay
+#' @param regions Granges; the regions to impute. Default is by chromosome.
+#' @param overlap_type string; 
+#' @param op closure; the imputation operation
+#' @inheritParams generic_scMethrix_function
 #' @return list; two \code{\link{scMethrix}} objects names 'training' and 'test'
 #' @examples
 #' data('scMethrix_data')
 #' generate_training_set(scMethrix_data, training_prop = 0.2)
 #' @export
-get_impute_regions <- function(scm = NULL, assay="score", new_assay = NULL, regions = NULL, op = NULL, n_chunks = 1, 
+impute_regions <- function(scm = NULL, assay="score", new_assay = NULL, regions = NULL, op = NULL, n_chunks = 1, 
                                n_threads = 1, overlap_type="within") {
+  
+  yid <- NULL
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -512,9 +515,6 @@ generate_random_subset <- function(scm = NULL, n_cpgs = 10000, seed = "123") {
     n_cpgs = min(nrow(scm),n_cpgs)
     warning("Invalid n_cpgs. Must be between 1 and ",nrow(scm),". Defaulted to ",n_cpgs)
   }
-
-  
-  
   
   set.seed(seed)
   idx <- sort(sample(1:nrow(scm),n_cpgs))

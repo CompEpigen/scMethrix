@@ -122,6 +122,7 @@
 
     <pre class="usage"><span class='fu'>read_index</span><span class='op'>(</span>
   <span class='va'>files</span>,
+  <span class='va'>col_list</span>,
   n_threads <span class='op'>=</span> <span class='fl'>0</span>,
   zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>,
   batch_size <span class='op'>=</span> <span class='fl'>200</span>,
@@ -134,6 +135,10 @@
     <tr>
       <th>files</th>
       <td><p>List of BED files</p></td>
+    </tr>
+    <tr>
+      <th>col_list</th>
+      <td><p>The column index object for the input BED files</p></td>
     </tr>
     <tr>
       <th>n_threads</th>

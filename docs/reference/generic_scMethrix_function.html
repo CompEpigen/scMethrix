@@ -128,7 +128,8 @@
   <span class='va'>verbose</span>,
   <span class='va'>n_chunks</span>,
   <span class='va'>n_threads</span>,
-  <span class='va'>h5_dir</span>
+  <span class='va'>h5_dir</span>,
+  <span class='va'>overlap_type</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -160,11 +161,15 @@
     </tr>
     <tr>
       <th>n_threads</th>
-      <td><p>integer; Number of parallel instances. <code>n_threads</code> must be less than or equal to <code>n_chunks</code>. Default = 1</p></td>
+      <td><p>integer; Number of parallel instances. <code>n_threads</code> should be less than or equal to <code>n_chunks</code>. Default = 1</p></td>
     </tr>
     <tr>
       <th>h5_dir</th>
       <td><p>string; The directory to use. Will be created if it does not exist. Default = NULL</p></td>
+    </tr>
+    <tr>
+      <th>overlap_type</th>
+      <td><p>defines the type of the overlap of the CpG sites with the target region. Default value is <code>within</code>. For detailed description, see the <code>findOverlaps</code> function of the <code>IRanges</code> package.</p></td>
     </tr>
     </table>
 

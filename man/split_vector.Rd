@@ -4,7 +4,7 @@
 \alias{split_vector}
 \title{Splits a vector into list of vectors by \code{chunk} or \code{size}}
 \usage{
-split_vector(vec, num = 1, by = "chunks")
+split_vector(vec, num = 1, by = c("chunks", "size"))
 }
 \arguments{
 \item{vec}{vector; The vector to split}

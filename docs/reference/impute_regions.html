@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Density Plot of \(\beta\)-Values — plot_density • scMethrix</title>
+<title>Generic imputation return function — impute_regions • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Density Plot of \(\beta\)-Values — plot_density" />
-<meta property="og:description" content="Density Plot of \(\beta\)-Values" />
+<meta property="og:title" content="Generic imputation return function — impute_regions" />
+<meta property="og:description" content="Generic imputation return function" />
 
 
 
@@ -111,22 +111,24 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Density Plot of \(\beta\)-Values</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_plot.R'><code>R/scMethrix_plot.R</code></a></small>
-    <div class="hidden name"><code>plot_density.Rd</code></div>
+    <h1>Generic imputation return function</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_transforms.R'><code>R/scMethrix_transforms.R</code></a></small>
+    <div class="hidden name"><code>impute_regions.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Density Plot of \(\beta\)-Values</p>
+    <p>Generic imputation return function</p>
     </div>
 
-    <pre class="usage"><span class='fu'>plot_density</span><span class='op'>(</span>
+    <pre class="usage"><span class='fu'>impute_regions</span><span class='op'>(</span>
   scm <span class='op'>=</span> <span class='cn'>NULL</span>,
-  ranges <span class='op'>=</span> <span class='cn'>NULL</span>,
-  n_cpgs <span class='op'>=</span> <span class='fl'>25000</span>,
-  pheno <span class='op'>=</span> <span class='cn'>NULL</span>,
-  col_palette <span class='op'>=</span> <span class='st'>"RdYlGn"</span>,
-  show_legend <span class='op'>=</span> <span class='cn'>TRUE</span>
+  assay <span class='op'>=</span> <span class='st'>"score"</span>,
+  new_assay <span class='op'>=</span> <span class='cn'>NULL</span>,
+  regions <span class='op'>=</span> <span class='cn'>NULL</span>,
+  op <span class='op'>=</span> <span class='cn'>NULL</span>,
+  n_chunks <span class='op'>=</span> <span class='fl'>1</span>,
+  n_threads <span class='op'>=</span> <span class='fl'>1</span>,
+  overlap_type <span class='op'>=</span> <span class='st'>"within"</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -137,35 +139,65 @@
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
-      <th>ranges</th>
-      <td><p>genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a <code>GenomicRanges</code> object</p></td>
+      <th>assay</th>
+      <td><p>string; name of an existing assay. Default = "score"</p></td>
     </tr>
     <tr>
-      <th>n_cpgs</th>
-      <td><p>Use these many random CpGs for plotting. Default 25000. Set it to <code>NULL</code> to use all - which can be memory expensive.</p></td>
+      <th>new_assay</th>
+      <td><p>string; name for transformed assay. Default = "new_assay"</p></td>
     </tr>
     <tr>
-      <th>pheno</th>
-      <td><p>Row name of colData(m). Will be used as a factor to color different groups</p></td>
+      <th>regions</th>
+      <td><p>Granges; the regions to impute. Default is by chromosome.</p></td>
     </tr>
     <tr>
-      <th>col_palette</th>
-      <td><p>Name of the RColorBrewer palette to use for plotting.</p></td>
+      <th>op</th>
+      <td><p>closure; the imputation operation</p></td>
     </tr>
     <tr>
-      <th>show_legend</th>
-      <td><p>Display the legend on the plot</p></td>
+      <th>n_chunks</th>
+      <td><p>integer; Number of chunks to split the <code><a href='scMethrix-class.html'>scMethrix</a></code> object in case it is very large. Default = 1</p></td>
+    </tr>
+    <tr>
+      <th>n_threads</th>
+      <td><p>integer; Number of parallel instances. <code>n_threads</code> should be less than or equal to <code>n_chunks</code>. Default = 1</p></td>
+    </tr>
+    <tr>
+      <th>overlap_type</th>
+      <td><p>string;</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>ggplot2 object</p>
+    <p>list; two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects names 'training' and 'test'</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Uses the specified imputation operation to evaluation an scMethrix object.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>plot_density</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='va'>scMethrix_data</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.05s</span></div><div class='output co'>#&gt; <span class='message'>Randomly selecting 25000 sites</span></div><div class='output co'>#&gt; <span class='warning'>Warning: Removed 434 rows containing non-finite values (stat_density).</span></div><div class='img'><img src='plot_density-1.png' alt='' width='700' height='433' /></div></pre>
+<span class='fu'><a href='generate_training_set.html'>generate_training_set</a></span><span class='op'>(</span><span class='va'>scMethrix_data</span>, training_prop <span class='op'>=</span> <span class='fl'>0.2</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; $training
+#&gt; An object of class scMethrix
+#&gt;    n_CpGs: 57
+#&gt;    n_samples: 4
+#&gt;    assays: score, counts
+#&gt;    reduced dims: 
+#&gt;    is_h5: FALSE
+#&gt;    Reference: hg19
+#&gt;    Physical size: 32.4 Kb
+#&gt; 
+#&gt; $test
+#&gt; An object of class scMethrix
+#&gt;    n_CpGs: 229
+#&gt;    n_samples: 4
+#&gt;    assays: score, counts
+#&gt;    reduced dims: 
+#&gt;    is_h5: FALSE
+#&gt;    Reference: hg19
+#&gt;    Physical size: 39.1 Kb
+#&gt; </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

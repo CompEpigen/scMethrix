@@ -123,11 +123,10 @@
     <pre class="usage"><span class='fu'>read_mem_data</span><span class='op'>(</span>
   <span class='va'>files</span>,
   <span class='va'>ref_cpgs</span>,
+  <span class='va'>col_list</span>,
   batch_size <span class='op'>=</span> <span class='fl'>200</span>,
   n_threads <span class='op'>=</span> <span class='fl'>0</span>,
   zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  meth_idx <span class='op'>=</span> <span class='fl'>4</span>,
-  cov_idx <span class='op'>=</span> <span class='cn'>NULL</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
@@ -143,6 +142,10 @@
       <td><p>The index of all unique coordinates from the input BED files</p></td>
     </tr>
     <tr>
+      <th>col_list</th>
+      <td><p>The column index object for the input BED files</p></td>
+    </tr>
+    <tr>
       <th>batch_size</th>
       <td><p>The number of files to hold in memory at once</p></td>
     </tr>
@@ -153,14 +156,6 @@
     <tr>
       <th>zero_based</th>
       <td><p>Boolean flag for whether the input data is zero-based or not</p></td>
-    </tr>
-    <tr>
-      <th>meth_idx</th>
-      <td><p>The column index of the methylation value for the read</p></td>
-    </tr>
-    <tr>
-      <th>cov_idx</th>
-      <td><p>The column index(es) of the read count</p></td>
     </tr>
     <tr>
       <th>verbose</th>

@@ -144,8 +144,10 @@
     <p>A merged <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Merges the base assay data from two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects. Merging of additional slot
-data is not supported at this time. Non-common assays between objects will be dropped</p>
+    <p>Merges the assay data from two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.</p>
+<p>If merging by rows, all CpG sites must be unique and samples must be identical
+If merging by columns, all samples must be unique and CpG sites must be identical</p>
+<p>TODO: Check if metadata is saved correctly</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>

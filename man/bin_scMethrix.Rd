@@ -37,7 +37,7 @@ Default value is \code{within}. For detailed description, see the \code{findOver
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 
-\item{n_threads}{integer; Number of parallel instances. \code{n_threads} must be less than or equal to \code{n_chunks}. Default = 1}
+\item{n_threads}{integer; Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. Default = 1}
 }
 \value{
 An \code{\link{scMethrix}} object

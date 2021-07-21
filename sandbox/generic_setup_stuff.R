@@ -62,4 +62,6 @@ scm.20.mem <- readRDS(file = "D:/Git/sampleData/scm.20.mem.rds")
 # Useful functions
 devtools::test()
 devtools::install()
+
+setwd("D:/Git/scMethrix")
 pkgdown::build_site()

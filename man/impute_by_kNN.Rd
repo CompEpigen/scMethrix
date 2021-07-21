@@ -4,14 +4,32 @@
 \alias{impute_by_kNN}
 \title{Imputes the an \code{\link{scMethrix}}object using a random forest model}
 \usage{
-impute_by_kNN(scm = NULL, assay = "score", new_assay = "impute", k = 10, ...)
+impute_by_kNN(
+  scm = NULL,
+  regions = NULL,
+  assay = "score",
+  new_assay = "kNN",
+  n_chunks = 1,
+  n_threads = 1,
+  overlap_type = "within",
+  k = 10,
+  ...
+)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
+\item{regions}{Granges; the regions to impute. Default is by chromosome.}
+
 \item{assay}{string; name of an existing assay. Default = "score"}
 
 \item{new_assay}{string; name for transformed assay. Default = "new_assay"}
+
+\item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1}
+
+\item{n_threads}{integer; Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. Default = 1}
+
+\item{overlap_type}{string;}
 
 \item{k}{Number of neighbors to be used in the
     imputation (default=10)}
@@ -29,7 +47,7 @@ Uses the inputted function to transform an assay in the \code{\link{scMethrix}} 
 }
 \examples{
 data('scMethrix_data')
-impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
+impute_by_kNN(scMethrix_data)
 }
 \references{
 Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.

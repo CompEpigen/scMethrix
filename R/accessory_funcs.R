@@ -278,7 +278,6 @@ subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
 #' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
 #' @param protocol string; the protocol used for bedgraph output. Options are: "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
 #' @return List of column names and indexes
-#' @examples
 #' @export
 get_source_idx = function(protocol = NULL) {
   
@@ -321,7 +320,6 @@ get_source_idx = function(protocol = NULL) {
 #' @param cov_idx integer; column of the coverage
 #' @param verbose flag to output messages or not
 #' @return List of column names and indexes
-#' @examples
 #' @export
 parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, strand_idx = NULL,
                             beta_idx = NULL, M_idx = NULL, U_idx = NULL,

@@ -123,12 +123,11 @@
     <pre class="usage"><span class='fu'>read_hdf5_data</span><span class='op'>(</span>
   <span class='va'>files</span>,
   <span class='va'>ref_cpgs</span>,
+  <span class='va'>col_list</span>,
   n_threads <span class='op'>=</span> <span class='fl'>0</span>,
   h5_temp <span class='op'>=</span> <span class='cn'>NULL</span>,
   zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  verbose <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  meth_idx <span class='op'>=</span> <span class='fl'>4</span>,
-  cov_idx <span class='op'>=</span> <span class='cn'>NULL</span>
+  verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -141,6 +140,10 @@
     <tr>
       <th>ref_cpgs</th>
       <td><p>The index of all unique coordinates from the input BED files</p></td>
+    </tr>
+    <tr>
+      <th>col_list</th>
+      <td><p>The column index object for the input BED files</p></td>
     </tr>
     <tr>
       <th>n_threads</th>
@@ -157,14 +160,6 @@
     <tr>
       <th>verbose</th>
       <td><p>flag to output messages or not.</p></td>
-    </tr>
-    <tr>
-      <th>meth_idx</th>
-      <td><p>The column index of the methylation value for the read</p></td>
-    </tr>
-    <tr>
-      <th>cov_idx</th>
-      <td><p>The column index(es) of the read count</p></td>
     </tr>
     </table>
 
