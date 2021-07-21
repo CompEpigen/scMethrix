@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Imputes the an scMethrixobject using a random forest model — impute_by_kNN • scMethrix</title>
+<title>Generic imputation return function — impute_regions • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Imputes the an scMethrixobject using a random forest model — impute_by_kNN" />
-<meta property="og:description" content="Imputes the an scMethrixobject using a random forest model" />
+<meta property="og:title" content="Generic imputation return function — impute_regions" />
+<meta property="og:description" content="Generic imputation return function" />
 
 
 
@@ -111,25 +111,24 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Imputes the an <code><a href='scMethrix-class.html'>scMethrix</a></code>object using a random forest model</h1>
+    <h1>Generic imputation return function</h1>
     <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_transforms.R'><code>R/scMethrix_transforms.R</code></a></small>
-    <div class="hidden name"><code>impute_by_kNN.Rd</code></div>
+    <div class="hidden name"><code>impute_regions.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Imputes the an <code><a href='scMethrix-class.html'>scMethrix</a></code>object using a random forest model</p>
+    <p>Generic imputation return function</p>
     </div>
 
-    <pre class="usage"><span class='fu'>impute_by_kNN</span><span class='op'>(</span>
+    <pre class="usage"><span class='fu'>impute_regions</span><span class='op'>(</span>
   scm <span class='op'>=</span> <span class='cn'>NULL</span>,
-  regions <span class='op'>=</span> <span class='cn'>NULL</span>,
   assay <span class='op'>=</span> <span class='st'>"score"</span>,
-  new_assay <span class='op'>=</span> <span class='st'>"kNN"</span>,
+  new_assay <span class='op'>=</span> <span class='cn'>NULL</span>,
+  regions <span class='op'>=</span> <span class='cn'>NULL</span>,
+  op <span class='op'>=</span> <span class='cn'>NULL</span>,
   n_chunks <span class='op'>=</span> <span class='fl'>1</span>,
   n_threads <span class='op'>=</span> <span class='fl'>1</span>,
-  overlap_type <span class='op'>=</span> <span class='st'>"within"</span>,
-  k <span class='op'>=</span> <span class='fl'>10</span>,
-  <span class='va'>...</span>
+  overlap_type <span class='op'>=</span> <span class='st'>"within"</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -140,16 +139,20 @@
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
-      <th>regions</th>
-      <td><p>Granges; the regions to impute. Default is by chromosome.</p></td>
-    </tr>
-    <tr>
       <th>assay</th>
       <td><p>string; name of an existing assay. Default = "score"</p></td>
     </tr>
     <tr>
       <th>new_assay</th>
       <td><p>string; name for transformed assay. Default = "new_assay"</p></td>
+    </tr>
+    <tr>
+      <th>regions</th>
+      <td><p>Granges; the regions to impute. Default is by chromosome.</p></td>
+    </tr>
+    <tr>
+      <th>op</th>
+      <td><p>closure; the imputation operation</p></td>
     </tr>
     <tr>
       <th>n_chunks</th>
@@ -163,38 +166,38 @@
       <th>overlap_type</th>
       <td><p>string;</p></td>
     </tr>
-    <tr>
-      <th>k</th>
-      <td><p>Number of neighbors to be used in the
-    imputation (default=10)</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>Additional arguments for <a href='https://rdrr.io/pkg/impute/man/impute.knn.html'>impute.knn</a></p></td>
-    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p>
+    <p>list; two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects names 'training' and 'test'</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Uses the inputted function to transform an assay in the <code><a href='scMethrix-class.html'>scMethrix</a></code> object.</p>
-    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
-
-    <p>Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.</p>
+    <p>Uses the specified imputation operation to evaluation an scMethrix object.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>impute_by_kNN</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 286
+<span class='fu'><a href='generate_training_set.html'>generate_training_set</a></span><span class='op'>(</span><span class='va'>scMethrix_data</span>, training_prop <span class='op'>=</span> <span class='fl'>0.2</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; $training
+#&gt; An object of class scMethrix
+#&gt;    n_CpGs: 57
 #&gt;    n_samples: 4
-#&gt;    assays: score, counts, kNN
+#&gt;    assays: score, counts
 #&gt;    reduced dims: 
 #&gt;    is_h5: FALSE
 #&gt;    Reference: hg19
-#&gt;    Physical size: 51 Kb</div></pre>
+#&gt;    Physical size: 32.4 Kb
+#&gt; 
+#&gt; $test
+#&gt; An object of class scMethrix
+#&gt;    n_CpGs: 229
+#&gt;    n_samples: 4
+#&gt;    assays: score, counts
+#&gt;    reduced dims: 
+#&gt;    is_h5: FALSE
+#&gt;    Reference: hg19
+#&gt;    Physical size: 39.1 Kb
+#&gt; </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

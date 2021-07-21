@@ -120,7 +120,16 @@
     <p>Imputes the an <code><a href='scMethrix-class.html'>scMethrix</a></code>object using a random forest model</p>
     </div>
 
-    <pre class="usage"><span class='fu'>impute_by_RF</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, assay <span class='op'>=</span> <span class='st'>"score"</span>, new_assay <span class='op'>=</span> <span class='st'>"impute"</span>, <span class='va'>...</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>impute_by_RF</span><span class='op'>(</span>
+  scm <span class='op'>=</span> <span class='cn'>NULL</span>,
+  regions <span class='op'>=</span> <span class='cn'>NULL</span>,
+  assay <span class='op'>=</span> <span class='st'>"score"</span>,
+  new_assay <span class='op'>=</span> <span class='st'>"RF"</span>,
+  n_chunks <span class='op'>=</span> <span class='fl'>1</span>,
+  n_threads <span class='op'>=</span> <span class='fl'>1</span>,
+  overlap_type <span class='op'>=</span> <span class='st'>"within"</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -130,12 +139,28 @@
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
+      <th>regions</th>
+      <td><p>Granges; the regions to impute. Default is by chromosome.</p></td>
+    </tr>
+    <tr>
       <th>assay</th>
       <td><p>string; name of an existing assay. Default = "score"</p></td>
     </tr>
     <tr>
       <th>new_assay</th>
       <td><p>string; name for transformed assay. Default = "new_assay"</p></td>
+    </tr>
+    <tr>
+      <th>n_chunks</th>
+      <td><p>integer; Number of chunks to split the <code><a href='scMethrix-class.html'>scMethrix</a></code> object in case it is very large. Default = 1</p></td>
+    </tr>
+    <tr>
+      <th>n_threads</th>
+      <td><p>integer; Number of parallel instances. <code>n_threads</code> should be less than or equal to <code>n_chunks</code>. Default = 1</p></td>
+    </tr>
+    <tr>
+      <th>overlap_type</th>
+      <td><p>string;</p></td>
     </tr>
     <tr>
       <th>...</th>

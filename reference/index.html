@@ -175,6 +175,18 @@
           <p><code><a href="get_sample_name.html">get_sample_name()</a></code> </p>
         </td>
         <td><p>Returns sample name derived from the input file name</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="parse_source_idx.html">parse_source_idx()</a></code> </p>
+        </td>
+        <td><p>Subsets a given list of CpGs by another list of CpGs</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="get_source_idx.html">get_source_idx()</a></code> </p>
+        </td>
+        <td><p>Gets bedgraph column indexes from common pipeline output formats</p></td>
       </tr>
     </tbody><tbody>
       <tr>
@@ -336,6 +348,18 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="mask_by_sample.html">mask_by_sample()</a></code> </p>
+        </td>
+        <td><p>Masks CpGs by cell count</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="mask_by_coverage.html">mask_by_coverage()</a></code> </p>
+        </td>
+        <td><p>Masks CpGs by coverage</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="remove_uncovered.html">remove_uncovered()</a></code> </p>
         </td>
         <td><p>Remove loci that are uncovered across all samples</p></td>
@@ -398,6 +422,18 @@
           <p><code><a href="transform_assay.html">transform_assay()</a></code> </p>
         </td>
         <td><p>Transforms an assay in an <code>scMethrix</code> object.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="bin_scMethrix.html">bin_scMethrix()</a></code> </p>
+        </td>
+        <td><p>Bins the ranges of an <code>scMethrix</code> object.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="binarize.html">binarize()</a></code> </p>
+        </td>
+        <td><p>Binarize an input value based on a <code>threshold</code></p></td>
       </tr>
     </tbody><tbody>
       
@@ -438,9 +474,21 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="impute_regions.html">impute_regions()</a></code> </p>
+        </td>
+        <td><p>Generic imputation return function</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="generate_training_set.html">generate_training_set()</a></code> </p>
         </td>
         <td><p>Splits an scMethrix object into two for use as a training and test set</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="generate_random_subset.html">generate_random_subset()</a></code> </p>
+        </td>
+        <td><p>Generates a random subset of CpG sites</p></td>
       </tr>
     </tbody><tbody>
       
@@ -564,6 +612,12 @@ inheritParams generic_plot_function</p></td>
           <p><code><a href="benchmark_imputation.html">benchmark_imputation()</a></code> </p>
         </td>
         <td><p>Evaluates imputations methods by NRMSE or AUC</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="scMethrix_theme.html">scMethrix_theme()</a></code> </p>
+        </td>
+        <td><p>Theme for ggplot</p></td>
       </tr>
     </tbody><tbody>
       <tr>
@@ -574,31 +628,6 @@ inheritParams generic_plot_function</p></td>
       </tr>
       
       
-    </tbody><tbody>
-      
-      <tr>
-        <th colspan="2">
-          <h3 id="section-transforms" class="hasAnchor"><a href="#section-transforms" class="anchor"></a>Transforms</h3>
-          <p class="section-desc"></p>
-        </th>
-      </tr>
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="binarize.html">binarize()</a></code> </p>
-        </td>
-        <td><p>Binarize an input value based on a <code>threshold</code></p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="bin_scMethrix.html">bin_scMethrix()</a></code> </p>
-        </td>
-        <td><p>Bins the ranges of an <code>scMethrix</code> object.</p></td>
-      </tr>
     </tbody><tbody>
       
       <tr>
