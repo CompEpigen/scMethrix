@@ -28,6 +28,7 @@ has_cov = function(m) {
 #' #get_sample_name("C:/dir/dir/filename.ext")
 #' @export
 get_sample_name = function(s) {
+  if (!is.character(s)) stop("Must be a string file path")
   return(tools::file_path_sans_ext(basename(s)))
 }
 
@@ -117,7 +118,9 @@ split_vector = function(vec, num = 1, by = c('chunks', 'size')) {
 #' @export
 split_granges = function(gr,chunks = NA, percent = NA, size = NA) { #=NULL, percent = NULL
 
-  if (sum(is.na(c(chunks,percent,size))) != 2) stop("Max 1 argument for chunking.")
+  if (!is(gr, "GRanges")) stop("Input must be a Granges object")
+  
+  if (sum(is.na(c(chunks,percent,size))) != 2) stop("Invalid input. Must contain 1 of either chunks, percent, or size")
   
   if (!is.na(percent)) {
     size <- floor(length(gr)*percent/(100))
@@ -155,6 +158,8 @@ split_granges = function(gr,chunks = NA, percent = NA, size = NA) { #=NULL, perc
 #' @export
 bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
 
+  if (!is(gr, "GRanges")) stop("Input must be a Granges object")
+  
   ends <- len <- seqnames(gr)@lengths
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
   starts <- head(c(1, ends + 1), -1)
@@ -215,7 +220,7 @@ start_time <- function() {
 split_time <- function() {
   time <- get("time.split", envir=topenv())
   if (!is.numeric(time)) {
-    warning("start_time() not set")
+    warning("start_time() not set. Starting from now.")
     return("[unknown time]")
   }
   time <- proc.time()["elapsed"]-time

@@ -121,7 +121,9 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
     }
   }
   
-  return(m)
+  #chrom_size = range(rowRanges(scm))@ranges@width
+  
+  return(sort(m))
 }
 
 #------------------------------------------------------------------------------------------------------------

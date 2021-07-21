@@ -1,4 +1,7 @@
 test_that("get_metadata_stats", {
+  
+  expect_error(get_metadata_stats("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  
   invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
     expect_error(get_metadata_stats(scm="not scMethrix"))
     s <- get_metadata_stats(scm)
@@ -7,14 +10,26 @@ test_that("get_metadata_stats", {
     s <- remove_assay(scm,assay="counts")
     s <- get_metadata_stats(s)
     expect_equal(dim(mcols(s)),c(n_cpg,4))
+    
+    stats <- mcols(s)
+    rng <- 1:10
+    
+    expect_equal(rowMeans(score(s)[rng,],na.rm=TRUE),stats$mean_meth[rng])
+    expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median_meth[rng])
+    expect_equal(DelayedMatrixStats::rowSds(score(s)[rng,],na.rm=TRUE),stats$sd_meth[rng])
+    expect_equal(ncol(s)-rowCounts(score(s)[rng,],val=NA),stats$cells[rng])
   }))
 })
 
 test_that("remove_assay", {
+  
+  expect_error(remove_assay("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(remove_assay(scm="not scMethrix"))
     expect_error(remove_assay(scm, assay="not an assay"))
     expect_error(remove_assay(scm, assay="score"))
+    
     plus1 <- transform_assay(scm,trans=function(x) x+1,assay="score",new_assay="plus1")
     expect_false(isTRUE(all.equal(assays(scm), assays(plus1))))
     plus1 <- remove_assay(plus1, assay="plus1")
@@ -23,27 +38,37 @@ test_that("remove_assay", {
 })
 
 test_that("merge_scMethrix", {
+  
+  expect_error(merge_scMethrix(scm1=scm.mem,scm2="not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(merge_scMethrix(scm1="not scMethrix",scm2=scm.mem),"A valid scMethrix object needs to be supplied")
+  
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(merge_scMethrix(scm1=scm,scm2="not scMethrix"))
+   
+    #same samples
+    expect_error(merge_scMethrix(scm,scm,by="col"), "You have the same samples in your datasets. You need different samples for this merging. ") 
+    #different regions
+    expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="col"),"There are non-overlapping regions in your datasets. This function only takes identical regions.") 
     
-    expect_error(merge_scMethrix(scm,scm,by="col")) #same samples
-    expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="col")) #different regions
+    #same regions
+    expect_error(merge_scMethrix(scm,scm,by="row"),"There are overlapping regions in your datasets. Each object must contain unique regions.") 
+    #different samples
+    expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="row"),"You have different samples in your dataset. You need the same samples in your datasets.") 
     
-    expect_error(merge_scMethrix(scm,scm,by="row")) #same regions
-    expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="row")) #different samples
-    
-    s <- scm
-    assays(s) <- assays(s)["score"]
+    s <- remove_assay(scm,assay="counts")
+
     expect_warning(merge_scMethrix(s[,1],scm[,2],by="col")) #different assays
     
-    expect_equivalent(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row"),scm)
-    expect_equivalent(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"),scm)
+    expect_equal(merge_scMethrix(scm[2:nrow(scm)],scm[1],by="row"),scm, check.attributes = FALSE) #TODO: Should remove the check.atrributes later
+    expect_equal(merge_scMethrix(scm[,2:ncol(scm)],scm[,1],by="col"),scm, check.attributes = FALSE)
+    
+    expect_equal(merge_scMethrix(scm[1], scm[2:nrow(scm)],by="row"),
+                 merge_scMethrix(scm[2:nrow(scm)], scm[1],by="row"), check.attributes = FALSE)
   }))
 })
 
 test_that("convert_HDF5_scMethrix", {
 
-  expect_error(convert_HDF5_scMethrix("not scMethrix"))
+  expect_error(subset_scMethrix("not scMethrix"),"A valid scMethrix object needs to be supplied")
   
   expect_true(is_h5(scm.h5))
   expect_equal(class(get_matrix(scm.h5))[1],"HDF5Matrix")
@@ -51,6 +76,7 @@ test_that("convert_HDF5_scMethrix", {
   scm <- convert_HDF5_scMethrix(scm.h5)
   
   expect_false(is_h5(scm))
+  expect_equal(as.numeric(score(scm)),as.numeric(score(scm.h5)))
   expect_equal(class(get_matrix(scm))[1],"matrix") 
   rm(scm)
   
@@ -58,7 +84,7 @@ test_that("convert_HDF5_scMethrix", {
 
 test_that("convert_scMethrix", {
   
-  expect_error(convert_scMethrix("not scMethrix"))
+  expect_error(convert_scMethrix("not scMethrix"),"A valid scMethrix object needs to be supplied")
   
   expect_false(is_h5(scm.mem))
   expect_equal(class(get_matrix(scm.mem))[1],"matrix") 
@@ -66,6 +92,7 @@ test_that("convert_scMethrix", {
   scm <- convert_scMethrix(scm.mem)
   
   expect_true(is_h5(scm))
+  expect_equal(as.numeric(score(scm)),as.numeric(score(scm.mem)))
   expect_equal(class(get_matrix(scm))[1],"HDF5Matrix")
   rm(scm)
   
@@ -73,7 +100,7 @@ test_that("convert_scMethrix", {
 
 test_that("subset_scMethrix", {
   
-  expect_error(subset_scMethrix("not scMethrix"))
+  expect_error(subset_scMethrix("not scMethrix"),"A valid scMethrix object needs to be supplied")
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
@@ -94,30 +121,33 @@ test_that("subset_scMethrix", {
     
     s <- subset_scMethrix(scm, regions = regions, by="include")
     expect_equal(dim(s),c(134,n_samples))
-  
+    expect_equal(length(findOverlaps(regions,rowRanges(s))),length(rowRanges(s)))
+      
     s <- subset_scMethrix(scm, samples = samples, contigs = contigs, regions = regions, by="include")
     expect_equal(dim(s),c(67,length(samples)))
     
     # Subset by exclude
     s <- subset_scMethrix(scm, samples = samples, by = "exclude")
     expect_equal(dim(s),c(n_cpg,length(samples)))
-    expect_equal(length(intersect(colData(s)$colData,samples)),0)
+    expect_equal(length(intersect(rownames(colData(s)),samples)),0)
     
     s <- subset_scMethrix(scm, contigs = contigs, by = "exclude")
     expect_equal(dim(s),c(139,n_samples))
-    #expect_equal(contigs,as.character(seqnames(s)@values))
+    expect_equal(length(intersect(contigs,as.character(seqnames(s)@values))),0)
     
     s <- subset_scMethrix(scm, regions = regions, by = "exclude")
     expect_equal(dim(s),c(152,n_samples))
+    expect_equal(length(findOverlaps(regions,rowRanges(s))),0)
     
     s <- subset_scMethrix(scm, samples = samples, contigs = contigs, regions = regions, by = "exclude")
     expect_equal(dim(s),c(72,length(samples)))
+    
   }))
 })
 
 test_that("get_matrix", {
  
-    expect_error(get_matrix("not scMethrix"))
+    expect_error(get_matrix("not scMethrix"),"A valid scMethrix object needs to be supplied")
   
     s <- get_matrix(scm.h5)
     expect_equal(dim(s),c(n_cpg,4))  
@@ -147,32 +177,45 @@ test_that("get_matrix", {
 
 test_that("remove_uncovered", {
   
-  expect_error(get_matrix("not scMethrix"))
+  expect_error(remove_uncovered("not scMethrix"),"A valid scMethrix object needs to be supplied")
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
     samples = c("C1","C2")
     s <- subset_scMethrix(scm,samples=samples,by = "include")
     expect_equal(dim(s),c(n_cpg,length(samples)))
-    expect_equal(dim(remove_uncovered(s)),c(235,2))
+    non_na_rows = nrow(score(s)[rowSums(is.na(score(s))) != ncol(s), ])
+    expect_equal(dim(remove_uncovered(s)),c(non_na_rows,length(samples)))
   }))
 })
 
 test_that("get_stats", {
   
-  expect_error(get_matrix("not scMethrix"))
+  expect_error(get_stats("not scMethrix"),"A valid scMethrix object needs to be supplied")
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     chr <- length(seqlengths(rowRanges(scm)))
     samples <- nrow(colData(scm))
     expect_equal(dim(get_stats(scm)),c(chr*samples,5))
     expect_equal(dim(get_stats(scm,per_chr = FALSE)),c(samples,4))
+    
+    stats <- get_stats(scm,per_chr=FALSE)
+    expect_equal(mean(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","mean_meth"]))
+    expect_equal(median(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","median_meth"]))
+    expect_equal(sd(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","sd_meth"]))
+    
+    scm <- subset_scMethrix(scm,contigs="chr1")
+    stats <- get_stats(scm,per_chr=TRUE)
+    expect_equal(mean(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","mean_meth"]))
+    expect_equal(median(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","median_meth"]))
+    expect_equal(sd(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","sd_meth"]))
+    
   }))
 })
 
 test_that("get_region_summary", {
   
-  expect_error(get_region_summary("not scMethrix"))
+  expect_error(get_region_summary("not scMethrix"),"A valid scMethrix object needs to be supplied")
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(get_region_summary(scm,group="not a group"))
@@ -190,7 +233,7 @@ test_that("get_region_summary", {
 
 test_that("mask_by_coverage", {
 
-  expect_error(mask_by_coverage("not scMethrix"))
+  expect_error(mask_by_coverage("not scMethrix"),"A valid scMethrix object needs to be supplied")
   expect_error(mask_by_coverage(remove_assay(scm.mem,assay="counts")))
   expect_error(mask_by_coverage(scm.mem,n_threads=2))
   
@@ -200,18 +243,18 @@ test_that("mask_by_coverage", {
 
     m <- mask_by_coverage(scm,low_threshold=2,avg_threshold=NULL)
     expect_equal(dim(m),c(n_cpg,n_samples))
-    expect_equal(dim(remove_uncovered(m)),c(232,n_samples))
+    expect_equal(dim(remove_uncovered(m)),c(length(which(rowSums(counts(m),na.rm=TRUE) >= 2)),n_samples))
 
-    m <- mask_by_coverage(scm,low_threshold=NULL,avg_threshold=1)
+    m <- mask_by_coverage(scm,low_threshold=NULL,avg_threshold=1) #Removes all rows with a sample with a coverage of 2
     expect_equal(dim(m),c(n_cpg,n_samples))
-    expect_equal(dim(remove_uncovered(m)),c(170,n_samples))
+    expect_equal(dim(remove_uncovered(m)),c(length(which(rowMeans(counts(m),na.rm=TRUE) == 1)),n_samples))
 
   }))
 })
 
 test_that("mask_by_sample", {
   
-  expect_error(mask_by_sample("not scMethrix"))
+  expect_error(mask_by_sample("not scMethrix"),"A valid scMethrix object needs to be supplied")
   expect_error(mask_by_sample(scm.mem,n_threads=2))
   expect_error(mask_by_sample(scm.mem,low_threshold=2,prop_threshold=1))
   
@@ -221,11 +264,11 @@ test_that("mask_by_sample", {
     
     m <- mask_by_sample(scm,low_threshold=2)
     expect_equal(dim(m),c(n_cpg,n_samples))
-    expect_equal(dim(remove_uncovered(m)),c(219,n_samples))
+    expect_equal(dim(remove_uncovered(m)),c(length(which(ncol(m) - rowCounts(score(m),value=NA) >= 2)),n_samples))
     
-    m <- mask_by_sample(scm,low_threshold=NULL,prop_threshold=0.25)
+    m <- mask_by_sample(scm,low_threshold=NULL,prop_threshold=0.25) # Since 0.25 of 4 sample is 1, same result as low_threshold = 1
     expect_equal(dim(m),c(n_cpg,n_samples))
-    expect_equal(dim(remove_uncovered(m)),c(146,n_samples))
+    expect_equal(dim(remove_uncovered(m)),c(length(which(ncol(m) - rowCounts(score(m),value=NA) > 1)),n_samples))
     
   }))
 })

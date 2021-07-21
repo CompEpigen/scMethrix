@@ -4,6 +4,7 @@ test_that("is_ondisk",{
 })
 
 test_that("get_sample_name", {
+  expect_error(get_sample_name(5),"Must be a string file path")
   expect_equal("file.name",get_sample_name("c:/dir/dir.dir/file.name.extension"))
 })
 
@@ -12,6 +13,9 @@ test_that("binarize", {
 })
 
 test_that("bin_granges",{
+  
+  expect_error(split_granges("not granges"),"Input must be a Granges object")
+  
   regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
   expect_equal(length(bin_granges(regions,bin_size=10)),10) 
   expect_equal(reduce(bin_granges(regions,bin_size=10)),regions)
@@ -21,9 +25,9 @@ test_that("split_granges",{
   regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
   regions <- bin_granges(regions,bin_size=1)
   
-  expect_error(split_granges("not granges"))
-  expect_error(split_granges(regions))
-  expect_error(split_granges(regions,chunks=2,size=3))
+  expect_error(split_granges("not granges"),"Input must be a Granges object")
+  expect_error(split_granges(regions),"Invalid input. Must contain 1 of either chunks, percent, or size")
+  expect_error(split_granges(regions,chunks=2,size=3),"Invalid input. Must contain 1 of either chunks, percent, or size")
   
   chunks = 3
   percent = 33
@@ -64,11 +68,12 @@ test_that("start,split,stop_time",{
 
 test_that("split_vector",{
   vec <- c(1,2,3,4,5,6,7,8)
+  expect_error(split_vector(vec,num="not a num"),"num must be numeric")
   expect_equal(split_vector(vec,4,by="size"),split_vector(vec,2,by="chunk"))
 })
 
 test_that("cast_granges",{
-  expect_error(cast_granges("not a Granges"))
+  expect_error(cast_granges("not a Granges"),"Invalid input class for regions. Must be a GRanges or data.frame-like")
   
   gr <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
   expect_equal(gr,cast_granges(gr))

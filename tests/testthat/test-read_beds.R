@@ -57,7 +57,8 @@ test_that("read_bed - in-memory, no coverage", {
 
 test_that("read_bed - HDF5, with coverage", {
   
-  expect_error(read_beds(files,h5=TRUE,h5_dir=NULL,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5))
+  expect_error(read_beds(files,h5=TRUE,h5_dir=NULL,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5),
+               "Output directory must be specified")
   
   path <- paste0(h5_dir,"HDF5mem")
   

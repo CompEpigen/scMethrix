@@ -23,7 +23,7 @@ n_samples <- 4
 message("Test setup completed")
 
 imputation_test_helper <- function(func) {
-  expect_error(func("not scMethrix"))
+  expect_error(func("not scMethrix"),"A valid scMethrix object needs to be supplied")
   
   #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   invisible(lapply(list(scm.mem), function(scm) {
@@ -43,11 +43,10 @@ imputation_test_helper <- function(func) {
     expect_equivalent(sco[nonNAs],imp[nonNAs])
     expect_false(all(sco[NAs] %in% imp[NAs]))
   }))
-  
 }
 
 graph_test_helper <- function(func, indiv_samples = TRUE) {
-  expect_error(func("not scMethrix"))
+  expect_error(func("not scMethrix"),"A valid scMethrix object needs to be supplied")
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     plot <- func(scm)
     expect_true("ggplot" %in% class(plot))

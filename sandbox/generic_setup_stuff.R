@@ -47,15 +47,18 @@ files <- files[1:10]
 
 col_idx <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
-scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5,6),replace=TRUE)
-scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 8,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
+#With Coverage
+scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),replace=TRUE, ref_cpgs = mm10_cpgs$cpgs,
+                        chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
+scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 8, ref_cpgs = mm10_cpgs$cpgs,
+                         chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
-
-profvis({
-scm.big.mem <- read_beds(files=files,h5=FALSE, ref_cpgs = mm10_cpgs$cpgs, n_threads = 8,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
-})
+#Without coverage
+scm.big.mem <- read_beds(files=files,h5=FALSE, ref_cpgs = mm10_cpgs$cpgs, n_threads = 8, 
+                         chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5),
-                        replace=TRUE, ref_cpgs = mm10_cpgs$cpgs, n_threads = 8)
+                        replace=TRUE, ref_cpgs = mm10_cpgs$cpgs, n_threads = 8,
+                        chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
 
 scm.20.mem <- readRDS(file = "D:/Git/sampleData/scm.20.mem.rds")
 
