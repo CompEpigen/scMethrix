@@ -16,7 +16,6 @@ test_that("transform_assay", {
   expect_error(transform_assay("not scMethrix"),"A valid scMethrix object needs to be supplied")
   trans <- function(x) x+1
   
-  
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(transform_assay(scm,trans="not closure"),"A valid transform function must be specified")
     expect_warning(transform_assay(scm, trans=trans, assay="score",new_assay="score"))
@@ -46,7 +45,6 @@ test_that("generate_training_set", {
   
   expect_error(generate_training_set("not scMethrix"),"A valid scMethrix object needs to be supplied")
   
-  #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(generate_training_set(scm,training_prop = 2),"training_prop must in the range of")
     
@@ -62,7 +60,6 @@ test_that("generate_random_subset", {
   
   expect_error(generate_training_set("not scMethrix"),"A valid scMethrix object needs to be supplied")
   
-  #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_warning(generate_random_subset(scm,n_cpgs = nrow(scm)+1))
     expect_warning(generate_random_subset(scm,n_cpgs = -1))
@@ -71,5 +68,3 @@ test_that("generate_random_subset", {
     expect_equal(nrow(m),100)
   }))
 })
-
-
