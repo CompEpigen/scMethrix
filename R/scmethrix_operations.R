@@ -697,16 +697,23 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
   starts <- head(c(1, ends + 1), -1)
   
-  if (is_h5(scm)) {
     if (per_chr) {
       stats <- lapply(1:length(starts), function(x) {
-        data.table::data.table(
+        s <- data.table::data.table(
           Chr = levels(seqnames(scm))[x],
           Sample_Name = colnames(scm),
-          mean_meth = DelayedMatrixStats::colMeans2(get_matrix(scm), rows = starts[x]:ends[x], na.rm = TRUE),
-          median_meth = DelayedMatrixStats::colMedians(get_matrix(scm), rows = starts[x]:ends[x], na.rm = TRUE),
-          sd_meth = DelayedMatrixStats::colSds(get_matrix(scm), rows = starts[x]:ends[x], na.rm = TRUE)
+          mean_meth = DelayedMatrixStats::colMeans2(score(scm), rows = starts[x]:ends[x], na.rm = TRUE),
+          median_meth = DelayedMatrixStats::colMedians(score(scm), rows = starts[x]:ends[x], na.rm = TRUE),
+          sd_meth = DelayedMatrixStats::colSds(score(scm), rows = starts[x]:ends[x], na.rm = TRUE)
         )
+        
+        if (has_cov(scm)) {
+          s <- cbind(s,data.table::data.table(
+            mean_cov = DelayedMatrixStats::colMeans2(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE),
+            median_cov = DelayedMatrixStats::colMedians(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE),
+            sd_cov = DelayedMatrixStats::colSds(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE)))
+        }
+        s
       })
       
       stats <- data.table::rbindlist(l = stats, use.names = TRUE)
@@ -718,37 +725,20 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
         median_meth = DelayedMatrixStats::colMedians(get_matrix(scm), na.rm = TRUE),
         sd_meth = DelayedMatrixStats::colSds(get_matrix(scm), na.rm = TRUE)
       )
+      
+      if (has_cov(scm)) {
+        stats <- cbind(stats,data.table::data.table(
+          mean_cov = DelayedMatrixStats::colMeans2(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE),
+          median_cov = DelayedMatrixStats::colMedians(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE),
+          sd_cov = DelayedMatrixStats::colSds(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE)))
+      }
     }
-    
-  } else {
-    if (per_chr) {
-      stats <- lapply(1:length(starts), function(x) {
-        data.table::data.table(
-          Chr = levels(seqnames(scm))[x],
-          Sample_Name = colnames(scm),
-          mean_meth = matrixStats::colMeans2(get_matrix(scm),rows = starts[x]:ends[x],na.rm = TRUE),
-          median_meth = matrixStats::colMedians(get_matrix(scm), rows = starts[x]:ends[x], na.rm = TRUE),
-          sd_meth = matrixStats::colSds(get_matrix(scm),rows = starts[x]:ends[x],na.rm = TRUE)
-        )
-      })
-      stats <- data.table::rbindlist(l = stats, use.names = TRUE)
-    } else {
-      stats <-
-        data.table::data.table(
-          Sample_Name = colnames(scm),
-          mean_meth = matrixStats::colMeans2(get_matrix(scm), na.rm = TRUE),
-          median_meth = matrixStats::colMedians(get_matrix(scm), na.rm = TRUE),
-          sd_meth = matrixStats::colSds(get_matrix(scm), na.rm = TRUE)
-        )
-    }
-  }
-  
+
   gc()
   message("Finished in ", stop_time())
   
   return(stats)
 }
-
 
 #------------------------------------------------------------------------------------------------------------
 #' Remove loci that are uncovered across all samples
