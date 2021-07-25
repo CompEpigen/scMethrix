@@ -608,7 +608,7 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 #' subset_scMethrix(scMethrix_data, regions = regions, by = "exclude")
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
-subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), verbose=TRUE) {
+subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), type="within",verbose=TRUE) {
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -625,7 +625,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
     
     if (!is.null(regions)) {
       regions <- cast_granges(regions)
-      reg <- subsetByOverlaps(rowRanges(scm), regions, invert = TRUE, type="any", maxgap=-1L, minoverlap=0L)
+      reg <- subsetByOverlaps(rowRanges(scm), regions, invert = TRUE, type=type, maxgap=-1L, minoverlap=0L)
       scm <- subset_scMethrix(scm,regions=reduce(reg),by="include")
     }
     
@@ -956,3 +956,7 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = 0, prop_
   
   return(scm)
 }
+
+
+
+
