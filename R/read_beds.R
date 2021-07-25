@@ -204,7 +204,7 @@ read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch
   for (i in 1:length(files)) {
     if (verbose) message("   Parsing: ",get_sample_name(files[i]),appendLF=FALSE)
     
-    data <- data.table::fread(files[i], header=FALSE, select = unname(col_list$col_idx[c("chr","start")]))
+    data <- data.table::fread(files[i], select = unname(col_list$col_idx[c("chr","start")]))
     
     # Concat the batch list if last element, otherwise save and iterate
     if (i%%batch_size == 0) {
