@@ -196,8 +196,8 @@ test_that("get_stats", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     chr <- length(seqlengths(rowRanges(scm)))
     samples <- nrow(colData(scm))
-    expect_equal(dim(get_stats(scm)),c(chr*samples,5))
-    expect_equal(dim(get_stats(scm,per_chr = FALSE)),c(samples,4))
+    expect_equal(dim(get_stats(scm)),c(chr*samples,8))
+    expect_equal(dim(get_stats(scm,per_chr = FALSE)),c(samples,7))
     
     stats <- get_stats(scm,per_chr=FALSE)
     expect_equal(mean(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","mean_meth"]))

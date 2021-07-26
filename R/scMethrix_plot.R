@@ -311,6 +311,7 @@ plot_stats <- function(plot_dat, what = "Score", stat = "mean", ignore_chr = NUL
   
   if (is(plot_dat, "scMethrix")) plot_dat = get_stats(plot_dat)
   
+  plot_dat <- plot_dat[,1:5]
   Chromosome <- . <- Sample_Name <- mean_meth <- sd_meth <- median_meth <- mean_cov <- sd_cov <- NULL
   median_cov <- measurement <- sd_low <- sd_high <- NULL
   stat <- match.arg(arg = stat, choices = c("mean", "median"))

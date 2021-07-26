@@ -586,6 +586,7 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 #' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param contigs string; array of chromosome names to subset by
 #' @param samples string; array of sample names to subset by
+#' @param overlap_type string; defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #' @param by string to decide whether to "include" or "exclude" the given criteria from the subset
 #' @importFrom IRanges subsetByOverlaps
 #' @examples
@@ -608,7 +609,7 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 #' subset_scMethrix(scMethrix_data, regions = regions, by = "exclude")
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
-subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), type="within",verbose=TRUE) {
+subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), overlap_type="within",verbose=TRUE) {
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -625,7 +626,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
     
     if (!is.null(regions)) {
       regions <- cast_granges(regions)
-      reg <- subsetByOverlaps(rowRanges(scm), regions, invert = TRUE, type=type, maxgap=-1L, minoverlap=0L)
+      reg <- subsetByOverlaps(rowRanges(scm), regions, invert = TRUE, type=overlap_type, maxgap=-1L, minoverlap=0L)
       scm <- subset_scMethrix(scm,regions=reduce(reg),by="include")
     }
     
@@ -687,6 +688,8 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' @export
 get_stats <- function(scm = NULL, per_chr = TRUE) {
 
+  x <- NULL
+  
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
@@ -728,9 +731,9 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
       
       if (has_cov(scm)) {
         stats <- cbind(stats,data.table::data.table(
-          mean_cov = DelayedMatrixStats::colMeans2(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE),
-          median_cov = DelayedMatrixStats::colMedians(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE),
-          sd_cov = DelayedMatrixStats::colSds(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE)))
+          mean_cov = DelayedMatrixStats::colMeans2(counts(scm), na.rm = TRUE),
+          median_cov = DelayedMatrixStats::colMedians(counts(scm), na.rm = TRUE),
+          sd_cov = DelayedMatrixStats::colSds(counts(scm), na.rm = TRUE)))
       }
     }
 
