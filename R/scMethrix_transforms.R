@@ -94,6 +94,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
+  if (is.null(h5_dir) && is_h5(scm)) stop("Output directory must be specified")
+  
  # if (is_h5(scm) && is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
   
   bin_by = match.arg(arg = bin_by, choices = c("bp","cpg"))
@@ -176,46 +178,58 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       op <- trans[[name]]
     }
     
-
-    
     if (is_h5(scm)) {
-      message("This isn't done yet")
+
+      stop("H5 currently not supporeted")
       
-      # rid_list <- split_vector(rrng$rid,num = n_threads)
-      # 
-      # 
-      # cl <- parallel::makeCluster(n_threads)  
-      # doParallel::registerDoParallel(cl) 
-      # parallel::clusterEvalQ(cl, c(library(data.table)))
-      # parallel::clusterExport(cl,list('overlap_indices','bin','mtx','yid'), envir = environment())
-      # 
+        mtx <- get_matrix(scm,assay=name)[overlap_indices$xid,] #TODO: Somehow missing rows if not subset, not sure why
+  
+        setAutoRealizationBackend("HDF5Array")
+  
+        cols <- split_vector(1:ncol(mtx),n_chunks)
+        sink <- AutoRealizationSink(c(ncol(mtx), length(rrng)))
+        grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(cols[[1]]), length(rrng)))
+  
+        cl <- parallel::makeCluster(n_threads)
+        doParallel::registerDoParallel(cl)
+        parallel::clusterEvalQ(cl, c(library(DelayedMatrixStats)))
+        parallel::clusterExport(cl,list('overlap_indices','worker','op'), envir = environment())
+        on.exit(parallel::stopCluster(cl))
+  
+        avg <- t(sapply(groups, function (group) {
+          idx <- overlap_indices[yid == group,]$xid
+          DelayedMatrixStats::colMeans2(mtx,row=idx,na.rm=TRUE)
+        }))
+        colnames(avg) <- colnames(mtx)
+      
+      
     } else {
 
-      worker <- function (mtx,overlap_indices,op) {
+      ### Split by cols
+      # worker <- function (mtx,overlap_indices,op) {
+      #   mtx <- mtx[,lapply(.SD,op),by=(overlap_indices$yid)]
+      #   mtx <- mtx[,overlap_indices:=NULL]
+      #   return(mtx)
+      # }
+      # 
+      # mtx <- data.table(get_matrix(scm,assay=name))[overlap_indices$xid,] 
+      # cols <- split_vector(1:ncol(mtx),n_chunks)
+      # 
+      # cl <- parallel::makeCluster(n_threads)
+      # doParallel::registerDoParallel(cl)
+      # parallel::clusterEvalQ(cl, c(library(data.table)))
+      # parallel::clusterExport(cl,list('overlap_indices','worker','op'), envir = environment())
+      # on.exit(parallel::stopCluster(cl))
+      # 
+      # 
+      # mtx <- lapply(cols,function(col) mtx[,..col])
+      # #mtx <- lapply(mtx,worker,overlap_indices = overlap_indices,op = op)
+      # mtx <- parLapply(cl,mtx,worker,overlap_indices = overlap_indices,op=op)
+      # 
+      # 
+      # mtx <- setDT(unlist(mtx, recursive = FALSE))
 
-        mtx <- mtx[,lapply(.SD,op),by=(overlap_indices$yid)]
-        mtx <- mtx[,overlap_indices:=NULL]
-        return(mtx)
-      }
-      
-      mtx <- data.table(get_matrix(scm,assay=name))[overlap_indices$xid,] 
-      cols <- split_vector(1:ncol(mtx),n_chunks)
-
-      cl <- parallel::makeCluster(n_threads)
-      doParallel::registerDoParallel(cl)
-      parallel::clusterEvalQ(cl, c(library(data.table)))
-      parallel::clusterExport(cl,list('overlap_indices','worker','op'), envir = environment())
-      on.exit(parallel::stopCluster(cl))
-
-     
-      mtx <- lapply(cols,function(col) mtx[,..col])
-      #mtx <- lapply(mtx,worker,overlap_indices = overlap_indices,op = op)
-      mtx <- parLapply(cl,mtx,worker,overlap_indices = overlap_indices,op=op)
-      
-      
-      mtx <- setDT(unlist(mtx, recursive = FALSE))
-
-      # Split by rids
+      ### Split by rids
       # worker <- function (mtx, yid, op) {
       #   mtx <- mtx[,lapply(.SD,op),by=(yid)]
       #   mtx <- mtx[,yid:=NULL]
@@ -239,18 +253,18 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       # mtx <- clusterMap(cl,worker,mtx=lapply(xid_list,function(xid) mtx[unlist(xid),]), yid = yid_list, MoreArgs = list(op = op))
       # mtx <- rbindlist(lapply(mtx, as.data.frame.list))
 
-      # Mapply algorithm 
+      ### Mapply algorithm 
       # mtx <- mapply(worker,mtx=lapply(xid_list,function(xid) mtx[unlist(xid),]), yid = yid_list, MoreArgs = list(op = op),simplify=TRUE)
       # cols <- row.names(mtx)
       # mtx <- lapply(1:nrow(mtx),function(x) unlist(mtx[x,]))
       # mtx <- t(rbindlist(lapply(mtx, as.data.frame.list)))
       # colnames(mtx) <- cols
       
-      # Basic algorithm
-       # mtx <- data.table(get_matrix(scm,assay=name))[overlap_indices$xid,] #TODO: Somehow missing rows if not subset, not sure why
-       # mtx <- mtx[,lapply(.SD,op),by=overlap_indices$yid]
-       # mtx <- mtx[,overlap_indices:=NULL]
-      # 
+      ### Basic algorithm
+      mtx <- data.table(get_matrix(scm,assay=name))[overlap_indices$xid,] #TODO: Somehow missing rows if not subset, not sure why
+      mtx <- mtx[,lapply(.SD,op),by=overlap_indices$yid]
+      mtx <- mtx[,overlap_indices:=NULL]
+
       assays[[name]] <- as(mtx,class(get_matrix(scm,assay=name)))
       
     }

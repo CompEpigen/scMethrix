@@ -10,6 +10,7 @@ subset_scMethrix(
   contigs = NULL,
   samples = NULL,
   by = c("include", "exclude"),
+  overlap_type = "within",
   verbose = TRUE
 )
 }
@@ -23,6 +24,8 @@ subset_scMethrix(
 \item{samples}{string; array of sample names to subset by}
 
 \item{by}{string to decide whether to "include" or "exclude" the given criteria from the subset}
+
+\item{overlap_type}{string; defines the type of the overlap of the CpG sites with the target region. Default value is \code{within}. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
