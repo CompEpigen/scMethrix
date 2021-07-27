@@ -171,7 +171,6 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 
     if (verbose) message("   Filling bins for the ",name," assay...")
     
-    
     if (is.null(trans[[name]])) { # If no named vector is specified, default to mean
       op <- function(x) mean(x,na.rm=TRUE)
     } else {
@@ -196,6 +195,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
         parallel::clusterExport(cl,list('overlap_indices','worker','op'), envir = environment())
         on.exit(parallel::stopCluster(cl))
   
+        groups <- NULL
+        
         avg <- t(sapply(groups, function (group) {
           idx <- overlap_indices[yid == group,]$xid
           DelayedMatrixStats::colMeans2(mtx,row=idx,na.rm=TRUE)
@@ -292,8 +293,6 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
   return (m_obj)
 }
-
-
 
 bin_scMethrix2 <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by = "bp", trans = NULL, 
                           overlap_type = "within", h5_dir = NULL, verbose = TRUE, n_chunks = 1, n_threads = 1) {
@@ -541,111 +540,28 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 }
 
 #------------------------------------------------------------------------------------------------------------
-#' Imputes the an \code{\link{scMethrix}}object using a iterative PCA model
-#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
-#' @param n_pc integer > 0; The number of principal components to use. This can be a range - e.g. c(1,5) - or a single value. 
-#' For a range, the optimal value will be estimated; this is time-intensive.
-#' @param ... Additional arguments for \link[missMDA]{imputePCA}
-#' @inheritParams impute_regions
-#' @inheritParams missMDA::imputePCA
-#' @return An \code{\link{scMethrix}} object
-#' @examples
-#' data('scMethrix_data')
-#' impute_by_iPCA(scMethrix_data, assay = "score", new_assay = "impute", n_pc = 2)
-#' @export
-#' @references Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
-#' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
-impute_by_iPCA <- function(scm = NULL, regions = NULL, assay = "score", new_assay = "iPCA", 
-                           n_chunks = 1, n_threads = 1, overlap_type = "within", n_pc = 2, ...) {
-
-  if (length(n_pc) > 1) {
-    warning("Caution: n_pc is given as range. This can be very time-intensive.")
-    n_pc <- missMDA::estim_ncpPCA(as.matrix(get_matrix(scm,assay = assay)),ncp.min = n_pc[1], ncp.max = n_pc[2], 
-                                  method.cv = "Kfold", verbose = TRUE)
-    n_pc <- n_pc$ncp
-  }
-
-  op <- function(mtx) missMDA::imputePCA(mtx, ncp = n_pc, ...)$completeObs
-    
-  scm <- impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
-                       n_chunks = n_chunks, n_threads = n_threads, overlap_type = overlap_type)
-    
-  return(scm)
-    
-}
-
-#------------------------------------------------------------------------------------------------------------
-#' Imputes the an \code{\link{scMethrix}}object using a random forest model
-#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
-#' @param ... Additional arguments for \link[missForest]{missForest}
-#' @inheritParams impute_regions
-#' @inheritParams missForest::missForest
-#' @return An \code{\link{scMethrix}} object
-#' @examples
-#' data('scMethrix_data')
-#' impute_by_RF(scMethrix_data, assay = "score", new_assay = "impute")
-#' @export
-#' @import missForest
-#' @references Stekhoven, D. J., & Bühlmann, P. (2012). MissForest—non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.
-impute_by_RF <- function(scm = NULL, regions = NULL, assay = "score", new_assay = "RF", 
-                         n_chunks = 1, n_threads = 1, overlap_type = "within", ...) {
-
-  # impute <- missForest::missForest(as.matrix(get_matrix(scm,assay = assay)))#, ...)
-  # assays(scm)[[new_assay]] <- as(impute$ximp,class(get_matrix(scm,assay=assay))[[1]])
-  
-  op <- function(mtx) missForest::missForest(mtx, ...)$ximp
-  
-  scm <- impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
-                     n_chunks = n_chunks, n_threads = n_threads, overlap_type = overlap_type)
-
-  return(scm)
-}
-
-
-#------------------------------------------------------------------------------------------------------------
-#' Imputes the an \code{\link{scMethrix}}object using a random forest model
-#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object.
-#' @param ... Additional arguments for \link[impute]{impute.knn}
-#' @inheritParams impute_regions
-#' @inheritParams impute::impute.knn
-#' @return An \code{\link{scMethrix}} object
-#' @examples
-#' data('scMethrix_data')
-#' impute_by_kNN(scMethrix_data)
-#' @export
-#' @import impute
-#' @references Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
-impute_by_kNN <- function(scm = NULL, regions = NULL, assay = "score", new_assay = "kNN", 
-                          n_chunks = 1, n_threads = 1, overlap_type = "within", k = 10, ...) {
-  
-  op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
-                           rowmax = 1.0, colmax = 1.0, maxp = 1500, ...)$data
-  
-  scm <- impute_regions(scm = scm, assay = assay, new_assay = new_assay, regions = regions, op = op, 
-                     n_chunks = n_chunks, n_threads = n_threads, overlap_type = overlap_type)
-
-  # impute <- impute::impute.knn(as.matrix(get_matrix(scm,assay = assay)), k = min(k,ncol(scm)), 
-  #                      rowmax = 1.0, colmax = 1.0, maxp = 1500, rng.seed=123)
-  # 
-  # assays(scm)[[new_assay]] <- as(impute$data,class(get_matrix(scm,assay=assay))[[1]])
-  # 
-  return(scm)
-}
-
-#------------------------------------------------------------------------------------------------------------
 #' Generic imputation return function
 #' @details Uses the specified imputation operation to evaluation an scMethrix object.
 #' @param regions Granges; the regions to impute. Default is by chromosome.
 #' @param overlap_type string; 
 #' @param op closure; the imputation operation
+#' @param by string/closure; the imputation to perform 'kNN','iPCA','RF'. Otherwise, a closure can be specified that returns the imputed matrix
+#' @param n_pc the range of principal components to check when using iPCA. Caution: this can be very time-intensive
 #' @inheritParams generic_scMethrix_function
+#' @inheritParams impute::impute.knn
+#' @inheritParams missForest::missForest
+#' @inheritParams missMDA::imputePCA
 #' @return list; two \code{\link{scMethrix}} objects names 'training' and 'test'
 #' @examples
 #' data('scMethrix_data')
 #' generate_training_set(scMethrix_data, training_prop = 0.2)
 #' @export
-impute_regions <- function(scm = NULL, assay="score", new_assay = NULL, regions = NULL, op = NULL, n_chunks = 1, 
-                               n_threads = 1, overlap_type="within") {
+#' @references Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
+#' @references Stekhoven, D. J., & Bühlmann, P. (2012). MissForest—non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.
+#' @references Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
+#' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
+impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regions = NULL, op = NULL, n_chunks = 1, 
+                               n_threads = 1, overlap_type="within", by=c("kNN","iPCA","RF"), k=10, n_pc=2,...) {
   
   yid <- NULL
   
@@ -664,6 +580,24 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = NULL, regions 
   
   if (is_h5(scm)) {
     warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
+  }
+  
+  if (by == "kNN") {
+    op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
+                                           rowmax = 1.0, colmax = 1.0, maxp = 1500, ...)$data
+  } else if (by == "iPCA") {
+    if (length(n_pc) > 1) {
+      warning("Caution: n_pc is given as range. This can be very time-intensive.")
+      n_pc <- missMDA::estim_ncpPCA(as.matrix(get_matrix(scm,assay = assay)),ncp.min = n_pc[1], ncp.max = n_pc[2], 
+                                    method.cv = "Kfold", verbose = TRUE)
+      n_pc <- n_pc$ncp
+    }
+    
+    op <- function(mtx) missMDA::imputePCA(mtx, ncp = n_pc, ...)$completeObs
+  } else if (by == "RF") {
+    op <- function(mtx) missForest::missForest(mtx, ...)$ximp
+  } else {
+    op = by
   }
   
   if (!is.null(regions)) {

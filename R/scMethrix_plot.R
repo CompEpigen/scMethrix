@@ -586,8 +586,9 @@ plot_umap <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_label
 #' @return ggplot; The graph showing the NRMSE for each imputation method at each sparsity
 #' @examples
 #' data('scMethrix_data')
+#' \dontrun{
 #' scMethrix_data <- impute_by_RF(scMethrix_data, new_assay="impute")
-#' benchmark_imputation(scMethrix_data, assay="impute", sparse_prop = c(0.1,0.5,0.85))
+#' benchmark_imputation(scMethrix_data, assay="impute", sparse_prop = c(0.1,0.5,0.85))}
 #' @export
 #' @import Metrics
 benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(0.1, 0.9, 0.1), iterations = 3,

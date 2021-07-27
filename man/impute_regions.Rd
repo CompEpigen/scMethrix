@@ -7,12 +7,16 @@
 impute_regions(
   scm = NULL,
   assay = "score",
-  new_assay = NULL,
+  new_assay = "impute",
   regions = NULL,
   op = NULL,
   n_chunks = 1,
   n_threads = 1,
-  overlap_type = "within"
+  overlap_type = "within",
+  by = c("kNN", "iPCA", "RF"),
+  k = 10,
+  n_pc = 2,
+  ...
 )
 }
 \arguments{
@@ -31,6 +35,15 @@ impute_regions(
 \item{n_threads}{integer; Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. Default = 1}
 
 \item{overlap_type}{string;}
+
+\item{by}{string/closure; the imputation to perform 'kNN','iPCA','RF'. Otherwise, a closure can be specified that returns the imputed matrix}
+
+\item{k}{Number of neighbors to be used in the
+    imputation (default=10)}
+
+\item{n_pc}{the range of principal components to check when using iPCA. Caution: this can be very time-intensive}
+
+\item{...}{further arguments passed to or from other methods}
 }
 \value{
 list; two \code{\link{scMethrix}} objects names 'training' and 'test'
@@ -44,4 +57,13 @@ Uses the specified imputation operation to evaluation an scMethrix object.
 \examples{
 data('scMethrix_data')
 generate_training_set(scMethrix_data, training_prop = 0.2)
+}
+\references{
+Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
+
+Stekhoven, D. J., & Bühlmann, P. (2012). MissForest—non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.
+
+Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
+
+Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
 }

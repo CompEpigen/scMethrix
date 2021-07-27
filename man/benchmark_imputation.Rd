@@ -37,6 +37,7 @@ Does stuff
 }
 \examples{
 data('scMethrix_data')
+\dontrun{
 scMethrix_data <- impute_by_RF(scMethrix_data, new_assay="impute")
-benchmark_imputation(scMethrix_data, assay="impute", sparse_prop = c(0.1,0.5,0.85))
+benchmark_imputation(scMethrix_data, assay="impute", sparse_prop = c(0.1,0.5,0.85))}
 }

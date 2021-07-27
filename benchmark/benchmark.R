@@ -16,18 +16,10 @@ bench.new <- microbenchmark(
 old <- bin_scMethrix_st(scm)
 new <- bin_scMethrix_test(scm)
 
-
-
 b <- microbenchmark(
   "old" = read_index(files,col_list),
   "new" = read_index2(files,col_list),
   times = 1,unit = "ms")
-
-
-
-
-
-
 
 bench <- microbenchmark(
   ### Operations

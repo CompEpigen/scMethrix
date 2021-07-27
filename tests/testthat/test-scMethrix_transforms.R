@@ -29,16 +29,31 @@ test_that("transform_assay", {
   }))
 })
 
-test_that("impute_by_iPCA", {
-  imputation_test_helper(impute_by_iPCA)
-})
-
-test_that("impute_by_RF", {
-  expect_warning(imputation_test_helper(impute_by_RF))
-})
-
-test_that("impute_by_kNN", {
-  imputation_test_helper(impute_by_kNN)
+test_that("impute_regions", {
+  expect_error(impute_regions("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  
+  suppressWarnings(
+    lapply(list("kNN","iPCA","RF"), function (method) {
+    #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+      invisible(lapply(list(scm.mem), function(scm) {
+        expect_error(impute_regions(scm,assay = "not an assay"))
+        expect_error(impute_regions(scm,new_assay = "score"))
+        expect_warning(impute_regions(scm,new_assay = "counts",by=method))
+        
+        impute = impute_regions(scm,new_assay="impute",by=method)
+        expect_true("impute" %in% SummarizedExperiment::assayNames(impute))
+        
+        sco <- get_matrix(impute,assay="score")
+        imp <- get_matrix(impute,assay="impute")
+        NAs <- which(is.na(sco))
+        nonNAs <- which(!is.na(sco))
+        
+        expect_true(anyNA(sco) && !anyNA(imp))
+        expect_equivalent(sco[nonNAs],imp[nonNAs])
+        expect_false(all(sco[NAs] %in% imp[NAs]))
+      }))
+    })
+  )
 })
 
 test_that("generate_training_set", {
