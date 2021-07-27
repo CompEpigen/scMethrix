@@ -126,6 +126,7 @@
   contigs <span class='op'>=</span> <span class='cn'>NULL</span>,
   samples <span class='op'>=</span> <span class='cn'>NULL</span>,
   by <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"include"</span>, <span class='st'>"exclude"</span><span class='op'>)</span>,
+  overlap_type <span class='op'>=</span> <span class='st'>"within"</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
@@ -153,6 +154,10 @@
       <td><p>string to decide whether to "include" or "exclude" the given criteria from the subset</p></td>
     </tr>
     <tr>
+      <th>overlap_type</th>
+      <td><p>string; defines the type of the overlap of the CpG sites with the target region. Default value is <code>within</code>. For detailed description, see the <code>findOverlaps</code> function of the <code>IRanges</code> package.</p></td>
+    </tr>
+    <tr>
       <th>verbose</th>
       <td><p>boolean; Flag for outputting function status messages. Default = TRUE</p></td>
     </tr>
@@ -175,7 +180,7 @@ either subset (<code>include</code>) to or filter (<code>exclude</code>) the spe
 
 <span class='co'>#Subset to only samples bed1 and bed3, and chromosome 1</span>
 <span class='fu'>subset_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, samples <span class='op'>=</span> <span class='va'>samples</span>, contigs <span class='op'>=</span> <span class='va'>contigs</span>, by <span class='op'>=</span> <span class='st'>"include"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by contigs</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by samples</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.11s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by contigs</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by samples</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.12s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 147
 #&gt;    n_samples: 2
 #&gt;    assays: score, counts
@@ -185,7 +190,7 @@ either subset (<code>include</code>) to or filter (<code>exclude</code>) the spe
 #&gt;    Physical size: 33.2 Kb</div><div class='input'>
 <span class='co'>#Subset to only region "chr1:1-5"</span>
 <span class='fu'>subset_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, regions <span class='op'>=</span> <span class='va'>regions</span>, by <span class='op'>=</span> <span class='st'>"include"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.06s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.07s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 67
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts
