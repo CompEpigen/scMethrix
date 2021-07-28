@@ -1,11 +1,11 @@
 #' Format \code{\link{scMethrix}} matrix to long form data for plotting
 #' @inheritParams generic_scMethrix_function
 #' @param n_cpgs Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.
-#' @param ranges genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
+#' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param pheno Row name of colData(m). Will be used as a factor to color different groups
 #' @return 'Long' matrix for methylation
 #' @export
-prepare_plot_data <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL){
+prepare_plot_data <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL){
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
@@ -16,8 +16,8 @@ prepare_plot_data <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno =
     }
   }
   
-  if (!is.null(ranges)) {
-    meth_sub <- subset_scMethrix(scm = scm, regions = ranges)
+  if (!is.null(regions)) {
+    meth_sub <- subset_scMethrix(scm = scm, regions = regions)
     if (!is.null(n_cpgs)) {
       message("Randomly selecting ", n_cpgs, " sites")
       ids <- sample(x = seq_along(meth_sub), replace = FALSE, size = min(n_cpgs,
@@ -83,7 +83,7 @@ get_palette <- function(n_row, col_palette){
 #' @examples
 #' data('scMethrix_data')
 #' plot_violin(scm = scMethrix_data)
-plot_violin <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL,
+plot_violin <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL,
                         col_palette = "RdYlGn", show_legend = TRUE) {
   variable <- Meth <- NULL
   
@@ -91,9 +91,9 @@ plot_violin <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL,
     stop("A valid scMethrix object needs to be supplied.")
   }
   
-  if (is.null(ranges)) ranges = rowRanges(scm)
+  if (is.null(regions)) regions = rowRanges(scm)
   
-  plot.data <- prepare_plot_data(scm=scm, ranges = ranges, n_cpgs = n_cpgs, pheno = pheno)
+  plot.data <- prepare_plot_data(scm=scm, regions = regions, n_cpgs = n_cpgs, pheno = pheno)
   
   col_palette <- get_palette(ncol(scm), col_palette)
   # generate the violin plot
@@ -117,7 +117,7 @@ plot_violin <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL,
 #' @examples
 #' data('scMethrix_data')
 #' plot_density(scm = scMethrix_data)
-plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL,
+plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL,
                          col_palette = "RdYlGn", show_legend = TRUE) {
   
   variable <- Meth <- NULL
@@ -126,9 +126,9 @@ plot_density <- function(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL
     stop("A valid scMethrix object needs to be supplied.")
   }
   
-  if (is.null(ranges)) ranges = rowRanges(scm)
+  if (is.null(regions)) regions = rowRanges(scm)
   
-  plot.data <- prepare_plot_data(scm=scm, ranges = ranges, n_cpgs = n_cpgs, pheno = pheno)
+  plot.data <- prepare_plot_data(scm=scm, regions = regions, n_cpgs = n_cpgs, pheno = pheno)
   col_palette <- get_palette(ncol(scm), col_palette)
   
   # generate the density plot

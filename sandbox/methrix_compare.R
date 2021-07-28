@@ -42,7 +42,7 @@ microbenchmark(
   m.loci = methrix::get_matrix(m,add_loci = TRUE),
   scm.gr = get_matrix(scm,add_loci = TRUE,in_granges=TRUE),
   m.gr = methrix::get_matrix(m,add_loci = TRUE,in_granges=TRUE),
-  times = 3,
+  times = 1,
   check = chk_equal
 )
 
@@ -55,7 +55,7 @@ microbenchmark(
   m.sam = subset_methrix(m, samples = 'C1'),
   scm.reg = subset_scMethrix(scm, regions = regions),
   m.reg = subset_methrix(m, regions = regions),
-  times = 3,
+  times = 1,
   check = chk_length
 )
 
@@ -67,7 +67,7 @@ microbenchmark(
     scm.cov <- remove_uncovered(scm.cov)
   },
   m.cov = methrix::coverage_filter(m, cov_thr = 1, min_samples = 3),
-  times = 3,
+  times = 1,
   check = chk_length
 )
 
@@ -76,7 +76,17 @@ microbenchmark(
   setup = {regions = data.table(chr = 'chr21', start = 27867971, end =  27868103)},
   scm.filt = subset_scMethrix(scm,regions = regions,by="exclude"),
   m.filt = methrix::region_filter(m,regions = regions),
-  times = 3,
+  times = 1,
+  check = chk_length
+)
+
+### Mask methrix
+microbenchmark(
+  scm.cov = {
+    scm.cov <- mask_by_coverage(scm,low_threshold = 1, avg_threshold = 5000)
+  },
+  m.cov = methrix::mask_methrix(m, low_count = 1, high_quantile  = NULL),
+  times = 1,
   check = chk_length
 )
 
@@ -85,7 +95,7 @@ microbenchmark(
   setup = {regions = data.table(chr = c('chr21','chr21'), start = c(27867971,27868110), end =  c(27868103,27868900))},
   scm.sum = get_region_summary(scm,regions = regions),
   m.sum = methrix::get_region_summary(m,regions = regions),
-  times = 3,
+  times = 1,
   check = chk_equal
 )
 
@@ -95,6 +105,6 @@ microbenchmark(
   m.perchr <- methrix::get_stats(m),
   scm.all <- get_stats(scm),
   m.all <- methrix::get_stats(m),
-  times = 3,
+  times = 1,
   check = chk_equal
 )

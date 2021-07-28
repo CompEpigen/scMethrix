@@ -12,6 +12,9 @@ if(length(new.packages)) {
 lapply(list.of.packages, require, character.only = TRUE)
 rm(list.of.packages,new.packages)
 
+assign("time.all", numeric(), envir=topenv())
+assign("time.split", numeric(), envir=topenv())
+
 source("D:/Git/scMethrix/R/accessory_funcs.R")
 source("D:/Git/scMethrix/R/scMethrix_operations.R")
 source("D:/Git/scMethrix/R/scMethrix_object.R")
@@ -31,6 +34,7 @@ Hg19_cpgs <- methrix::extract_CPGs(ref_genome = "BSgenome.Hsapiens.UCSC.hg19")
 mm10_cpgs <- methrix::extract_CPGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10")
 mm10_cpgs <- mm10_cpgs$cpgs[,1:3]
 ref_cpgs <- mm10_cpgs
+rm(mm10_cpgs)
 
 # Generic data import
 setwd("D:/Git/sampleData/Yunhee.GSE97179")
@@ -39,18 +43,20 @@ setwd("D:/Git/sampleData/test_data")
 
 setwd("D:/Git/sampleData/100cell")
 
+setwd("D:/Git/sampleData/mini")
+
 files <- list.files (getwd(),full.names = TRUE)
 
 files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
 
-files <- files[1:10]
+files <- files[1:500]
 
 col_idx <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
 #With Coverage
-scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),replace=TRUE, ref_cpgs = mm10_cpgs$cpgs,
+scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(tempdir(),"/sse"),ref_cpgs = ref_cpgs, replace=TRUE,
                         chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
-scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 8, ref_cpgs = mm10_cpgs$cpgs,
+scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 8, 
                          chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
 #Without coverage

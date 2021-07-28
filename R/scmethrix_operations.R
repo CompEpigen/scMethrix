@@ -467,7 +467,7 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 #' save_HDF5_scMethrix(scm, h5_dir = dir, replace = TRUE)
 #' @return Nothing
 #' @export
-save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, ...) {
+save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verbose = TRUE, ...) {
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -477,11 +477,15 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, ...)
     stop("Please provide the target directory containing ")
   }
   
+  if (verbose) message("Saving HDF5 experiment to disk...",start_time())
+  
   if (is_h5(scm)) {
     HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = h5_dir, replace = replace, ...)
   } else {
     stop("The object is not a methrix object or not in an HDF5 format. ")
   }
+  
+  if (verbose) message("Experiment saved in ",stop_time())
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
@@ -497,18 +501,18 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, ...)
 #' save_HDF5_scMethrix(scm, h5_dir = dir, replace = TRUE)
 #' n <- load_HDF5_scMethrix(dir)
 #' @export
-load_HDF5_scMethrix <- function(dir = NULL, ...) {
+load_HDF5_scMethrix <- function(dir = NULL, verbose = TRUE, ...) {
   
   if (is.null(dir)) {
     stop("Please provide the target directory containing ")
   }
   
-  message("Loading HDF5 object", start_time())
+  if (verbose) message("Loading HDF5 object", start_time())
   
   scm <- HDF5Array::loadHDF5SummarizedExperiment(dir = dir, ...)
   scm <- as(scm, "scMethrix")
   
-  message("Loaded in ",stop_time())
+  if (verbose) message("Loaded in ",stop_time())
   
   return(scm)
 }
@@ -753,17 +757,17 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
 #' # Remove uncovered CpGs after subsetting to a single sample
 #' remove_uncovered(subset_scMethrix(scMethrix_data, samples = "df1", by="include"))
 #' @export
-remove_uncovered <- function(scm = NULL) {
+remove_uncovered <- function(scm = NULL, verbose = TRUE) {
   
   if (!is(scm, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.")
   }
   
-  message("Removing uncovered CpGs...", start_time())
+  if (verbose) message("Removing uncovered CpGs...", start_time())
   
   row_idx <- DelayedMatrixStats::rowSums2(!is.na(get_matrix(scm)))==0
   
-  message(paste0("Removed ", format(sum(row_idx), big.mark = ","),
+  if (verbose) message(paste0("Removed ", format(sum(row_idx), big.mark = ","),
                  " [", round(sum(row_idx)/nrow(scm) * 100, digits = 2), "%] uncovered loci of ",
                  format(nrow(scm), big.mark = ","), " sites (",stop_time(),")"))
   
@@ -898,7 +902,6 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = 0, prop_
   # }
   
   if (verbose) message("Masking CpG sites by cell count...",start_time())
-  
   
   # if (!is.null(prop_threshold)) {
   #   low_threshold <- ncol(scm)+ncol(scm)*prop_threshold

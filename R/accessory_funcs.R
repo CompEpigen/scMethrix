@@ -221,6 +221,7 @@ split_time <- function() {
   time <- get("time.split", envir=topenv())
   if (!is.numeric(time)) {
     warning("start_time() not set. Starting from now.")
+    start_time()
     return("[unknown time]")
   }
   time <- proc.time()["elapsed"]-time
