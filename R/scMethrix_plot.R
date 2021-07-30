@@ -409,10 +409,6 @@ plot_imap <- function(scm) {
 #' @param show_dp_labels Default FLASE
 #' @return ggplot2 object
 #' @importFrom graphics par mtext lines axis legend title
-#' @examples
-#' data('scMethrix_data')
-#' scmpc = pca_scMethrix(scMethrix_data)
-#' plot_pca(scmpc)
 #' @export
 plot_dim_red <- function(dim_red, col_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE) {
   
@@ -490,7 +486,7 @@ plot_dim_red <- function(dim_red, col_anno = NULL, shape_anno = NULL, axis_label
 #' @importFrom graphics par mtext lines axis legend title barplot points
 #' @examples
 #' data('scMethrix_data')
-#' scmpc = pca_scMethrix(scMethrix_data)
+#' scmpc = dim_red_scMethrix(scMethrix_data,type="PCA")
 #' plot_pca(scmpc)
 #' @export
 plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE, plot_vars = FALSE) {
@@ -537,6 +533,8 @@ plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
+#' scmpc = dim_red_scMethrix(scMethrix_data,type="tSNE")
+#' plot_tsne(scmpc)
 #' @export
 plot_tsne <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE) {
   
@@ -559,6 +557,8 @@ plot_tsne <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_label
 #' @seealso [umap_scMethrix()] for dimensionality reduction
 #' @examples
 #' data('scMethrix_data')
+#' scmpc = dim_red_scMethrix(scMethrix_data,type="uMAP")
+#' plot_umap(scmpc)
 #' @export
 plot_umap <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE) {
   

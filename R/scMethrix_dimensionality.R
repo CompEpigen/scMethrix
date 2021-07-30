@@ -71,101 +71,70 @@ reduce_cpgs <- function(scm, assay = "score", var = "top", top_var = 1000, na.rm
   return (meth_sub)
 }
 
-#--------------------------------------------------------------------------------------------------------------
-#' Principal Component Analysis
-#' @details Do PCA stuff. NA values will be removed.
+#------------------------------------------------------------------------------------------------------------
+#' Reduces dimensionality
+#' @details Does reduction stuff
 #' @param n_components Number of components to use
+#' @param n_neighbors integer; number of nearest neighbors
+#' @param type string; the type of imputation "tSNE","UMAP", or "PCA"
 #' @inheritParams reduce_cpgs 
+#' @inheritParams Rtsne::Rtsne
+#' @inheritParams umap::umap
 #' @inheritParams stats::prcomp
-#' @return \code{\link{scMethrix}} object with reducedDim 'PCA'
+#' @return \code{\link{scMethrix}} object with reducedDim assay
+#' @import Rtsne
+#' @import umap
 #' @importFrom stats prcomp
-#' @seealso [plot_pca()] for plotting
+#' @seealso [plot_dim_red()] for plotting
 #' @examples
 #' data('scMethrix_data')
-#' pca_scMethrix(scMethrix_data)
+#' 
 #' @export
-#'
-pca_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbose = FALSE, n_components = 2, ...) {
+dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), var = "top", top_var = 1000, perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
   
-  if (verbose) message("Starting PCA ",start_time())
+  if (verbose) message("Starting imputation...",start_time())
   
   meth <- reduce_cpgs(scm,assay = assay, var = var, top_var = top_var, verbose = verbose, na.rm = TRUE)
-  meth <- prcomp(x = as.matrix(t(meth)), retx = TRUE)#, ...)
   
-  # Variance explained by PC's
-  pc_vars <- meth$sdev^2/sum(meth$sdev^2)
-  names(pc_vars) <- colnames(meth$x)
-  pc_vars <- round(pc_vars, digits = 2)
-  
-  reducedDim(scm, "PCA") <- meth$x[,1:n_components]
-  scm@metadata$PCA_vars <- pc_vars[1:n_components]
-
-  if (verbose) {
-    message("PCA vars (saved in metadata$PCA_vars):")
-    message(paste(names(pc_vars), pc_vars, sep = ":", collapse = ", "))
-    message("PCA finished in ",stop_time())
+  if (type == "tSNE") {
+    
+    meth_sub <- Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), k = n_components)#, ...)
+    
+    reducedDim(scm, "tSNE") <- meth_sub$Y
+    
+    if (verbose) message("tSNE generated in ",stop_time())
+    
+  } else if (type == "UMAP") {
+    
+    umap <- umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)),n_components=n_components)#, ...)
+    
+    reducedDim(scm, "UMAP") <- umap$layout
+    
+    
+  } else if (type == "PCA") {
+    
+    meth <- prcomp(x = as.matrix(t(meth)), retx = TRUE)#, ...)
+    
+    # Variance explained by PC's
+    pc_vars <- meth$sdev^2/sum(meth$sdev^2)
+    names(pc_vars) <- colnames(meth$x)
+    pc_vars <- round(pc_vars, digits = 2)
+    
+    reducedDim(scm, "PCA") <- meth$x[,1:n_components]
+    scm@metadata$PCA_vars <- pc_vars[1:n_components]
+    
+    if (verbose) {
+      message("PCA vars (saved in metadata$PCA_vars):")
+      message(paste(names(pc_vars), pc_vars, sep = ":", collapse = ", "))
+      message("PCA finished in ",stop_time())
+    }
+    
+  } else {
+    stop("Invalid imputation type specified")
   }
   
   gc(verbose = FALSE)
-    
-  return(scm)
-}
-
-#------------------------------------------------------------------------------------------------------------
-#' Generates UMAP for scMethrix
-#' @details Does UMAP stuff
-#' @param n_neighbors integer; number of nearest neighbors
-#' @param n_components Number of components to use
-#' @inheritParams reduce_cpgs 
-#' @inheritParams umap::umap
-#' @return \code{\link{scMethrix}} object with reducedDim 'UMAP'
-#' @import umap
-#' @seealso [plot_umap()] for plotting
-#' @examples
-#' data('scMethrix_data')
-#' umap_scMethrix(scMethrix_data)
-#' @export
-umap_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, verbose = FALSE, n_neighbors = 15, n_components = 2, ...) {
-  
-  if (verbose) message("Starting UMAP",start_time())
-  
-  meth <- reduce_cpgs(scm,assay = assay, var = var, top_var = top_var, verbose = verbose, na.rm=TRUE)
-  umap <- umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)),n_components=n_components)#, ...)
-  
-  reducedDim(scm, "UMAP") <- umap$layout
-  
-  if (verbose) message("UMAP generated in ",stop_time())
-  
-  gc(verbose = FALSE)
   
   return(scm)
 }
 
-#------------------------------------------------------------------------------------------------------------
-#' Generates tSNE for scMethrix
-#' @details Does tSNE stuff
-#' @param n_components Number of components to use
-#' @inheritParams reduce_cpgs 
-#' @inheritParams Rtsne::Rtsne
-#' @return \code{\link{scMethrix}} object with reducedDim 'tSNE'
-#' @import Rtsne
-#' @seealso [plot_tsne()] for plotting
-#' @examples
-#' data('scMethrix_data')
-#' umap_scMethrix(scMethrix_data)
-#' @export
-tsne_scMethrix <- function(scm, assay="score", var = "top", top_var = 1000, perplexity = 30, verbose = FALSE, n_components = 2, ...) {
-  
-  if (verbose) message("Starting tSNE",start_time())
-  
-  meth <- reduce_cpgs(scm,assay = assay, var = var, top_var = top_var, verbose = verbose, na.rm = TRUE)
-  meth_sub <- Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), k = n_components)#, ...)
-  
-  reducedDim(scm, "tSNE") <- meth_sub$Y
-  
-  if (verbose) message("tSNE generated in ",stop_time())
-  
-  gc(verbose = FALSE)
-  
-  return(scm)
-}
