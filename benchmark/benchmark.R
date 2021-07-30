@@ -35,7 +35,6 @@ bench <- microbenchmark(
   "remove_uncovered"={remove_uncovered(scm)},
   "mask_by_coverage"={mask_by_coverage(scm,low_threshold=2,avg_threshold = 1)},
   "mask_by_sample"={mask_by_sample(scm,low_threshold=2)},
-  
   ### Transformations
   "transform_assay"={transform_assay(scm,assay="score",new_assay="binarize",trans=binarize)},
   "bin_scMethrix"={bin_scMethrix(scm,n_threads = 8)},
