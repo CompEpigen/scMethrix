@@ -1,0 +1,24 @@
+setwd("D:/Git/sampleData/metadata")
+files <- list.files (getwd(),full.names = TRUE)
+files <- files[grepl(".*txt$", files,ignore.case = TRUE)]
+
+colData <- data.table()
+
+for (file in files) {
+  
+  data <- suppressWarnings(data.table::fread(file,header = F,col.names = c("Sample")))
+  data$Cell <- sub("\\_.*", "", get_sample_name(file))
+  
+  colData <- rbind(colData,data)
+
+}
+
+colData2 <- colData
+colData$Sample <- paste0(colData$Sample,"_1")
+colData2$Sample <- paste0(colData2$Sample,"_2")
+colData <- rbind(colData,colData2)
+rm(colData2)
+colData <- colData[order(Sample),]
+
+
+

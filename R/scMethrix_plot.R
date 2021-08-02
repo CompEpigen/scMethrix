@@ -38,7 +38,7 @@ prepare_plot_data <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno 
   
   
   if (!is.null(pheno)) {
-    if (pheno %in% colnames(colData(scm))) {
+    if (pheno %in% rownames(colData(scm))) {
       colnames(meth_sub) <- as.character(scm@colData[, pheno])
     } else {
       stop("Please provide a valid phenotype annotation column.")
@@ -268,7 +268,7 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
   sparsity <- DelayedMatrixStats::colCounts(score(scm),value=NA)
   
   if (!is.null(pheno)) {
-    if (pheno %in% colnames(colData(scm))) {
+    if (pheno %in% rownames(colData(scm))) {
       pheno <- as.character(scm@colData[, pheno])
       sparsity <- data.frame(Phenotype = pheno, Sparsity = sparsity/nrow(scm))
       p <- ggplot(sparsity, aes(x=pheno, y=Sparsity, color = pheno))
@@ -410,40 +410,40 @@ plot_imap <- function(scm) {
 #' @return ggplot2 object
 #' @importFrom graphics par mtext lines axis legend title
 #' @export
-plot_dim_red <- function(dim_red, col_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE) {
+plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE) {
   
   X <- Y <- color_me <- shape_me <- row_names <- NULL
+  
+  dim_red <- reducedDim(scm,type=dim_red)
   
   if (ncol(dim_red) != 2) {
     warning("More than two columns in the dimentionality reduction. Only the first two will be used")
     dim_red <- dim_red[,1:2]
   }
   
-  if (!is.null(col_anno)) {
-    col_anno_idx <- which(colnames(dim_red) == col_anno)
-    if (length(col_anno_idx) == 0) {
-      stop(paste0(col_anno, " not found in provided methrix object"))
-    } else {
-      colnames(dim_red)[col_anno_idx] <- "color_me"
-    }
-  }
-  
-  if (!is.null(shape_anno)) {
-    shape_anno_idx <- which(colnames(dim_red) == shape_anno)
-    if (length(shape_anno_idx) == 0) {
-      stop(paste0(shape_anno, " not found in provided methrix object"))
-    } else {
-      colnames(dim_red)[shape_anno_idx] <- "shape_me"
-    }
-  }
-  
-  if (is.null(axis_labels)) {
-    axis_labels = list(X="",Y="")
-  }
-  
   dim_red = as.data.frame(dim_red)
   colnames(dim_red) <- c("X", "Y")
   dim_red$row_names = rownames(dim_red)
+  
+  if (!is.null(col_anno)) {
+    if (colnames(colData(scm)) %in% col_anno) {
+      dim_red$color_me <- unlist(as.data.table(colData(scm))[,..col_anno]) #TODO: make colData a data.table
+    } else {
+      stop(paste0(col_anno, " not found in provided scMethrix object"))
+    }
+  }
+    
+  if (!is.null(shape_anno)) {
+    if (colnames(colData(scm)) %in% shape_anno) {
+      dim_red$shape_me <- unlist(as.data.table(colData(scm))[,shape_anno]) #TODO: make colData a data.table
+    } else {
+      stop(paste0(shape_anno, " not found in provided scMethrix object"))
+    }
+  }  
+
+  if (is.null(axis_labels)) {
+    axis_labels = list(X="",Y="")
+  }
   
   if (all(c("color_me", "shape_me") %in% colnames(dim_red))) {
     dimred_gg <- ggplot(data = dim_red, aes(x = X, y = Y, color = color_me,
@@ -510,7 +510,7 @@ plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels
     Y = paste0(pc_y, " [", pc_vars[pc_y]*100, " %]")
   )
   
-  pca_gg <- plot_dim_red(dim_red = dim_red, col_anno = col_anno, shape_anno = shape_anno, 
+  pca_gg <- plot_dim_red(scm, dim_red = "PCA", col_anno = col_anno, shape_anno = shape_anno, 
                show_dp_labels = show_labels, axis_labels = axis_labels)
   
   if (plot_vars) {
@@ -546,7 +546,7 @@ plot_tsne <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_label
     stop("t-SNE results not present in scMethrix object. Run tsne_scMethrix() first.")
   }
   
-  plot_dim_red(dim_red = reducedDim(scm,type="tSNE"), col_anno = col_anno, shape_anno = shape_anno, 
+  plot_dim_red(scm, dim_red = "tSNE", col_anno = col_anno, shape_anno = shape_anno, 
                show_dp_labels = show_labels, axis_labels = NULL)
   
 }
@@ -570,7 +570,7 @@ plot_umap <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_label
     stop("UMAP results not present in scMethrix object. Run umap_scMethrix() first.")
   }
 
-  plot_dim_red(dim_red = reducedDim(scm,type="UMAP"), col_anno = col_anno, shape_anno = shape_anno, 
+  plot_dim_red(scm, dim_red = "UMAP", col_anno = col_anno, shape_anno = shape_anno, 
                show_dp_labels = show_labels, axis_labels = NULL)
   
 }

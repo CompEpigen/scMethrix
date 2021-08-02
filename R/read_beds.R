@@ -107,8 +107,20 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
                                                 zero_based = zero_based, verbose = verbose)
     message("Building scMethrix object")
 
-    if (is.null(colData)) colData <- data.frame()[1:(length(files)), ]
-    row.names(colData) <- unlist(lapply(files,get_sample_name))
+    if(is.null(colData)) {
+      colData <- data.frame()[1:(length(files)), ]
+      row.names(colData) <- colnames(reads$score)
+    } else {
+      cd <- data.frame()[1:(length(files)), ]
+      cd$Sample <- colnames(reads$score)
+      cd <- merge(cd,colData,by="Sample")
+      row.names(cd) <- cd$Sample
+      cd$Sample <- NULL
+      colData <- cd
+    }
+    
+    # if (is.null(colData)) colData <- data.frame()[1:(length(files)), ]
+    # row.names(colData) <- unlist(lapply(files,get_sample_name))
     
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
@@ -122,18 +134,24 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   } else {
 
     message("Reading in BED files") 
-
+    
     reads <- read_mem_data(files, ref_cpgs, col_list = col_list, batch_size = batch_size, n_threads = n_threads,
                            zero_based = zero_based,verbose = verbose)
     
-    #colData <- t(data.frame(lapply(files,get_sample_name),check.names=FALSE))
-    #colData <- t(unlist(lapply(files,get_sample_name)))
-    
     message("Building scMethrix object")
-    
-    if (is.null(colData)) colData <- data.frame()[1:(length(files)), ]
-    row.names(colData) <- unlist(lapply(files,get_sample_name))
-    
+
+    if(is.null(colData)) {
+      colData <- data.frame()[1:(length(files)), ]
+      row.names(colData) <- colnames(reads$score)
+    } else {
+      cd <- data.frame()[1:(length(files)), ]
+      cd$Sample <- colnames(reads$score)
+      cd <- merge(cd,colData,by="Sample")
+      row.names(cd) <- cd$Sample
+      cd$Sample <- NULL
+      colData <- cd
+    }
+
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
     
