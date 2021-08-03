@@ -38,9 +38,9 @@ test_that("impute_regions", {
       invisible(lapply(list(scm.mem), function(scm) {
         expect_error(impute_regions(scm,assay = "not an assay"))
         expect_error(impute_regions(scm,new_assay = "score"))
-        expect_warning(impute_regions(scm,new_assay = "counts",by=method))
+        expect_warning(impute_regions(scm,new_assay = "counts",type=method))
         
-        impute = impute_regions(scm,new_assay="impute",by=method)
+        impute = impute_regions(scm,new_assay="impute",type=method)
         expect_true("impute" %in% SummarizedExperiment::assayNames(impute))
         
         sco <- get_matrix(impute,assay="score")

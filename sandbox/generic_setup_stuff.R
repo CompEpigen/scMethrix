@@ -75,6 +75,7 @@ scm.methrix <- read_beds(files=files,h5=FALSE, chr_idx=1, start_idx=2, M_idx=3, 
 # Useful functions
 devtools::test()
 devtools::install()
+devtools::run_examples()
 
 setwd("D:/Git/scMethrix")
 pkgdown::build_site()

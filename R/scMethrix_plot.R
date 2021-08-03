@@ -401,6 +401,7 @@ plot_imap <- function(scm) {
 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Plot dimensionality reduction
+#' @inheritParams generic_scMethrix_function
 #' @param dim_red dimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
 #' the X and Y coordinates of the dim. red., with each row being a seperate sample
 #' @param axis_labels A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired
@@ -412,7 +413,7 @@ plot_imap <- function(scm) {
 #' @export
 plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE) {
   
-  X <- Y <- color_me <- shape_me <- row_names <- NULL
+  X <- Y <- color_me <- shape_me <- row_names <- ..col_anno <- NULL
   
   dim_red <- reducedDim(scm,type=dim_red)
   
@@ -557,7 +558,7 @@ plot_tsne <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_label
 #' @seealso [umap_scMethrix()] for dimensionality reduction
 #' @examples
 #' data('scMethrix_data')
-#' scmpc = dim_red_scMethrix(scMethrix_data,type="uMAP")
+#' scmpc = dim_red_scMethrix(scMethrix_data,type="UMAP")
 #' plot_umap(scmpc)
 #' @export
 plot_umap <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE) {

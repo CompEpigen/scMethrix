@@ -5,6 +5,7 @@
 \title{Plot dimensionality reduction}
 \usage{
 plot_dim_red(
+  scm,
   dim_red,
   col_anno = NULL,
   shape_anno = NULL,
@@ -13,6 +14,8 @@ plot_dim_red(
 )
 }
 \arguments{
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
+
 \item{dim_red}{dimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
 the X and Y coordinates of the dim. red., with each row being a seperate sample}
 
@@ -29,9 +32,4 @@ ggplot2 object
 }
 \description{
 Plot dimensionality reduction
-}
-\examples{
-data('scMethrix_data')
-scmpc = pca_scMethrix(scMethrix_data)
-plot_pca(scmpc)
 }

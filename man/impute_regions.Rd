@@ -13,7 +13,8 @@ impute_regions(
   n_chunks = 1,
   n_threads = 1,
   overlap_type = "within",
-  by = c("kNN", "iPCA", "RF"),
+  type = c("kNN", "iPCA", "RF"),
+  verbose = TRUE,
   k = 10,
   n_pc = 2,
   ...
@@ -36,7 +37,9 @@ impute_regions(
 
 \item{overlap_type}{string;}
 
-\item{by}{string/closure; the imputation to perform 'kNN','iPCA','RF'. Otherwise, a closure can be specified that returns the imputed matrix}
+\item{type}{string/closure; the imputation to perform 'kNN','iPCA','RF'. Otherwise, a closure can be specified that returns the imputed matrix}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 
 \item{k}{Number of neighbors to be used in the
     imputation (default=10)}

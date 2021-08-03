@@ -23,6 +23,8 @@ Plot tSNE results
 }
 \examples{
 data('scMethrix_data')
+scmpc = dim_red_scMethrix(scMethrix_data,type="tSNE")
+plot_tsne(scmpc)
 }
 \seealso{
 \code{\link[=tsne_scMethrix]{tsne_scMethrix()}} for dimensionality reduction

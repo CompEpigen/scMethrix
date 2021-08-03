@@ -491,6 +491,7 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verb
 #--------------------------------------------------------------------------------------------------------------------------
 #' Loads HDF5 \code{\link{scMethrix}} object
 #' @details Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
+#' @inheritParams generic_scMethrix_function
 #' @param dir The directory to read in from. Default NULL
 #' @param ... Parameters to pass to \code{\link{loadHDF5SummarizedExperiment}}
 #' @return An object of class \code{\link{scMethrix}}

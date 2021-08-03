@@ -4,12 +4,12 @@
 \alias{prepare_plot_data}
 \title{Format \code{\link{scMethrix}} matrix to long form data for plotting}
 \usage{
-prepare_plot_data(scm = NULL, ranges = NULL, n_cpgs = 25000, pheno = NULL)
+prepare_plot_data(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{ranges}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
+\item{regions}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
 
 \item{n_cpgs}{Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.}
 

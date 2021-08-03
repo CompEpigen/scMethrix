@@ -545,7 +545,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @param regions Granges; the regions to impute. Default is by chromosome.
 #' @param overlap_type string; 
 #' @param op closure; the imputation operation
-#' @param by string/closure; the imputation to perform 'kNN','iPCA','RF'. Otherwise, a closure can be specified that returns the imputed matrix
+#' @param type string/closure; the imputation to perform 'kNN','iPCA','RF'. Otherwise, a closure can be specified that returns the imputed matrix
 #' @param n_pc the range of principal components to check when using iPCA. Caution: this can be very time-intensive
 #' @inheritParams generic_scMethrix_function
 #' @inheritParams impute::impute.knn
@@ -561,7 +561,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @references Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
 #' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
 impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regions = NULL, op = NULL, n_chunks = 1, 
-                               n_threads = 1, overlap_type="within", by=c("kNN","iPCA","RF"), k=10, n_pc=2,...) {
+                               n_threads = 1, overlap_type="within", type=c("kNN","iPCA","RF"), verbose = TRUE, k=10, n_pc=2,...) {
   
   yid <- NULL
   
@@ -582,10 +582,10 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
   }
   
-  if (by == "kNN") {
+  if (type == "kNN") {
     op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
                                            rowmax = 1.0, colmax = 1.0, maxp = 1500, ...)$data
-  } else if (by == "iPCA") {
+  } else if (type == "iPCA") {
     if (length(n_pc) > 1) {
       warning("Caution: n_pc is given as range. This can be very time-intensive.")
       n_pc <- missMDA::estim_ncpPCA(as.matrix(get_matrix(scm,assay = assay)),ncp.min = n_pc[1], ncp.max = n_pc[2], 
@@ -594,10 +594,10 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     }
     
     op <- function(mtx) missMDA::imputePCA(mtx, ncp = n_pc, ...)$completeObs
-  } else if (by == "RF") {
+  } else if (type == "RF") {
     op <- function(mtx) missForest::missForest(mtx, ...)$ximp
   } else {
-    op = by
+    op = type
   }
   
   if (!is.null(regions)) {
@@ -613,12 +613,15 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type))
   colnames(overlap_indices) <- c("xid", "yid")
   overlap_indices[,yid := paste0("rid_", yid)]
-  rid_list <- split_vector(regions$rid,num = n_chunks)
-  rid_list <- lapply(rid_list, function(rids) {split_vector(rids,num = n_threads)})
+  rid_list <- regions$rid
+  # rid_list <- split_vector(regions$rid,num = n_chunks)
+  # rid_list <- lapply(rid_list, function(rids) {split_vector(rids,num = n_threads)})
 
-  for (rids in rid_list) {
-   
-    idx <- lapply(rids,FUN = function(rid) overlap_indices[overlap_indices$yid %in% rid]$xid)
+  for (i in 1:length(rid_list)) {
+
+    if (verbose) message("Parsing chunk ", i, " of ",length(rid_list))
+    
+    idx <- lapply(rid_list[i],FUN = function(rid) overlap_indices[overlap_indices$yid %in% rid]$xid)
     impute <- lapply(idx,function(i) op(get_matrix(scm[i,],assay))) # This is in parallel later
     
     for (i in 1:length(idx)) assays(scm)[[new_assay]][idx[[i]],] <- impute[[i]]

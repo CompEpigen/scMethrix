@@ -4,10 +4,12 @@
 \alias{remove_uncovered}
 \title{Remove loci that are uncovered across all samples}
 \usage{
-remove_uncovered(scm = NULL)
+remove_uncovered(scm = NULL, verbose = TRUE)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 An object of class \code{\link{scMethrix}}

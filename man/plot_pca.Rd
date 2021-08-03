@@ -31,7 +31,7 @@ Plot PCA results
 }
 \examples{
 data('scMethrix_data')
-scmpc = pca_scMethrix(scMethrix_data)
+scmpc = dim_red_scMethrix(scMethrix_data,type="PCA")
 plot_pca(scmpc)
 }
 \seealso{

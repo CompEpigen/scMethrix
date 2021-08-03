@@ -4,7 +4,13 @@
 \alias{save_HDF5_scMethrix}
 \title{Saves an HDF5 \code{\link{scMethrix}} object}
 \usage{
-save_HDF5_scMethrix(scm = NULL, h5_dir = NULL, replace = FALSE, ...)
+save_HDF5_scMethrix(
+  scm = NULL,
+  h5_dir = NULL,
+  replace = FALSE,
+  verbose = TRUE,
+  ...
+)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
@@ -12,6 +18,8 @@ save_HDF5_scMethrix(scm = NULL, h5_dir = NULL, replace = FALSE, ...)
 \item{h5_dir}{string; The directory to use. Will be created if it does not exist. Default = NULL}
 
 \item{replace}{Should it overwrite the pre-existing data? FALSE by default.}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 
 \item{...}{Parameters to pass to saveHDF5SummarizedExperiment}
 }

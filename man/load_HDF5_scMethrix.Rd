@@ -4,10 +4,12 @@
 \alias{load_HDF5_scMethrix}
 \title{Loads HDF5 \code{\link{scMethrix}} object}
 \usage{
-load_HDF5_scMethrix(dir = NULL, ...)
+load_HDF5_scMethrix(dir = NULL, verbose = TRUE, ...)
 }
 \arguments{
 \item{dir}{The directory to read in from. Default NULL}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 
 \item{...}{Parameters to pass to \code{\link{loadHDF5SummarizedExperiment}}}
 }

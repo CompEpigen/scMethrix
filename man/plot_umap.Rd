@@ -23,6 +23,8 @@ Plot UMAP results
 }
 \examples{
 data('scMethrix_data')
+scmpc = dim_red_scMethrix(scMethrix_data,type="UMAP")
+plot_umap(scmpc)
 }
 \seealso{
 \code{\link[=umap_scMethrix]{umap_scMethrix()}} for dimensionality reduction
