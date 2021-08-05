@@ -81,8 +81,8 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
 #' regions <- unlist(tile(regions,10))
 #' bin_scMethrix(scMethrix_data, regions = regions)
 #' @export
-bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by = "bp", trans = NULL, 
-                          overlap_type = "within", h5_dir = NULL, verbose = TRUE, n_chunks = 1, n_threads = 1) {
+bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by = c("bp","cpg"), trans = NULL, 
+                          overlap_type = "within", h5_dir = NULL, verbose = TRUE, n_chunks = 1, n_threads = 1, replace = FALSE) {
 
   yid <- NULL
   
@@ -130,7 +130,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       
       for(rid in 1:length(regions$rid)) {
         
-        #if (verbose) message("   Processing region ",rid,"/",length(regions$rid))
+        if (verbose) message("   Processing region ",rid,"/",length(regions$rid))
         
         idx <- which(overlap_indices[,yid == regions$rid[rid]])
         idx <- split_vector(idx,num = bin_size, by = "size")
@@ -167,6 +167,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
   # Function to process each bin
 
+  
   for (name in SummarizedExperiment::assayNames(scm)) {
 
     if (verbose) message("   Filling bins for the ",name," assay...")
@@ -179,30 +180,53 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
     
     if (is_h5(scm)) {
 
-      stop("H5 currently not supporeted")
+      setAutoRealizationBackend("HDF5Array")
       
-        mtx <- get_matrix(scm,assay=name)[overlap_indices$xid,] #TODO: Somehow missing rows if not subset, not sure why
-  
-        setAutoRealizationBackend("HDF5Array")
-  
-        cols <- split_vector(1:ncol(mtx),n_chunks)
-        sink <- AutoRealizationSink(c(ncol(mtx), length(rrng)))
-        grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(cols[[1]]), length(rrng)))
-  
-        cl <- parallel::makeCluster(n_threads)
-        doParallel::registerDoParallel(cl)
-        parallel::clusterEvalQ(cl, c(library(DelayedMatrixStats)))
-        parallel::clusterExport(cl,list('overlap_indices','worker','op'), envir = environment())
-        on.exit(parallel::stopCluster(cl))
-  
-        groups <- NULL
+      cols <- split_vector(1:ncol(scm),n_chunks)
+      sink <- AutoRealizationSink(c(length(rrng),ncol(scm)))
+      grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rrng),length(cols[[1]])))
+      
+      for (i in 1:length(cols)) {
         
-        avg <- t(sapply(groups, function (group) {
-          idx <- overlap_indices[yid == group,]$xid
-          DelayedMatrixStats::colMeans2(mtx,row=idx,na.rm=TRUE)
-        }))
-        colnames(avg) <- colnames(mtx)
+        if (verbose) message("Processing chunk ",i)
+        col <- cols[[i]]
+        mtx <- as.data.table(get_matrix(scm,assay=name)[overlap_indices$xid,col])
+        mtx <- mtx[,lapply(.SD,op),by=overlap_indices$yid]
+        mtx <- mtx[,overlap_indices:=NULL]
+        
+        DelayedArray::write_block(block = as.matrix(mtx), viewport = grid[[as.integer(i)]], sink = sink)
+      }
       
+      assays[[name]] <- sink
+      
+      
+       # mtx <- get_matrix(scm,assay=name)[overlap_indices$xid,] #TODO: Somehow missing rows if not subset, not sure why
+  
+
+  
+        # cl <- parallel::makeCluster(n_threads)
+        # doParallel::registerDoParallel(cl)
+        # parallel::clusterEvalQ(cl, c(library(DelayedMatrixStats)))
+        # parallel::clusterExport(cl,list('overlap_indices','worker','op'), envir = environment())
+        # on.exit(parallel::stopCluster(cl))
+        
+        
+        
+        # 
+        # 
+        # idxs <- split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid)/ceiling(length(overlap_indices$xid)/n_chunks)))
+        # 
+        # dat <- do.call("rbind",lapply(idxs, function(idx) get_matrix(scm[idx,])))
+        # dat = cbind(overlap_indices, dat)
+        # 
+        # dat[, lapply(.SD, mean, na.rm = T), by = yid, .SDcols = colnames(scm)]
+        # 
+        # avg <- t(sapply(unique(overlap_indices[,yid]), function (rid) {
+        #   message("Parsing ",rid)
+        #   idx <- overlap_indices[yid == rid,]$xid
+        #   DelayedMatrixStats::colMeans2(mtx,row=idx,na.rm=TRUE)
+        # }))
+        # colnames(avg) <- colnames(mtx)
       
     } else {
 
@@ -260,7 +284,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       # mtx <- lapply(1:nrow(mtx),function(x) unlist(mtx[x,]))
       # mtx <- t(rbindlist(lapply(mtx, as.data.frame.list)))
       # colnames(mtx) <- cols
-      
+
       ### Basic algorithm
       mtx <- data.table(get_matrix(scm,assay=name))[overlap_indices$xid,] #TODO: Somehow missing rows if not subset, not sure why
       mtx <- mtx[,lapply(.SD,op),by=overlap_indices$yid]
@@ -272,6 +296,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
     
     if (verbose) message("Bins filled in ",split_time())
   }
+
+  rrng <- rrng[which(rrng$rid %in% overlap_indices$yid)]
   
   rrng$rid <- NULL
   
@@ -293,6 +319,34 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
   return (m_obj)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 bin_scMethrix2 <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by = "bp", trans = NULL, 
                           overlap_type = "within", h5_dir = NULL, verbose = TRUE, n_chunks = 1, n_threads = 1) {
@@ -341,7 +395,7 @@ bin_scMethrix2 <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by
       
       for(rid in 1:length(regions$rid)) {
         
-        #if (verbose) message("   Processing region ",rid,"/",length(regions$rid))
+        if (verbose) message("   Processing region ",rid,"/",length(regions$rid))
         
         idx <- which(overlap_indices[,yid == regions$rid[rid]])
         idx <- split_vector(idx,num = bin_size, by = "size")
@@ -582,6 +636,8 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
   }
   
+  if (verbose) message("Starting imputation by ",type,start_time())
+  
   if (type == "kNN") {
     op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
                                            rowmax = 1.0, colmax = 1.0, maxp = 1500, ...)$data
@@ -603,31 +659,34 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   if (!is.null(regions)) {
     regions = cast_granges(regions)
     scm <- subset_scMethrix(scm, regions = regions) 
-  } else { # If no region is specifed, use entire chromosomes
-    regions = range(rowRanges(scm))
-  }
-  
-  assays(scm)[[new_assay]] <- assays(scm)[[assay]]
-  
-  regions$rid <- paste0("rid_", 1:length(regions))
-  overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type))
-  colnames(overlap_indices) <- c("xid", "yid")
-  overlap_indices[,yid := paste0("rid_", yid)]
-  rid_list <- regions$rid
-  # rid_list <- split_vector(regions$rid,num = n_chunks)
-  # rid_list <- lapply(rid_list, function(rids) {split_vector(rids,num = n_threads)})
-
-  for (i in 1:length(rid_list)) {
-
-    if (verbose) message("Parsing chunk ", i, " of ",length(rid_list))
     
-    idx <- lapply(rid_list[i],FUN = function(rid) overlap_indices[overlap_indices$yid %in% rid]$xid)
-    impute <- lapply(idx,function(i) op(get_matrix(scm[i,],assay))) # This is in parallel later
+    assays(scm)[[new_assay]] <- assays(scm)[[assay]]
+
+    regions$rid <- paste0("rid_", 1:length(regions))
+    overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type))
+    colnames(overlap_indices) <- c("xid", "yid")
+    overlap_indices[,yid := paste0("rid_", yid)]
+    rid_list <- regions$rid
+    # rid_list <- split_vector(regions$rid,num = n_chunks)
+    # rid_list <- lapply(rid_list, function(rids) {split_vector(rids,num = n_threads)})
+  
+    for (i in 1:length(rid_list)) {
+  
+      if (verbose) message("Parsing chunk ", i, " of ",length(rid_list))
+      
+      idx <- lapply(rid_list[i],FUN = function(rid) overlap_indices[overlap_indices$yid %in% rid]$xid)
+      impute <- lapply(idx,function(i) op(get_matrix(scm[i,],assay))) # This is in parallel later
+      
+      for (i in 1:length(idx)) assays(scm)[[new_assay]][idx[[i]],] <- impute[[i]]
+    }
+  } else {
     
-    for (i in 1:length(idx)) assays(scm)[[new_assay]][idx[[i]],] <- impute[[i]]
+    assays(scm)[[new_assay]] <- op(get_matrix(scm,assay))
     
   }
    
+  if (verbose) message("Imputed in ",stop_time())
+  
   return(scm)
 }
 

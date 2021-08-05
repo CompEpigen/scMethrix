@@ -8,13 +8,14 @@ bin_scMethrix(
   scm = NULL,
   regions = NULL,
   bin_size = 1e+05,
-  bin_by = "bp",
+  bin_by = c("bp", "cpg"),
   trans = NULL,
   overlap_type = "within",
   h5_dir = NULL,
   verbose = TRUE,
   n_chunks = 1,
-  n_threads = 1
+  n_threads = 1,
+  replace = FALSE
 )
 }
 \arguments{

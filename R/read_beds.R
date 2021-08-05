@@ -485,7 +485,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, n_threads = 0, h5_temp = N
     HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
                                    dimnames = list(NULL, colData), type = "integer",
                                    filepath = tempfile(pattern = "cov_sink_", tmpdir = h5_temp),
-                                   name = "M", level = 6)
+                                   name = "C", level = 6)
   
   # Determine the grids for the sinks
   if (n_threads == 0) {

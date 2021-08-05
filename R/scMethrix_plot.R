@@ -413,7 +413,7 @@ plot_imap <- function(scm) {
 #' @export
 plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE) {
   
-  X <- Y <- color_me <- shape_me <- row_names <- ..col_anno <- NULL
+  X <- Y <- color_me <- shape_me <- row_names <-  NULL
   
   dim_red <- reducedDim(scm,type=dim_red)
   
@@ -436,7 +436,7 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
     
   if (!is.null(shape_anno)) {
     if (colnames(colData(scm)) %in% shape_anno) {
-      dim_red$shape_me <- unlist(as.data.table(colData(scm))[,shape_anno]) #TODO: make colData a data.table
+      dim_red$shape_me <- unlist(as.data.table(colData(scm))[,..shape_anno]) #TODO: make colData a data.table
     } else {
       stop(paste0(shape_anno, " not found in provided scMethrix object"))
     }
