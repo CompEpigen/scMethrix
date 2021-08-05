@@ -124,13 +124,14 @@
   scm <span class='op'>=</span> <span class='cn'>NULL</span>,
   regions <span class='op'>=</span> <span class='cn'>NULL</span>,
   bin_size <span class='op'>=</span> <span class='fl'>1e+05</span>,
-  bin_by <span class='op'>=</span> <span class='st'>"bp"</span>,
+  bin_by <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"bp"</span>, <span class='st'>"cpg"</span><span class='op'>)</span>,
   trans <span class='op'>=</span> <span class='cn'>NULL</span>,
   overlap_type <span class='op'>=</span> <span class='st'>"within"</span>,
   h5_dir <span class='op'>=</span> <span class='cn'>NULL</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>,
   n_chunks <span class='op'>=</span> <span class='fl'>1</span>,
-  n_threads <span class='op'>=</span> <span class='fl'>1</span>
+  n_threads <span class='op'>=</span> <span class='fl'>1</span>,
+  replace <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -195,7 +196,7 @@ Default value is <code>within</code>. For detailed description, see the <code>fi
 <span class='va'>regions</span> <span class='op'>&lt;-</span> <span class='fu'>GRanges</span><span class='op'>(</span>seqnames <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"chr1"</span><span class='op'>)</span>, ranges <span class='op'>=</span> <span class='fu'>IRanges</span><span class='op'>(</span><span class='fl'>1</span>,<span class='fl'>200000000</span><span class='op'>)</span><span class='op'>)</span> 
 <span class='va'>regions</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span><span class='op'>(</span><span class='fu'>tile</span><span class='op'>(</span><span class='va'>regions</span>,<span class='fl'>10</span><span class='op'>)</span><span class='op'>)</span>
 <span class='fu'>bin_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, regions <span class='op'>=</span> <span class='va'>regions</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.07s</span></div><div class='output co'>#&gt; <span class='message'>Subsetting for 10 input regions...</span></div><div class='output co'>#&gt; <span class='message'>Binning by bp with size of 1e+05...</span></div><div class='output co'>#&gt; <span class='message'>Generated 131 bins in 0.13s</span></div><div class='output co'>#&gt; <span class='message'>   Filling bins for the score assay...</span></div><div class='output co'>#&gt; <span class='message'>Bins filled in 0.44s</span></div><div class='output co'>#&gt; <span class='message'>   Filling bins for the counts assay...</span></div><div class='output co'>#&gt; <span class='message'>Bins filled in 0.02s</span></div><div class='output co'>#&gt; <span class='message'>Rebuilding experiment...</span></div><div class='output co'>#&gt; <span class='message'>Experiment binned for 10 regions containing 131 total bins in 0.79s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.11s</span></div><div class='output co'>#&gt; <span class='message'>Subsetting for 10 input regions...</span></div><div class='output co'>#&gt; <span class='message'>Binning by bp with size of 1e+05...</span></div><div class='output co'>#&gt; <span class='message'>Generated 131 bins in 0.18s</span></div><div class='output co'>#&gt; <span class='message'>   Filling bins for the score assay...</span></div><div class='output co'>#&gt; <span class='message'>Bins filled in 0.54s</span></div><div class='output co'>#&gt; <span class='message'>   Filling bins for the counts assay...</span></div><div class='output co'>#&gt; <span class='message'>Bins filled in 0.07s</span></div><div class='output co'>#&gt; <span class='message'>Rebuilding experiment...</span></div><div class='output co'>#&gt; <span class='message'>Experiment binned for 10 regions containing 131 total bins in 1.01s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 131
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts
