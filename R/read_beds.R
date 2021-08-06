@@ -82,13 +82,26 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     }
   }
 
-  if (is.null(ref_cpgs)) {
-    ref_cpgs <- read_index(files = files, col_list = col_list, n_threads = n_threads, 
-                           batch_size = batch_size, zero_based = zero_based)
-  } else {
-    ref_cpgs <- subset_ref_cpgs(ref_cpgs, read_index(files=files,col_list = col_list,n_threads,
-                                                     batch_size = batch_size, zero_based = zero_based))
+  # Check stranding of reference genome and add - strand if nec.
+  if (stranded) {
+    ref_plus <- data.table::copy(ref_cpgs)
+    ref_plus[, `:=`(strand, "+")]
+    ref_cpgs[, `:=`(start, start + 1)]
+    ref_cpgs[, `:=`(strand, "-")]
+    ref_cpgs <- data.table::rbindlist(list(ref_cpgs, ref_plus), use.names = TRUE)
+    data.table::setkeyv(ref_cpgs, cols = c("chr", "start"))
+    message(paste0("-CpGs stranded: ", format(nrow(ref_cpgs), big.mark = ",")), "(reference CpGs from both strands)")
+    rm(ref_plus) 
+    gc()
   }
+  
+  # if (is.null(ref_cpgs)) {
+  #   ref_cpgs <- read_index(files = files, col_list = col_list, n_threads = n_threads, 
+  #                          batch_size = batch_size, zero_based = zero_based)
+  # } else {
+  #   ref_cpgs <- subset_ref_cpgs(ref_cpgs, read_index(files=files,col_list = col_list,n_threads,
+  #                                                    batch_size = batch_size, zero_based = zero_based))
+  # }
   
   col_list$max_value = max(read_bed_by_index(file = files[1], ref_cpgs,col_list=col_list)$beta,na.rm = TRUE)
   
@@ -280,6 +293,9 @@ read_bed_by_index <- function(file, ref_cpgs, col_list = NULL, zero_based=FALSE)
   data <- suppressWarnings(data.table::fread(file, select = unname(col_list$col_idx), 
                                              col.names = names(col_list$col_idx), key = c("chr", "start")))
 
+  data[, `:=`(chr, as.character(chr))]
+  data[, `:=`(start, as.integer(start))]
+  
   if (!is.null(col_list$col_idx["beta"]) && !is.null(col_list$max_value) && col_list$max_value != 1) {
     data[,beta := (beta/col_list$max_value)]
   }
@@ -415,39 +431,78 @@ read_bed_by_index <- function(file, ref_cpgs, col_list = NULL, zero_based=FALSE)
 #   }
 # }
 # 
-# read_bed_by_index3 <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE) {
-# 
-#   beds <- NULL
-#   
-#   for (i in 1:length(files)) {
-#     
-#     bed <- data.table::fread(files[[i]], select = unname(col_list$col_idx), 
-#                              col.names = names(col_list$col_idx), key = c("chr", "start"))
-#     
-#     if (!is.null(col_list$col_idx["beta"]) && !is.null(col_list$max_value) && col_list$max_value != 1) {
-#       bed[,beta := (beta/col_list$max_value)]
-#     }
-#     
-#     if (!is.null(col_list$fix_missing)) {
-#       for (cmd in col_list$fix_missing) {
-#         bed[, eval(parse(text = cmd))]
-#       }
-#     }
-#     
-#     bed <- bed[,c("chr","start","beta")]
-#     
-#     setnames(bed, "beta", get_sample_name(files[[i]]))
-#     
-#     if (is.null(beds)) {
-#       beds <- bed
-#     } else {
-#       beds <- merge(beds,bed,all=TRUE)
-#     }
-#     
-#   }
-#   
-#   return (beds[ref_cpgs,-c("chr","start")])
-# }
+read_bed_by_index3 <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE) {
+
+  meths <- NULL
+  covs <- NULL
+
+  for (i in 1:length(files)) {
+
+    browser()
+    
+    bed <- data.table::fread(files[[i]], select = unname(col_list$col_idx),
+                             col.names = names(col_list$col_idx), key = c("chr", "start"))
+    n_bed <- nrow(bed)
+    
+    #Scale beta to [0,1]
+    if (!is.null(col_list$col_idx["beta"])) {
+      if(!is.null(col_list$max_value) && col_list$max_value != 1) {
+        bed[,beta := (beta/col_list$max_value)]
+      } else {
+        sample_row_idx = sample(x = seq_len(nrow(bed)), size = 1000, replace = FALSE)
+        max_beta = max(bed[sample_row_idx, beta], na.rm = TRUE)
+        rm(sample_row_idx)
+        bed[,beta := (beta/max_beta)]
+      }
+    }
+
+    #Fill in other columns
+    if (!is.null(col_list$fix_missing)) {
+      for (cmd in col_list$fix_missing) {
+        bed[, eval(parse(text = cmd))]
+      }
+    }
+    
+    bed[, c("end","strand"):=NULL] # TODO: this probably breaks stuff
+    
+    # Bring bedgraphs to 1-based cordinate
+    if (zero_based) {
+      bed[, `:=`(start, start + 1)]
+    }
+    
+    # Merge with the ref_cpgs
+    bed <- merge(ref_cpgs,bed,all.x=TRUE)
+    
+    # If strand information needs to collapsed, bring start position of
+    # crick strand to previous base (on watson base) and estimate new M, U
+    # and beta values
+    if (strand_collapse) {
+      if (!all(c("M", "U") %in% names(bed))) stop("strand_collapse works only when M and U are available!")
+      bed[, `:=`(start, ifelse(strand == "-", yes = start - 1, no = start))]
+      bed = bed[, .(M = sum(M, na.rm = TRUE), U = sum(U, na.rm = TRUE)), .(chr, start)]
+      bed[, `:=`(cov, M + U)]
+      bed[cov == 0, cov := NA]
+      bed[, `:=`(beta, M/cov)]
+      bed[, `:=`(strand, "+")]
+    }
+
+    meth <- bed[,c("chr","start","beta")]
+    cov <- bed[,c("chr","start","cov")]
+
+    setnames(meth, "beta", get_sample_name(files[[i]]))
+    setnames(cov, "cov", get_sample_name(files[[i]]))
+
+    if (is.null(meths) && is.null(covs)) {
+      meths <- meth
+      covs <- cov
+    } else {
+      meths <- merge(meths,meth,all=TRUE)
+      covs <- merge(covs,cov,all=TRUE)
+    }
+  }
+
+  return (list(beta = meths[ref_cpgs,-c("chr","start")], cov = covs[ref_cpgs,-c("chr","start")]))
+}
 
 #' Writes values from input BED files into an in-disk \code{\link{HDF5Array}}
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
