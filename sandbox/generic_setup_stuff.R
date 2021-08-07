@@ -15,6 +15,8 @@ rm(list.of.packages,new.packages)
 assign("time.all", numeric(), envir=topenv())
 assign("time.split", numeric(), envir=topenv())
 
+ref_cpgs <- readRDS("D:/Git/sampleData/ref_cpgs.rds")
+
 source("D:/Git/scMethrix/R/accessory_funcs.R")
 source("D:/Git/scMethrix/R/scMethrix_operations.R")
 source("D:/Git/scMethrix/R/scMethrix_object.R")

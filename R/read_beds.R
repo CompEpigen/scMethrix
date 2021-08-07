@@ -4,7 +4,7 @@
 #' @param files BED files containing methylation d
 #' @param ref_cpgs BED files containing list of CpG sites. Must be zero-based genome.
 #' @param colData vector of input sample names
-#' @param stranded Default c
+#' @param stranded Whether in input data is stranded. Default FALSE
 #' @param genome_name Name of genome. Default hg19
 #' @param batch_size Max number of files to hold in memory at once
 #' @param n_threads number of threads to use. Default 1.
@@ -47,12 +47,16 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   if (verbose) message("File import starting...")
   
   if (is.null(files)) {
-    stop("Missing input files.", call. = FALSE)
+    stop("Missing input files [files]", call. = FALSE)
   }
   
   if (!all(grepl("\\.(bed|bedgraph)", files))) {
     stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
   }
+  
+  # if (is.null(ref_cpgs) && h5) {
+  #   stop("Reference CpGs must be provided for HDF5 format", call. = FALSE)
+  # }
   
   if (n_threads > length(files)/2){
     n_threads <- min(n_threads,length(files)/2) # cannot have multiple threads with a single file being input
@@ -82,26 +86,25 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     }
   }
 
-  # Check stranding of reference genome and add - strand if nec.
-  if (stranded) {
-    ref_plus <- data.table::copy(ref_cpgs)
-    ref_plus[, `:=`(strand, "+")]
-    ref_cpgs[, `:=`(start, start + 1)]
-    ref_cpgs[, `:=`(strand, "-")]
-    ref_cpgs <- data.table::rbindlist(list(ref_cpgs, ref_plus), use.names = TRUE)
-    data.table::setkeyv(ref_cpgs, cols = c("chr", "start"))
-    message(paste0("-CpGs stranded: ", format(nrow(ref_cpgs), big.mark = ",")), "(reference CpGs from both strands)")
-    rm(ref_plus) 
-    gc()
+  #Check the reference cpgs
+  if (is.null(ref_cpgs)) {
+    #Generate references from input files
+    ref_cpgs <- read_index(files = files, col_list = col_list, n_threads = n_threads,
+                           batch_size = batch_size, zero_based = zero_based)
+  } else {
+    # Check stranding of reference genome and add - strand if nec.
+    if (stranded) {
+      ref_plus <- data.table::copy(ref_cpgs)
+      ref_plus[, `:=`(strand, "+")]
+      ref_cpgs[, `:=`(start, start + 1)]
+      ref_cpgs[, `:=`(strand, "-")]
+      ref_cpgs <- data.table::rbindlist(list(ref_cpgs, ref_plus), use.names = TRUE)
+      data.table::setkeyv(ref_cpgs, cols = c("chr", "start"))
+      message(paste0("-CpGs stranded: ", format(nrow(ref_cpgs), big.mark = ",")), "(reference CpGs from both strands)")
+      rm(ref_plus) 
+      gc()
+    }
   }
-  
-  # if (is.null(ref_cpgs)) {
-  #   ref_cpgs <- read_index(files = files, col_list = col_list, n_threads = n_threads, 
-  #                          batch_size = batch_size, zero_based = zero_based)
-  # } else {
-  #   ref_cpgs <- subset_ref_cpgs(ref_cpgs, read_index(files=files,col_list = col_list,n_threads,
-  #                                                    batch_size = batch_size, zero_based = zero_based))
-  # }
   
   col_list$max_value = max(read_bed_by_index(file = files[1], ref_cpgs,col_list=col_list)$beta,na.rm = TRUE)
   
@@ -275,83 +278,86 @@ read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch
 #' Parses BED files for methylation values using previously generated index genomic coordinates
 #' @details Creates an NA-based vector populated with methlylation values from the input BED file in the
 #' respective indexed genomic coordinates
-#' @param file The BED file to parse
+#' @param files The BED file to parse
 #' @param ref_cpgs The index of all unique coordinates from the input BED files
 #' @param zero_based Whether the input data is 0 or 1 based
 #' @param col_list The column index object for the input BED files
+#' @param strand_collapse Default FALSe
+#' @param fill Fill the output matrix to match the ref_cpgs. This must be used for HDF5 input formats to ensure consistent
+#' spacing for the grid. It is optional for in-memory formats.
 #' @return data.table containing vector of all indexed methylation values for the input BED
 #' @examples
 #' \dontrun{
 #' #Do Nothing
 #' }
 #' @export
-read_bed_by_index <- function(file, ref_cpgs, col_list = NULL, zero_based=FALSE) {
-
-  . <- chr <- start <- beta <- meth1 <- meth2 <- cov <- cov1 <- cov2 <- NULL
-
-  # Format will be: chr | start | meth | cov
-  data <- suppressWarnings(data.table::fread(file, select = unname(col_list$col_idx), 
-                                             col.names = names(col_list$col_idx), key = c("chr", "start")))
-
-  data[, `:=`(chr, as.character(chr))]
-  data[, `:=`(start, as.integer(start))]
-  
-  if (!is.null(col_list$col_idx["beta"]) && !is.null(col_list$max_value) && col_list$max_value != 1) {
-    data[,beta := (beta/col_list$max_value)]
-  }
-  
-  if (!is.null(col_list$fix_missing)) {
-    for (cmd in col_list$fix_missing) {
-      data[, eval(parse(text = cmd))]
-    }
-  }
-
-  #if (zero_based) data[,start] <- data[,start]+1L
-
-  if (col_list$has_cov) {
-    
-    #Do the search
-    sample <- cbind(data[.(ref_cpgs$chr, ref_cpgs$start)][,.(beta,cov)],
-                    data[.(ref_cpgs$chr, ref_cpgs$end)][,.(beta,cov)])
-    colnames(sample) <- c("beta1", "cov1", "beta2","cov2")
-    
-    #Get the meth values from start and end CpG by weighted mean for both reads (meth*cov)
-    sample[,meth1 := meth1 * cov1]
-    sample[,meth2 := meth2 * cov2]
-    sample[,beta := rowSums(.SD, na.rm = TRUE), .SDcols = c("beta1", "beta2")]
-    sample[,cov := rowSums(.SD, na.rm = TRUE), .SDcols = c("cov1", "cov2")]
-    sample[cov == 0, cov := NA] #since above line evals NA+NA as 0
-    sample[,beta := beta / cov]
-    sample <- sample[,.(beta,cov)]
-    
-    s <- nrow(ref_cpgs)-sum(is.na(sample[,(beta)]))
-  } else {
-    #Get the methylation value as the mean of start and end site
-    sample <- rowMeans(cbind(
-      data[.(ref_cpgs$chr, ref_cpgs$start)][,(beta)], 
-      data[.(ref_cpgs$chr, ref_cpgs$end)][,(beta)]), na.rm=TRUE)
-    s <- nrow(ref_cpgs)-sum(is.na(sample))
-  }
-  
-  d <- nrow(data)
-  
-  if (s < 0.9*d) 
-  {warning(paste0("Only ",round(s/d*100,1) ,"% of CpG sites in '",basename(file),"' are present in ref_cpgs"))}
-  
-  # Save the sample name data
-  if (col_list$has_cov) {
-    sample <- data.table(sapply(sample, as.integer))
-    sample <- list(beta = sample[,.(beta)], cov = sample[,.(cov)])
-    names(sample$beta) <- get_sample_name(file)
-    names(sample$cov) <- get_sample_name(file)
-  } else {
-    sample <- data.table(as.integer(sample))
-    names(sample) <- get_sample_name(file)
-    sample <- list(beta = sample)
-  }
-
-  return(sample)
-}
+# read_bed_by_index <- function(file, ref_cpgs, col_list = NULL, zero_based=FALSE) {
+# 
+#   . <- chr <- start <- beta <- meth1 <- meth2 <- cov <- cov1 <- cov2 <- NULL
+# 
+#   # Format will be: chr | start | meth | cov
+#   data <- suppressWarnings(data.table::fread(file, select = unname(col_list$col_idx), 
+#                                              col.names = names(col_list$col_idx), key = c("chr", "start")))
+# 
+#   data[, `:=`(chr, as.character(chr))]
+#   data[, `:=`(start, as.integer(start))]
+#   
+#   if (!is.null(col_list$col_idx["beta"]) && !is.null(col_list$max_value) && col_list$max_value != 1) {
+#     data[,beta := (beta/col_list$max_value)]
+#   }
+#   
+#   if (!is.null(col_list$fix_missing)) {
+#     for (cmd in col_list$fix_missing) {
+#       data[, eval(parse(text = cmd))]
+#     }
+#   }
+# 
+#   #if (zero_based) data[,start] <- data[,start]+1L
+# 
+#   if (col_list$has_cov) {
+#     
+#     #Do the search
+#     sample <- cbind(data[.(ref_cpgs$chr, ref_cpgs$start)][,.(beta,cov)],
+#                     data[.(ref_cpgs$chr, ref_cpgs$end)][,.(beta,cov)])
+#     colnames(sample) <- c("beta1", "cov1", "beta2","cov2")
+#     
+#     #Get the meth values from start and end CpG by weighted mean for both reads (meth*cov)
+#     sample[,meth1 := meth1 * cov1]
+#     sample[,meth2 := meth2 * cov2]
+#     sample[,beta := rowSums(.SD, na.rm = TRUE), .SDcols = c("beta1", "beta2")]
+#     sample[,cov := rowSums(.SD, na.rm = TRUE), .SDcols = c("cov1", "cov2")]
+#     sample[cov == 0, cov := NA] #since above line evals NA+NA as 0
+#     sample[,beta := beta / cov]
+#     sample <- sample[,.(beta,cov)]
+#     
+#     s <- nrow(ref_cpgs)-sum(is.na(sample[,(beta)]))
+#   } else {
+#     #Get the methylation value as the mean of start and end site
+#     sample <- rowMeans(cbind(
+#       data[.(ref_cpgs$chr, ref_cpgs$start)][,(beta)], 
+#       data[.(ref_cpgs$chr, ref_cpgs$end)][,(beta)]), na.rm=TRUE)
+#     s <- nrow(ref_cpgs)-sum(is.na(sample))
+#   }
+#   
+#   d <- nrow(data)
+#   
+#   if (s < 0.9*d) 
+#   {warning(paste0("Only ",round(s/d*100,1) ,"% of CpG sites in '",basename(file),"' are present in ref_cpgs"))}
+#   
+#   # Save the sample name data
+#   if (col_list$has_cov) {
+#     sample <- data.table(sapply(sample, as.integer))
+#     sample <- list(beta = sample[,.(beta)], cov = sample[,.(cov)])
+#     names(sample$beta) <- get_sample_name(file)
+#     names(sample$cov) <- get_sample_name(file)
+#   } else {
+#     sample <- data.table(as.integer(sample))
+#     names(sample) <- get_sample_name(file)
+#     sample <- list(beta = sample)
+#   }
+# 
+#   return(sample)
+# }
 
 # read_bed_by_index2 <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE) {
 #   
@@ -431,15 +437,12 @@ read_bed_by_index <- function(file, ref_cpgs, col_list = NULL, zero_based=FALSE)
 #   }
 # }
 # 
-read_bed_by_index3 <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE) {
+read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE, strand_collapse = FALSE, fill = TRUE) {
 
-  meths <- NULL
-  covs <- NULL
+  meths <- covs <- M <- U <- chr <- NULL
 
   for (i in 1:length(files)) {
 
-    browser()
-    
     bed <- data.table::fread(files[[i]], select = unname(col_list$col_idx),
                              col.names = names(col_list$col_idx), key = c("chr", "start"))
     n_bed <- nrow(bed)
@@ -449,7 +452,7 @@ read_bed_by_index3 <- function(files, ref_cpgs, col_list = NULL, zero_based=FALS
       if(!is.null(col_list$max_value) && col_list$max_value != 1) {
         bed[,beta := (beta/col_list$max_value)]
       } else {
-        sample_row_idx = sample(x = seq_len(nrow(bed)), size = 1000, replace = FALSE)
+        sample_row_idx = sample(x = seq_len(nrow(bed)), size = min(1000,nrow(bed)), replace = FALSE)
         max_beta = max(bed[sample_row_idx, beta], na.rm = TRUE)
         rm(sample_row_idx)
         bed[,beta := (beta/max_beta)]
@@ -471,7 +474,7 @@ read_bed_by_index3 <- function(files, ref_cpgs, col_list = NULL, zero_based=FALS
     }
     
     # Merge with the ref_cpgs
-    bed <- merge(ref_cpgs,bed,all.x=TRUE)
+    bed <- merge(ref_cpgs,bed)
     
     # If strand information needs to collapsed, bring start position of
     # crick strand to previous base (on watson base) and estimate new M, U
@@ -481,7 +484,7 @@ read_bed_by_index3 <- function(files, ref_cpgs, col_list = NULL, zero_based=FALS
       bed[, `:=`(start, ifelse(strand == "-", yes = start - 1, no = start))]
       bed = bed[, .(M = sum(M, na.rm = TRUE), U = sum(U, na.rm = TRUE)), .(chr, start)]
       bed[, `:=`(cov, M + U)]
-      bed[cov == 0, cov := NA]
+      #bed[cov == 0, cov := NA]
       bed[, `:=`(beta, M/cov)]
       bed[, `:=`(strand, "+")]
     }
@@ -500,8 +503,13 @@ read_bed_by_index3 <- function(files, ref_cpgs, col_list = NULL, zero_based=FALS
       covs <- merge(covs,cov,all=TRUE)
     }
   }
-
-  return (list(beta = meths[ref_cpgs,-c("chr","start")], cov = covs[ref_cpgs,-c("chr","start")]))
+  
+  if (fill) {
+    meths <- merge(ref_cpgs,meths,all.x=TRUE)[,-c("end","strand")]
+    covs <- merge(ref_cpgs,covs,all.x=TRUE)[,-c("end","strand")]
+  }
+  
+  return (list(beta = meths[,-c("chr","start")], cov = covs[,-c("chr","start")]))
 }
 
 #' Writes values from input BED files into an in-disk \code{\link{HDF5Array}}
@@ -514,13 +522,14 @@ read_bed_by_index3 <- function(files, ref_cpgs, col_list = NULL, zero_based=FALS
 #' @param zero_based Boolean flag for whether the input data is zero-based or not
 #' @param col_list The column index object for the input BED files
 #' @param verbose flag to output messages or not.
+#' @param n_chunks The number of chunks to break the input data into
 #' @return List of \code{\link{HDF5Array}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
 #' @import DelayedArray HDF5Array parallel doParallel
 #' @examples
 #' \dontrun{
 #' #Do Nothing
 #' }
-read_hdf5_data <- function(files, ref_cpgs, col_list, n_threads = 0, h5_temp = NULL, zero_based = FALSE, 
+read_hdf5_data <- function(files, ref_cpgs, col_list, n_chunks = 1, n_threads = 0, h5_temp = NULL, zero_based = FALSE, 
                            verbose = TRUE) {
   
   if (verbose) message("Starting HDF5 object",start_time()) 
@@ -532,7 +541,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, n_threads = 0, h5_temp = N
   colData <- as.vector(unlist(lapply(files,get_sample_name)))
   
   M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
-                                           dimnames = list(NULL,colData), type = "integer",
+                                           dimnames = list(NULL,colData), type = "double",
                                            filepath = tempfile(pattern="M_sink_",tmpdir=h5_temp),
                                            name = "M", level = 6)
   
@@ -541,21 +550,20 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, n_threads = 0, h5_temp = N
                                    dimnames = list(NULL, colData), type = "integer",
                                    filepath = tempfile(pattern = "cov_sink_", tmpdir = h5_temp),
                                    name = "C", level = 6)
-  
+ 
   # Determine the grids for the sinks
   if (n_threads == 0) {
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
                                            spacings = c(dimension, 1L)) 
   } else {
-    grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
-                                           spacings = c(dimension, n_threads)) 
+    files <- split_vector(files,n_chunks,by="chunks")
+    grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(unlist(files))),
+                                           spacings = c(dimension, n_threads*length(files))) 
     cl <- parallel::makeCluster(n_threads)  
     doParallel::registerDoParallel(cl)  
     
     parallel::clusterEvalQ(cl, c(library(data.table)))
     parallel::clusterExport(cl,list('read_bed_by_index','get_sample_name'))
-    
-    files <- split_vector(files,n_threads,by="size")
   }
   
   # Read data to the sinks
@@ -564,7 +572,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, n_threads = 0, h5_temp = N
     if (n_threads == 0) {
       if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
       
-      bed <- read_bed_by_index(files[i], ref_cpgs, col_list = col_list, zero_based = zero_based)
+      bed <- read_bed_by_index(files = files[i], ref_cpgs = ref_cpgs, col_list = col_list, zero_based = zero_based)
       
       DelayedArray::write_block(block = as.matrix(bed[["beta"]]), viewport = grid[[i]], sink = M_sink)
       
