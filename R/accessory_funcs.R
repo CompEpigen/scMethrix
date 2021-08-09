@@ -368,9 +368,12 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
                         "U := cov-M")
       } else if (has(U_idx)) {
         if (verbose) message("Estimating cov and M from U and beta")
-        fix_missing = c(fix_missing, "cov := as.integer(U*(1-beta))", # Has: beta,M,U   No: cov
+        fix_missing = c(fix_missing, "cov := as.integer(U*(1-beta))", # Has: beta,U   No: M,cov
                         "M := cov-U")
       } else {
+        if (verbose) message("Only beta info found")
+        fix_missing = c(fix_missing, "cov := 2",
+                        "M := beta*cov","U := (1-beta)*cov") # Has: beta   No: cov,M,U
         has_cov = FALSE
       }
     }

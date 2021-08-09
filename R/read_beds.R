@@ -505,11 +505,15 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
   }
   
   if (fill) {
-    meths <- merge(ref_cpgs,meths,all.x=TRUE)[,-c("end","strand")]
-    covs <- merge(ref_cpgs,covs,all.x=TRUE)[,-c("end","strand")]
+    suppressWarnings(meths <- merge(ref_cpgs,meths,all.x=TRUE)[,-c("end","strand")])
+    if (col_list$has_cov) suppressWarnings(covs <- merge(ref_cpgs,covs,all.x=TRUE)[,-c("end","strand")])
   }
   
-  return (list(beta = meths[,-c("chr","start")], cov = covs[,-c("chr","start")]))
+  if (col_list$has_cov) {
+    return (list(beta = meths[,-c("chr","start")], cov = covs[,-c("chr","start")]))
+  } else {
+    return (list(beta = meths[,-c("chr","start")]))
+  }
 }
 
 #' Writes values from input BED files into an in-disk \code{\link{HDF5Array}}
