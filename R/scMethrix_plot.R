@@ -413,7 +413,7 @@ plot_imap <- function(scm) {
 #' @export
 plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE) {
   
-  X <- Y <- color_me <- shape_me <- row_names <-  NULL
+  X <- Y <- color_me <- shape_me <- row_names <- ..col_anno <- ..shape_anno <- NULL
   
   dim_red <- reducedDim(scm,type=dim_red)
   

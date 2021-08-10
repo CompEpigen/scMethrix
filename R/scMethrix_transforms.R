@@ -74,6 +74,7 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
 #' Default value is `within`. For detailed description, see the \code{findOverlaps} function of the 
 #' \code{\link{IRanges}} package.
 #' @param h5_dir directory to store an H5 based object
+#' @param replace boolean; flag for whether to delete the contents of h5_dir before saving 
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')

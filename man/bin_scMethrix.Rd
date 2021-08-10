@@ -42,6 +42,8 @@ Default value is \code{within}. For detailed description, see the \code{findOver
 \item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1}
 
 \item{n_threads}{integer; Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. Default = 1}
+
+\item{replace}{boolean; flag for whether to delete the contents of h5_dir before saving}
 }
 \value{
 An \code{\link{scMethrix}} object

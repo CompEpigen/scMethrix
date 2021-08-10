@@ -15,7 +15,7 @@ rm(list.of.packages,new.packages)
 assign("time.all", numeric(), envir=topenv())
 assign("time.split", numeric(), envir=topenv())
 
-ref_cpgs <- readRDS("D:/Git/sampleData/ref_cpgs.rds")
+if (is.null(ref_cpgs)) ref_cpgs <- readRDS("D:/Git/sampleData/ref_cpgs.rds")
 
 source("D:/Git/scMethrix/R/accessory_funcs.R")
 source("D:/Git/scMethrix/R/scMethrix_operations.R")
@@ -51,16 +51,16 @@ files <- list.files (getwd(),full.names = TRUE)
 
 files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
 
-files <- files[1:500]
+files <- files[1:20]
 
 col_list <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
 #With Coverage
 tic()
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(tempdir(),"/sse"),ref_cpgs = ref_cpgs, replace=TRUE,
-                        chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6, colData = colData, n_threads=8)
+                        chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6, colData = colData, n_threads=0, batch_size = 20)
 toc()
-scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 0, #colData = pheno,
+scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 0, colData = colData,
                          chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
 #Without coverage
