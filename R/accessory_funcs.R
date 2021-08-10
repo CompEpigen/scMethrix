@@ -55,6 +55,19 @@ binarize = function(x,threshold = NULL, rep_na = NA, verbose = FALSE) {
   return(x)
 }
 
+#' A faster version of cbind when trying to combine lists of data.tables
+#' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
+#'  If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}
+#' @param ... A list of data.tables with identical # of rows
+#' @return data.table; the cbinded output 
+#' @export
+colbind = function(...) {
+  setDT(
+    unlist(..., recursive = FALSE),
+    check.names = TRUE
+  )[]
+}
+
 #' Splits a vector into list of vectors by \code{chunk} or \code{size}
 #' @details Splits a vector into a list of \code{num} vectors or vectors of \code{n} size. If \code{len(vec)%%num != 0},
 #' then the last vector will have a length of less than size \code{num}
