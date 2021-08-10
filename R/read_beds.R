@@ -6,7 +6,7 @@
 #' @param colData vector of input sample names
 #' @param stranded Whether in input data is stranded. Default FALSE
 #' @param genome_name Name of genome. Default hg19
-#' @param batch_size Max number of files to hold in memory at once
+#' @param batch_size integer; Max number of files to hold in memory at once. Default 20
 #' @param n_threads number of threads to use. Default 1.
 #' Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.
 #' @param h5 Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}
@@ -38,7 +38,7 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = 200, n_threads = 0, 
+read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = 20, n_threads = 0, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE,
                       zero_based = FALSE, reads = NULL, replace = FALSE, pipeline = NULL, stranded = FALSE,
                       chr_idx = NULL, start_idx = NULL, end_idx = NULL, beta_idx = NULL,
@@ -106,7 +106,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     }
   }
   
-  col_list$max_value = max(read_bed_by_index(file = files[1], ref_cpgs,col_list=col_list)$beta,na.rm = TRUE)
+  col_list$max_value = max(read_bed_by_index(files = files[1], ref_cpgs,col_list=col_list)$beta,na.rm = TRUE)
   
   gc()
   
@@ -119,7 +119,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
     
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     if (is.null(reads)) reads <- read_hdf5_data(files = files, ref_cpgs = ref_cpgs, col_list = col_list, 
-                                                n_threads = n_threads, h5_temp = h5_temp, 
+                                                n_threads = n_threads, h5_temp = h5_temp, batch_size = batch_size,
                                                 zero_based = zero_based, verbose = verbose)
     message("Building scMethrix object")
 
@@ -439,7 +439,7 @@ read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch
 # 
 read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE, strand_collapse = FALSE, fill = TRUE) {
 
-  meths <- covs <- M <- U <- chr <- NULL
+  . <- meths <- covs <- M <- U <- chr <- NULL
 
   for (i in 1:length(files)) {
 
@@ -526,14 +526,14 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
 #' @param zero_based Boolean flag for whether the input data is zero-based or not
 #' @param col_list The column index object for the input BED files
 #' @param verbose flag to output messages or not.
-#' @param n_chunks The number of chunks to break the input data into
+#' @param batch_size The number of file to hold in memory at once
 #' @return List of \code{\link{HDF5Array}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
 #' @import DelayedArray HDF5Array parallel doParallel
 #' @examples
 #' \dontrun{
 #' #Do Nothing
 #' }
-read_hdf5_data <- function(files, ref_cpgs, col_list, n_chunks = 1, n_threads = 0, h5_temp = NULL, zero_based = FALSE, 
+read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, h5_temp = NULL, zero_based = FALSE, 
                            verbose = TRUE) {
   
   if (verbose) message("Starting HDF5 object",start_time()) 
@@ -557,12 +557,13 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, n_chunks = 1, n_threads = 
  
   # Determine the grids for the sinks
   if (n_threads == 0) {
-    grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(files)),
-                                           spacings = c(dimension, 1L)) 
-  } else {
-    files <- split_vector(files,n_chunks,by="chunks")
+    files <- split_vector(files,batch_size,by="size")
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(unlist(files))),
-                                           spacings = c(dimension, n_threads*length(files))) 
+                                           spacings = c(dimension, length(files[[1]]))) 
+  } else {
+    files <- split_vector(files,ceiling(batch_size/n_threads),by="size")
+    grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(unlist(files))),
+                                           spacings = c(dimension, length(files[[1]]))) 
     cl <- parallel::makeCluster(n_threads)  
     doParallel::registerDoParallel(cl)  
     
@@ -573,18 +574,20 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, n_chunks = 1, n_threads = 
   # Read data to the sinks
   for (i in 1:length(files)) {
     
+    if (verbose) message("   Parsing: Chunk ", i,appendLF=FALSE)
+    
     if (n_threads == 0) {
-      if (verbose) message("   Parsing: ", get_sample_name(files[i]),appendLF=FALSE)
       
-      bed <- read_bed_by_index(files = files[i], ref_cpgs = ref_cpgs, col_list = col_list, zero_based = zero_based)
+      bed <- read_bed_by_index(files = files[[i]], ref_cpgs = ref_cpgs, col_list = col_list, zero_based = zero_based)
       
       DelayedArray::write_block(block = as.matrix(bed[["beta"]]), viewport = grid[[i]], sink = M_sink)
       
       if (col_list$has_cov) DelayedArray::write_block(block = as.matrix(bed[["cov"]]),
                                                       viewport = grid[[i]], sink = cov_sink)
     } else {
-      if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE)
-      bed <- parallel::parLapply(cl,unlist(files[i]),fun=read_bed_by_index, ref_cpgs = ref_cpgs,
+
+      bed <- parallel::parLapply(cl,split_vector(files[[i]],n_threads,by="chunks"),
+                                 fun=read_bed_by_index, ref_cpgs = ref_cpgs,
                                  col_list = col_list, zero_based = zero_based)
       
       DelayedArray::write_block(block = as.matrix(do.call(cbind, lapply(bed, `[[`, "beta"))), 
@@ -771,7 +774,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, n_chunks = 1, n_threads = 
 #' \dontrun{
 #' #Do Nothing
 #' }
-read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 200, n_threads = 0, zero_based = FALSE, 
+read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, zero_based = FALSE, 
                           verbose = TRUE) {
 
   if (verbose) message("Reading BED data...",start_time()) 
@@ -796,6 +799,8 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 200, n_threads
   } else {
     # Single thread functionality
     # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
+    
+    files <- split_vector(files,batch_size,by="size")
     reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based, col_list = col_list)
   }
 

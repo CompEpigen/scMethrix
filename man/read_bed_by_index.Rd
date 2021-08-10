@@ -4,16 +4,28 @@
 \alias{read_bed_by_index}
 \title{Parses BED files for methylation values using previously generated index genomic coordinates}
 \usage{
-read_bed_by_index(file, ref_cpgs, col_list = NULL, zero_based = FALSE)
+read_bed_by_index(
+  files,
+  ref_cpgs,
+  col_list = NULL,
+  zero_based = FALSE,
+  strand_collapse = FALSE,
+  fill = TRUE
+)
 }
 \arguments{
-\item{file}{The BED file to parse}
+\item{files}{The BED file to parse}
 
 \item{ref_cpgs}{The index of all unique coordinates from the input BED files}
 
 \item{col_list}{The column index object for the input BED files}
 
 \item{zero_based}{Whether the input data is 0 or 1 based}
+
+\item{strand_collapse}{Default FALSe}
+
+\item{fill}{Fill the output matrix to match the ref_cpgs. This must be used for HDF5 input formats to ensure consistent
+spacing for the grid. It is optional for in-memory formats.}
 }
 \value{
 data.table containing vector of all indexed methylation values for the input BED

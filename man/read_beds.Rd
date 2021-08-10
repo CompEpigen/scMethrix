@@ -64,7 +64,7 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 \item{pipeline}{Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
 If not known use idx arguments for manual column assignments.}
 
-\item{stranded}{Default c}
+\item{stranded}{Whether in input data is stranded. Default FALSE}
 
 \item{chr_idx}{integer; column index for chromosome in bedgraph files}
 
