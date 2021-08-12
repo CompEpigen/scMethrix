@@ -3,11 +3,41 @@ test_that("bin_scMethrix", {
   expect_error(bin_scMethrix("not scMethrix"),"A valid scMethrix object needs to be supplied")
   expect_error(bin_scMethrix(scm.h5),"Output directory must be specified")
 
-  #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-  invisible(lapply(list(scm.mem), function(scm) {
-    bin <- bin_scMethrix(scm, h5_dir = paste0(tempdir(),"/bin"), n_threads = 2)
+  path <- paste0(h5_dir,"bin")
+  
+ # invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    invisible(lapply(list(scm.mem), function(scm) {
+    
+  #invisible(lapply(list(scm.mem), function(scm) {
+    # Check default conditions and threading
+    bin <- bin_scMethrix(scm, h5_dir = paste0(h5_dir,"/bin1"), n_threads = 2)
     expect_equal(dim(bin),c(258,4))
-    rm(bin)
+    
+    #Check the score assay (should be mean)
+    scm <- transform_assay(scm,assay="score",new_assay="bin",trans=binarize)
+    scm <- transform_assay(scm,assay="score",new_assay="bin2",trans=binarize)
+    bin <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin1"))
+    sub <- subset_scMethrix(scm,contigs="chr1")
+    vals <- DelayedMatrixStats::colMeans2(score(sub),na.rm=T)
+    expect_equal(as.numeric(score(bin)[1,]),as.numeric(vals))
+    
+    #Check the counts assay (should be sum)
+    vals <- DelayedMatrixStats::colSums2(counts(sub),na.rm=T)
+    expect_equal(as.numeric(counts(bin)[1,]),as.numeric(vals))
+    
+    #Check a custom assay  (should be mean)
+    vals <- DelayedMatrixStats::colMeans2(get_matrix(sub,assay="bin"),na.rm=T)
+    expect_equal(as.numeric(get_matrix(bin,assay="bin")[1,]),as.numeric(vals))
+    
+    #Check the custom transform function  (should be mean, but specified as sum)
+    bin2 <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg",trans = c(bin2 = function(x) sum(x,na.rm=TRUE)), h5_dir = paste0(h5_dir,"/bin2"))
+    expect_equal(score(bin),score(bin2))
+    expect_equal(counts(bin),counts(bin2))
+    expect_equal(get_matrix(bin,assay="bin"),get_matrix(bin2,assay="bin"))
+    
+    vals <- DelayedMatrixStats::colSums2(get_matrix(sub,assay="bin2"),na.rm=T)
+    expect_equal(as.numeric(get_matrix(bin2,assay="bin2")[1,]),as.numeric(vals))
+
   }))
 })
 

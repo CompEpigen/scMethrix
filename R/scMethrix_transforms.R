@@ -89,6 +89,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
   if (is.null(trans)) {
     trans <- c(counts = function(x) sum(x,na.rm=TRUE))
+  } else if (is.null(trans[["counts"]])) {
+    trans <- c(trans, c(counts = function(x) sum(x,na.rm=TRUE)))
   }
   
   if (!is(scm, "scMethrix")) {
