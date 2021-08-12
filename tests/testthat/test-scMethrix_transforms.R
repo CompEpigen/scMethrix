@@ -17,6 +17,8 @@ test_that("bin_scMethrix", {
     scm <- transform_assay(scm,assay="score",new_assay="bin",trans=binarize)
     scm <- transform_assay(scm,assay="score",new_assay="bin2",trans=binarize)
     bin <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin1"))
+    expect_equal(dim(bin),c(length(rowRanges(bin)),length(samples(bin))))
+    
     sub <- subset_scMethrix(scm,contigs="chr1")
     vals <- DelayedMatrixStats::colMeans2(score(sub),na.rm=T)
     expect_equal(as.numeric(score(bin)[1,]),as.numeric(vals))
@@ -30,7 +32,8 @@ test_that("bin_scMethrix", {
     expect_equal(as.numeric(get_matrix(bin,assay="bin")[1,]),as.numeric(vals))
     
     #Check the custom transform function  (should be mean, but specified as sum)
-    bin2 <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg",trans = c(bin2 = function(x) sum(x,na.rm=TRUE)), h5_dir = paste0(h5_dir,"/bin2"))
+    bin2 <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg",trans = c(bin2 = function(x) sum(x,na.rm=TRUE)), 
+                          h5_dir = paste0(h5_dir,"/bin2"))
     expect_equal(score(bin),score(bin2))
     expect_equal(counts(bin),counts(bin2))
     expect_equal(get_matrix(bin,assay="bin"),get_matrix(bin2,assay="bin"))

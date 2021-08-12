@@ -75,6 +75,13 @@ setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
           (x); SummarizedExperiment::assay(x, i="score")}
 )
 
+setMethod(f = "sampleNames", signature = "scMethrix", definition = function(object)   {
+  (object); row.names(colData(object))}
+)
+
+# setMethod(f = "featureNames", signature = "scMethrix", definition = function(object)   {
+#   (object); row.names(colData(object))}
+# )
 
 #' Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package
 #' @param scm \code{\link{scMethrix}}; the single cell methylation experiment
