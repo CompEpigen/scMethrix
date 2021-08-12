@@ -40,7 +40,7 @@ test_that("plot_sparsity", {
 })
 
 test_that("plot_stats", {
-  expect_error(plot_pca("not scMethrix"),"A valid scMethrix object needs to be supplied")
+ # expect_error(plot_stats("not scMethrix"),"A valid scMethrix object needs to be supplied")
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     plot = plot_stats(get_stats(scm))
     expect_true("ggplot" %in% class(plot))
@@ -48,30 +48,27 @@ test_that("plot_stats", {
     expect_equal(sort(unique(plot$data$Chromosome)),sort(levels(seqnames(scm))))
   }))
 })
-# 
-# test_that("plot_pca", {
-#   expect_error(plot_pca("not scMethrix"),"A valid scMethrix object needs to be supplied")
-#   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-#     plot <- plot_pca(pca_scMethrix(scm))
-#     expect_true("ggplot" %in% class(plot))
-#     expect_equal(plot$data$row_names,colnames(scm))
-#   }))
-# })
-# 
-# test_that("plot_tsne", {
-#   expect_error(plot_tsne("not scMethrix"),"A valid scMethrix object needs to be supplied")
-#   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-#     plot <- plot_tsne(tsne_scMethrix(scm))
-#     expect_true("ggplot" %in% class(plot))
-#     expect_equal(plot$data$row_names,colnames(scm))
-#   }))
-# })
-# 
-# test_that("plot_umap", {
-#   expect_error(plot_umap("not scMethrix"),"A valid scMethrix object needs to be supplied")
-#   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-#     plot <- plot_umap(umap_scMethrix(scm))
-#     expect_true("ggplot" %in% class(plot))
-#     expect_equal(plot$data$row_names,colnames(scm))
-#   }))
-# })
+
+test_that("plot_dim_red", {
+  
+  #PCA
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    plot <- plot_dim_red(dim_red_scMethrix(scm,type = "PCA"),dim_red="PCA")
+    expect_true("ggplot" %in% class(plot))
+    expect_equal(plot$data$row_names,colnames(scm))
+  }))
+  
+  #tSNE
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    plot <- plot_dim_red(dim_red_scMethrix(scm,type = "tSNE"),dim_red="tSNE")
+    expect_true("ggplot" %in% class(plot))
+    expect_equal(plot$data$row_names,colnames(scm))
+  }))
+  
+  #UMAP
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    plot <- plot_dim_red(dim_red_scMethrix(scm,type = "UMAP"),dim_red="UMAP")
+    expect_true("ggplot" %in% class(plot))
+    expect_equal(plot$data$row_names,colnames(scm))
+  }))
+})

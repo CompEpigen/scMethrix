@@ -477,104 +477,56 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
 }
 
 #--------------------------------------------------------------------------------------------------------------------------
-#' Plot PCA results
-#' @inheritParams generic_scMethrix_function
-#' @inheritParams plot_dim_red 
-#' @param plot_vars Plot the variance explanation too
-#' @param show_labels Show cell names on each data point. Default FLASE
-#' @return ggplot2 object
-#' @seealso [pca_scMethrix()] for dimensionality reduction
-#' @importFrom graphics par mtext lines axis legend title barplot points
-#' @examples
-#' data('scMethrix_data')
-#' scmpc = dim_red_scMethrix(scMethrix_data,type="PCA")
-#' plot_pca(scmpc)
-#' @export
-plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE, plot_vars = FALSE) {
-  
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
-  }
-  
-  if (!("PCA" %in% reducedDimNames(scm))){
-    stop("PCA results not present in scMethrix object. Run pca_scMethrix() first.")
-  }
-  
-  dim_red = reducedDim(scm,type="PCA")[,1:2]
-  pc_vars = scm@metadata$PCA_vars
-  
-  pc_x = colnames(dim_red)[1]
-  pc_y = colnames(dim_red)[2]
-  
-  axis_labels = list(
-    X = paste0(pc_x, " [", pc_vars[pc_x]*100, " %]"),
-    Y = paste0(pc_y, " [", pc_vars[pc_y]*100, " %]")
-  )
-  
-  pca_gg <- plot_dim_red(scm, dim_red = "PCA", col_anno = col_anno, shape_anno = shape_anno, 
-               show_dp_labels = show_labels, axis_labels = axis_labels)
-  
-  if (plot_vars) {
-    par(mar = c(3, 4, 1, 4))
-    b = barplot(height = pc_vars, names.arg = NA, col = "#2c3e50", ylim = c(0, 1), las = 2, axes = FALSE, ylab = "Variance Explained")
-    points(x = b, y = cumsum(pc_vars), type = 'l', lty = 2, lwd = 1.2, xpd = TRUE, col = "#c0392b")
-    points(x = b, y = cumsum(pc_vars), type = 'p', pch = 19, xpd = TRUE, col = "#c0392b")
-    mtext(text = paste0("PC", 1:length(pc_vars)), side = 1, at = b, las = 2, line = 0.5, cex = 0.8)
-    axis(side = 2, at = seq(0, 1, 0.1), line = 0, las = 2, cex.axis = 0.8)
-    axis(side = 4, at = seq(0, 1, 0.1), line = 0, las = 2, cex.axis = 0.8)
-    legend(x = "topleft", legend = "Cumulative", col = "#c0392b", pch = 19, lwd = 1, cex = 0.75, bty = "n")
-  }
-  
-  return(pca_gg)
-}
-
-#' Plot tSNE results
-#' @inheritParams plot_pca
-#' @seealso [tsne_scMethrix()] for dimensionality reduction
-#' @return ggplot2 object
-#' @examples
-#' data('scMethrix_data')
-#' scmpc = dim_red_scMethrix(scMethrix_data,type="tSNE")
-#' plot_tsne(scmpc)
-#' @export
-plot_tsne <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE) {
-  
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
-  }
-  
-  if (!("tSNE" %in% reducedDimNames(scm))){
-    stop("t-SNE results not present in scMethrix object. Run tsne_scMethrix() first.")
-  }
-  
-  plot_dim_red(scm, dim_red = "tSNE", col_anno = col_anno, shape_anno = shape_anno, 
-               show_dp_labels = show_labels, axis_labels = NULL)
-  
-}
-
-#' Plot UMAP results
-#' @inheritParams plot_pca
-#' @return ggplot2 object
-#' @seealso [umap_scMethrix()] for dimensionality reduction
-#' @examples
-#' data('scMethrix_data')
-#' scmpc = dim_red_scMethrix(scMethrix_data,type="UMAP")
-#' plot_umap(scmpc)
-#' @export
-plot_umap <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE) {
-  
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
-  }
-  
-  if (!("UMAP" %in% reducedDimNames(scm))){
-    stop("UMAP results not present in scMethrix object. Run umap_scMethrix() first.")
-  }
-
-  plot_dim_red(scm, dim_red = "UMAP", col_anno = col_anno, shape_anno = shape_anno, 
-               show_dp_labels = show_labels, axis_labels = NULL)
-  
-}
+# Plot PCA results
+# @inheritParams generic_scMethrix_function
+# @inheritParams plot_dim_red 
+# @param plot_vars Plot the variance explanation too
+# @param show_labels Show cell names on each data point. Default FLASE
+# @return ggplot2 object
+# @seealso [pca_scMethrix()] for dimensionality reduction
+# @importFrom graphics par mtext lines axis legend title barplot points
+# @examples
+# data('scMethrix_data')
+# scmpc = dim_red_scMethrix(scMethrix_data,type="PCA")
+# plot_pca(scmpc)
+# @export
+# plot_pca <- function(scm = NULL, col_anno = NULL, shape_anno = NULL, show_labels = FALSE, plot_vars = FALSE) {
+#   
+#   if (!is(scm, "scMethrix")){
+#     stop("A valid scMethrix object needs to be supplied.")
+#   }
+#   
+#   if (!("PCA" %in% reducedDimNames(scm))){
+#     stop("PCA results not present in scMethrix object. Run pca_scMethrix() first.")
+#   }
+#   
+#   dim_red = reducedDim(scm,type="PCA")[,1:2]
+#   pc_vars = scm@metadata$PCA_vars
+#   
+#   pc_x = colnames(dim_red)[1]
+#   pc_y = colnames(dim_red)[2]
+#   
+#   axis_labels = list(
+#     X = paste0(pc_x, " [", pc_vars[pc_x]*100, " %]"),
+#     Y = paste0(pc_y, " [", pc_vars[pc_y]*100, " %]")
+#   )
+#   
+#   pca_gg <- plot_dim_red(scm, dim_red = "PCA", col_anno = col_anno, shape_anno = shape_anno, 
+#                show_dp_labels = show_labels, axis_labels = axis_labels)
+#   
+#   if (plot_vars) {
+#     par(mar = c(3, 4, 1, 4))
+#     b = barplot(height = pc_vars, names.arg = NA, col = "#2c3e50", ylim = c(0, 1), las = 2, axes = FALSE, ylab = "Variance Explained")
+#     points(x = b, y = cumsum(pc_vars), type = 'l', lty = 2, lwd = 1.2, xpd = TRUE, col = "#c0392b")
+#     points(x = b, y = cumsum(pc_vars), type = 'p', pch = 19, xpd = TRUE, col = "#c0392b")
+#     mtext(text = paste0("PC", 1:length(pc_vars)), side = 1, at = b, las = 2, line = 0.5, cex = 0.8)
+#     axis(side = 2, at = seq(0, 1, 0.1), line = 0, las = 2, cex.axis = 0.8)
+#     axis(side = 4, at = seq(0, 1, 0.1), line = 0, las = 2, cex.axis = 0.8)
+#     legend(x = "topleft", legend = "Cumulative", col = "#c0392b", pch = 19, lwd = 1, cex = 0.75, bty = "n")
+#   }
+#   
+#   return(pca_gg)
+# }
 
 #------------------------------------------------------------------------------------------------------------
 #' Evaluates imputations methods by NRMSE or AUC
