@@ -602,7 +602,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @param regions Granges; the regions to impute. Default is by chromosome.
 #' @param overlap_type string; 
 #' @param op closure; the imputation operation
-#' @param type string/closure; the imputation to perform 'kNN','iPCA','RF'. Otherwise, a closure can be specified that returns the imputed matrix
+#' @param type string/closure; the imputation to perform "kNN","iPCA",or "RF". Otherwise, a closure can be specified that returns the imputed matrix. Default = "kNN"
 #' @param n_pc the range of principal components to check when using iPCA. Caution: this can be very time-intensive
 #' @inheritParams generic_scMethrix_function
 #' @inheritParams impute::impute.knn
@@ -618,7 +618,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @references Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
 #' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
 impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regions = NULL, op = NULL, n_chunks = 1, 
-                               n_threads = 1, overlap_type="within", type=c("kNN","iPCA","RF"), verbose = TRUE, k=10, n_pc=2,...) {
+                               n_threads = 1, overlap_type="within", type="kNN", verbose = TRUE, k=10, n_pc=2,...) {
   
   yid <- NULL
   
@@ -636,9 +636,9 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   }
   
   if (is_h5(scm)) {
-    warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
+    warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation. This is very memory-instensive.")
   }
-  
+
   if (verbose) message("Starting imputation by ",type,start_time())
   
   if (type == "kNN") {
@@ -684,7 +684,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     }
   } else {
     
-    assays(scm)[[new_assay]] <- op(get_matrix(scm,assay))
+    assays(scm)[[new_assay]] <- op(as.matrix(get_matrix(scm,assay)))
     
   }
    

@@ -17,6 +17,10 @@ test_that("bin_scMethrix", {
     bin <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin1"), replace = T)
     expect_equal(dim(bin),c(length(rowRanges(bin)),length(samples(bin))))
     
+    if (is_h5(scm)) {
+      expect_equal(class(score(bin))[[1]],"DelayedMatrix")
+    }
+    
     sub <- subset_scMethrix(scm,contigs="chr1")
     vals <- DelayedMatrixStats::colMeans2(score(sub),na.rm=T)
     expect_equal(as.numeric(score(bin)[1,]),as.numeric(vals))
@@ -39,6 +43,8 @@ test_that("bin_scMethrix", {
     vals <- DelayedMatrixStats::colSums2(get_matrix(sub,assay="bin2"),na.rm=T)
     expect_equal(as.numeric(get_matrix(bin2,assay="bin2")[1,]),as.numeric(vals))
 
+    rm(bin,bin2,vals)
+    
   }))
 })
 
@@ -50,23 +56,31 @@ test_that("transform_assay", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(transform_assay(scm,trans="not closure"),"A valid transform function must be specified")
     expect_warning(transform_assay(scm, trans=trans, assay="score",new_assay="score"))
+    
+    # Create a new assay with value of x+1
     plus1 <- transform_assay(scm, trans=trans, assay="score",new_assay="plus1")
     expect_false(isTRUE(all.equal(assays(scm), assays(plus1))))
-    expect_equivalent(get_matrix(scm)+1,get_matrix(plus1,assay="plus1"))
+    expect_equivalent(score(scm)+1,get_matrix(plus1,assay="plus1"))
     if (is_h5(scm)) {
       expect_equal(class(get_matrix(plus1,assay="plus1"))[[1]],"HDF5Matrix")
     }
+    
+    #Make sure the other assays are not affected
+    expect_equivalent(counts(scm),counts(plus1))
+
     rm(plus1)
   }))
 })
 
 test_that("impute_regions", {
   expect_error(impute_regions("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_warning(impute_regions(scm.h5),"Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
   
   suppressWarnings(
+    # Check all the usable imputation methods
     lapply(list("kNN","iPCA","RF"), function (method) {
-    #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-      invisible(lapply(list(scm.mem), function(scm) {
+    invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+      #invisible(lapply(list(scm.mem), function(scm) {
         expect_error(impute_regions(scm,assay = "not an assay"))
         expect_error(impute_regions(scm,new_assay = "score"))
         expect_warning(impute_regions(scm,new_assay = "counts",type=method))
