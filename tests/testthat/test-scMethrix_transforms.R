@@ -5,18 +5,16 @@ test_that("bin_scMethrix", {
 
   path <- paste0(h5_dir,"bin")
   
- # invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    invisible(lapply(list(scm.mem), function(scm) {
-    
-  #invisible(lapply(list(scm.mem), function(scm) {
+ invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+ # invisible(lapply(list(scm.mem), function(scm) {
     # Check default conditions and threading
-    bin <- bin_scMethrix(scm, h5_dir = paste0(h5_dir,"/bin1"), n_threads = 2)
+    bin <- bin_scMethrix(scm, h5_dir = paste0(h5_dir,"/bin1"), n_threads = 2, replace = T)
     expect_equal(dim(bin),c(258,4))
     
     #Check the score assay (should be mean)
     scm <- transform_assay(scm,assay="score",new_assay="bin",trans=binarize)
     scm <- transform_assay(scm,assay="score",new_assay="bin2",trans=binarize)
-    bin <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin1"))
+    bin <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin1"), replace = T)
     expect_equal(dim(bin),c(length(rowRanges(bin)),length(samples(bin))))
     
     sub <- subset_scMethrix(scm,contigs="chr1")
@@ -33,10 +31,10 @@ test_that("bin_scMethrix", {
     
     #Check the custom transform function  (should be mean, but specified as sum)
     bin2 <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg",trans = c(bin2 = function(x) sum(x,na.rm=TRUE)), 
-                          h5_dir = paste0(h5_dir,"/bin2"))
-    expect_equal(score(bin),score(bin2))
-    expect_equal(counts(bin),counts(bin2))
-    expect_equal(get_matrix(bin,assay="bin"),get_matrix(bin2,assay="bin"))
+                          h5_dir = paste0(h5_dir,"/bin2"),replace=T)
+    expect_equal(score(bin),score(bin2), check.attributes = FALSE)
+    expect_equal(counts(bin),counts(bin2), check.attributes = FALSE)
+    expect_equal(get_matrix(bin,assay="bin"),get_matrix(bin2,assay="bin"), check.attributes = FALSE)
     
     vals <- DelayedMatrixStats::colSums2(get_matrix(sub,assay="bin2"),na.rm=T)
     expect_equal(as.numeric(get_matrix(bin2,assay="bin2")[1,]),as.numeric(vals))
