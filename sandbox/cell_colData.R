@@ -20,5 +20,17 @@ colData <- rbind(colData,colData2)
 rm(colData2)
 colData <- colData[order(Sample),]
 
+#Derive from exp
 
+scm = scm.impute
 
+samp = row.names(colData(scm))
+samp = sub("final_","",samp)
+samp = sub(".sra","",samp)
+samp = sub("_CpG","",samp)
+samp = data.table(Sample=samp)
+
+colData <- merge(samp,colData,all.x=TRUE)
+
+row.names(colData(scm)) <- colData$Sample
+colData(scm)$Cell = colData$Cell
