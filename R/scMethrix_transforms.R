@@ -83,7 +83,7 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
 #' bin_scMethrix(scMethrix_data, regions = regions)
 #' @export
 bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by = c("bp","cpg"), trans = NULL, 
-                          overlap_type = "within", h5_dir = NULL, verbose = TRUE, n_chunks = 1, n_threads = 1, replace = FALSE) {
+                          overlap_type = "within", h5_dir = NULL, verbose = TRUE, batch_size = 20, n_threads = 1, replace = FALSE) {
 
   yid <- NULL
   
@@ -103,10 +103,13 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
   bin_by = match.arg(arg = bin_by, choices = c("bp","cpg"))
   
+  if (verbose) message("Binning experiment...")
+  
   if (!is.null(regions)) {
     regions = cast_granges(regions)
     scm <- subset_scMethrix(scm, regions = regions) 
   } else { # If no region is specifed, use entire chromosomes
+    if (verbose) message ("No regions specified; using whole chromosomes")
     regions = range(rowRanges(scm))
   }
   
@@ -185,10 +188,10 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 
       setAutoRealizationBackend("HDF5Array")
       
-      cols <- split_vector(1:ncol(scm),n_chunks)
+      cols <- split_vector(1:ncol(scm),batch_size,by="size")
       sink <- AutoRealizationSink(c(length(rrng),ncol(scm)))
-      grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rrng),length(cols[[1]])))
-      
+      grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rrng),batch_size))
+
       for (i in 1:length(cols)) {
         
         if (verbose) message("Processing chunk ",i)
