@@ -7,11 +7,11 @@
 binarize(x, threshold = NULL, rep_na = NA, verbose = FALSE)
 }
 \arguments{
-\item{x}{A value to binarize}
+\item{x}{numeric; A value to binarize}
 
-\item{threshold}{The threshold for binarizing. Will default to the center number between max and min.}
+\item{threshold}{numeric; The threshold for binarizing. Will default to the center number between max and min.}
 
-\item{rep_na}{The value to replace missing values with. Default NA.}
+\item{rep_na}{numeric; The value to replace missing values with. Default NA.}
 
 \item{verbose}{boolean; flag for whether to display threshold or not}
 }

@@ -1,5 +1,5 @@
 #' Checks if \code{\link{scMethrix}} object is an HDF5 object
-#' @param m The \code{\link{scMethrix}} object
+#' @param m scMethrix; The \code{\link{scMethrix}} object
 #' @return boolean Whether the object is HDF5
 #' @examples
 #' data('scMethrix_data')
@@ -10,7 +10,7 @@ is_h5 = function(m) {
 }
 
 #' Checks if \code{\link{scMethrix}} object has a coverage matrix
-#' @param m The \code{\link{scMethrix}} object
+#' @param m scMethrix; The \code{\link{scMethrix}} object
 #' @return boolean Whether the object has a coverage matrix
 #' @examples
 #' data('scMethrix_data')
@@ -21,7 +21,7 @@ has_cov = function(m) {
 }
 
 #' Returns sample name derived from the input file name
-#' @param s A file.path
+#' @param s string; A file.path
 #' @return string containing the sample name
 #' @import tools
 #' @examples
@@ -35,9 +35,9 @@ get_sample_name = function(s) {
 #' Binarize an input value based on a \code{threshold}
 #' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
 #'  If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}
-#' @param x A value to binarize
-#' @param threshold The threshold for binarizing. Will default to the center number between max and min.
-#' @param rep_na The value to replace missing values with. Default NA. 
+#' @param x numeric; A value to binarize
+#' @param threshold numeric; The threshold for binarizing. Will default to the center number between max and min.
+#' @param rep_na numeric; The value to replace missing values with. Default NA. 
 #' @param verbose boolean; flag for whether to display threshold or not
 #' @return 1 or 0, if above of below the threshold, or 'rep.na' if NA
 #' @examples
@@ -116,10 +116,10 @@ split_vector = function(vec, num = 1, by = c('chunks', 'size')) {
 #' Splits a \code{\link{GRanges}} object by \code{chunks}, \code{percent} or \code{size}
 #' @details Divides each region \code{\link{GRanges}} into equally-sized lists based on a chunking parameter. 
 #' If \code{len(gr) %% number != 0}, then the last vector will have a length of less than size \code{number}
-#' @param gr The \code{\link{GRanges}} object
-#' @param chunks The total number of desired chunks (rounded up to nearest int)
-#' @param percent The percentage of overall CpGs in each chunk
-#' @param size The number of CpGs to include in each chunk
+#' @param gr GRanges; The \code{\link{GRanges}} object
+#' @param chunks integer; The total number of desired chunks (rounded up to nearest int)
+#' @param percent numeric; The percentage of overall CpGs in each chunk
+#' @param size integer; The number of CpGs to include in each chunk
 #' @return \code{\link{GRangesList}} containing all the chunked \code{\link{GRanges}}
 #' @import GenomicRanges
 #' @examples
@@ -161,8 +161,8 @@ split_granges = function(gr,chunks = NA, percent = NA, size = NA) { #=NULL, perc
 
 #' Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size} 
 #' @details Bins a single region in \code{\link{GRanges}} format into multiple regions with a specified \code{bin_size}. If \code{length(gr) %% bin_size != 0}, then the last GRange will have a length < \code{bin_size}. This is used instead of tile when you need consistently sized bins with the last bin being smaller
-#' @param gr The \code{\link{GRanges}} object
-#' @param bin_size The length of region in each bin
+#' @param gr GRanges; The \code{\link{GRanges}} object
+#' @param bin_size integer; The length of region in each bin
 #' @return \code{\link{GRangesList}} containing all the binned \code{\link{GRanges}}
 #' @import GenomicRanges
 #' @examples
@@ -199,7 +199,7 @@ bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
 #' @details Casts the input as a \code{\link{GRanges}} object. Input can be \code{\link{GRanges}} or a 
 #' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input BED format
 #'  must be \code{chr-start-end} for \code{\link{data.frame}} objects.
-#' @param regions The input regions
+#' @param regions GRanges or data.frame; The input regions to cast to \code{\link{GRanges}}
 #' @return \code{\link{GRanges}} object with the input regions
 #' @import GenomicRanges
 #' @examples
@@ -261,9 +261,9 @@ stop_time <- function() {
 
 #' Subsets a given list of CpGs by another list of CpGs
 #' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
-#' @param ref_cpgs A reference set of CpG sites (e.g. Hg19 or mm10) in bedgraph format
-#' @param gen_cpgs A subset of CpG sites. Usually obtained from \code{\link{read_index}}.
-#' @param verbose flag to output messages or not
+#' @param ref_cpgs data.table; A reference set of CpG sites (e.g. Hg19 or mm10) in bedgraph format
+#' @param gen_cpgs data.table; A subset of CpG sites. Usually obtained from \code{\link{read_index}}.
+#' @param verbose boolean; flag to output messages or not
 #' @return Returns list of CpG sites in bedgraph format
 #' @examples
 #' ref_cpgs = data.frame(chr="chr1",start=(1:5*2-1), end=(1:5*2))

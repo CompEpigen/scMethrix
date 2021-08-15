@@ -8,7 +8,7 @@ read_hdf5_data(
   files,
   ref_cpgs,
   col_list,
-  n_chunks = 1,
+  batch_size = 20,
   n_threads = 0,
   h5_temp = NULL,
   zero_based = FALSE,
@@ -16,21 +16,22 @@ read_hdf5_data(
 )
 }
 \arguments{
-\item{files}{The BED files to parse}
+\item{files}{list of strings; file.paths of BED files}
 
-\item{ref_cpgs}{The index of all unique coordinates from the input BED files}
+\item{ref_cpgs}{data.table; list of CpG sites in the tab-delimited format of chr-start-end. Must be zero-based genome.}
 
-\item{col_list}{The column index object for the input BED files}
+\item{col_list}{string; The column index object for the input BED files}
 
-\item{n_chunks}{The number of chunks to break the input data into}
+\item{batch_size}{integer; The number of file to hold in memory at once}
 
-\item{n_threads}{The number of threads to use. 0 is the default thread with no cluster built.}
+\item{n_threads}{integer; number of threads to use. Default 1.
+Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.}
 
-\item{h5_temp}{The file location to store the \code{\link{RealizationSink}} object}
+\item{h5_temp}{string; temporary directory to store hdf5}
 
-\item{zero_based}{Boolean flag for whether the input data is zero-based or not}
+\item{zero_based}{boolean; flag for whether the input data is zero-based or not}
 
-\item{verbose}{flag to output messages or not.}
+\item{verbose}{boolean; flag to output messages or not.}
 }
 \value{
 List of \code{\link{HDF5Array}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL

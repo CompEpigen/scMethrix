@@ -10,9 +10,9 @@ plot_sparsity(scm = NULL, type = c("box", "scatter"), pheno = NULL)
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{type}{Choose between 'box' (boxplot) or 'scatter' (scatterplot).}
+\item{type}{string; Choose between 'box' (boxplot) or 'scatter' (scatterplot).}
 
-\item{pheno}{phenotype columns}
+\item{pheno}{string; phenotype columns}
 }
 \value{
 ggplot2 object

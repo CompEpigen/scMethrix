@@ -7,13 +7,13 @@
 split_granges(gr, chunks = NA, percent = NA, size = NA)
 }
 \arguments{
-\item{gr}{The \code{\link{GRanges}} object}
+\item{gr}{GRanges; The \code{\link{GRanges}} object}
 
-\item{chunks}{The total number of desired chunks (rounded up to nearest int)}
+\item{chunks}{integer; The total number of desired chunks (rounded up to nearest int)}
 
-\item{percent}{The percentage of overall CpGs in each chunk}
+\item{percent}{numeric; The percentage of overall CpGs in each chunk}
 
-\item{size}{The number of CpGs to include in each chunk}
+\item{size}{integer; The number of CpGs to include in each chunk}
 }
 \value{
 \code{\link{GRangesList}} containing all the chunked \code{\link{GRanges}}

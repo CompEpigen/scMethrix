@@ -7,7 +7,7 @@
 is_h5(m)
 }
 \arguments{
-\item{m}{The \code{\link{scMethrix}} object}
+\item{m}{scMethrix; The \code{\link{scMethrix}} object}
 }
 \value{
 boolean Whether the object is HDF5

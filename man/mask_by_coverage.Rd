@@ -22,7 +22,7 @@ mask_by_coverage(
 
 \item{avg_threshold}{numeric; The max average coverage. Default = 2}
 
-\item{n_threads}{Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1}
+\item{n_threads}{integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }

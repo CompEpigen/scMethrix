@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------------------------------------
 #' Reduces a assay to a representative matrix
 #' @details For the purposes of dimensionality reduction, this function selects either random CpGs or those with the highest variability. 
-#' @param scm Input \code{\link{scMethrix}} object
-#' @param assay The assay to use. Default is 'score'
-#' @param top_var Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements).
-#' @param var Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'
-#' @param verbose flag to output messages or not
-#' @param na.rm Remove NA values
+#' @param scm scMethrix; Input \code{\link{scMethrix}} object
+#' @param assay string; The assay to use. Default is 'score'
+#' @param top_var integer; Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements).
+#' @param var strning; Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'
+#' @param verbose boolean; flag to output messages or not
+#' @param na.rm boolean; flag to remove NA values
 #' @return matrix; the reduced form of the input assay
 #' @importFrom stats complete.cases var
 #' @examples
@@ -74,7 +74,7 @@ reduce_cpgs <- function(scm, assay = "score", var = "top", top_var = 1000, na.rm
 #------------------------------------------------------------------------------------------------------------
 #' Reduces dimensionality
 #' @details Does reduction stuff
-#' @param n_components Number of components to use
+#' @param n_components integer; Number of components to use for PCA
 #' @param n_neighbors integer; number of nearest neighbors
 #' @param type string; the type of imputation "tSNE","UMAP", or "PCA"
 #' @inheritParams reduce_cpgs 

@@ -600,7 +600,6 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' Generic imputation return function
 #' @details Uses the specified imputation operation to evaluation an scMethrix object.
 #' @param regions Granges; the regions to impute. Default is by chromosome.
-#' @param overlap_type string; 
 #' @param op closure; the imputation operation
 #' @param type string/closure; the imputation to perform "kNN","iPCA",or "RF". Otherwise, a closure can be specified that returns the imputed matrix. Default = "kNN"
 #' @param n_pc the range of principal components to check when using iPCA. Caution: this can be very time-intensive

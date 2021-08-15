@@ -9,11 +9,11 @@ prepare_plot_data(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL)
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{regions}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
+\item{regions}{Granges; genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
 
-\item{n_cpgs}{Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.}
+\item{n_cpgs}{integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.}
 
-\item{pheno}{Row name of colData(m). Will be used as a factor to color different groups}
+\item{pheno}{string; Col name of colData(m). Will be used as a factor to color different groups}
 }
 \value{
 'Long' matrix for methylation

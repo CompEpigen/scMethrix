@@ -9,7 +9,7 @@ read_beds(
   ref_cpgs = NULL,
   colData = NULL,
   genome_name = "hg19",
-  batch_size = 200,
+  batch_size = 20,
   n_threads = 0,
   h5 = FALSE,
   h5_dir = NULL,
@@ -32,39 +32,39 @@ read_beds(
 )
 }
 \arguments{
-\item{files}{BED files containing methylation d}
+\item{files}{list of strings; file.paths of BED files}
 
-\item{ref_cpgs}{BED files containing list of CpG sites. Must be zero-based genome.}
+\item{ref_cpgs}{data.table; list of CpG sites in the tab-delimited format of chr-start-end. Must be zero-based genome.}
 
-\item{colData}{vector of input sample names}
+\item{colData}{list of strings; Sample names. Will be derived from filenames if not provided}
 
-\item{genome_name}{Name of genome. Default hg19}
+\item{genome_name}{string; Name of genome. Default hg19}
 
-\item{batch_size}{Max number of files to hold in memory at once}
+\item{batch_size}{integer; Max number of files to hold in memory at once. Default 20}
 
-\item{n_threads}{number of threads to use. Default 1.
+\item{n_threads}{integer; number of threads to use. Default 1.
 Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.}
 
-\item{h5}{Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}}
+\item{h5}{boolean; Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}}
 
-\item{h5_dir}{directory to store H5 based object}
+\item{h5_dir}{string; directory to store H5 based object}
 
-\item{h5_temp}{temporary directory to store hdf5}
+\item{h5_temp}{string; temporary directory to store hdf5}
 
-\item{desc}{Description of the experiment}
+\item{desc}{string; Description of the experiment}
 
-\item{verbose}{flag to output messages or not.}
+\item{verbose}{boolean; flag to output messages or not.}
 
-\item{zero_based}{Boolean flag for whether the input data is zero-based or not}
+\item{zero_based}{boolean; flag for whether the input data is zero-based or not}
 
-\item{reads}{Manual input of reads. Typically used for testing.}
+\item{reads}{data.table; Manual input of reads. Typically used for testing.}
 
-\item{replace}{Boolean flag for whether to delete the contents of h5_dir before saving}
+\item{replace}{boolean; flag for whether to delete the contents of h5_dir before saving}
 
-\item{pipeline}{Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
+\item{pipeline}{string; Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
 If not known use idx arguments for manual column assignments.}
 
-\item{stranded}{Whether in input data is stranded. Default FALSE}
+\item{stranded}{boolean; Whether in input data is stranded. Default FALSE}
 
 \item{chr_idx}{integer; column index for chromosome in bedgraph files}
 

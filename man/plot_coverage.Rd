@@ -18,20 +18,20 @@ plot_coverage(
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{type}{Choose between 'hist' (histogram) or 'dens' (density plot).}
+\item{type}{string; Choose between 'hist' (histogram) or 'dens' (density plot).}
 
-\item{pheno}{Row name of colData(m). Will be used as a factor to color different groups}
+\item{pheno}{string; Col name of colData(m). Will be used as a factor to color different groups}
 
-\item{perGroup}{Color the plots in a sample-wise manner?}
+\item{perGroup}{boolean; Color the plots in a sample-wise manner?}
 
-\item{lim}{Maximum coverage value to be plotted.}
+\item{lim}{integer; Maximum coverage value to be plotted.}
 
-\item{size.lim}{The maximum number of observarions (sites*samples) to use. If the dataset is larger that this,
+\item{size.lim}{integer; The maximum number of observarions (sites*samples) to use. If the dataset is larger that this,
 random sites will be selected from the genome.}
 
-\item{col_palette}{Name of the RColorBrewer palette to use for plotting.}
+\item{col_palette}{string; Name of the RColorBrewer palette to use for plotting.}
 
-\item{show_legend}{Display the legend on the plot}
+\item{show_legend}{boolean; Display the legend on the plot}
 }
 \value{
 ggplot2 object

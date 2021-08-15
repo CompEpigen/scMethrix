@@ -7,7 +7,7 @@
 get_sample_name(s)
 }
 \arguments{
-\item{s}{A file.path}
+\item{s}{string; A file.path}
 }
 \value{
 string containing the sample name

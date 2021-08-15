@@ -14,17 +14,18 @@ read_index(
 )
 }
 \arguments{
-\item{files}{List of BED files}
+\item{files}{list of strings; file.paths of BED files}
 
-\item{col_list}{The column index object for the input BED files}
+\item{col_list}{string; The column index object for the input BED files}
 
-\item{n_threads}{integer for number of threads to use}
+\item{n_threads}{integer; number of threads to use. Default 1.
+Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.}
 
-\item{zero_based}{Whether the input data is 0 or 1 based}
+\item{zero_based}{boolean; flag for whether the input data is zero-based or not}
 
-\item{batch_size}{Number of files to process before running unique. Default of 30.}
+\item{batch_size}{integer; Max number of files to hold in memory at once. Default 20}
 
-\item{verbose}{flag to output messages or not.}
+\item{verbose}{boolean; flag to output messages or not.}
 }
 \value{
 data.table containing all unique genomic coordinates

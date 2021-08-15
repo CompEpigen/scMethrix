@@ -14,17 +14,17 @@ read_bed_by_index(
 )
 }
 \arguments{
-\item{files}{The BED file to parse}
+\item{files}{string; file.paths of BED files to parse to parse}
 
-\item{ref_cpgs}{The index of all unique coordinates from the input BED files}
+\item{ref_cpgs}{data.table; The index of all unique coordinates from the input BED files}
 
-\item{col_list}{The column index object for the input BED files}
+\item{col_list}{string; The column index object for the input BED files}
 
-\item{zero_based}{Whether the input data is 0 or 1 based}
+\item{zero_based}{boolean; Whether the input data is 0 or 1 based}
 
-\item{strand_collapse}{Default FALSe}
+\item{strand_collapse}{boolean; Default FALSE}
 
-\item{fill}{Fill the output matrix to match the ref_cpgs. This must be used for HDF5 input formats to ensure consistent
+\item{fill}{boolean; Fill the output matrix to match the ref_cpgs. This must be used for HDF5 input formats to ensure consistent
 spacing for the grid. It is optional for in-memory formats.}
 }
 \value{

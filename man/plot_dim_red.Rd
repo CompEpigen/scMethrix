@@ -16,16 +16,16 @@ plot_dim_red(
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{dim_red}{dimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
+\item{dim_red}{string; name of adimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
 the X and Y coordinates of the dim. red., with each row being a seperate sample}
 
-\item{col_anno}{Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object}
+\item{col_anno}{string; Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object}
 
-\item{shape_anno}{Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object}
+\item{shape_anno}{string; Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object}
 
-\item{axis_labels}{A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired}
+\item{axis_labels}{list of strings; A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired}
 
-\item{show_dp_labels}{Default FLASE}
+\item{show_dp_labels}{boolean; Flag to show the labels for dots. Default FALSE}
 }
 \value{
 ggplot2 object

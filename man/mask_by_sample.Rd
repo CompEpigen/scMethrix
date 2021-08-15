@@ -22,7 +22,7 @@ mask_by_sample(
 
 \item{prop_threshold}{numeric; The minimal proportion of covered cells. Default = NULL.}
 
-\item{n_threads}{Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.}
+\item{n_threads}{integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }

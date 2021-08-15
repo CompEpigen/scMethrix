@@ -14,17 +14,17 @@ reduce_cpgs(
 )
 }
 \arguments{
-\item{scm}{Input \code{\link{scMethrix}} object}
+\item{scm}{scMethrix; Input \code{\link{scMethrix}} object}
 
-\item{assay}{The assay to use. Default is 'score'}
+\item{assay}{string; The assay to use. Default is 'score'}
 
-\item{var}{Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'}
+\item{var}{strning; Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'}
 
-\item{top_var}{Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements).}
+\item{top_var}{integer; Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements).}
 
-\item{na.rm}{Remove NA values}
+\item{na.rm}{boolean; flag to remove NA values}
 
-\item{verbose}{flag to output messages or not}
+\item{verbose}{boolean; flag to output messages or not}
 }
 \value{
 matrix; the reduced form of the input assay

@@ -13,7 +13,7 @@ impute_regions(
   n_chunks = 1,
   n_threads = 1,
   overlap_type = "within",
-  type = c("kNN", "iPCA", "RF"),
+  type = "kNN",
   verbose = TRUE,
   k = 10,
   n_pc = 2,
@@ -35,9 +35,9 @@ impute_regions(
 
 \item{n_threads}{integer; Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. Default = 1}
 
-\item{overlap_type}{string;}
+\item{overlap_type}{defines the type of the overlap of the CpG sites with the target region. Default value is \code{within}. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.}
 
-\item{type}{string/closure; the imputation to perform 'kNN','iPCA','RF'. Otherwise, a closure can be specified that returns the imputed matrix}
+\item{type}{string/closure; the imputation to perform "kNN","iPCA",or "RF". Otherwise, a closure can be specified that returns the imputed matrix. Default = "kNN"}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 

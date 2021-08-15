@@ -8,26 +8,27 @@ read_mem_data(
   files,
   ref_cpgs,
   col_list,
-  batch_size = 200,
+  batch_size = 20,
   n_threads = 0,
   zero_based = FALSE,
   verbose = TRUE
 )
 }
 \arguments{
-\item{files}{The BED files to parse}
+\item{files}{list of strings; file.paths of BED files}
 
-\item{ref_cpgs}{The index of all unique coordinates from the input BED files}
+\item{ref_cpgs}{data.table; list of CpG sites in the tab-delimited format of chr-start-end. Must be zero-based genome.}
 
 \item{col_list}{The column index object for the input BED files}
 
-\item{batch_size}{The number of files to hold in memory at once}
+\item{batch_size}{integer; Max number of files to hold in memory at once. Default 20}
 
-\item{n_threads}{The number of threads to use. 0 is the default thread with no cluster built.}
+\item{n_threads}{integer; number of threads to use. Default 1.
+Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.}
 
-\item{zero_based}{Boolean flag for whether the input data is zero-based or not}
+\item{zero_based}{boolean; flag for whether the input data is zero-based or not}
 
-\item{verbose}{flag to output messages or not.}
+\item{verbose}{boolean; flag to output messages or not.}
 }
 \value{
 matrix of the methylation values for input BED files

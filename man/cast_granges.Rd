@@ -7,7 +7,7 @@
 cast_granges(regions)
 }
 \arguments{
-\item{regions}{The input regions}
+\item{regions}{GRanges or data.frame; The input regions to cast to \code{\link{GRanges}}}
 }
 \value{
 \code{\link{GRanges}} object with the input regions

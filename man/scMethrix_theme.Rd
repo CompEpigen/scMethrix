@@ -7,9 +7,9 @@
 scMethrix_theme(base_size = 12, base_family = "")
 }
 \arguments{
-\item{base_size}{Size of text}
+\item{base_size}{integer; Size of text}
 
-\item{base_family}{Family of text}
+\item{base_family}{string; Family of text}
 }
 \value{
 ggplot element; data for the ggplot theme

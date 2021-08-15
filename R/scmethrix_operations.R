@@ -680,7 +680,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' Estimate descriptive statistics for each sample
 #' @details Calculate descriptive statistics (mean, median, SD) either by sample or \code{per_chr}
 #' @inheritParams generic_scMethrix_function
-#' @param per_chr Estimate stats per chromosome. Default TRUE
+#' @param per_chr boolean; Estimate stats per chromosome. Default TRUE
 #' @examples
 #' data('scMethrix_data')
 #' 
@@ -789,7 +789,7 @@ remove_uncovered <- function(scm = NULL, verbose = TRUE) {
 #' @inheritParams generic_scMethrix_function
 #' @param low_threshold numeric; The minimal coverage allowed. Everything below will get masked. Default = 0
 #' @param avg_threshold numeric; The max average coverage. Default = 2
-#' @param n_threads Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1
+#' @param n_threads integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
@@ -880,7 +880,7 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = 0, avg
 #' @inheritParams generic_scMethrix_function
 #' @param low_threshold numeric; The minimal cell count allowed. Everything below will get masked. Default = 0
 #' @param prop_threshold numeric; The minimal proportion of covered cells. Default = NULL.
-#' @param n_threads Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
+#' @param n_threads integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples

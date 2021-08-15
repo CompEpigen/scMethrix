@@ -9,7 +9,9 @@ benchmark_imputation(
   assay = "score",
   sparse_prop = seq(0.1, 0.9, 0.1),
   iterations = 3,
-  imp_methods = c(iPCA = impute_by_iPCA, RF = impute_by_RF, kNN = impute_by_kNN),
+  imp_methods = c(iPCA = function(...) impute_regions(type = "iPCA", ...), RF =
+    function(...) impute_regions(type = "RF", ...), kNN = function(...)
+    impute_regions(type = "kNN", ...)),
   type = "RMSE"
 )
 }
@@ -38,6 +40,7 @@ Does stuff
 \examples{
 data('scMethrix_data')
 \dontrun{
-scMethrix_data <- impute_by_RF(scMethrix_data, new_assay="impute")
-benchmark_imputation(scMethrix_data, assay="impute", sparse_prop = c(0.1,0.5,0.85))}
+scMethrix_data <- impute_regions(scMethrix_data, new_assay="impute",type="RF")
+benchmark_imputation(scMethrix_data, assay="impute", sparse_prop = c(0.1,0.5,0.85))
+}
 }

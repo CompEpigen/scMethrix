@@ -17,17 +17,17 @@ plot_stats(
 \arguments{
 \item{plot_dat}{results from \code{\link{get_stats}}}
 
-\item{what}{Can be \code{M} or \code{C}. Default \code{M}}
+\item{what}{string; Can be \code{M} or \code{C}. Default \code{M} #TODO: Remove this}
 
-\item{stat}{Can be \code{mean} or \code{median}. Default \code{mean}}
+\item{stat}{string; Can be \code{mean} or \code{median}. Default \code{mean}}
 
-\item{ignore_chr}{Chromsomes to ignore. Default \code{NULL}}
+\item{ignore_chr}{boolean; Chromsomes to ignore. Default \code{NULL}}
 
-\item{samples}{Use only these samples. Default \code{NULL}}
+\item{samples}{list of strings; Use only these samples. Default \code{NULL}}
 
-\item{n_col}{number of columns. Passed to \code{facet_wrap}}
+\item{n_col}{integer; number of columns. Passed to \code{facet_wrap}}
 
-\item{n_row}{number of rows. Passed to \code{facet_wrap}}
+\item{n_row}{integer; number of rows. Passed to \code{facet_wrap}}
 }
 \value{
 ggplot2 object

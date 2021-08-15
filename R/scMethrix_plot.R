@@ -1,8 +1,8 @@
 #' Format \code{\link{scMethrix}} matrix to long form data for plotting
 #' @inheritParams generic_scMethrix_function
-#' @param n_cpgs Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.
-#' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param pheno Row name of colData(m). Will be used as a factor to color different groups
+#' @param n_cpgs integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.
+#' @param regions Granges; genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
+#' @param pheno string; Col name of colData(m). Will be used as a factor to color different groups
 #' @return 'Long' matrix for methylation
 #' @export
 prepare_plot_data <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL){
@@ -75,8 +75,8 @@ get_palette <- function(n_row, col_palette){
 
 #' Violin Plot for \eqn{\beta}-Values
 #' @inheritParams prepare_plot_data
-#' @param col_palette Name of the RColorBrewer palette to use for plotting.
-#' @param show_legend Display the legend on the plot
+#' @param col_palette string; Name of the RColorBrewer palette to use for plotting.
+#' @param show_legend boolean; Display the legend on the plot
 #' @return ggplot2 object
 #' @export
 #' @import ggplot2
@@ -148,10 +148,10 @@ plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NUL
 #--------------------------------------------------------------------------------------------------------------------------
 #' Coverage QC Plots
 #' @inheritParams plot_violin
-#' @param perGroup Color the plots in a sample-wise manner?
-#' @param lim Maximum coverage value to be plotted.
-#' @param type Choose between 'hist' (histogram) or 'dens' (density plot).
-#' @param size.lim The maximum number of observarions (sites*samples) to use. If the dataset is larger that this,
+#' @param perGroup boolean; Color the plots in a sample-wise manner?
+#' @param lim integer; Maximum coverage value to be plotted.
+#' @param type string; Choose between 'hist' (histogram) or 'dens' (density plot).
+#' @param size.lim integer; The maximum number of observarions (sites*samples) to use. If the dataset is larger that this,
 #' random sites will be selected from the genome.
 #' @return ggplot2 object
 #' @examples
@@ -248,8 +248,8 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
 #' Sparsity of sample
 #' inheritParams generic_plot_function
 #' @inheritParams generic_scMethrix_function
-#' @param type Choose between 'box' (boxplot) or 'scatter' (scatterplot).
-#' @param pheno phenotype columns
+#' @param type string; Choose between 'box' (boxplot) or 'scatter' (scatterplot).
+#' @param pheno string; phenotype columns
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
@@ -292,12 +292,12 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
 #' Plot descriptive statistics
 #' @details plot descriptive statistics results from \code{\link{get_stats}}
 #' @param plot_dat results from \code{\link{get_stats}}
-#' @param what Can be \code{M} or \code{C}. Default \code{M}
-#' @param stat Can be \code{mean} or \code{median}. Default \code{mean}
-#' @param ignore_chr Chromsomes to ignore. Default \code{NULL}
-#' @param samples Use only these samples. Default \code{NULL}
-#' @param n_col number of columns. Passed to `facet_wrap`
-#' @param n_row number of rows. Passed to `facet_wrap`
+#' @param what string; Can be \code{M} or \code{C}. Default \code{M} #TODO: Remove this
+#' @param stat string; Can be \code{mean} or \code{median}. Default \code{mean}
+#' @param ignore_chr boolean; Chromsomes to ignore. Default \code{NULL}
+#' @param samples list of strings; Use only these samples. Default \code{NULL}
+#' @param n_col integer; number of columns. Passed to `facet_wrap`
+#' @param n_row integer; number of rows. Passed to `facet_wrap`
 #' @return ggplot2 object
 #' @seealso \code{\link{get_stats}}
 #' @examples
@@ -402,12 +402,12 @@ plot_imap <- function(scm) {
 #--------------------------------------------------------------------------------------------------------------------------
 #' Plot dimensionality reduction
 #' @inheritParams generic_scMethrix_function
-#' @param dim_red dimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
+#' @param dim_red string; name of adimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
 #' the X and Y coordinates of the dim. red., with each row being a seperate sample
-#' @param axis_labels A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired
-#' @param col_anno Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object
-#' @param shape_anno Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object
-#' @param show_dp_labels Default FLASE
+#' @param axis_labels list of strings; A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired
+#' @param col_anno string; Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object
+#' @param shape_anno string; Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object
+#' @param show_dp_labels boolean; Flag to show the labels for dots. Default FALSE
 #' @return ggplot2 object
 #' @importFrom graphics par mtext lines axis legend title
 #' @export
@@ -588,8 +588,8 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
 
 #------------------------------------------------------------------------------------------------------------
 #' Theme for ggplot
-#' @param base_size Size of text
-#' @param base_family Family of text
+#' @param base_size integer; Size of text
+#' @param base_family string; Family of text
 #' @return ggplot element; data for the ggplot theme
 #' @export
 scMethrix_theme <- function(base_size = 12, base_family = "") {

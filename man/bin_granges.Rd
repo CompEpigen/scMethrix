@@ -7,9 +7,9 @@
 bin_granges(gr, bin_size = 1e+05)
 }
 \arguments{
-\item{gr}{The \code{\link{GRanges}} object}
+\item{gr}{GRanges; The \code{\link{GRanges}} object}
 
-\item{bin_size}{The length of region in each bin}
+\item{bin_size}{integer; The length of region in each bin}
 }
 \value{
 \code{\link{GRangesList}} containing all the binned \code{\link{GRanges}}

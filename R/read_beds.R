@@ -1,23 +1,23 @@
 #' Versatile BedGraph reader.
 #' @details Reads BED files and generates methylation matrices.
 #' Optionally arrays can be serialized as on-disk HDFS5 arrays.
-#' @param files BED files containing methylation d
-#' @param ref_cpgs BED files containing list of CpG sites. Must be zero-based genome.
-#' @param colData vector of input sample names
-#' @param stranded Whether in input data is stranded. Default FALSE
-#' @param genome_name Name of genome. Default hg19
+#' @param files list of strings; file.paths of BED files
+#' @param ref_cpgs data.table; list of CpG sites in the tab-delimited format of chr-start-end. Must be zero-based genome.
+#' @param colData list of strings; Sample names. Will be derived from filenames if not provided
+#' @param stranded boolean; Whether in input data is stranded. Default FALSE
+#' @param genome_name string; Name of genome. Default hg19
 #' @param batch_size integer; Max number of files to hold in memory at once. Default 20
-#' @param n_threads number of threads to use. Default 1.
+#' @param n_threads integer; number of threads to use. Default 1.
 #' Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.
-#' @param h5 Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}
-#' @param h5_dir directory to store H5 based object
-#' @param h5_temp temporary directory to store hdf5
-#' @param desc Description of the experiment
-#' @param verbose flag to output messages or not.
-#' @param zero_based Boolean flag for whether the input data is zero-based or not
-#' @param reads Manual input of reads. Typically used for testing.
-#' @param replace Boolean flag for whether to delete the contents of h5_dir before saving
-#' @param pipeline Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
+#' @param h5 boolean; Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}
+#' @param h5_dir string; directory to store H5 based object
+#' @param h5_temp string; temporary directory to store hdf5
+#' @param desc string; Description of the experiment
+#' @param verbose boolean; flag to output messages or not.
+#' @param zero_based boolean; flag for whether the input data is zero-based or not
+#' @param reads data.table; Manual input of reads. Typically used for testing.
+#' @param replace boolean; flag for whether to delete the contents of h5_dir before saving
+#' @param pipeline string; Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
 #' If not known use idx arguments for manual column assignments.
 #' @param chr_idx integer; column index for chromosome in bedgraph files
 #' @param start_idx integer; column index for start position in bedgraph files
@@ -186,12 +186,8 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 #' @details Create list of unique genomic regions from input BED files. Populates a list of batch_size+1 with 
 #' the genomic coordinates from BED files, then runs \code{\link{unique}} when the list is full and keeps the running
 #' results in the batch_size+1 position. Also indexes based on 'chr' and 'start' for later searching.
-#' @param files List of BED files
-#' @param n_threads integer for number of threads to use
-#' @param batch_size Number of files to process before running unique. Default of 30.
-#' @param zero_based Whether the input data is 0 or 1 based
-#' @param col_list The column index object for the input BED files
-#' @param verbose flag to output messages or not.
+#' @inheritParams read_beds
+#' @param col_list string; The column index object for the input BED files
 #' @return data.table containing all unique genomic coordinates
 #' @import parallel doParallel
 #' @examples
@@ -278,12 +274,12 @@ read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch
 #' Parses BED files for methylation values using previously generated index genomic coordinates
 #' @details Creates an NA-based vector populated with methlylation values from the input BED file in the
 #' respective indexed genomic coordinates
-#' @param files The BED file to parse
-#' @param ref_cpgs The index of all unique coordinates from the input BED files
-#' @param zero_based Whether the input data is 0 or 1 based
-#' @param col_list The column index object for the input BED files
-#' @param strand_collapse Default FALSe
-#' @param fill Fill the output matrix to match the ref_cpgs. This must be used for HDF5 input formats to ensure consistent
+#' @param files string; file.paths of BED files to parse to parse
+#' @param ref_cpgs data.table; The index of all unique coordinates from the input BED files
+#' @param zero_based boolean; Whether the input data is 0 or 1 based
+#' @param col_list string; The column index object for the input BED files
+#' @param strand_collapse boolean; Default FALSE
+#' @param fill boolean; Fill the output matrix to match the ref_cpgs. This must be used for HDF5 input formats to ensure consistent
 #' spacing for the grid. It is optional for in-memory formats.
 #' @return data.table containing vector of all indexed methylation values for the input BED
 #' @examples
@@ -519,14 +515,10 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
 #' Writes values from input BED files into an in-disk \code{\link{HDF5Array}}
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.
-#' @param files The BED files to parse
-#' @param ref_cpgs The index of all unique coordinates from the input BED files
-#' @param n_threads The number of threads to use. 0 is the default thread with no cluster built.
-#' @param h5_temp The file location to store the \code{\link{RealizationSink}} object
-#' @param zero_based Boolean flag for whether the input data is zero-based or not
-#' @param col_list The column index object for the input BED files
-#' @param verbose flag to output messages or not.
-#' @param batch_size The number of file to hold in memory at once
+#' @inheritParams read_beds
+#' @param col_list string; The column index object for the input BED files
+#' @param verbose boolean; flag to output messages or not.
+#' @param batch_size integer; The number of file to hold in memory at once
 #' @return List of \code{\link{HDF5Array}}. 1 is methylation, 2 is coverage. If no cov_idx is specified, 2 will be NULL
 #' @import DelayedArray HDF5Array parallel doParallel
 #' @examples
@@ -761,13 +753,8 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
 #' Writes values from input BED files into an in-memory \code{\link{matrix}}
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.
-#' @param files The BED files to parse
-#' @param ref_cpgs The index of all unique coordinates from the input BED files
-#' @param batch_size The number of files to hold in memory at once
-#' @param n_threads The number of threads to use. 0 is the default thread with no cluster built.
-#' @param zero_based Boolean flag for whether the input data is zero-based or not
+#' @inheritParams read_beds
 #' @param col_list The column index object for the input BED files
-#' @param verbose flag to output messages or not.
 #' @return matrix of the methylation values for input BED files
 #' @import parallel doParallel
 #' @examples
