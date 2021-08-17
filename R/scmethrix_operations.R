@@ -964,6 +964,57 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = 0, prop_
   return(scm)
 }
 
+#' Masks non-variable CpGs
+#' @details Takes \code{\link{scMethrix}} object and masks CpGs with low variability by putting NA for assay values. The sites will remain in the object and all assays will be affected.
+#' @inheritParams generic_scMethrix_function
+#' @param low_threshold numeric; The variability threshold. Masking is done for all CpGs less than or equal to this value. A CpG that is methylated or unmethylated in all samples will have a variability of 0, whereas a completely variable CpG will have a value of 1. Default = 0.05.
+#' @param n_threads integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
+#' @return An object of class \code{\link{scMethrix}}
+#' @importFrom SummarizedExperiment assays assays<-
+#' @examples
+#' data('scMethrix_data')
+#' mask_non_variable(scMethrix_data,low_threshold=0.05)
+#' @export
+mask_non_variable <- function(scm = NULL, assay = "score", low_threshold = 0.05, n_threads =1 , verbose = TRUE) {
+  
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
+  
+  if (!is_h5(scm) & n_threads != 1) 
+    stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
+  
+  
+  if (verbose) message("Masking non-variable CpG sites...",start_time())
 
-
-
+  n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+    
+  vals <- DelayedMatrixStats::rowSds(get_matrix(scm,assay=assay), na.rm = TRUE) 
+  vals[which(is.na(vals))] <- 0
+  vals <- vals/DelayedMatrixStats::rowMeans2(get_matrix(scm,assay=assay), na.rm = TRUE)
+  vals[which(is.nan(vals))] = 0 #For case of all non-methylated CpGs (hence 0/0 = NaN)
+  
+  row_idx <- which(vals <= low_threshold)
+    
+  if (length(row_idx) == 0) {
+    message("   No CpGs found with a variability <= ",low_threshold)
+  } else if (length(row_idx) == nrow(scm)) {
+    message("   No CpGs were masked with a variability <= ",low_threshold)
+  } else {
+    for (i in 1:length(assays(scm))) {
+      assays(scm)[[i]][row_idx,] <- as.integer(NA)
+    } 
+      
+    n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)) - n
+      
+    for (i in seq_along(colnames(scm))) {
+      if (n[i]==0) next
+      if (verbose) message(paste0("   Masked ", n[i], " CpGs due to low variability in sample ",  colnames(scm)[i], "."))
+    }
+      
+    if (verbose) message("Masked ",length(row_idx)," CpGs with variability <= ",low_threshold)
+  }
+  
+  if (verbose) message("Masking finished in ",stop_time())
+  
+  return(scm)
+  
+}
