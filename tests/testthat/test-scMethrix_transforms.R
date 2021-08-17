@@ -6,7 +6,6 @@ test_that("bin_scMethrix", {
   path <- paste0(h5_dir,"bin")
   
  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
- # invisible(lapply(list(scm.mem), function(scm) {
     # Check default conditions and threading
     bin <- bin_scMethrix(scm, h5_dir = paste0(h5_dir,"/bin1"), n_threads = 2, replace = T)
     expect_equal(dim(bin),c(258,4))
@@ -42,9 +41,6 @@ test_that("bin_scMethrix", {
     
     vals <- DelayedMatrixStats::colSums2(get_matrix(sub,assay="bin2"),na.rm=T)
     expect_equal(as.numeric(get_matrix(bin2,assay="bin2")[1,]),as.numeric(vals))
-
-    rm(bin,bin2,vals)
-    
   }))
 })
 
@@ -67,8 +63,6 @@ test_that("transform_assay", {
     
     #Make sure the other assays are not affected
     expect_equivalent(counts(scm),counts(plus1))
-
-    rm(plus1)
   }))
 })
 
@@ -80,7 +74,6 @@ test_that("impute_regions", {
     # Check all the usable imputation methods
     lapply(list("kNN","iPCA","RF"), function (method) {
     invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-      #invisible(lapply(list(scm.mem), function(scm) {
         expect_error(impute_regions(scm,assay = "not an assay"))
         expect_error(impute_regions(scm,new_assay = "score"))
         expect_warning(impute_regions(scm,new_assay = "counts",type=method))
@@ -108,11 +101,13 @@ test_that("generate_training_set", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(generate_training_set(scm,training_prop = 2),"training_prop must in the range of")
     
-    set <- generate_training_set(scm,training_prop = 0.2)
-    expect_equal(nrow(set$training),57)
-    expect_equal(nrow(set$test),229)
+    n <- nrow(scm)
+    prop <- 0.2
     
-    expect_equivalent(scm,merge_scMethrix(set$training,set$test)) #TODO: validate this better
+    set <- generate_training_set(scm,training_prop = prop)
+    expect_equal(nrow(set$training),round(n*prop))
+    expect_equal(nrow(set$test),round(n*(1-prop)))
+    expect_equivalent(scm,merge_scMethrix(set$training,set$test))
   }))
 })
 

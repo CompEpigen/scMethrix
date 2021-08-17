@@ -236,6 +236,10 @@ test_that("mask_by_coverage", {
   expect_error(mask_by_coverage("not scMethrix"),"A valid scMethrix object needs to be supplied")
   expect_error(mask_by_coverage(remove_assay(scm.mem,assay="counts")))
   expect_error(mask_by_coverage(scm.mem,n_threads=2))
+  expect_error(mask_by_coverage(scm.mem,low_threshold=-1),"Thresholds")
+  expect_error(mask_by_coverage(scm.mem,low_threshold="not numeric"),"Thresholds")
+  expect_error(mask_by_coverage(scm.mem,avg_threshold=-1,"Thresholds"))
+  expect_error(mask_by_coverage(scm.mem,avg_threshold="not numeric"),"Thresholds")
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     #expect_error(mask_by_coverage(scm,n_threads=2))
@@ -257,6 +261,34 @@ test_that("mask_by_sample", {
   expect_error(mask_by_sample("not scMethrix"),"A valid scMethrix object needs to be supplied")
   expect_error(mask_by_sample(scm.mem,n_threads=2))
   expect_error(mask_by_sample(scm.mem,low_threshold=2,prop_threshold=1))
+  expect_error(mask_by_sample(scm.mem,low_threshold=-1),"low_threshold")
+  expect_error(mask_by_sample(scm.mem,low_threshold="not numeric"),"low_threshold")
+  expect_error(mask_by_sample(scm.mem,prop_threshold=-1,"prop_threshold"))
+  expect_error(mask_by_sample(scm.mem,prop_threshold=2,"prop_threshold"))
+  expect_error(mask_by_sample(scm.mem,prop_threshold="not numeric"),"prop_threshold")
+  
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    #expect_error(mask_by_coverage(scm,n_threads=2))
+    #expect_error(mask_by_coverage(scm,max_avg_count=1,type="cells"))
+    
+    m <- mask_by_sample(scm,low_threshold=2)
+    expect_equal(dim(m),c(n_cpg,n_samples))
+    expect_equal(dim(remove_uncovered(m)),c(length(which(ncol(m) - rowCounts(score(m),value=NA) >= 2)),n_samples))
+    
+    m <- mask_by_sample(scm,low_threshold=NULL,prop_threshold=0.25) # Since 0.25 of 4 sample is 1, same result as low_threshold = 1
+    expect_equal(dim(m),c(n_cpg,n_samples))
+    expect_equal(dim(remove_uncovered(m)),c(length(which(ncol(m) - rowCounts(score(m),value=NA) > 1)),n_samples))
+    
+  }))
+})
+
+test_that("mask_non_variable", {
+  
+  expect_error(mask_non_variable("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(mask_non_variable(scm.mem,n_threads=2))
+  expect_error(mask_non_variable(scm.mem,low_threshold=2,"low_threshold must be between 0 and 1"))
+  expect_error(mask_non_variable(scm.mem,low_threshold=-1,"low_threshold must be between 0 and 1"))
+  expect_error(mask_non_variable(scm.mem,low_threshold="not numeric"),"low_threshold must be between 0 and 1")
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     #expect_error(mask_by_coverage(scm,n_threads=2))

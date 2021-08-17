@@ -787,6 +787,8 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = 0, avg
   if (!is_h5(scm) && n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
   
+  if (!is.numeric(low_threshold) || !is.numeric(avg_threshold) || low_threshold < 0 || avg_threshold < 0) stop("Thresholds must be greater than 0")
+  
   if (!has_cov(scm)) stop("Cannot mask as no coverage matrix is present in the object.")
   
   # if(!is.numeric(low_threshold) || !is.numeric(low_threshold)){
@@ -887,6 +889,9 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = 0, prop_
   #   stop("Thresholds must be a numeric value.")
   # }
   
+  if (!is.null(low_threshold) && (!is.numeric(low_threshold) || low_threshold < 0)) stop("low_threshold must be >= 0")
+  if (!is.null(prop_threshold) && (!is.numeric(prop_threshold) || prop_threshold > 1 || prop_threshold < 0)) stop("prop_threshold must be between 0 and 1")
+  
   if (verbose) message("Masking CpG sites by cell count...",start_time())
   
   # if (!is.null(prop_threshold)) {
@@ -960,13 +965,14 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = 0, prop_
 #' data('scMethrix_data')
 #' mask_non_variable(scMethrix_data,low_threshold=0.05)
 #' @export
-mask_non_variable <- function(scm = NULL, assay = "score", low_threshold = 0.05, n_threads =1 , verbose = TRUE) {
+mask_non_variable <- function(scm = NULL, assay = "score", low_threshold = 0.05, n_threads = 1, verbose = TRUE) {
   
   if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
   if (!is_h5(scm) & n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
   
+  if (!is.numeric(low_threshold) || low_threshold > 1 || low_threshold < 0) stop("low_threshold must be between 0 and 1")
   
   if (verbose) message("Masking non-variable CpG sites...",start_time())
 

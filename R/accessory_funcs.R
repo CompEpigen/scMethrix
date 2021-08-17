@@ -5,8 +5,13 @@
 #' data('scMethrix_data')
 #' is_h5(scMethrix_data)
 #' @export
-is_h5 = function(m) {
-  return(m@metadata$is_h5)
+is_h5 = function(scm) {
+  
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  return(scm@metadata$is_h5)
 }
 
 #' Checks if \code{\link{scMethrix}} object has a coverage matrix
@@ -16,8 +21,13 @@ is_h5 = function(m) {
 #' data('scMethrix_data')
 #' has_cov(scMethrix_data)
 #' @export
-has_cov = function(m) {
-  return("counts" %in% SummarizedExperiment::assayNames(m))
+has_cov = function(scm) {
+  
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  return("counts" %in% SummarizedExperiment::assayNames(scm))
 }
 
 #' Returns sample name derived from the input file name

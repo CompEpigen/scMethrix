@@ -1,6 +1,13 @@
-test_that("is_ondisk",{
+test_that("is_h5",{
+  expect_error(is_h5("not a scMethrix"),"A valid scMethrix object needs to be supplied.")
   expect_true(is_h5(scm.h5))
   expect_false(is_h5(scm.mem))
+})
+
+test_that("has_cov",{
+  expect_error(has_cov("not a scMethrix"),"A valid scMethrix object needs to be supplied.")
+  expect_true(has_cov(scm.mem))
+  expect_false(has_cov(remove_assay(scm.mem,assay="counts")))
 })
 
 test_that("get_sample_name", {
@@ -9,13 +16,12 @@ test_that("get_sample_name", {
 })
 
 test_that("binarize", {
+  expect_error(binarize("not numbers"),"non-numeric argument to binary operator")
   expect_equal(binarize(c(0,0,100,100,75,NA)),c(0,0,1,1,1,NA))
 })
 
 test_that("bin_granges",{
-  
-  expect_error(split_granges("not granges"),"Input must be a Granges object")
-  
+  expect_error(bin_granges("not granges"),"Input must be a Granges object")
   regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
   expect_equal(length(bin_granges(regions,bin_size=10)),10) 
   expect_equal(reduce(bin_granges(regions,bin_size=10)),regions)
