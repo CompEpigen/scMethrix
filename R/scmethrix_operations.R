@@ -691,7 +691,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' get_stats(scMethrix_data,per_chr = FALSE)
 #' @return data.table of summary stats
 #' @export
-get_stats <- function(scm = NULL, per_chr = TRUE) {
+get_stats <- function(scm = NULL, assay="score",per_chr = TRUE) {
 
   x <- NULL
   
@@ -710,18 +710,10 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
         s <- data.table::data.table(
           Chr = levels(seqnames(scm))[x],
           Sample_Name = colnames(scm),
-          mean_meth = DelayedMatrixStats::colMeans2(score(scm), rows = starts[x]:ends[x], na.rm = TRUE),
-          median_meth = DelayedMatrixStats::colMedians(score(scm), rows = starts[x]:ends[x], na.rm = TRUE),
-          sd_meth = DelayedMatrixStats::colSds(score(scm), rows = starts[x]:ends[x], na.rm = TRUE)
+          mean_meth = DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
+          median_meth = DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
+          sd_meth = DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE)
         )
-        
-        if (has_cov(scm)) {
-          s <- cbind(s,data.table::data.table(
-            mean_cov = DelayedMatrixStats::colMeans2(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE),
-            median_cov = DelayedMatrixStats::colMedians(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE),
-            sd_cov = DelayedMatrixStats::colSds(counts(scm), rows = starts[x]:ends[x], na.rm = TRUE)))
-        }
-        s
       })
       
       stats <- data.table::rbindlist(l = stats, use.names = TRUE)
@@ -729,17 +721,10 @@ get_stats <- function(scm = NULL, per_chr = TRUE) {
     } else {
       stats <- data.table::data.table(
         Sample_Name = colnames(scm),
-        mean_meth = DelayedMatrixStats::colMeans2(get_matrix(scm), na.rm = TRUE),
-        median_meth = DelayedMatrixStats::colMedians(get_matrix(scm), na.rm = TRUE),
-        sd_meth = DelayedMatrixStats::colSds(get_matrix(scm), na.rm = TRUE)
+        mean_meth = DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), na.rm = TRUE),
+        median_meth = DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), na.rm = TRUE),
+        sd_meth = DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), na.rm = TRUE)
       )
-      
-      if (has_cov(scm)) {
-        stats <- cbind(stats,data.table::data.table(
-          mean_cov = DelayedMatrixStats::colMeans2(counts(scm), na.rm = TRUE),
-          median_cov = DelayedMatrixStats::colMedians(counts(scm), na.rm = TRUE),
-          sd_cov = DelayedMatrixStats::colSds(counts(scm), na.rm = TRUE)))
-      }
     }
 
   gc()
