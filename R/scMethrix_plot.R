@@ -73,6 +73,17 @@ get_palette <- function(n_row, col_palette){
   return(color_pal)
 }
 
+#' Getter for plot shapes. Shapes selected for optimal distinction and taken from:
+#' http://www.sthda.com/english/wiki/r-plot-pch-symbols-the-different-point-shapes-available-in-r
+#' @param n_row Number of shapes. Max of 15.
+#' @return list of shapes (by integer)
+get_shape <- function(n_row) {
+  shapes <- c(21:25,3,4,7:14)
+  return(shapes[1:n_row])
+}
+
+
+
 #' Violin Plot for \eqn{\beta}-Values
 #' @inheritParams prepare_plot_data
 #' @param col_palette string; Name of the RColorBrewer palette to use for plotting.
@@ -471,6 +482,11 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
   if (show_dp_labels) {
     dimred_gg <- dimred_gg + geom_label(size = 4) 
   }
+  
+  dimred_gg <- dimred_gg + scale_shape_discrete(solid=T)+
+    scale_shape_manual(values = get_shape(length(unique(dim_red$shape_me)))) +
+    #scale_shape_manual(values = rep(16,length(unique(dim_red$shape_me)))) +
+    scale_color_manual(values= get_palette(length(unique(dim_red$color_me)),col_palette = "Dark2"))
   
   return(dimred_gg)
   
