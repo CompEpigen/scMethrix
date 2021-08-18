@@ -236,10 +236,10 @@ test_that("mask_by_coverage", {
   expect_error(mask_by_coverage("not scMethrix"),"A valid scMethrix object needs to be supplied")
   expect_error(mask_by_coverage(remove_assay(scm.mem,assay="counts")))
   expect_error(mask_by_coverage(scm.mem,n_threads=2))
-  expect_error(mask_by_coverage(scm.mem,low_threshold=-1),"Thresholds")
-  expect_error(mask_by_coverage(scm.mem,low_threshold="not numeric"),"Thresholds")
-  expect_error(mask_by_coverage(scm.mem,avg_threshold=-1,"Thresholds"))
-  expect_error(mask_by_coverage(scm.mem,avg_threshold="not numeric"),"Thresholds")
+  expect_error(mask_by_coverage(scm.mem,low_threshold=-1),"low_threshold")
+  expect_error(mask_by_coverage(scm.mem,low_threshold="not numeric"),"low_threshold")
+  expect_error(mask_by_coverage(scm.mem,avg_threshold=-1,"avg_threshold"))
+  expect_error(mask_by_coverage(scm.mem,avg_threshold="not numeric"),"avg_threshold")
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     #expect_error(mask_by_coverage(scm,n_threads=2))

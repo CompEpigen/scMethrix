@@ -75,10 +75,6 @@ setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
           (x); SummarizedExperiment::assay(x, i="score")}
 )
 
-setMethod(f = "sampleNames", signature = "scMethrix", definition = function(object)   {
-  (object); row.names(colData(object))}
-)
-
 # setMethod(f = "featureNames", signature = "scMethrix", definition = function(object)   {
 #   (object); row.names(colData(object))}
 # )

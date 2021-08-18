@@ -4,7 +4,7 @@
 \alias{has_cov}
 \title{Checks if \code{\link{scMethrix}} object has a coverage matrix}
 \usage{
-has_cov(m)
+has_cov(scm)
 }
 \arguments{
 \item{m}{scMethrix; The \code{\link{scMethrix}} object}

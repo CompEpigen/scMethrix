@@ -4,7 +4,7 @@
 \alias{is_h5}
 \title{Checks if \code{\link{scMethrix}} object is an HDF5 object}
 \usage{
-is_h5(m)
+is_h5(scm)
 }
 \arguments{
 \item{m}{scMethrix; The \code{\link{scMethrix}} object}

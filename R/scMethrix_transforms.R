@@ -73,6 +73,7 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
 #' @param overlap_type character; defines the type of the overlap of the CpG sites with the target region. 
 #' Default value is `within`. For detailed description, see the \code{findOverlaps} function of the 
 #' \code{\link{IRanges}} package.
+#' @param batch_size integer; the number of files to process at once
 #' @param h5_dir directory to store an H5 based object
 #' @param replace boolean; flag for whether to delete the contents of h5_dir before saving 
 #' @return An \code{\link{scMethrix}} object

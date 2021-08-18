@@ -303,7 +303,7 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
 #' Plot descriptive statistics
 #' @details plot descriptive statistics results from \code{\link{get_stats}}
 #' @param plot_dat data.table or scMethrix; results from \code{\link{get_stats}}. If an \code{\link{scMethrix}} object is supplied, \code{\link{get_stats}} will be run for the specified assay
-#' @param what string; Can be \code{M} or \code{C}. Default \code{M} #TODO: Remove this
+#' @param assay string; Which assay to get the stats of. Default "score"
 #' @param stat string; Can be \code{mean} or \code{median}. Default \code{mean}
 #' @param ignore_chr boolean; Chromsomes to ignore. Default \code{NULL}
 #' @param samples list of strings; Use only these samples. Default \code{NULL}

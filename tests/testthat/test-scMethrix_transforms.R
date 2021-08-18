@@ -14,7 +14,7 @@ test_that("bin_scMethrix", {
     scm <- transform_assay(scm,assay="score",new_assay="bin",trans=binarize)
     scm <- transform_assay(scm,assay="score",new_assay="bin2",trans=binarize)
     bin <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin1"), replace = T)
-    expect_equal(dim(bin),c(length(rowRanges(bin)),length(sampleNames(bin))))
+    expect_equal(dim(bin),c(length(rowRanges(bin)),length(colnames(bin))))
     
     if (is_h5(scm)) {
       expect_equal(class(score(bin))[[1]],"DelayedMatrix")

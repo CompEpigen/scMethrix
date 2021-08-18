@@ -13,7 +13,7 @@ bin_scMethrix(
   overlap_type = "within",
   h5_dir = NULL,
   verbose = TRUE,
-  n_chunks = 1,
+  batch_size = 20,
   n_threads = 1,
   replace = FALSE
 )
@@ -38,8 +38,6 @@ Default value is \code{within}. For detailed description, see the \code{findOver
 \item{h5_dir}{directory to store an H5 based object}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
-
-\item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1}
 
 \item{n_threads}{integer; Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. Default = 1}
 

@@ -1,5 +1,5 @@
 #' Checks if \code{\link{scMethrix}} object is an HDF5 object
-#' @param m scMethrix; The \code{\link{scMethrix}} object
+#' @param scm scMethrix; The \code{\link{scMethrix}} object
 #' @return boolean Whether the object is HDF5
 #' @examples
 #' data('scMethrix_data')
@@ -15,7 +15,7 @@ is_h5 = function(scm) {
 }
 
 #' Checks if \code{\link{scMethrix}} object has a coverage matrix
-#' @param m scMethrix; The \code{\link{scMethrix}} object
+#' @param scm scMethrix; The \code{\link{scMethrix}} object
 #' @return boolean Whether the object has a coverage matrix
 #' @examples
 #' data('scMethrix_data')

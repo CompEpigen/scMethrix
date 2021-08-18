@@ -772,8 +772,8 @@ remove_uncovered <- function(scm = NULL, verbose = TRUE) {
 #'  \code{avg_threshold} is used to mask sites with high aberrant counts. For single cell data, this is typically CpG sites with an average count > 2, as there are only two strands in a cell to sequence.
 #'  
 #' @inheritParams generic_scMethrix_function
-#' @param low_threshold numeric; The minimal coverage allowed. Everything below will get masked. Default = 0
-#' @param avg_threshold numeric; The max average coverage. Default = 2
+#' @param low_threshold numeric; The minimal coverage allowed. Everything below will get masked. If NULL, this will be ignored. Default = 0
+#' @param avg_threshold numeric; The max average coverage. If NULL, this will be ignored. Default = 2
 #' @param n_threads integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
@@ -787,7 +787,8 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = 0, avg
   if (!is_h5(scm) && n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
   
-  if (!is.numeric(low_threshold) || !is.numeric(avg_threshold) || low_threshold < 0 || avg_threshold < 0) stop("Thresholds must be greater than 0")
+  if (!is.null(low_threshold) && (!is.numeric(low_threshold) || low_threshold < 0)) stop("low_threshold must be greater than 0")
+  if (!is.null(avg_threshold) && (!is.numeric(avg_threshold) || avg_threshold < 0)) stop("avg_threshold must be greater than 0")
   
   if (!has_cov(scm)) stop("Cannot mask as no coverage matrix is present in the object.")
   
