@@ -424,7 +424,7 @@ plot_imap <- function(scm) {
 #' @export
 plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE) {
   
-  X <- Y <- color_me <- shape_me <- row_names <- ..col_anno <- ..shape_anno <- NULL
+  X <- Y <- color_me <- shape_me <- row_names <- ..col_anno <- ..shape_anno <- color <- shape <- NULL
   
   dim_red <- reducedDim(scm,type=dim_red)
   
@@ -440,6 +440,7 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
   if (!is.null(col_anno)) {
     if (colnames(colData(scm)) %in% col_anno) {
       dim_red$color_me <- unlist(as.data.table(colData(scm))[,..col_anno]) #TODO: make colData a data.table
+      colors <- scale_color_manual(values= get_palette(length(unique(dim_red$color_me)),col_palette = "Dark2"))
     } else {
       stop(paste0(col_anno, " not found in provided scMethrix object"))
     }
@@ -448,6 +449,7 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
   if (!is.null(shape_anno)) {
     if (colnames(colData(scm)) %in% shape_anno) {
       dim_red$shape_me <- unlist(as.data.table(colData(scm))[,..shape_anno]) #TODO: make colData a data.table
+      shapes <- scale_shape_manual(values = get_shape(length(unique(dim_red$shape_me))))
     } else {
       stop(paste0(shape_anno, " not found in provided scMethrix object"))
     }
@@ -483,10 +485,8 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
     dimred_gg <- dimred_gg + geom_label(size = 4) 
   }
   
-  dimred_gg <- dimred_gg + scale_shape_discrete(solid=T)+
-    scale_shape_manual(values = get_shape(length(unique(dim_red$shape_me)))) +
-    #scale_shape_manual(values = rep(16,length(unique(dim_red$shape_me)))) +
-    scale_color_manual(values= get_palette(length(unique(dim_red$color_me)),col_palette = "Dark2"))
+  dimred_gg <- dimred_gg + color + shape
+    
   
   return(dimred_gg)
   

@@ -191,7 +191,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       
       cols <- split_vector(1:ncol(scm),batch_size,by="size")
       sink <- AutoRealizationSink(c(length(rrng),ncol(scm)))
-      grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rrng),batch_size))
+      grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rrng),length(cols[[1]])))
 
       for (i in 1:length(cols)) {
         
