@@ -964,9 +964,9 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = 0, prop_
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
 #' data('scMethrix_data')
-#' mask_non_variable(scMethrix_data,low_threshold=0.05)
+#' mask_by_variance(scMethrix_data,low_threshold=0.05)
 #' @export
-mask_non_variable <- function(scm = NULL, assay = "score", low_threshold = 0.05, n_threads = 1, verbose = TRUE) {
+mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, n_threads = 1, verbose = TRUE) {
   
   if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
