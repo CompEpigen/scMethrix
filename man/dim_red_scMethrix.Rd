@@ -2,7 +2,7 @@
 % Please edit documentation in R/scMethrix_dimensionality.R
 \name{dim_red_scMethrix}
 \alias{dim_red_scMethrix}
-\title{Reduces dimensionality}
+\title{Reduces dimensionality (tSNE, UMAP, PCA, or custom)}
 \usage{
 dim_red_scMethrix(
   scm,
@@ -42,7 +42,7 @@ dim_red_scMethrix(
 \code{\link{scMethrix}} object with reducedDim assay
 }
 \description{
-Reduces dimensionality
+Reduces dimensionality (tSNE, UMAP, PCA, or custom)
 }
 \details{
 Does reduction stuff

@@ -18,9 +18,9 @@ mask_by_coverage(
 
 \item{assay}{string; name of an existing assay. Default = "score"}
 
-\item{low_threshold}{numeric; The minimal coverage allowed. Everything below will get masked. Default = 0}
+\item{low_threshold}{numeric; The minimal coverage allowed. Everything below will get masked. If NULL, this will be ignored. Default = 0}
 
-\item{avg_threshold}{numeric; The max average coverage. Default = 2}
+\item{avg_threshold}{numeric; The max average coverage. If NULL, this will be ignored. Default = 2}
 
 \item{n_threads}{integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1}
 

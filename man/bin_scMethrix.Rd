@@ -39,6 +39,8 @@ Default value is \code{within}. For detailed description, see the \code{findOver
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 
+\item{batch_size}{integer; the number of files to process at once}
+
 \item{n_threads}{integer; Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. Default = 1}
 
 \item{replace}{boolean; flag for whether to delete the contents of h5_dir before saving}

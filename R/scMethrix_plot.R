@@ -74,7 +74,7 @@ get_palette <- function(n_row, col_palette){
 }
 
 #' Getter for plot shapes. Shapes selected for optimal distinction and taken from:
-#' http://www.sthda.com/english/wiki/r-plot-pch-symbols-the-different-point-shapes-available-in-r
+#' @details http://www.sthda.com/english/wiki/r-plot-pch-symbols-the-different-point-shapes-available-in-r
 #' @param n_row Number of shapes. Max of 15.
 #' @return list of shapes (by integer)
 get_shape <- function(n_row) {

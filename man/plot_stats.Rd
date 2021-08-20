@@ -17,6 +17,8 @@ plot_stats(
 \arguments{
 \item{plot_dat}{data.table or scMethrix; results from \code{\link{get_stats}}. If an \code{\link{scMethrix}} object is supplied, \code{\link{get_stats}} will be run for the specified assay}
 
+\item{assay}{string; Which assay to get the stats of. Default "score"}
+
 \item{stat}{string; Can be \code{mean} or \code{median}. Default \code{mean}}
 
 \item{ignore_chr}{boolean; Chromsomes to ignore. Default \code{NULL}}
@@ -26,8 +28,6 @@ plot_stats(
 \item{n_col}{integer; number of columns. Passed to \code{facet_wrap}}
 
 \item{n_row}{integer; number of rows. Passed to \code{facet_wrap}}
-
-\item{what}{string; Can be \code{M} or \code{C}. Default \code{M} #TODO: Remove this}
 }
 \value{
 ggplot2 object

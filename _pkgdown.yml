@@ -40,6 +40,7 @@ reference:
   - subset_scMethrix
   - mask_by_sample
   - mask_by_coverage
+  - mask_by_variance
   - remove_uncovered
 - subtitle: "Statistics"
 - contents:
@@ -54,18 +55,13 @@ reference:
   - binarize
 - subtitle: "Imputation"
 - contents:
-  - impute_by_iPCA
   - impute_by_melissa
-  - impute_by_RF
-  - impute_by_kNN
   - impute_regions
   - generate_training_set
   - generate_random_subset
 - subtitle: "Dimensionality Reduction"
 - contents:
-  - pca_scMethrix
-  - umap_scMethrix
-  - tsne_scMethrix
+  - dim_red_scMethrix
   - reduce_cpgs
 - title: "Plotting"
 - contents: 
@@ -76,10 +72,8 @@ reference:
   - plot_sparsity
   - plot_stats
   - plot_dim_red
-  - plot_pca
-  - plot_umap
-  - plot_tsne
   - get_palette
+  - get_shape
   - benchmark_imputation
   - scMethrix_theme
 - title: "Misc functions"

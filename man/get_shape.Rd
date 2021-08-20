@@ -2,8 +2,7 @@
 % Please edit documentation in R/scMethrix_plot.R
 \name{get_shape}
 \alias{get_shape}
-\title{Getter for plot shapes. Shapes selected for optimal distinction and taken from:
-http://www.sthda.com/english/wiki/r-plot-pch-symbols-the-different-point-shapes-available-in-r}
+\title{Getter for plot shapes. Shapes selected for optimal distinction and taken from:}
 \usage{
 get_shape(n_row)
 }
@@ -15,5 +14,7 @@ list of shapes (by integer)
 }
 \description{
 Getter for plot shapes. Shapes selected for optimal distinction and taken from:
+}
+\details{
 http://www.sthda.com/english/wiki/r-plot-pch-symbols-the-different-point-shapes-available-in-r
 }

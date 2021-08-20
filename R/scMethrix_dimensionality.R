@@ -72,7 +72,7 @@ reduce_cpgs <- function(scm, assay = "score", var = "top", top_var = 1000, na.rm
 }
 
 #------------------------------------------------------------------------------------------------------------
-#' Reduces dimensionality
+#' Reduces dimensionality (tSNE, UMAP, PCA, or custom)
 #' @details Does reduction stuff
 #' @param n_components integer; Number of components to use for PCA
 #' @param n_neighbors integer; number of nearest neighbors
@@ -109,7 +109,6 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), v
     umap <- umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)),n_components=n_components)#, ...)
     
     reducedDim(scm, "UMAP") <- umap$layout
-    
     
   } else if (type == "PCA") {
     
