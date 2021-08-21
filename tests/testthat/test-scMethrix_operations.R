@@ -45,24 +45,46 @@ test_that("merge_scMethrix", {
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
    
     #same samples
-    expect_error(merge_scMethrix(scm,scm,by="col"), "You have the same samples in your datasets. You need different samples for this merging. ") 
+    expect_error(merge_scMethrix(scm,scm,by="col"), "You have the same samples in your datasets. ") 
     #different regions
-    expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="col"),"There are non-overlapping regions in your datasets. This function only takes identical regions.") 
+    expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="col"),"There are non-overlapping regions in your datasets.") 
+    #different metadata
+    expect_warning(merge_scMethrix(get_metadata_stats(scm[,1:2]),scm[,3:4],by="col"))
     
     #same regions
-    expect_error(merge_scMethrix(scm,scm,by="row"),"There are overlapping regions in your datasets. Each object must contain unique regions.") 
+    expect_error(merge_scMethrix(scm,scm,by="row"),"There are overlapping regions in your datasets.") 
     #different samples
-    expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="row"),"You have different samples in your dataset. You need the same samples in your datasets.") 
-    
-    s <- remove_assay(scm,assay="counts")
+    expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="row"),"You have different samples in your dataset.") 
+    #different metadata
+    expect_s4_class(merge_scMethrix(get_metadata_stats(scm[1:2]),scm[3:4]),'scMethrix')
 
-    expect_warning(merge_scMethrix(s[,1],scm[,2],by="col")) #different assays
+    #different assays
+    expect_warning(merge_scMethrix(remove_assay(scm,assay="counts")[,1],scm[,2],by="col")) 
     
-    expect_equal(merge_scMethrix(scm[2:nrow(scm)],scm[1],by="row"),scm, check.attributes = FALSE) #TODO: Should remove the check.atrributes later
-    expect_equal(merge_scMethrix(scm[,2:ncol(scm)],scm[,1],by="col"),scm, check.attributes = FALSE)
+    if (!is_h5(scm)) {
+      expect_equal(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row"),scm)
+      expect_equal(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"),scm)
+      
+      #order doesn't matter
+      expect_equal(merge_scMethrix(scm[1], scm[2:nrow(scm)],by="row"),
+                   merge_scMethrix(scm[2:nrow(scm)], scm[1],by="row"))
+      
+      # expect_equal(merge_scMethrix(scm[,1], scm[,2:ncol(scm)],by="col"),  #colbind is currently position dependant
+      #              merge_scMethrix(scm[,2:ncol(scm)], scm[,1],by="col"))
+    } else { # Test is less stringent on HDF5-stored objects due since the seed value for delayed operations is not reflected in the parent object
+      expect_equal(as.matrix(score(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row"))),as.matrix(score(scm)))
+      expect_equal(as.matrix(score(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"))),as.matrix(score(scm)))
+      
+      expect_equal(as.matrix(counts(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row"))),as.matrix(counts(scm)))
+      expect_equal(as.matrix(counts(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"))),as.matrix(counts(scm)))
+      
+      #order doesn't matter
+      expect_equal(as.matrix(score(merge_scMethrix(scm[1], scm[2:nrow(scm)],by="row"))),
+                   as.matrix(score(merge_scMethrix(scm[2:nrow(scm)], scm[1],by="row"))))
+      expect_equal(as.matrix(counts(merge_scMethrix(scm[1], scm[2:nrow(scm)],by="row"))),
+                   as.matrix(counts(merge_scMethrix(scm[2:nrow(scm)], scm[1],by="row"))))
+    }
     
-    expect_equal(merge_scMethrix(scm[1], scm[2:nrow(scm)],by="row"),
-                 merge_scMethrix(scm[2:nrow(scm)], scm[1],by="row"), check.attributes = FALSE)
   }))
 })
 
