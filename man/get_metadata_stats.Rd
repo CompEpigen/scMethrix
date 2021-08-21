@@ -17,6 +17,8 @@ Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} ob
 }
 \details{
 Adds the mean, median, SD, and sample count and coverage (if present) for  the \code{\link{GenomicRanges}} in an \code{\link{scMethrix}} object. This can be accessed using mcols().
+
+This data will not be updated automatically for any subset, merge, bin, etc functions.
 }
 \examples{
 data('scMethrix_data')

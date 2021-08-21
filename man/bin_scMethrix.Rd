@@ -21,7 +21,7 @@ bin_scMethrix(
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{regions}{The regions from which to make the bins}
+\item{regions}{Granges; The regions from which to make the bins.}
 
 \item{bin_size}{integer; The size of each bin. First bin will begin at the start position of the first genomic
 region on the chromosome. If NULL, there will be one bin per region. Default 100000.}

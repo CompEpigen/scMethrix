@@ -23,11 +23,12 @@ Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
 Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.
 
 If merging by rows, all CpG sites must be unique and samples must be identical
-If merging by columns, all samples must be unique and CpG sites must be identical
+If merging by columns, all samples must be unique and CpG sites must be identical.
 
-TODO: Check if metadata is saved correctly
+Metadata will be retained in certain situations. Merging by row will keep the rowRanges metadata, but merging by column will not. For experiment metadata, only metadata from scm1 will be retained. Custom experiment metadata can manually be added via \code{metadata<-}, or to rowRanges via \code{mcols}.
 }
 \examples{
 data('scMethrix_data')
 merge_scMethrix(scMethrix_data[1:5],scMethrix_data[6:10],by="row")
+merge_scMethrix(scMethrix_data[,1:2],scMethrix_data[,3:4],by="col")
 }

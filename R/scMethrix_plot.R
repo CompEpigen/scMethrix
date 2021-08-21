@@ -362,10 +362,10 @@ plot_stats <- function(plot_dat, assay = "score", stat = "mean", ignore_chr = NU
   } else {
     if (stat == "mean") {
       plot_dat[, which(grepl("^median", colnames(plot_dat))):=NULL]
-      plot_title <- paste("Mean",what)
+      plot_title <- paste("Mean",assay)
     } else {
       plot_dat[, which(grepl("^mean", colnames(plot_dat))):=NULL]
-      plot_title <- paste("Median",what)
+      plot_title <- paste("Median",assay)
     }
     
     colnames(plot_dat) <- c("Sample_Name", "measurement", "sd")

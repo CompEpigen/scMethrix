@@ -64,7 +64,7 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
 #' 
 #' In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs.
 #' @inheritParams generic_scMethrix_function
-#' @param regions The regions from which to make the bins
+#' @param regions Granges; The regions from which to make the bins.
 #' @param bin_size integer; The size of each bin. First bin will begin at the start position of the first genomic
 #' region on the chromosome. If NULL, there will be one bin per region. Default 100000.
 #' @param bin_by character; can create bins by # of base pairs "bp" or by # of CpG sites "cpg". Default "bp"
