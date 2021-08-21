@@ -91,6 +91,8 @@ Versatile BedGraph reader.
 \details{
 Reads BED files and generates methylation matrices.
 Optionally arrays can be serialized as on-disk HDFS5 arrays.
+
+colData should be input as a headered data.table with a column called "Sample" with names matching the input filenames. Any other columns may be added to include relevant data (e.g. cell type, collection date, etc). During input, this is done as a left join on the inputted files, so the input colData may contain rows for samples that are not actually included in the analysis. This data will be updated on any relevant subsets or merges, etc.
 }
 \examples{
 \dontrun{

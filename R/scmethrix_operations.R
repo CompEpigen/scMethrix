@@ -1,6 +1,9 @@
 #------------------------------------------------------------------------------------------------------------
 #' Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
 #' @details Adds the mean, median, SD, and sample count and coverage (if present) for  the \code{\link{GenomicRanges}} in an \code{\link{scMethrix}} object. This can be accessed using mcols().
+#' 
+#' This data will not be updated automatically for any subset, merge, bin, etc functions.
+#' 
 #' @inheritParams generic_scMethrix_function
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -73,7 +76,7 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #' If merging by rows, all CpG sites must be unique and samples must be identical
 #' If merging by columns, all samples must be unique and CpG sites must be identical. 
 #' 
-#' Metadata will be retained in certain situations. Merging by row will keep the rowRanges metadata, but merging by column will not. For experiment metadata, only metadata from scm1 will be retained. Custom experiment metadata can manually be added via \code{\link{metadata<-}}.
+#' Metadata will be retained in certain situations. Merging by row will keep the rowRanges metadata, but merging by column will not. For experiment metadata, only metadata from scm1 will be retained. Custom experiment metadata can manually be added via \code{metadata<-}, or to rowRanges via \code{mcols}.
 #' 
 #' @param scm1 A \code{\link{scMethrix}} object
 #' @param scm2 A \code{\link{scMethrix}} object
