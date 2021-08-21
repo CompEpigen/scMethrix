@@ -71,9 +71,10 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #' @details Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.
 #' 
 #' If merging by rows, all CpG sites must be unique and samples must be identical
-#' If merging by columns, all samples must be unique and CpG sites must be identical
+#' If merging by columns, all samples must be unique and CpG sites must be identical. 
 #' 
-#' TODO: Check if metadata is saved correctly
+#' Metadata will be retained in certain situations. Merging by row will keep the rowRanges metadata, but merging by column will not. For experiment metadata, only metadata from scm1 will be retained. Custom experiment metadata can manually be added via \code{\link{metadata<-}}.
+#' 
 #' @param scm1 A \code{\link{scMethrix}} object
 #' @param scm2 A \code{\link{scMethrix}} object
 #' @param by Merge by columns or rows
@@ -81,12 +82,15 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #' @examples
 #' data('scMethrix_data')
 #' merge_scMethrix(scMethrix_data[1:5],scMethrix_data[6:10],by="row")
+#' merge_scMethrix(scMethrix_data[,1:2],scMethrix_data[,3:4],by="col")
 #' @export
 merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
   
   if (!is(scm1, "scMethrix") || !is(scm2, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
+  
+  if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.")
   
   names1 = SummarizedExperiment::assayNames(scm1)
   names2 = SummarizedExperiment::assayNames(scm2)
@@ -105,25 +109,44 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
     if (nrow(colData(scm1)) != nrow(colData(scm2)) || !all(rownames(scm1@colData) == rownames(scm2@colData))) {
       stop("You have different samples in your dataset. You need the same samples in your datasets. ")
     } else {
-      m <- rbind(scm1, scm2)
+      scm <- rbind(scm1, scm2)
     }
-    if (any(duplicated(rowRanges(m)))) {
+    if (any(duplicated(rowRanges(scm)))) {
       stop("There are overlapping regions in your datasets. Each object must contain unique regions. ")
     }
   }
   if (by == "col") {
     if (any(rownames(scm1@colData) %in% rownames(scm2@colData))) {
       stop("You have the same samples in your datasets. You need different samples for this merging.  ")
-    } else if (!identical(rowRanges(scm1),rowRanges(scm2))) {
+    } 
+    
+    if (ncol(mcols(rowRanges(scm1))) != 0 || ncol(mcols(rowRanges(scm2))) != 0) {
+      warning("Metadata contained in rowRanges will be erased when merged by column")
+      mcols(scm1) <- subset(mcols(scm1),select = NULL)
+      mcols(scm2) <- subset(mcols(scm2),select = NULL)
+    }
+    
+    if (!identical(rowRanges(scm1),rowRanges(scm2))) {
       stop("There are non-overlapping regions in your datasets. This function only takes identical regions. ")
     } else {
-      m <- cbind(scm1, scm2)
+      scm <- cbind(scm1, scm2)
     }
   }
   
+  metadata(scm) <- metadata(scm1)
+  int_metadata(scm) <- int_metadata(scm1)
+  
+  # colorder <- order(colnames(scm))
+  # 
+  # for (name in SummarizedExperiment::assayNames(scm)) {
+  #   
+  #   dimnames(assays(scm)[[name]])[[2]] <- dimnames(scm)[[2]][order(colnames(scm))] #Sort cols
+  # 
+  # }
+  
   #chrom_size = range(rowRanges(scm))@ranges@width
   
-  return(sort(m))
+  return(sort(scm))
 }
 
 #------------------------------------------------------------------------------------------------------------
