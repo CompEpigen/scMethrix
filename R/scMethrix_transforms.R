@@ -8,7 +8,7 @@
 #' data('scMethrix_data')
 #' transform_assay(scMethrix_data,assay="score",new_assay="plus1",trans=function(x){x+1})
 #' @export
-transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h5_temp = NULL) {
+transform_assay <- function(scm, assay = "score", new_assay = NULL, trans = NULL, h5_temp = NULL) {
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -126,7 +126,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
   colnames(overlap_indices) <- c("xid", "yid")
   overlap_indices[,yid := paste0("rid_", yid)]
-  
+
   if (!is.null(bin_size)) {
     
     if (verbose) message("Binning by ",bin_by," with size of ",bin_size,"...")
@@ -150,10 +150,11 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       }
       
     } else if (bin_by == "bp") {
-      
-      rrng <- unlist(tile(regions, width = bin_size)) #TODO: Should switch this to using RLE lookup
+
+      rrng <- sort(unlist(tile(regions, width = bin_size))) #TODO: Should switch this to using RLE lookup
       
       idx <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type))
+      idx <- idx[order(subjectHits),]
       
       rrng <- rrng[unique(idx$subjectHits)]
       rrng$n_cpgs <- rle(idx$subjectHits)$lengths
