@@ -129,7 +129,7 @@
   n_chunks <span class='op'>=</span> <span class='fl'>1</span>,
   n_threads <span class='op'>=</span> <span class='fl'>1</span>,
   overlap_type <span class='op'>=</span> <span class='st'>"within"</span>,
-  type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"kNN"</span>, <span class='st'>"iPCA"</span>, <span class='st'>"RF"</span><span class='op'>)</span>,
+  type <span class='op'>=</span> <span class='st'>"kNN"</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>,
   k <span class='op'>=</span> <span class='fl'>10</span>,
   n_pc <span class='op'>=</span> <span class='fl'>2</span>,
@@ -169,11 +169,11 @@
     </tr>
     <tr>
       <th>overlap_type</th>
-      <td><p>string;</p></td>
+      <td><p>defines the type of the overlap of the CpG sites with the target region. Default value is <code>within</code>. For detailed description, see the <code>findOverlaps</code> function of the <code>IRanges</code> package.</p></td>
     </tr>
     <tr>
       <th>type</th>
-      <td><p>string/closure; the imputation to perform 'kNN','iPCA','RF'. Otherwise, a closure can be specified that returns the imputed matrix</p></td>
+      <td><p>string/closure; the imputation to perform "kNN","iPCA",or "RF". Otherwise, a closure can be specified that returns the imputed matrix. Default = "kNN"</p></td>
     </tr>
     <tr>
       <th>verbose</th>

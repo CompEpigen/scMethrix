@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Reduces dimensionality — dim_red_scMethrix • scMethrix</title>
+<title>Reduces dimensionality (tSNE, UMAP, PCA, or custom) — dim_red_scMethrix • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Reduces dimensionality — dim_red_scMethrix" />
-<meta property="og:description" content="Reduces dimensionality" />
+<meta property="og:title" content="Reduces dimensionality (tSNE, UMAP, PCA, or custom) — dim_red_scMethrix" />
+<meta property="og:description" content="Reduces dimensionality (tSNE, UMAP, PCA, or custom)" />
 
 
 
@@ -111,13 +111,13 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Reduces dimensionality</h1>
+    <h1>Reduces dimensionality (tSNE, UMAP, PCA, or custom)</h1>
     <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_dimensionality.R'><code>R/scMethrix_dimensionality.R</code></a></small>
     <div class="hidden name"><code>dim_red_scMethrix.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Reduces dimensionality</p>
+    <p>Reduces dimensionality (tSNE, UMAP, PCA, or custom)</p>
     </div>
 
     <pre class="usage"><span class='fu'>dim_red_scMethrix</span><span class='op'>(</span>
@@ -138,11 +138,11 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>scm</th>
-      <td><p>Input <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+      <td><p>scMethrix; Input <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
     </tr>
     <tr>
       <th>assay</th>
-      <td><p>The assay to use. Default is 'score'</p></td>
+      <td><p>string; The assay to use. Default is 'score'</p></td>
     </tr>
     <tr>
       <th>type</th>
@@ -150,11 +150,11 @@
     </tr>
     <tr>
       <th>var</th>
-      <td><p>Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'</p></td>
+      <td><p>strning; Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'</p></td>
     </tr>
     <tr>
       <th>top_var</th>
-      <td><p>Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements).</p></td>
+      <td><p>integer; Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements).</p></td>
     </tr>
     <tr>
       <th>perplexity</th>
@@ -162,11 +162,11 @@
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>flag to output messages or not</p></td>
+      <td><p>boolean; flag to output messages or not</p></td>
     </tr>
     <tr>
       <th>n_components</th>
-      <td><p>Number of components to use</p></td>
+      <td><p>integer; Number of components to use for PCA</p></td>
     </tr>
     <tr>
       <th>n_neighbors</th>

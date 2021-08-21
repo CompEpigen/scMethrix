@@ -125,7 +125,7 @@
   ref_cpgs <span class='op'>=</span> <span class='cn'>NULL</span>,
   colData <span class='op'>=</span> <span class='cn'>NULL</span>,
   genome_name <span class='op'>=</span> <span class='st'>"hg19"</span>,
-  batch_size <span class='op'>=</span> <span class='fl'>200</span>,
+  batch_size <span class='op'>=</span> <span class='fl'>20</span>,
   n_threads <span class='op'>=</span> <span class='fl'>0</span>,
   h5 <span class='op'>=</span> <span class='cn'>FALSE</span>,
   h5_dir <span class='op'>=</span> <span class='cn'>NULL</span>,
@@ -152,69 +152,69 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>files</th>
-      <td><p>BED files containing methylation d</p></td>
+      <td><p>list of strings; file.paths of BED files</p></td>
     </tr>
     <tr>
       <th>ref_cpgs</th>
-      <td><p>BED files containing list of CpG sites. Must be zero-based genome.</p></td>
+      <td><p>data.table; list of CpG sites in the tab-delimited format of chr-start-end. Must be zero-based genome.</p></td>
     </tr>
     <tr>
       <th>colData</th>
-      <td><p>vector of input sample names</p></td>
+      <td><p>list of strings; Sample names. Will be derived from filenames if not provided</p></td>
     </tr>
     <tr>
       <th>genome_name</th>
-      <td><p>Name of genome. Default hg19</p></td>
+      <td><p>string; Name of genome. Default hg19</p></td>
     </tr>
     <tr>
       <th>batch_size</th>
-      <td><p>Max number of files to hold in memory at once</p></td>
+      <td><p>integer; Max number of files to hold in memory at once. Default 20</p></td>
     </tr>
     <tr>
       <th>n_threads</th>
-      <td><p>number of threads to use. Default 1.
+      <td><p>integer; number of threads to use. Default 1.
 Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.</p></td>
     </tr>
     <tr>
       <th>h5</th>
-      <td><p>Should the coverage and methylation matrices be stored as <code>HDF5Array</code></p></td>
+      <td><p>boolean; Should the coverage and methylation matrices be stored as <code>HDF5Array</code></p></td>
     </tr>
     <tr>
       <th>h5_dir</th>
-      <td><p>directory to store H5 based object</p></td>
+      <td><p>string; directory to store H5 based object</p></td>
     </tr>
     <tr>
       <th>h5_temp</th>
-      <td><p>temporary directory to store hdf5</p></td>
+      <td><p>string; temporary directory to store hdf5</p></td>
     </tr>
     <tr>
       <th>desc</th>
-      <td><p>Description of the experiment</p></td>
+      <td><p>string; Description of the experiment</p></td>
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>flag to output messages or not.</p></td>
+      <td><p>boolean; flag to output messages or not.</p></td>
     </tr>
     <tr>
       <th>zero_based</th>
-      <td><p>Boolean flag for whether the input data is zero-based or not</p></td>
+      <td><p>boolean; flag for whether the input data is zero-based or not</p></td>
     </tr>
     <tr>
       <th>reads</th>
-      <td><p>Manual input of reads. Typically used for testing.</p></td>
+      <td><p>data.table; Manual input of reads. Typically used for testing.</p></td>
     </tr>
     <tr>
       <th>replace</th>
-      <td><p>Boolean flag for whether to delete the contents of h5_dir before saving</p></td>
+      <td><p>boolean; flag for whether to delete the contents of h5_dir before saving</p></td>
     </tr>
     <tr>
       <th>pipeline</th>
-      <td><p>Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
+      <td><p>string; Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
 If not known use idx arguments for manual column assignments.</p></td>
     </tr>
     <tr>
       <th>stranded</th>
-      <td><p>Default c</p></td>
+      <td><p>boolean; Whether in input data is stranded. Default FALSE</p></td>
     </tr>
     <tr>
       <th>chr_idx</th>

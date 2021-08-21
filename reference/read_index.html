@@ -134,27 +134,28 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>files</th>
-      <td><p>List of BED files</p></td>
+      <td><p>list of strings; file.paths of BED files</p></td>
     </tr>
     <tr>
       <th>col_list</th>
-      <td><p>The column index object for the input BED files</p></td>
+      <td><p>string; The column index object for the input BED files</p></td>
     </tr>
     <tr>
       <th>n_threads</th>
-      <td><p>integer for number of threads to use</p></td>
+      <td><p>integer; number of threads to use. Default 1.
+Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.</p></td>
     </tr>
     <tr>
       <th>zero_based</th>
-      <td><p>Whether the input data is 0 or 1 based</p></td>
+      <td><p>boolean; flag for whether the input data is zero-based or not</p></td>
     </tr>
     <tr>
       <th>batch_size</th>
-      <td><p>Number of files to process before running unique. Default of 30.</p></td>
+      <td><p>integer; Max number of files to hold in memory at once. Default 20</p></td>
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>flag to output messages or not.</p></td>
+      <td><p>boolean; flag to output messages or not.</p></td>
     </tr>
     </table>
 

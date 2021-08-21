@@ -124,6 +124,7 @@
   <span class='va'>files</span>,
   <span class='va'>ref_cpgs</span>,
   <span class='va'>col_list</span>,
+  batch_size <span class='op'>=</span> <span class='fl'>20</span>,
   n_threads <span class='op'>=</span> <span class='fl'>0</span>,
   h5_temp <span class='op'>=</span> <span class='cn'>NULL</span>,
   zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>,
@@ -135,31 +136,36 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>files</th>
-      <td><p>The BED files to parse</p></td>
+      <td><p>list of strings; file.paths of BED files</p></td>
     </tr>
     <tr>
       <th>ref_cpgs</th>
-      <td><p>The index of all unique coordinates from the input BED files</p></td>
+      <td><p>data.table; list of CpG sites in the tab-delimited format of chr-start-end. Must be zero-based genome.</p></td>
     </tr>
     <tr>
       <th>col_list</th>
-      <td><p>The column index object for the input BED files</p></td>
+      <td><p>string; The column index object for the input BED files</p></td>
+    </tr>
+    <tr>
+      <th>batch_size</th>
+      <td><p>integer; The number of file to hold in memory at once</p></td>
     </tr>
     <tr>
       <th>n_threads</th>
-      <td><p>The number of threads to use. 0 is the default thread with no cluster built.</p></td>
+      <td><p>integer; number of threads to use. Default 1.
+Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.</p></td>
     </tr>
     <tr>
       <th>h5_temp</th>
-      <td><p>The file location to store the <code>RealizationSink</code> object</p></td>
+      <td><p>string; temporary directory to store hdf5</p></td>
     </tr>
     <tr>
       <th>zero_based</th>
-      <td><p>Boolean flag for whether the input data is zero-based or not</p></td>
+      <td><p>boolean; flag for whether the input data is zero-based or not</p></td>
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>flag to output messages or not.</p></td>
+      <td><p>boolean; flag to output messages or not.</p></td>
     </tr>
     </table>
 

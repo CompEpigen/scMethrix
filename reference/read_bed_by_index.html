@@ -120,26 +120,42 @@
     <p>Parses BED files for methylation values using previously generated index genomic coordinates</p>
     </div>
 
-    <pre class="usage"><span class='fu'>read_bed_by_index</span><span class='op'>(</span><span class='va'>file</span>, <span class='va'>ref_cpgs</span>, col_list <span class='op'>=</span> <span class='cn'>NULL</span>, zero_based <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>read_bed_by_index</span><span class='op'>(</span>
+  <span class='va'>files</span>,
+  <span class='va'>ref_cpgs</span>,
+  col_list <span class='op'>=</span> <span class='cn'>NULL</span>,
+  zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  strand_collapse <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  fill <span class='op'>=</span> <span class='cn'>TRUE</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>file</th>
-      <td><p>The BED file to parse</p></td>
+      <th>files</th>
+      <td><p>string; file.paths of BED files to parse to parse</p></td>
     </tr>
     <tr>
       <th>ref_cpgs</th>
-      <td><p>The index of all unique coordinates from the input BED files</p></td>
+      <td><p>data.table; The index of all unique coordinates from the input BED files</p></td>
     </tr>
     <tr>
       <th>col_list</th>
-      <td><p>The column index object for the input BED files</p></td>
+      <td><p>string; The column index object for the input BED files</p></td>
     </tr>
     <tr>
       <th>zero_based</th>
-      <td><p>Whether the input data is 0 or 1 based</p></td>
+      <td><p>boolean; Whether the input data is 0 or 1 based</p></td>
+    </tr>
+    <tr>
+      <th>strand_collapse</th>
+      <td><p>boolean; Default FALSE</p></td>
+    </tr>
+    <tr>
+      <th>fill</th>
+      <td><p>boolean; Fill the output matrix to match the ref_cpgs. This must be used for HDF5 input formats to ensure consistent
+spacing for the grid. It is optional for in-memory formats.</p></td>
     </tr>
     </table>
 

@@ -142,15 +142,15 @@
     </tr>
     <tr>
       <th>low_threshold</th>
-      <td><p>numeric; The minimal coverage allowed. Everything below will get masked. Default = 0</p></td>
+      <td><p>numeric; The minimal coverage allowed. Everything below will get masked. If NULL, this will be ignored. Default = 0</p></td>
     </tr>
     <tr>
       <th>avg_threshold</th>
-      <td><p>numeric; The max average coverage. Default = 2</p></td>
+      <td><p>numeric; The max average coverage. If NULL, this will be ignored. Default = 2</p></td>
     </tr>
     <tr>
       <th>n_threads</th>
-      <td><p>Number of parallel instances. Can only be used if <code><a href='scMethrix-class.html'>scMethrix</a></code> is in HDF5 format. Default = 1</p></td>
+      <td><p>integer; Number of parallel instances. Can only be used if <code><a href='scMethrix-class.html'>scMethrix</a></code> is in HDF5 format. Default = 1</p></td>
     </tr>
     <tr>
       <th>verbose</th>

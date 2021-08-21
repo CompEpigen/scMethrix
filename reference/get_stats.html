@@ -120,7 +120,7 @@
     <p>Estimate descriptive statistics for each sample</p>
     </div>
 
-    <pre class="usage"><span class='fu'>get_stats</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, per_chr <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>get_stats</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, assay <span class='op'>=</span> <span class='st'>"score"</span>, per_chr <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -130,8 +130,12 @@
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
+      <th>assay</th>
+      <td><p>string; name of an existing assay. Default = "score"</p></td>
+    </tr>
+    <tr>
       <th>per_chr</th>
-      <td><p>Estimate stats per chromosome. Default TRUE</p></td>
+      <td><p>boolean; Estimate stats per chromosome. Default TRUE</p></td>
     </tr>
     </table>
 
@@ -147,31 +151,22 @@
 
 <span class='co'>#Get stats for each sample and chromosome</span>
 <span class='fu'>get_stats</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Getting descriptive statistics...</span></div><div class='output co'>#&gt; <span class='message'>Finished in 1.37s</span></div><div class='output co'>#&gt;     Chr Sample_Name mean_meth median_meth  sd_meth mean_cov median_cov
-#&gt; 1: chr1          C1  68.81720         100 46.57508 1.161290          1
-#&gt; 2: chr1          C2  72.50000         100 44.93314 1.237500          1
-#&gt; 3: chr1          C3  72.77228         100 44.45489 1.237624          1
-#&gt; 4: chr1          C4  74.73684         100 43.06952 1.210526          1
-#&gt; 5: chr2          C1  67.61364         100 46.13808 1.113636          1
-#&gt; 6: chr2          C2  71.08434         100 44.93931 1.180723          1
-#&gt; 7: chr2          C3  64.53488         100 47.81476 1.197674          1
-#&gt; 8: chr2          C4  54.16667         100 49.82399 1.226190          1
-#&gt;       sd_cov
-#&gt; 1: 0.3697920
-#&gt; 2: 0.4282360
-#&gt; 3: 0.4277503
-#&gt; 4: 0.4098452
-#&gt; 5: 0.3191878
-#&gt; 6: 0.3871276
-#&gt; 7: 0.4005810
-#&gt; 8: 0.4208766</div><div class='input'>
+</div><div class='output co'>#&gt; <span class='message'>Getting descriptive statistics...</span></div><div class='output co'>#&gt; <span class='message'>Finished in 0.87s</span></div><div class='output co'>#&gt;     Chr Sample_Name mean_meth median_meth  sd_meth
+#&gt; 1: chr1          C1  68.81720         100 46.57508
+#&gt; 2: chr1          C2  72.50000         100 44.93314
+#&gt; 3: chr1          C3  72.77228         100 44.45489
+#&gt; 4: chr1          C4  74.73684         100 43.06952
+#&gt; 5: chr2          C1  67.61364         100 46.13808
+#&gt; 6: chr2          C2  71.08434         100 44.93931
+#&gt; 7: chr2          C3  64.53488         100 47.81476
+#&gt; 8: chr2          C4  54.16667         100 49.82399</div><div class='input'>
 <span class='co'>#Get stats for each sample</span>
 <span class='fu'>get_stats</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,per_chr <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Getting descriptive statistics...</span></div><div class='output co'>#&gt; <span class='message'>Finished in 0.47s</span></div><div class='output co'>#&gt;    Sample_Name mean_meth median_meth  sd_meth mean_cov median_cov    sd_cov
-#&gt; 1:          C1  68.23204         100 46.23817 1.138122          1 0.3459846
-#&gt; 2:          C2  71.77914         100 44.80300 1.208589          1 0.4075520
-#&gt; 3:          C3  68.98396         100 46.08938 1.219251          1 0.4148500
-#&gt; 4:          C4  65.08380         100 47.36149 1.217877          1 0.4139614</div></pre>
+</div><div class='output co'>#&gt; <span class='message'>Getting descriptive statistics...</span></div><div class='output co'>#&gt; <span class='message'>Finished in 0.47s</span></div><div class='output co'>#&gt;    Sample_Name mean_meth median_meth  sd_meth
+#&gt; 1:          C1  68.23204         100 46.23817
+#&gt; 2:          C2  71.77914         100 44.80300
+#&gt; 3:          C3  68.98396         100 46.08938
+#&gt; 4:          C4  65.08380         100 47.36149</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
