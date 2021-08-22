@@ -59,6 +59,7 @@ col_list <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_id
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(tempdir(),"/sse"),ref_cpgs = ref_cpgs, replace=TRUE,
                         chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6, colData = colData, n_threads=0, batch_size = 20)
 scm.big.h5 <- load_HDF5_scMethrix(dir="D:/Git/sampleData/500.h5")
+saveHDF5SummarizedExperiment(scm.big.h5,dir="D:/Git/sampleData/500.h5",replace=TRUE)
 
 scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 0, colData = colData,
                          chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
@@ -83,12 +84,22 @@ devtools::run_examples()
 setwd("D:/Git/scMethrix")
 pkgdown::build_site()
 
+saveRDS(colData, file = "colData.rds")
+
 #Psuedo Analysis
-scm <- load_HDF5_scMethrix(dir="D:/Git/sampleData/500.h5")
 ah = AnnotationHub()
 qhs = query(ah, c("RefSeq", "Mus musculus", "mm10"))
 genes = qhs[[1]]
 proms = promoters(genes)
+
+scm <- load_HDF5_scMethrix(dir="D:/Git/sampleData/500.h5")
+scm <- scm[,1:25]
 scm <- bin_scMethrix(scm,proms,h5_dir = paste0(tempdir(),"/h5"))
+scm <- convert_HDF5_scMethrix(scm)
 scm <- mask_by_sample(scm,low_threshold=NULL,prop_threshold=0.95)
-scm <- mask_by_variance(scm,low_threshold = 0.05)
+scm <- mask_by_variance(scm,low_threshold=0.05)
+scm <- remove_uncovered(scm)
+scm <- impute_regions(scm)
+scm <- transform_assay(scm,trans=binarize,assay="impute",new_assay="bin")
+scm <- dim_red_scMethrix(scm,assay="impute",type="UMAP")
+plot_dim_red(scm,"UMAP")

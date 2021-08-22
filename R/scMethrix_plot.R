@@ -486,7 +486,6 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
   }
   
   dimred_gg <- dimred_gg + color + shape
-    
   
   return(dimred_gg)
   
