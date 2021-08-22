@@ -12,7 +12,7 @@
 #' @slot int_elementMetadata NULL 
 #' @exportClass scMethrix
 #' @importFrom stats median quantile sd
-#' @importFrom utils data head write.table
+#' @importFrom utils data head write.table menu
 #' @importFrom methods is as new
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #'
@@ -44,8 +44,25 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
                                                                         descriptive_stats = desc,
                                                                         is_h5 = TRUE, 
                                                                         has_cov = ("count" %in% names(assays))))
-      #TODO: Cannot save to same directory input files exist in
+
       if (!is.null(h5_dir)) {
+        
+        files <- list.files (h5_dir,full.names = TRUE)
+        
+        if (length(files) != 0 && replace == FALSE) {
+          message("Files are present in the target directory, including: ")
+          writeLines(paste("   ",head(files)))
+          choice <- menu(c("Yes", "No"), title="Are you sure you want to delete this directory and save the HDF5 experiment?")
+          
+          if (choice == 2 || choice == 0) {
+            message("Saving aborted. The target directory has not been affected.")
+            return(invisible(NULL))
+          } else {
+            #unlink(h5_dir, recursive=TRUE)
+            replace = TRUE
+          }
+        }
+        
         message("Writing to disk...",start_time())
         
         tryCatch(HDF5Array::saveHDF5SummarizedExperiment(x = sse, dir = h5_dir, replace = replace, 

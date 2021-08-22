@@ -6,7 +6,7 @@
 \usage{
 transform_assay(
   scm,
-  assay = NULL,
+  assay = "score",
   new_assay = NULL,
   trans = NULL,
   h5_temp = NULL

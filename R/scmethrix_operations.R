@@ -503,12 +503,29 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verb
     stop("Please provide the target directory containing ")
   }
   
-  if (verbose) message("Saving HDF5 experiment to disk...",start_time())
+  #if (is.null(h5_dir)) h5_dir = paste0(tempdir(),"/h5")
+  
+  files <- list.files (h5_dir,full.names = TRUE)
+  
+  if (length(files) != 0 && replace == FALSE) {
+    message("Files are present in the target directory, including: ")
+    writeLines(paste("   ",head(files)))
+    choice <- menu(c("Yes", "No"), title="Are you sure you want to delete this directory and save the HDF5 experiment?")
+
+    if (choice == 2 || choice == 0) {
+      message("Saving aborted. The target directory has not been affected.")
+      return(invisible(NULL))
+    } else {
+      #unlink(h5_dir, recursive=TRUE)
+      replace = TRUE
+    }
+  }
   
   if (is_h5(scm)) {
-    HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = h5_dir, replace = replace, ...)
+    if (verbose) message("Saving HDF5 experiment to disk...",start_time())
+    HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = h5_dir, replace = replace, chunkdim = c(length(rowRanges(scm)),1), ...)
   } else {
-    stop("The object is not a methrix object or not in an HDF5 format. ")
+    stop("The object is not an scMethrix object or not in an HDF5 format. ")
   }
   
   if (verbose) message("Experiment saved in ",stop_time())

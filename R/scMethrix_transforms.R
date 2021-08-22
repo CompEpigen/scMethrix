@@ -154,7 +154,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       rrng <- sort(unlist(tile(regions, width = bin_size))) #TODO: Should switch this to using RLE lookup
       
       idx <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type))
-      idx <- idx[order(subjectHits),]
+      idx <- idx[order(idx$subjectHits),]
       
       rrng <- rrng[unique(idx$subjectHits)]
       rrng$n_cpgs <- rle(idx$subjectHits)$lengths
