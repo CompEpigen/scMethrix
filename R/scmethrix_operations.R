@@ -479,7 +479,6 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
   return (mtx)
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
 #' Saves an HDF5 \code{\link{scMethrix}} object
 #' @details Takes \code{\link{scMethrix}} object and saves it in the specified directory
 #' @inheritParams generic_scMethrix_function
@@ -494,44 +493,44 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 #' @return Nothing
 #' @export
 save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verbose = TRUE, ...) {
-  
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+
+  if (is(scm, "scMethrix")) {
+    if (!is_h5(scm)) stop("A valid scMethrix HDF5 object needs to be supplied.", call. = FALSE)
+  } else if (!is(scm, "SingleCellExperiment")) {
+    stop("A valid SingleCellExperiment-derived object needs to be supplied.", call. = FALSE)
   }
-  
-  if (is.null(dir)) {
+
+  if (is.null(h5_dir)) {
     stop("Please provide the target directory containing ")
   }
-  
+
   #if (is.null(h5_dir)) h5_dir = paste0(tempdir(),"/h5")
   
-  files <- list.files (h5_dir,full.names = TRUE)
+  if (dir.exists(h5_dir)) {
+    files <- list.files (h5_dir,full.names = TRUE)
+    
+    if (length(files) != 0 && replace == FALSE) {
+      message("Files are present in the target directory, including: ")
+      writeLines(paste("   ",head(files)))
+      choice <- menu(c("Yes", "No"), title="Are you sure you want to delete this directory and save the HDF5 experiment?")
   
-  if (length(files) != 0 && replace == FALSE) {
-    message("Files are present in the target directory, including: ")
-    writeLines(paste("   ",head(files)))
-    choice <- menu(c("Yes", "No"), title="Are you sure you want to delete this directory and save the HDF5 experiment?")
-
-    if (choice == 2 || choice == 0) {
-      message("Saving aborted. The target directory has not been affected.")
-      return(invisible(NULL))
-    } else {
-      #unlink(h5_dir, recursive=TRUE)
-      replace = TRUE
+      if (choice == 2 || choice == 0) {
+        message("Saving aborted. The target directory has not been affected.")
+        return(invisible(NULL))
+      } else {
+        #unlink(h5_dir, recursive=TRUE)
+        replace = TRUE
+      }
     }
   }
   
-  if (is_h5(scm)) {
-    if (verbose) message("Saving HDF5 experiment to disk...",start_time())
-    HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = h5_dir, replace = replace, chunkdim = c(length(rowRanges(scm)),1), ...)
-  } else {
-    stop("The object is not an scMethrix object or not in an HDF5 format. ")
-  }
-  
+  if (verbose) message("Saving HDF5 experiment to disk...",start_time())
+
+  HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = h5_dir, replace = replace, chunkdim = c(length(rowRanges(scm)),1), ...)
+
   if (verbose) message("Experiment saved in ",stop_time())
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
 #' Loads HDF5 \code{\link{scMethrix}} object
 #' @details Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
 #' @inheritParams generic_scMethrix_function

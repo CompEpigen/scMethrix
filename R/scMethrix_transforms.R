@@ -34,7 +34,7 @@ transform_assay <- function(scm, assay = "score", new_assay = NULL, trans = NULL
                                            spacings = c(length(scm), 1L)) 
     
     trans_sink <- HDF5Array::HDF5RealizationSink(dim = dim(scm),
-                                                 dimnames = list(NULL,row.names(colData(scm))), type = "integer",
+                                                 dimnames = list(NULL,row.names(colData(scm))), type = "double",
                                                  filepath = tempfile(pattern="trans_sink_",tmpdir=h5_temp),
                                                  name = new_assay, level = 6)
     
