@@ -81,3 +81,37 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, assay="score", verbose = 
   } 
 }
 
+#' Appends colData in an scMethrix object
+#' @details Typically used for clustering. Allows additional information to be added to colData in an scMethrix object after the object creation. It does this via a left join on the original colData. Any samples not included in the colData object will be filled with NAs.
+#' @param scm scMethrix; Input \code{\link{scMethrix}} object
+#' @param colData matrix; A matrix containing colData. Must contain either a column labelled "Sample" or row names that correspond with the input \code{\link{scMethrix}} object
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' colData <- colData(scMethrix_data)
+#' colData["Type"] <- "Cell"
+#' scMethrix_data <- append_col_data(scMethrix_data,colData)
+#' colData(scMethrix_data)
+#' @export
+append_col_data <- function(scm, colData) {
+  
+  if (!("Sample" %in% colnames(colData))) {
+    colData["Sample"] <- rownames(colData)
+  }
+  
+  cd <- colData(scm)
+  cd["Sample"] <- rownames(cd)
+  
+  n_samples <- length(intersect(cd$Sample,colData$Sample))
+  
+  if (n_samples != nrow(cd)) warning(nrow(cd)-n_samples," samples are not specified in colData")
+
+  cd <- merge(cd,colData,by="Sample", all.x = TRUE)
+  
+  row.names(cd) <- cd$Sample
+  cd <- within(cd, rm(Sample))
+  
+  colData(scm) <- cd
+  
+  return(scm)
+}
