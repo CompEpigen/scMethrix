@@ -79,12 +79,12 @@ colbind = function(...) {
 }
 
 #' Splits a vector into list of vectors by \code{chunk} or \code{size}
-#' @details Splits a vector into a list of \code{num} vectors or vectors of \code{n} size. If \code{len(vec)%%num != 0},
-#' then the last vector will have a length of less than size \code{num}
+#' @details Splits a vector into consistantly sized sub-lists. The sub-list size will always be decreasing based on list order.
 #' @param vec vector; The vector to split
-#' @param num integer; The number to split by
-#' @param by string; Whether to split by '\code{chunks}' or by '\code{size}'
-#' @return A list of vectors
+#' @param chunks integer; The number of desired sub-lists
+#' @param percent integer; The maximum percentage of elements each sub-list should hold
+#' @param size integer; The maximum size of each sub-list
+#' @return A list of sub-vectors
 #' @examples
 #' # Split vector into 4 sub vectors
 #' split_vector(c(1,2,3,4,5,6,7,8),chunks=4)
@@ -100,27 +100,22 @@ split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
   if (sum(is.na(c(chunks,percent,size))) != 2) stop("Invalid input. Must contain 1 of either chunks, percent, or size")
   
   if (!is.na(percent)) {
-    size <- floor(length(vec)*percent/(100))
+    if (!is.numeric(percent)) stop("Invalid input. Percent must be numeric")
+    
+    chunks = 100/percent
   }
-  
-  if (!is.na(chunks)) {
-    chunks = ceiling(chunks)
-    size <- ceiling(length(vec)/chunks)
-  }
-  
+ 
   if (!is.na(size)) {
-    splits <- ceiling(length(vec)/size)
-    splits <- size*(0:(splits-1))+1
+    if (!is.numeric(size)) stop("Invalid input. Size must be numeric")
+    chunks = length(vec)/ceiling(size)
   }
+
+  if (!is.numeric(chunks)) stop("Invalid input. Chunks must be numeric")
   
-  lst <- list()
+  chunks = max(1,chunks)
   
-  for (i in 1:length(splits)) {
-    s <- splits[i]
-    lst[[i]] <- vec[s:min(s+size-1,length(vec))]
-  }
-  
-  return (lst)
+  return(unname(split(vec, sort(rep_len(1:ceiling(chunks), length(vec))))))
+
 }
 
 #' Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size} 
