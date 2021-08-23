@@ -27,26 +27,6 @@ test_that("bin_granges",{
   expect_equal(reduce(bin_granges(regions,bin_size=10)),regions)
 })
 
-test_that("split_granges",{
-  regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
-  regions <- bin_granges(regions,bin_size=1)
-  
-  expect_error(split_granges("not granges"),"Input must be a Granges object")
-  expect_error(split_granges(regions),"Invalid input. Must contain 1 of either chunks, percent, or size")
-  expect_error(split_granges(regions,chunks=2,size=3),"Invalid input. Must contain 1 of either chunks, percent, or size")
-  
-  chunks = 3
-  percent = 33
-  size = 33
-  
-  expect_equal(length(split_granges(regions,chunks=chunks)),3)
-  expect_equal(length(split_granges(regions,percent=percent)),4)
-  expect_equal(length(split_granges(regions,percent=percent)[[4]]),1)
-  expect_equal(split_granges(regions,percent=percent),split_granges(regions,size=size))
-  expect_true(all(regions == unlist(split_granges(regions,size=size))))
-
-})
-
 test_that("start,split,stop_time",{
   expect_warning(stop_time())
   expect_warning(split_time())
@@ -77,6 +57,7 @@ test_that("split_vector",{
   expect_error(split_vector(vec,size=1,chunks=1),"Invalid input.")
   expect_equal(split_vector(vec,size=2),split_vector(vec,chunks=4))
   expect_equal(split_vector(vec,percent=25),split_vector(vec,chunks=4))
+  expect_equal(unlist(split_vector(vec,percent=25)),vec)
 })
 
 test_that("cast_granges",{
