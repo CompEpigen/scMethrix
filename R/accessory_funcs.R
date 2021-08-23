@@ -87,40 +87,68 @@ colbind = function(...) {
 #' @return A list of vectors
 #' @examples
 #' # Split vector into 4 sub vectors
-#' split_vector(c(1,2,3,4,5,6,7,8),4,by="chunk")
+#' split_vector(c(1,2,3,4,5,6,7,8),chunks=4)
 #' 
 #' # Split vector into sub-vectors with a size of 2
-#' split_vector(c(1,2,3,4,5,6,7,8),2,by="size")
+#' split_vector(c(1,2,3,4,5,6,7,8),size=2)
+#' 
+#' # Split vector into sub-vectors each with 25% of the total elements
+#' split_vector(c(1,2,3,4,5,6,7,8),percent=25)
 #' @export
-split_vector = function(vec, num = 1, by = c('chunks', 'size')) {
+split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
 
-  if (!is.numeric(num)) {
-    stop("num must be numeric")
+  if (sum(is.na(c(chunks,percent,size))) != 2) stop("Invalid input. Must contain 1 of either chunks, percent, or size")
+  
+  if (!is.na(percent)) {
+    size <- floor(length(vec)*percent/(100))
   }
   
-  type = match.arg(arg = by, choices = c('chunks', 'size'))
-  
-  if (type=="size") {
-    
-    vec <- split(vec, ceiling(seq_along(vec)/num))
-    return (unname(vec))
-    
-  } else {
-    
-    len <- length(vec)
-
-    if (len < num) num <- len
-    
-    #if (len/num < 2) stop("Length of input vector must be at least 2x greater than the number of chunks")
-    
-    chunks <- ceiling(len/num)*(1:(num-1))
-    idx <- c(0,chunks+1)
-    chunks <- c(chunks,len)
-    
-    return(lapply(1:num, function(i) {
-      return(vec[idx[i]:chunks[i]])
-    }))
+  if (!is.na(chunks)) {
+    chunks = ceiling(chunks)
+    size <- ceiling(length(vec)/chunks)
   }
+  
+  if (!is.na(size)) {
+    splits <- ceiling(length(vec)/size)
+    splits <- size*(0:(splits-1))+1
+  }
+  
+  lst <- list()
+  
+  for (i in 1:length(splits)) {
+    s <- splits[i]
+    lst[[i]] <- vec[s:min(s+size-1,length(vec))]
+  }
+  return (lst)
+  
+  
+  # if (!is.numeric(num)) {
+  #   stop("num must be numeric")
+  # }
+  # 
+  # type = match.arg(arg = by, choices = c('chunks', 'size'))
+  # 
+  # if (type=="size") {
+  #   
+  #   vec <- split(vec, ceiling(seq_along(vec)/num))
+  #   return (unname(vec))
+  #   
+  # } else {
+  #   
+  #   len <- length(vec)
+  #   
+  #   if (len < num) num <- len
+  #   
+  #   #if (len/num < 2) stop("Length of input vector must be at least 2x greater than the number of chunks")
+  #   
+  #   chunks <- ceiling(len/num)*(1:(num-1))
+  #   idx <- c(0,chunks+1)
+  #   chunks <- c(chunks,len)
+  #   
+  #   return(lapply(1:num, function(i) {
+  #     return(vec[idx[i]:chunks[i]])
+  #   }))
+  # }
 }
 
 #' Splits a \code{\link{GRanges}} object by \code{chunks}, \code{percent} or \code{size}

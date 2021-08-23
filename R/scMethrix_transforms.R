@@ -140,7 +140,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
         if (verbose) message("   Processing region ",rid,"/",length(regions$rid))
         
         idx <- which(overlap_indices[,yid == regions$rid[rid]])
-        idx <- split_vector(idx,num = bin_size, by = "size")
+        idx <- split_vector(idx,size=bin_size)
         
         for(i in idx) {
           gr <- range(rowRanges(scm[c(i[1],i[length(i)]),]))
@@ -190,7 +190,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 
       setAutoRealizationBackend("HDF5Array")
       
-      cols <- split_vector(1:ncol(scm),batch_size,by="size")
+      cols <- split_vector(1:ncol(scm),size=batch_size)
       sink <- AutoRealizationSink(c(length(rrng),ncol(scm)))
       grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rrng),length(cols[[1]])))
 

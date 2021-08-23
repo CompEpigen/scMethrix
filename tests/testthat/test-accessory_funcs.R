@@ -74,8 +74,9 @@ test_that("start,split,stop_time",{
 
 test_that("split_vector",{
   vec <- c(1,2,3,4,5,6,7,8)
-  expect_error(split_vector(vec,num="not a num"),"num must be numeric")
-  expect_equal(split_vector(vec,4,by="size"),split_vector(vec,2,by="chunk"))
+  expect_error(split_vector(vec,size=1,chunks=1),"Invalid input.")
+  expect_equal(split_vector(vec,size=2),split_vector(vec,chunks=4))
+  expect_equal(split_vector(vec,percent=25),split_vector(vec,chunks=4))
 })
 
 test_that("cast_granges",{
