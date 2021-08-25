@@ -74,8 +74,8 @@ reduce_cpgs <- function(scm, assay = "score", var = "top", top_var = 1000, na.rm
 #------------------------------------------------------------------------------------------------------------
 #' Reduces dimensionality (tSNE, UMAP, PCA, or custom)
 #' @details Does reduction stuff
-#' @param n_components integer; Number of components to use for PCA
-#' @param n_neighbors integer; number of nearest neighbors
+#' @param n_components integer; Number of components to use
+#' @param n_neighbors integer; number of nearest neighbors for UMAP
 #' @param type string; the type of imputation "tSNE","UMAP", or "PCA"
 #' @inheritParams reduce_cpgs 
 #' @inheritParams Rtsne::Rtsne
