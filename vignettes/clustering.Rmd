@@ -1,0 +1,16 @@
+---
+  title: "03: Clustering and metacells"
+author: "Andrew Lindsay, Reka Toth"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: true
+toc_depth: 3
+toc_float: true
+self_contained: yes
+highlight: pygments
+vignette: >
+  %\VignetteIndexEntry{scMethrix tutorial}
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteEncoding{UTF-8}
+---
