@@ -24,7 +24,7 @@
 #' @details Utilizes mainly the bioDist package to determine various distance metrics to be used for later clustering. 
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object
 #' @param assay string; The assay to use. Default is 'score'
-#' @param type string; The type of distance metric to use. Available options are 'spearman' and 'tau'. 
+#' @param type string; The type of distance metric to use. Available options are "pearson", spearman", "tau", "euclidean". "maximum", "manhattan", "canberra", "binary", "minkowski"
 #' @param verbose boolean; flag to output messages or not
 #' @return matrix; the distance matrix
 #' @import bioDist
@@ -32,7 +32,7 @@
 #' @seealso <https://www.bioconductor.org/packages//2.7/bioc/html/bioDist.html>
 #' @examples
 #' @export
-get_distance_matrix <- function(scm, assay="score",type="spearman",verbose=TRUE) {
+get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE) {
   
   # mtx <- as.data.table(get_matrix(scm,assay=assay))
   # mtx <- setDT(transpose(mtx,keep.names="sample"))[]
@@ -44,11 +44,16 @@ get_distance_matrix <- function(scm, assay="score",type="spearman",verbose=TRUE)
   if (any(is.na(mtx))) stop("There are NA values present in the matrix. Please fill/impute/bin to remove NAs.")
   
   if (type == "spearman") {
-    return (spearman.dist(mtx))
+    dist <- spearman.dist(mtx)
+  } else if (type == "pearson") {
+    dist <- cor.dist(mtx)
   } else if (type == "tau") {
-    return(tau.dist(mtx))
-  } 
+    dist <- tau.dist(mtx)
+  } else if (type %in% c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")) {
+    dist <- dist(mtx, method = type)
+  }
   
+  return(dist)
 }
 
 #' Generates a cluster object for an \code{\link{scMethrix}} object
