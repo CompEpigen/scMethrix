@@ -12,8 +12,6 @@
 # # draw dendogram with red borders around the 5 clusters
 # rect.hclust(fit, k=2, border="red")
 # 
-# 
-# 
 # # Model Based Clustering
 # library(mclust)
 # tic()
@@ -65,7 +63,7 @@ get_distance_matrix <- function(scm, assay="score",type="spearman",verbose=TRUE)
 #' @seealso [get_distance_matrix()]
 #' @examples
 #' @export
-cluster_scMethrix <- function(scm = NULL, dist = NULL, assay="score", verbose = TRUE, type="hierarchical") {
+cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay="score", verbose = TRUE, type="hierarchical", ...) {
 
   if (is.null(dist)) {
     if (is.null(scm)) {
@@ -75,10 +73,19 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, assay="score", verbose = 
     }
   }
   
+  if (is.null(n_clusters)) n_clusters = attr(dist,"Size")
+  
   if (type=="hierarchical") {
     fit <- hclust(dist, method="ward.D")
-    return(fit)
+    fit <- cutree(fit, k=n_clusters)
+    colData <- data.frame(Sample = names(fit), Cluster = fit)
+  } else if (type=="partition") {
+    fit <- kmeans(dist, centers = n_clusters)
+    colData <- data.frame(Sample = names(fit$cluster), Cluster = fit$cluster)
   } 
+  
+  scm <- append_col_data(scm,colData)
+  return(scm)
 }
 
 #' Appends colData in an scMethrix object
@@ -115,3 +122,4 @@ append_col_data <- function(scm, colData) {
   
   return(scm)
 }
+
