@@ -28,6 +28,66 @@ Luo C, Keown CL, Kurihara L, Zhou J et al. Single-cell methylomes identify neuro
 library(scMethrix)
 ```
 
+# Download the data
+
+The data can be directly downloaded from GEO, using the `GEOquery` package. The files will be downloaded into the working directory. 
+
+```{r message=FALSE, warning=FALSE}
+if(!requireNamespace("GEOquery")) {
+  BiocManager::install("GEOquery")
+}
+library(GEOquery)  
+```
+
+```{r message=FALSE, warning=FALSE}
+data_dir = "./GSE97179/"
+dir.create(path = data_dir, showWarnings = FALSE, recursive = TRUE)
+```
+
+```{r eval=F}
+lapply(c("GSM2553093", "GSM2553095", "GSM2553097", "GSM2553099", "GSM2553101", "GSM2553103"), function(gsm){
+  filePaths <-  GEOquery::getGEOSuppFiles(GEO = gsm, baseDir = data_dir, makeDirectory = TRUE)
+  
+  tar_dir <- paste0(data_dir,gsm,"/")
+  tar_file <- list.files(tar_dir,full.names=T)
+  untar(tar_file,exdir = tar_dir)
+  file.remove(tar_file)
+  
+  bed_dir <- paste0(tar_dir,list.files(tar_dir))
+  
+  invisible(lapply(list.files(bed_dir,full.names=T), function(file) {
+    gunzip(file,remove=T)
+  }))
+  
+  bed_files <- list.files(bed_dir,full.names=T)
+
+  bed <- do.call("rbind", lapply(bed_files, FUN = function(file) {
+    b <- fread(file, header=TRUE, sep="\t",drop=c(4,5))
+  }))
+
+  fwrite(bed,paste0(data_dir,gsm,".bed"),sep = "\t")
+  
+  unlink(tar_dir,recursive=TRUE,force=TRUE)
+  if (dir.exists(tar_dir)) warning(sprintf("Failed to remove data folder for [%s]", tar_dir))
+})
+```
+
+```{r message=FALSE, warning=FALSE}
+bed_files <- list.files(
+  path = data_dir,
+  pattern = "*.bed$",
+  full.names = TRUE, 
+  recursive = TRUE
+)
+
+print(basename(bed_files))
+```
+
+# Processing
+
+## CpG annotation 
+As a first step, we need a list of CpG sites in the respective genome. The CpG sites are listed using the respective [BSgenome](https://bioconductor.org/packages/release/bioc/html/BSgenome.html) annotation package. The `read_beds` function is also able to extract CpG sites on it's own, however, it might be beneficial to do it separately. 
+
 ```{r message=FALSE, warning=FALSE}
 #Genome of your preference to work with
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -39,41 +99,12 @@ if(!requireNamespace("BSgenome.Mmusculus.UCSC.mm10")) {
 library(BSgenome.Mmusculus.UCSC.mm10) 
 ```
 
-# Download the data
-
-The data can be directly downloaded from GEO, using the `GEOquery` package. The files will be downloaded into separate subfolders in the working directory. 
-
-```{r message=FALSE, warning=FALSE}
-if(!requireNamespace("GEOquery")) {
-  BiocManager::install("GEOquery")
-}
-library(GEOquery)  
-```
-
-```{r eval=F}
-filePaths <-  getGEOSuppFiles("GSM2553093")
-filePaths <-  getGEOSuppFiles("GSM2553095")
-filePaths <-  getGEOSuppFiles("GSM2553097")
-filePaths <-  getGEOSuppFiles("GSM2553099")
-filePaths <-  getGEOSuppFiles("GSM2553101")
-filePaths <-  getGEOSuppFiles("GSM2553103")
-```
-
-```{r message=FALSE, warning=FALSE}
-bed_files <- list.files(
-  path = getwd(),
-  pattern = "*bed\\.gz$",
-  full.names = TRUE, 
-  recursive = T
-)
-```
-
-# Processing
-
-## CpG annotation 
-As a first step, we need a list of CpG sites in the respective genome. The CpG sites are listed using the respective [Bsgenome](https://bioconductor.org/packages/release/bioc/html/BSgenome.html) annotation package. The `read_beds` function is also able to extract CpG sites on it's own, however, it might be beneficial to do it separately. 
-
 ```{r ref_data}
+if(!requireNamespace("methrix")) {
+  BiocManager::install("methrix")
+}
+library(methrix) 
+
 mm19_cpgs <- suppressWarnings(methrix::extract_CPGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10"))
 ```
 
@@ -83,20 +114,15 @@ An annotation table is also necessary to perform analyses. The data will be adde
 ```{r sample_anno}
 sample_anno <- data.frame(
   row.names = gsub(
-    pattern = paste0("GSM[[:digit:]]*_BiSeq_(WT_D[[:digit:]]{1,2}_R[[:digit:]]).bed.gz"),
-    replacement = "\\1",
-    x = basename(bed_files)
-    ),
-  Day = gsub(
-    pattern = paste0("GSM[[:digit:]]*_BiSeq_WT_(D[[:digit:]]{1,2})_R[[:digit:]].bed.gz"),
-    replacement = "\\1",
-    x = basename(bed_files)
-    ),
-  Replicate = gsub(
-    pattern = paste0("GSM[[:digit:]]*_BiSeq_WT_D[[:digit:]]{1,2}_(R[[:digit:]]).bed.gz"),
-    replacement = "\\1",
-    x = basename(bed_files)
-    ),
+  pattern = ".bed$",
+  replacement = "",
+  x = basename(bed_files)
+  ),
+  Sample = gsub(
+  pattern = ".bed$", 
+  replacement = "",
+  x = basename(bed_files)
+  ),
   stringsAsFactors = FALSE
 )
 knitr::kable(sample_anno)
@@ -112,26 +138,26 @@ res <- fread(bed_files[1])
 head(res)
 ```
 
-The `read_bed=s` function adds CpGs missing from the reference set, and creates a methylation/coverage matrices. Once the process is complete - it returns an object of class `scMethrix` which in turn inherits `SingleCellExperiment` class. `scMethrix` object contains ‘methylation’ and (optionally) ‘coverage’ matrices (either in-memory or as on-disk HDF5 arrays) along with pheno-data and other basic info. This object can be passed to all downstream functions for various analysis. For further details on the data structure, see the `SingleCellExperiment` package.
+The `read_beds` function adds CpGs missing from the reference set, and creates a methylation/coverage matrices. Once the process is complete - it returns an object of class `scMethrix` which in turn inherits `SingleCellExperiment` class. `scMethrix` object contains ‘methylation’ and (optionally) ‘coverage’ matrices (either in-memory or as on-disk HDF5 arrays) along with pheno-data and other basic info. This object can be passed to all downstream functions for various analysis. For further details on the data structure, see the `SingleCellExperiment` package.
 
 * For computers with large memory, increase speed using `batch_size` parameter. This will open multiple files at once, but keep in mind that increasing the batch size will increase the memory needs as well. 
 
 A more detailed description of the `read_beds` function is here: [read_beds](https://compepigen.github.io/WGBS_best_practice/read_bedgraphs.html))
 
 ```{r vect_read_in}
-meth <- methrix::read_bedgraphs(
+meth <- read_beds(
   files = bed_files,
-  ref_cpgs = hg19_cpgs,
+  ref_cpgs = mm19_cpgs,
   chr_idx = 1,
   start_idx = 2,
+  strand_idx = 3,
+  cov_idx = 4,
   M_idx = 5,
-  U_idx = 6,
   stranded = FALSE,
   zero_based = TRUE, 
-  collapse_strands = FALSE, 
-  coldata = sample_anno,
-  vect = TRUE,
-  vect_batch_size = 4
+  #collapse_strands = FALSE, 
+  colData = sample_anno, 
+  batch_size = 2
 )
 ```
 
@@ -149,7 +175,7 @@ Without any further processing, we can create an interactive html report contain
 The report can be accessed here: [Initial reports](https://compepigen.github.io/WGBS_best_practice/initial_methrix_reports.html)
 
 ```{r, eval=FALSE}
-methrix::methrix_report(meth = meth, output_dir = getwd(), prefix = "initial")
+#methrix::methrix_report(meth = meth, output_dir = getwd(), prefix = "initial")
 ```
 
 In the report, we can check genome-wide and chromosome based statistics on coverage and methylation, in order to identify potential quality issues, for example:
