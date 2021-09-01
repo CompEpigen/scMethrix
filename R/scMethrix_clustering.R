@@ -24,26 +24,31 @@
 #' @details Utilizes mainly the bioDist package to determine various distance metrics to be used for later clustering. 
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object
 #' @param assay string; The assay to use. Default is 'score'
-#' @param type string; The type of distance metric to use. Available options are "pearson", spearman", "tau", "euclidean". "maximum", "manhattan", "canberra", "binary", "minkowski"
+#' @param type string; The type of distance metric to use. Available options are "pearson", spearman", "tau", "euclidean". "maximum", "manhattan", "canberra", "binary", "minkowski". An aribitrary distance function can also be used, so long as the input takes just the specified matrix.
 #' @param verbose boolean; flag to output messages or not
 #' @return matrix; the distance matrix
 #' @import bioDist
 #' @seealso <https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/dist>
 #' @seealso <https://www.bioconductor.org/packages//2.7/bioc/html/bioDist.html>
 #' @examples
+#' data('scMethrix_data')
+#' scMethrix_data <- impute_regions(scMethrix_data)#' 
+#' get_distance_matrix(scMethrix_data,assay = "impute") 
+#' 
+#' # For an arbitrary distance function
+#' library(bioDist)
+#' fun <- bioDist::spearman.dist
+#' get_distance_matrix(scMethrix_data,assay = "impute",type = bioDist::spearman.dist)
 #' @export
 get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE) {
-  
-  # mtx <- as.data.table(get_matrix(scm,assay=assay))
-  # mtx <- setDT(transpose(mtx,keep.names="sample"))[]
-  # mtx <- as.matrix(mtx)
-  # 
   
   mtx <- as.matrix(t(get_matrix(scm,assay=assay)))
   
   if (any(is.na(mtx))) stop("There are NA values present in the matrix. Please fill/impute/bin to remove NAs.")
   
-  if (type == "spearman") {
+  if (typeof(type) == "closure") { # For the arbitrary case
+    dist <- type(mtx)
+  } else if (type == "spearman") {
     dist <- spearman.dist(mtx)
   } else if (type == "pearson") {
     dist <- cor.dist(mtx)
@@ -51,6 +56,8 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
     dist <- tau.dist(mtx)
   } else if (type %in% c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")) {
     dist <- dist(mtx, method = type)
+  } else {
+    stop("Invalid distance metric specified")
   }
   
   return(dist)
@@ -61,12 +68,27 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object. If this is specified the distance matrix will be a generic \code{\link[bioDist]{spearman.dist}} distance
 #' @param dist dist; A distance matrix generated for an scMethrix object. Not necessary
 #' @param assay string; The assay to use. Default is 'score'
-#' @param type string; The type of distance metric to use. Available options are 'spearman' and 'tau'. 
+#' @param type string; The type of distance metric to use. Available options are 'hierarchical' and 'partition'. An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. \code{c(C1=1,C2=1,C3=1,C4=2)})
 #' @param verbose boolean; flag to output messages or not
 #' @return matrix; the distance matrix
 #' @import bioDist
 #' @seealso [get_distance_matrix()]
 #' @examples
+#' data('scMethrix_data')
+#' scMethrix_data <- impute_regions(scMethrix_data)#' 
+#' dist <- get_distance_matrix(scMethrix_data,assay = "impute")  
+#' 
+#' # For a generic clustering function
+#' # The function must return a named vector of integers
+#' fun <- function (dist) {
+#'     fit <- hclust(dist, method="ward.D")
+#'     fit <- cutree(fit, k=2)
+#'     return(fit)
+#'     }
+#' 
+#' fun(dist) # Example of arbitrary function output 
+#' cluster_scMethrix(dist = dist,type=fun)
+#' 
 #' @export
 cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay="score", verbose = TRUE, type="hierarchical", ...) {
 
@@ -80,7 +102,10 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
   
   if (is.null(n_clusters)) n_clusters = attr(dist,"Size")
   
-  if (type=="hierarchical") {
+  if (typeof(type) == "closure") {
+    fit <- type(dist)
+    colData <- data.frame(Sample = names(fit), Cluster = fit)
+  } else if (type=="hierarchical") {
     fit <- hclust(dist, method="ward.D")
     fit <- cutree(fit, k=n_clusters)
     colData <- data.frame(Sample = names(fit), Cluster = fit)
@@ -127,4 +152,3 @@ append_col_data <- function(scm, colData) {
   
   return(scm)
 }
-
