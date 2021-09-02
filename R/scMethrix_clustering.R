@@ -48,6 +48,7 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
 #' @param assay string; The assay to use. Default is 'score'
 #' @param type string; The type of distance metric to use. Available options are 'hierarchical', 'partition', "model". An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. \code{c(C1=1,C2=1,C3=1,C4=2)})
 #' @param n_clusters integer; the desired number of clusters. This is ignored for model-based clustering
+#' @param colname string; the name of the colData column that contains the cluster information
 #' @param verbose boolean; flag to output messages or not
 #' @param ... Additional parameters for the clustering functions
 #' @return An \code{\link{scMethrix}} object
@@ -70,7 +71,7 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
 #' fun(dist) # Example of arbitrary function output 
 #' cluster_scMethrix(scMethrix_data, dist = dist, type = fun)
 #' @export
-cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay="score", verbose = TRUE, type="hierarchical", ...) {
+cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay="score", colname = "Cluster", verbose = TRUE, type="hierarchical", ...) {
 
   Cluster <- Sample <- NULL
   
@@ -98,6 +99,8 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
     colData <- data.frame(Sample = names(fit$classification), Cluster = fit$classification)
   }
   
+  names(colData)[names(colData) == "Cluster"] <- colname
+  
   # else if (type == "density") {
   #   if (!is.null(n_clusters)) warning("n_clusters is ignored for density clustering")
   #   fit <- dbscan(dist, eps, minPts = n_clusters, borderPoints = TRUE, ...)
@@ -111,35 +114,52 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
 #' Appends colData in an scMethrix object
 #' @details Typically used for clustering. Allows additional information to be added to colData in an scMethrix object after the object creation. It does this via a left join on the original colData. Any samples not included in the colData object will be filled with NAs.
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object
-#' @param colData matrix; A matrix containing colData. Must contain either a column labelled "Sample" or row names that correspond with the input \code{\link{scMethrix}} object
+#' @param colData dataframe-like or named vector; For a dataframe-like, Must contain either a column labelled "Sample" or row names that correspond with the input \code{\link{scMethrix}} object. For a named vector, vector names must correspond to the row names of the input \code{\link{scMethrix}} object
+#' @param name string; the name of the column for named vector input. Ignored for matrix input
 #' @return An \code{\link{scMethrix}} object
 #' @examples
+#' 
+#' # For dataframe-like input
 #' data('scMethrix_data')
 #' colData <- colData(scMethrix_data)
-#' colData["Type"] <- "Cell"
+#' colData["Cluster"] <- 1:nrow(colData)
 #' scMethrix_data <- append_col_data(scMethrix_data,colData)
 #' colData(scMethrix_data)
+#' 
+#' # For named vector input
+#' data('scMethrix_data')
+#' colData <- c(C1=1,C2=1,C3=1,C4=2)
+#' scMethrix_data <- append_col_data(scMethrix_data,colData, name="Cluster")
+#' colData(scMethrix_data)
+#' 
 #' @export
-append_col_data <- function(scm, colData) {
+append_col_data <- function(scm, colData, name = "Data") {
   
   Sample <- NULL
   
-  if (!("Sample" %in% colnames(colData))) {
-    colData["Sample"] <- rownames(colData)
+  if (is.vector(colData)) { # Case for named vector input, convert to matrix
+    colData <- as.data.frame(t(data.frame(as.list(colData))))
+    colnames(colData) <- name
   }
   
   cd <- colData(scm)
-  cd["Sample"] <- rownames(cd)
+  cols <- colnames(colData) %in% colnames(cd)
   
+  if (any(cols)) {
+    warning("Colnames of colData already exist in scMethrix object (",colnames(colData)[cols],"). These will be overwritten.")
+    cd <- cd[ , !(names(cd) %in% colnames(colData)[cols])]
+  }
+  
+  if (!("Sample" %in% colnames(colData))) colData["Sample"] <- rownames(colData)
+  
+  cd["Sample"] <- rownames(cd)
   n_samples <- length(intersect(cd$Sample,colData$Sample))
   
   if (n_samples != nrow(cd)) warning(nrow(cd)-n_samples," samples are not specified in colData")
 
   cd <- merge(cd,colData,by="Sample", all.x = TRUE)
-  
   row.names(cd) <- cd$Sample
   cd <- subset(cd, select=-c(Sample))
-  
   colData(scm) <- cd
   
   return(scm)

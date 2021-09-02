@@ -4,12 +4,14 @@
 \alias{append_col_data}
 \title{Appends colData in an scMethrix object}
 \usage{
-append_col_data(scm, colData)
+append_col_data(scm, colData, name = "Data")
 }
 \arguments{
 \item{scm}{scMethrix; Input \code{\link{scMethrix}} object}
 
-\item{colData}{matrix; A matrix containing colData. Must contain either a column labelled "Sample" or row names that correspond with the input \code{\link{scMethrix}} object}
+\item{colData}{dataframe-like or named vector; For a dataframe-like, Must contain either a column labelled "Sample" or row names that correspond with the input \code{\link{scMethrix}} object. For a named vector, vector names must correspond to the row names of the input \code{\link{scMethrix}} object}
+
+\item{name}{string; the name of the column for named vector input. Ignored for matrix input}
 }
 \value{
 An \code{\link{scMethrix}} object
@@ -21,9 +23,18 @@ Appends colData in an scMethrix object
 Typically used for clustering. Allows additional information to be added to colData in an scMethrix object after the object creation. It does this via a left join on the original colData. Any samples not included in the colData object will be filled with NAs.
 }
 \examples{
+
+# For dataframe-like input
 data('scMethrix_data')
 colData <- colData(scMethrix_data)
-colData["Type"] <- "Cell"
+colData["Cluster"] <- 1:nrow(colData)
 scMethrix_data <- append_col_data(scMethrix_data,colData)
 colData(scMethrix_data)
+
+# For named vector input
+data('scMethrix_data')
+colData <- c(C1=1,C2=1,C3=1,C4=2)
+scMethrix_data <- append_col_data(scMethrix_data,colData, name="Cluster")
+colData(scMethrix_data)
+
 }

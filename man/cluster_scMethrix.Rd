@@ -9,6 +9,7 @@ cluster_scMethrix(
   dist = NULL,
   n_clusters = NULL,
   assay = "score",
+  colname = "Cluster",
   verbose = TRUE,
   type = "hierarchical",
   ...
@@ -22,6 +23,8 @@ cluster_scMethrix(
 \item{n_clusters}{integer; the desired number of clusters. This is ignored for model-based clustering}
 
 \item{assay}{string; The assay to use. Default is 'score'}
+
+\item{colname}{string; the name of the colData column that contains the cluster information}
 
 \item{verbose}{boolean; flag to output messages or not}
 
