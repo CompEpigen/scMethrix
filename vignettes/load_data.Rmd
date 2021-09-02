@@ -176,7 +176,7 @@ Without any further processing, we can create an interactive html report contain
 The report can be accessed here: [Initial reports](https://compepigen.github.io/WGBS_best_practice/initial_methrix_reports.html)
 
 ```{r, eval=FALSE}
-#methrix::methrix_report(meth = meth, output_dir = getwd(), prefix = "initial")
+methrix::methrix_report(meth = meth, output_dir = getwd(), prefix = "initial")
 ```
 
 In the report, we can check genome-wide and chromosome based statistics on coverage and methylation, in order to identify potential quality issues, for example:

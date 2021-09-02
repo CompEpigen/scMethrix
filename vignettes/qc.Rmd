@@ -1,0 +1,156 @@
+---
+title: "02: QC and reports"
+author: "Andrew Lindsay, Reka Toth"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: true
+toc_depth: 3
+toc_float: true
+self_contained: yes
+highlight: pygments
+vignette: >
+  %\VignetteIndexEntry{02: QC and reports}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Filtering
+
+## Coverage based filtering 
+
+To ensure the high quality of our dataset, the sites with very low (untrustworthy methylation level) or high coverage (technical problem) should not be used. We can mask these CpG sites. Please note, that the DSS we were using for Differential Methylation Region (DMR) calling, doesn't need the removal of the lowly covered sites, because it takes it into account by analysis. However, using a not too restrictive threshold won't interfere with DMR calling. 
+
+```{r mask_methrix, eval=F}
+meth <- scMethrix::mask_by_coverage(meth, low_threshold = 2, avg_threshold = 2) 
+```
+
+Later we can remove those sites that are not covered by any of the samples. 
+
+```{r remove_uncovered, eval=F}
+meth <- scMethrix::remove_uncovered(meth) 
+```
+
+To reduce the data for future imputation/binning/clustering, we might want to remove non-variable CpG sites. The function `mask_by_variance` will calculate the variance of each CpG site and mask it if below a specified threshold. 
+
+```{r mast_by_variance, eval=F}
+meth <- scMethrix::mask_by_variance(meth, low_threshold = 0.05)
+```
+
+## SNP filtering
+
+SNPs, mostly the C > T mutations can disrupt methylation calling. Therefore it is essential to remove CpG sites that overlap with common variants, if we have variation in our study population. For example working with human, unpaired data, e.g. treated vs. untreated groups. 
+During filtering, we can select the population of interest and the minimum minor allele frequency (MAF) of the SNPs.
+SNP filtering is currently implemented for mm10, hg19 and hg38 assemblies. 
+
+
+```{r message=FALSE, warning=FALSE, eval=F}
+if(!requireNamespace("GenomicScores")) {
+BiocManager::install("GenomicScores")
+}
+library(GenomicScores) 
+```
+
+```{r remove_snps, eval=F}
+meth <- scMethrix::remove_snps(meth, keep = TRUE)
+```
+* There is a possibility to keep the sites possibly overlapping with SNPs. We can use this data for detecting possible sample mismatches. For this, we need to plot the most variable sites (probably the ones that are variable in our study population) and plot them on a heatmap. 
+
+```{r, eval=F}
+if (!requireNamespace("pheatmap", quietly = TRUE))
+    install.packages("pheatmap")
+snps <- meth[[2]]
+meth <- meth[[1]]
+pheatmap::pheatmap(get_matrix(order_by_sd(snps)[1:min(5000, length(snps)),]))
+```
+
+
+* SNP removal in mouse data: 
+  Usually, there is no need to remove SNPs from mouse data, since for many experiments, the same strain of mice is used. However, there are cases, when different crosses of strains are used, for which, the level of heterozygosity might be different. SNP data for mice can be downloaded from here: https://www.sanger.ac.uk/science/data/mouse-genomes-project. The SNPs can be filtered out using the `subset_scMethrix` function. 
+  
+
+# Visualization and QC after filtering
+
+## scMethrix report
+After filtering, it worth running a report again, to see if any of the samples were so lowly covered that it warrants an action (e.g. removal of the sample)
+
+**Important:** Don't forget to set the `recal_stats` to `TRUE`, since the object changed since reading in. The output directory has to be different from last time, to avoid using the intermediate files calculated during the last run. 
+
+```{r filtered_report, eval=FALSE}
+methrix::methrix_report(meth = meth, output_dir = getwd(), recal_stats = TRUE, prefix="processed")
+```
+The report can be found here: [processed_methrix_reports.html](https://compepigen.github.io/WGBS_best_practice/processed_methrix_reports.html)
+
+
+There are additional possibilities to visualize the study. We can look at the density of coverage both sample- and group-wise: 
+  
+```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
+scMethrix::plot_coverage(meth, type = "dens")
+```
+
+
+```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
+scMethrix::plot_coverage(meth, type = "dens", pheno = "Day", perGroup = TRUE)
+```
+
+We can visualize te beta value distribution as a violin plot or density plot. These plots (as well as the coverage plot) use the most variable 25000 CpG sites to ensure fast processing. `plot_density` and `plot_violin` has the option to use data only from a restricted region. 
+
+```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
+scMethrix::plot_density(meth)
+```
+
+```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
+scMethrix::plot_density(meth, ranges = GRanges("chr1:1-10000000"))
+```
+
+## Dimensionality reduction 
+
+`scMethrix` offers principal component analysis (PCA), uniform manifold approximation and projection (UMAP), and t-distributed stochastic neighbor embedding (tSNE) to conduct and visualize dimensionality reduction. The resulting reduction is stored in the scMethrix object, and can be accessed via reducedDim().
+First, the model is calculated, then a number of sites are selected for plotting, either random or based on variance (`var` option). This ensures that the calculations remain feasible. 
+
+```{r fig.height=3, fig.width=4, eval=FALSE}
+meth <- scMethrix::dim_red_scMethrix(meth,type="PCA",top_var = 10000, n_components = 20)
+plot_dim_red(meth,type="PCA")
+```
+
+```{r fig.height=3, fig.width=4, eval=FALSE}
+meth <- scMethrix::dim_red_scMethrix(meth,type="UMAP",top_var = 10000, n_neighbors = 3)
+plot_dim_red(meth,type="UMAP")
+```
+
+```{r fig.height=3, fig.width=4, eval=FALSE}
+meth <- scMethrix::dim_red_scMethrix(meth,type="tSNE",top_var = 10000, n_components = 20)
+plot_dim_red(meth,type="tSNE")
+```
+
+At visualization, we can provide the `methrix` object to allow color or shape annotation of groups or samples.  
+
+```{r fig.height=3, fig.width=4, eval=FALSE}
+scMethrix::plot_pca(meth, col_anno = "Day", shape_anno = "Replicate")
+```
+
+`scMethrix` offers the possibility of region based filtering. With this option, selected regions, e.g. promoters can be visualized. We will use the `AnnotationHub` package to assess basic annotation categories. 
+
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+if(!requireNamespace("AnnotationHub")) {
+  BiocManager::install("AnnotationHub", update = F)
+}
+```
+
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+library("AnnotationHub")
+ah = AnnotationHub()
+qhs = query(ah, c("RefSeq", "Mus musculus", "mm10"))
+genes = qhs[[1]]
+promotors = promoters(genes)
+```
+
+```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
+meth.subset <- subset_methrix(meth,regions = promotors)
+meth <- scMethrix::dim_red_scMethrix(meth.subset,type="PCA",top_var = 10000, n_components = 20)
+plot_dim_red(meth,type="PCA")
+```
+
+  
+  
+  
