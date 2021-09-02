@@ -3,7 +3,7 @@ list.of.packages <- c("SingleCellExperiment","data.table","plyr","HDF5Array","ti
                       "tools","microbenchmark","measurements","magrittr","doParallel","parallel",
                       "Cairo","ggplot2","methrix","BSgenome","BSgenome.Hsapiens.UCSC.hg19","usethis",
                       "BSgenome.Mmusculus.UCSC.mm10","pkgdown","umap","stringi","missMDA","Rtsne","missForest",
-                      "impute","profvis",'Melissa','Metrics','SimDesign','bioDist')
+                      "impute","profvis",'Melissa','Metrics','SimDesign','bioDist','dbscan')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) {
   install.packages(new.packages)

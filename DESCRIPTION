@@ -36,7 +36,9 @@ Imports:
     missForest,
     impute,
     SimDesign,
-    Metrics
+    Metrics,
+    bioDist,
+    mclust
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: 

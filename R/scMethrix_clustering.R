@@ -1,25 +1,3 @@
-# # Ward Hierarchical Clustering
-# tic()
-# 
-# d <- dist(score(scm.impute), method = "euclidean") # distance matrix
-# toc()
-# 
-# tic()
-# fit <- hclust(d, method="ward.D")
-# toc()
-# plot(fit) # display dendogram
-# groups <- cutree(fit, k=4) # cut tree into 5 clusters
-# # draw dendogram with red borders around the 5 clusters
-# rect.hclust(fit, k=2, border="red")
-# 
-# # Model Based Clustering
-# library(mclust)
-# tic()
-# fit <- Mclust(get_matrix(scm.dim,assay="impute"))
-# toc()
-# plot(fit) # plot results
-# summary(fit) # display the best model
-
 #' Get the pair-wise distance matrix for an assay
 #' @details Utilizes mainly the bioDist package to determine various distance metrics to be used for later clustering. 
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object
@@ -32,7 +10,7 @@
 #' @seealso <https://www.bioconductor.org/packages//2.7/bioc/html/bioDist.html>
 #' @examples
 #' data('scMethrix_data')
-#' scMethrix_data <- impute_regions(scMethrix_data)#' 
+#' scMethrix_data <- impute_regions(scMethrix_data) 
 #' get_distance_matrix(scMethrix_data,assay = "impute") 
 #' 
 #' # For an arbitrary distance function
@@ -66,16 +44,19 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
 #' Generates a cluster object for an \code{\link{scMethrix}} object
 #' @details Enables multiple methods of clustering to classify samples in an \code{\link{scMethrix}} object. Either an \code{\link{scMethrix}} object or a \code{\link[stats]{dist}} object must be provided for clustering.
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object. If this is specified the distance matrix will be a generic \code{\link[bioDist]{spearman.dist}} distance
-#' @param dist dist; A distance matrix generated for an scMethrix object. Not necessary
+#' @param dist dist; Optional. A distance matrix generated for an assay. Will use default paramaters for \code{\link{get_distance_matrix}}.
 #' @param assay string; The assay to use. Default is 'score'
-#' @param type string; The type of distance metric to use. Available options are 'hierarchical' and 'partition'. An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. \code{c(C1=1,C2=1,C3=1,C4=2)})
+#' @param type string; The type of distance metric to use. Available options are 'hierarchical', 'partition', "model". An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. \code{c(C1=1,C2=1,C3=1,C4=2)})
+#' @param n_clusters integer; the desired number of clusters. This is ignored for model-based clustering
 #' @param verbose boolean; flag to output messages or not
-#' @return matrix; the distance matrix
+#' @param ... Additional parameters for the clustering functions
+#' @return An \code{\link{scMethrix}} object
 #' @import bioDist
-#' @seealso [get_distance_matrix()]
+#' @import mclust
+#' @seealso [get_distance_matrix()] for distance metrics, [hclust()] for heirarchical clustering, [kmeans()] for partition clustering, [Mclust()] for model clustering 
 #' @examples
 #' data('scMethrix_data')
-#' scMethrix_data <- impute_regions(scMethrix_data)#' 
+#' scMethrix_data <- impute_regions(scMethrix_data)
 #' dist <- get_distance_matrix(scMethrix_data,assay = "impute")  
 #' 
 #' # For a generic clustering function
@@ -87,18 +68,17 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
 #'     }
 #' 
 #' fun(dist) # Example of arbitrary function output 
-#' cluster_scMethrix(dist = dist,type=fun)
-#' 
+#' cluster_scMethrix(scMethrix_data, dist = dist, type = fun)
 #' @export
 cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay="score", verbose = TRUE, type="hierarchical", ...) {
 
-  if (is.null(dist)) {
-    if (is.null(scm)) {
-      stop("Either scm or dist must be specified")
-    } else {
-      dist <- get_distance_matrix(scm, assay=assay)
-    }
+  Cluster <- Sample <- NULL
+  
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
+  
+  if (is.null(dist)) dist <- get_distance_matrix(scm, assay=assay)
   
   if (is.null(n_clusters)) n_clusters = attr(dist,"Size")
   
@@ -106,14 +86,24 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
     fit <- type(dist)
     colData <- data.frame(Sample = names(fit), Cluster = fit)
   } else if (type=="hierarchical") {
-    fit <- hclust(dist, method="ward.D")
-    fit <- cutree(fit, k=n_clusters)
+    fit <- stats::hclust(dist, method="ward.D", ...)
+    fit <- stats::cutree(fit, k=n_clusters)
     colData <- data.frame(Sample = names(fit), Cluster = fit)
   } else if (type=="partition") {
-    fit <- kmeans(dist, centers = n_clusters)
+    fit <- stats::kmeans(dist, centers = min(n_clusters,attr(dist,"Size")-1)) # Max clusters = nrow(scm)-1
     colData <- data.frame(Sample = names(fit$cluster), Cluster = fit$cluster)
-  } 
+  } else if (type == "model") {
+    if (!is.null(n_clusters)) warning("n_clusters is ignored for model-based clustering")
+    fit <- mclust::Mclust(as.matrix(t(get_matrix(scm,assay=assay))), ...)
+    colData <- data.frame(Sample = names(fit$classification), Cluster = fit$classification)
+  }
   
+  # else if (type == "density") {
+  #   if (!is.null(n_clusters)) warning("n_clusters is ignored for density clustering")
+  #   fit <- dbscan(dist, eps, minPts = n_clusters, borderPoints = TRUE, ...)
+  #   
+  # }
+  # 
   scm <- append_col_data(scm,colData)
   return(scm)
 }
@@ -132,6 +122,8 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
 #' @export
 append_col_data <- function(scm, colData) {
   
+  Sample <- NULL
+  
   if (!("Sample" %in% colnames(colData))) {
     colData["Sample"] <- rownames(colData)
   }
@@ -146,7 +138,7 @@ append_col_data <- function(scm, colData) {
   cd <- merge(cd,colData,by="Sample", all.x = TRUE)
   
   row.names(cd) <- cd$Sample
-  cd <- within(cd, rm(Sample))
+  cd <- subset(cd, select=-c(Sample))
   
   colData(scm) <- cd
   
