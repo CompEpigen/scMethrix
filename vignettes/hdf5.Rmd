@@ -1,0 +1,98 @@
+---
+title: "05: Working with large cohorts"
+author: "Andrew Lindsay, Reka Toth"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: true
+toc_depth: 3
+toc_float: true
+self_contained: yes
+highlight: pygments
+vignette: >
+  %\VignetteIndexEntry{05: Working with large cohorts}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+  
+# Working with HDF5-based object
+
+## `read_beds` function 
+For memory efficient read in, one can use an HDF5 based `scMethrix` object. A small number of bedgraph files are in the memory at the same time, while the resulting object won't be stored in the memory, but on-disk. 
+Additional arguments to use HDF5:
+
+  * Set `h5=TRUE` 
+  * h5_dir --> a directory to save the final object. It is possible to save the object later. It increases the processing time significantly.  
+  * h5_temp --> a temporary directory to use during data processing. Set this if for example the default temporary location doesn't have enough free space to store the temporary data. 
+
+```{r hdf5_read_in, eval=TRUE, include=TRUE, eval=F}
+meth <- read_beds(
+  files = bed_files,
+  ref_cpgs = mm19_cpgs,
+  chr_idx = 1,
+  start_idx = 2,
+  strand_idx = 3,
+  cov_idx = 4,
+  M_idx = 5,
+  stranded = FALSE,
+  zero_based = TRUE, 
+  #collapse_strands = FALSE, 
+  colData = sample_anno, 
+  batch_size = 2,
+  h5 = TRUE
+)
+```
+
+
+Basic `scMethrix` operations work with HDF5-based objects as well. Functions relying on external packages (e.g. imputation and clustering) will require casting to an in-memory matrix before processing. 
+
+```{r, eval=F}
+meth <- scMethrix::remove_uncovered(meth)
+```
+
+It is also possible to transform non-HDF5-based objects to HDF5-based ones and back. 
+
+```{r, eval=F}
+m <- convert_HDF5_scMethrix(meth)
+m2 <- convert_scMethrix(m)
+```
+
+
+## Saving and loading
+
+Saving and loading of an HDF5-based object is not possible using the standard save or saveRDS functions. `scMethrix` offers easy to use saving and loading tools, which are essentially wrappers around the `saveHDF5SummarizedExperiment` and `loadHDF5SummarizedExperiment` functions. 
+
+
+```{r eval=FALSE}
+target_dir = paste0( getwd(), '/temp/')
+save_HDF5_methrix(meth, dir = target_dir, replace = TRUE)
+meth <- load_HDF5_methrix(dir = target_dir)
+```
+
+# Working with large number of samples
+
+The primary goal of `scMethrix` is to allow users to handle the whole-genome methylation data. The functions are optimized to keep the speed high and the memory need low. However, additional efforts were taken to allow `scMethrix` to handle large number of samples (even > 1000) in the samples in the same, efficient way. Therefore, many functions implement the argument `batch_size` to split these datasets into digestible chunks and `n_threads` to parallelize the processing of these chunks. 
+Functions currently supporting the arguments `batch_size` and `n_threads`:
+`read_beds`
+`get_region_summary`
+
+The multicore option is platform independent.
+
+# Integration with other tools
+
+`scMethrix` has multiple options to export data for different purposes. The `write_bedgraph` function supports a bedgraph format, that can be directly uploaded to UCSC. The `multibed` option generates a file with all samples as columns. The `metilene` option ensures that this file is in the correct format for [metilene](http://www.bioinf.uni-leipzig.de/Software/metilene/), a command line DMR caller.  
+
+
+```{r eval=FALSE}
+# UCSC browser
+export_bedgraphs(m = meth, output_dir = ".")
+# Metilene
+write_bedgraphs(m = meth, output_dir = ".", rm_NA = FALSE, metilene = TRUE,multiBed = "metline_ip", phenoCol = "Day")
+```
+
+We also support bigWig format.
+
+```{r, eval=F}
+write_bigwigs(meth, output_dir = ".", samp_names = NULL)
+```
+
