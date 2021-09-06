@@ -1,0 +1,79 @@
+---
+title: "03: Transformations and Imputations"
+author: "Andrew Lindsay, Reka Toth"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: true
+toc_depth: 3
+toc_float: true
+self_contained: yes
+highlight: pygments
+vignette: >
+  %\VignetteIndexEntry{03: Transformations and Imputations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+# Transforming assays and imputation
+Methylation data is presented in different ways based on the output pipeline. Scores are commonly reported with ranges such as [-1..1], [0..1], or [0..100]. Depending on your downstream analysis, it may be necessary to transform these values to another range. The `transform_assay` function allows and arbitrary function input to transform each element in the dataset. 
+
+```{r, eval=F}
+#To convert [0..1] scores to [0..100] scores
+fun <- function(x) round(x*100)
+meth <- scMethrix::transform_assay(meth, assay = "score" , new_assay = "score.100", trans = fun)
+```
+
+Binarizing is a common operation for single cell methylation data as a majority of CpG sites have the same methylation status on both strands. A `binarize` function is included in the package. The function will automatically generate a threshold cutoff based on the mean methylation value.
+
+```{r, eval=F}
+#To convert [0..1] scores to [0..100] scores
+meth <- scMethrix::transform_assay(meth, assay = "score" ,new_assay = "binarize", trans = binarize)
+```
+
+# Binning
+CpG-level precision may not be necessary for downstream analysis, so binning can be used to drastically reduce the number of calculations necessary for computation. There are multiple options in which to determine binning. By default, entire chromosomes are used for binning, but a `region` list can be provided to limit binning to particular sections of the genome (e.g. only promoters). From there, binning can either be done by `bp` or by number of `cpg` sites.
+
+All assays in the `scMethrix` object will be binned. By default, the `count` assay will be summed during binning while the `score` assay and all other assays will use their mean values. It is possible to specify other operations, if desired.
+
+```{r, eval=F}
+#Divide the genome into 100kbp bins
+meth <- scMethrix::bin_scMethrix(meth, bin_size = 100000, bin_by = "bp")
+
+#Divides promoters into groups of 100 CpGs
+meth <- scMethrix::bin_scMethrix(meth, bin_size = 1000, bin_by = "cpg", regions = promoters)
+
+#Divide the genome into 100kbp bins, but use the median value for the score assay
+meth <- scMethrix::bin_scMethrix(meth, bin_size = 100000, bin_by = "bp", trans=c(score= function(x) median(x,na.rm=TRUE)))
+```
+
+# Imputation
+As single cell bisulfite sequencing is typically very sparse, it is usually necessary to perform some imputation to fill NA elements, as most clustering and dimensionality reduction algorithms cannot handle large numbers of NA values. Imputation algorithms available here are k-nearest neighbour (`kNN`), iterative PCA (`iPCA`),or random forest (`RF`). As well, an arbitrary imputation function can be used here, provided that the final output is a matrix the same dimensions as the input matrix. By default, the entire chromosome is used for the imputation, but this is incredibly memory-intensive. A `region` list can be provided to impute small regions together, but an assumption for quasi-independence is typically needed (such as promoter regions).
+
+```{r, eval=F}
+#Impute the whole genome via kNN
+meth <- scMethrix::impute_regions(meth, assay = "score", new_assay = "impute", type = "kNN", k = 10)
+
+#Impute promoter regions via random forest
+meth <- scMethrix::impute_regions(meth, assay = "score", new_assay = "impute", type = "RF", regions = promoters)
+
+#Impute via an arbitrary imputation function.
+fun <- function(mtx) missForest::missForest(mtx, ...)$ximp
+meth <- scMethrix::impute_regions(meth, assay = "score", new_assay = "impute", type = fun, regions = promoters)
+```
+
+# Generating test sets
+To judge the accuracy of imputation, it may be helpful to generate a test and training set. This is easily done with `generate_training_set`. A specified proportion of CpG sites will be subsetted into two `scMethrix` objects. 
+
+```{r, eval=F}
+#Generate a training set that contains 20% of the total CpG sites.
+meth <- scMethrix::generate_training_set(meth, training_prop = 0.2)
+```
+
+For small-scale testing purposes, a randomized miniature scMethrix object may be useful
+
+```{r, eval=F}
+#Generate a training set that contains 20% of the total CpG sites.
+meth <- scMethrix::generate_random_subset(meth, n_cpgs = 10000)
+```
