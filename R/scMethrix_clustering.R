@@ -2,7 +2,7 @@
 #' @details Utilizes mainly the bioDist package to determine various distance metrics to be used for later clustering. 
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object
 #' @param assay string; The assay to use. Default is 'score'
-#' @param type string; The type of distance metric to use. Available options are "pearson", spearman", "tau", "euclidean". "maximum", "manhattan", "canberra", "binary", "minkowski". An aribitrary distance function can also be used, so long as the input takes just the specified matrix.
+#' @param type string; The type of distance metric to use. Available options are "pearson", "spearman", "tau", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski". An aribitrary distance function can also be used, so long as the input takes just the specified matrix.
 #' @param verbose boolean; flag to output messages or not
 #' @return matrix; the distance matrix
 #' @import bioDist
@@ -20,6 +20,16 @@
 #' @export
 get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE) {
   
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
+    stop("Assay does not exist in the object", call. = FALSE)
+  }
+
+  if (typeof(type) != "closure" && !(type %in% c("pearson", "spearman", "tau", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"))) stop("Invalid type of distance calculation")
+  
   mtx <- as.matrix(t(get_matrix(scm,assay=assay)))
   
   if (any(is.na(mtx))) stop("There are NA values present in the matrix. Please fill/impute/bin to remove NAs.")
@@ -36,6 +46,10 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
     dist <- dist(mtx, method = type)
   } else {
     stop("Invalid distance metric specified")
+  }
+  
+  if (all(dim(as.matrix(dist)) != rep(ncol(scm),2))) {
+    stop("Outputted distance matrix size does not match number of samples. This should not happen.")
   }
   
   return(dist)
@@ -78,6 +92,12 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
+  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
+    stop("Assay does not exist in the object", call. = FALSE)
+  }
+  
+  if (typeof(type) != "closure" && !(type %in% c("hierarchical", "partition", "model"))) stop("Invalid type of clustering")
   
   if (is.null(dist)) dist <- get_distance_matrix(scm, assay=assay)
   
@@ -133,15 +153,22 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
 #' colData(scMethrix_data)
 #' 
 #' @export
-append_col_data <- function(scm, colData, name = "Data") {
+append_col_data <- function(scm = NULL, colData = NULL, name = "Data") {
   
   Sample <- NULL
   
-  if (is.vector(colData)) { # Case for named vector input, convert to matrix
-    colData <- as.data.frame(t(data.frame(as.list(colData))))
-    colnames(colData) <- name
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
+  colData <- DataFrame(colData) #TODO: make a catch for this
+  
+  if (ncol(colData) == 1) colnames(colData) = name
+  
+  if (!is(colData, "DataFrame")) {
+    stop("A valid colData object must be supplied (named vector or dataframe-like).", call. = FALSE)
+  }
+
   cd <- colData(scm)
   cols <- colnames(colData) %in% colnames(cd)
   

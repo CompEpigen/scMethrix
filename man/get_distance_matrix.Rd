@@ -11,7 +11,7 @@ get_distance_matrix(scm, assay = "score", type = "euclidean", verbose = TRUE)
 
 \item{assay}{string; The assay to use. Default is 'score'}
 
-\item{type}{string; The type of distance metric to use. Available options are "pearson", spearman", "tau", "euclidean". "maximum", "manhattan", "canberra", "binary", "minkowski". An aribitrary distance function can also be used, so long as the input takes just the specified matrix.}
+\item{type}{string; The type of distance metric to use. Available options are "pearson", "spearman", "tau", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski". An aribitrary distance function can also be used, so long as the input takes just the specified matrix.}
 
 \item{verbose}{boolean; flag to output messages or not}
 }

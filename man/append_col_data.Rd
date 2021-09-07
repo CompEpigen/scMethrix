@@ -4,7 +4,7 @@
 \alias{append_col_data}
 \title{Appends colData in an scMethrix object}
 \usage{
-append_col_data(scm, colData, name = "Data")
+append_col_data(scm = NULL, colData = NULL, name = "Data")
 }
 \arguments{
 \item{scm}{scMethrix; Input \code{\link{scMethrix}} object}
