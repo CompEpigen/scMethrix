@@ -63,6 +63,10 @@ reference:
 - contents:
   - dim_red_scMethrix
   - reduce_cpgs
+- subtitle: "Clustering"
+- contents:
+  - get_distance_matrix
+  - cluster_scMethrix
 - title: "Plotting"
 - contents: 
   - prepare_plot_data

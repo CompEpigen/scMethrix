@@ -75,10 +75,10 @@ test_that("cluster_scMethrix", {
   }))
 })
 
-test_that("append_col_data", {
+test_that("append_colData", {
 
-  expect_error(append_col_data(scm="not scMethrix"),"A valid scMethrix object needs to be supplied")
-  #expect_error(append_col_data(scm=scm.mem, colData=NULL),"A valid colData object must be supplied")
+  expect_error(append_colData(scm="not scMethrix"),"A valid scMethrix object needs to be supplied")
+  #expect_error(append_colData(scm=scm.mem, colData=NULL),"A valid colData object must be supplied")
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
@@ -90,7 +90,7 @@ test_that("append_col_data", {
     #Dataframe input
     colData <- colData(scm)
     colData[name] <- vals
-    app <- append_col_data(scm, colData=colData,name=name)
+    app <- append_colData(scm, colData=colData,name=name)
     
     expect_equivalent(colnames(colData(app)),name)
     expect_equivalent(colData(app)[,name],vals)
@@ -98,7 +98,7 @@ test_that("append_col_data", {
     #Named vector input
     colData <- vals
     names(colData) <- rownames(colData(scm))
-    app <- append_col_data(scm, colData=colData,name=name)
+    app <- append_colData(scm, colData=colData,name=name)
     
     expect_equivalent(colnames(colData(app)),name)
     expect_equivalent(colData(app)[,name],vals)

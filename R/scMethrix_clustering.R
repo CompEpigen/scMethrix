@@ -127,7 +127,7 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
   #   
   # }
   # 
-  scm <- append_col_data(scm,colData)
+  scm <- append_colData(scm,colData)
   return(scm)
 }
 
@@ -143,17 +143,17 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
 #' data('scMethrix_data')
 #' colData <- colData(scMethrix_data)
 #' colData["Cluster"] <- 1:nrow(colData)
-#' scMethrix_data <- append_col_data(scMethrix_data,colData)
+#' scMethrix_data <- append_colData(scMethrix_data,colData)
 #' colData(scMethrix_data)
 #' 
 #' # For named vector input
 #' data('scMethrix_data')
 #' colData <- c(C1=1,C2=1,C3=1,C4=2)
-#' scMethrix_data <- append_col_data(scMethrix_data,colData, name="Cluster")
+#' scMethrix_data <- append_colData(scMethrix_data,colData, name="Cluster")
 #' colData(scMethrix_data)
 #' 
 #' @export
-append_col_data <- function(scm = NULL, colData = NULL, name = "Data") {
+append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
   
   Sample <- NULL
   
@@ -161,13 +161,12 @@ append_col_data <- function(scm = NULL, colData = NULL, name = "Data") {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  colData <- DataFrame(colData) #TODO: make a catch for this
-  
+  colData <- data.frame(colData) #TODO: test better for inputs
   if (ncol(colData) == 1) colnames(colData) = name
   
-  if (!is(colData, "DataFrame")) {
-    stop("A valid colData object must be supplied (named vector or dataframe-like).", call. = FALSE)
-  }
+  # if (!is(colData, "vector")) {
+  #   stop("A valid colData object must be supplied (named vector or dataframe-like).", call. = FALSE)
+  # }
 
   cd <- colData(scm)
   cols <- colnames(colData) %in% colnames(cd)
