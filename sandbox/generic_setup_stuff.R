@@ -3,7 +3,7 @@ list.of.packages <- c("SingleCellExperiment","data.table","plyr","HDF5Array","ti
                       "tools","microbenchmark","measurements","magrittr","doParallel","parallel",
                       "Cairo","ggplot2","methrix","BSgenome","BSgenome.Hsapiens.UCSC.hg19","usethis",
                       "BSgenome.Mmusculus.UCSC.mm10","pkgdown","umap","stringi","missMDA","Rtsne","missForest",
-                      "impute","profvis",'Melissa','Metrics','SimDesign')
+                      "impute","profvis",'Melissa','Metrics','SimDesign','bioDist','dbscan')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) {
   install.packages(new.packages)
@@ -23,6 +23,7 @@ source("D:/Git/scMethrix/R/scMethrix_object.R")
 source("D:/Git/scMethrix/R/read_beds.R")
 source("D:/Git/scMethrix/R/scMethrix_dimensionality.R")
 source("D:/Git/scMethrix/R/scMethrix_transforms.R")
+source("D:/Git/scMethrix/R/scMethrix_clustering.R")
 source("D:/Git/scMethrix/R/scMethrix_plot.R")
 source("D:/Git/scMethrix/tests/testthat/setup.R")
 
