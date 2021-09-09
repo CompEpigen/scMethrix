@@ -2,6 +2,10 @@ pandoc: 2.11.4
 pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
-  load_data: load_data.html
-last_built: 2021-09-10T04:48Z
+  01_load_data: 01_load_data.html
+  02_qc: 02_qc.html
+  03_transforms: 03_transforms.html
+  04_clustering: 04_clustering.html
+  05_hdf5: 05_hdf5.html
+last_built: 2021-09-09T07:52Z
 
