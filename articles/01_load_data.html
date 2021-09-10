@@ -173,13 +173,9 @@
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">BiocManager</span><span class="op">)</span>
 <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"BSgenome.Mmusculus.UCSC.mm10"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
   <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"BSgenome.Mmusculus.UCSC.mm10"</span><span class="op">)</span>
-<span class="op">}</span></code></pre></div>
-<pre><code>## 
-## The downloaded binary packages are in
-##  /var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T//RtmpO1lTZW/downloaded_packages</code></pre>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">BSgenome.Mmusculus.UCSC.mm10</span><span class="op">)</span> </code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<span class="op">}</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">BSgenome.Mmusculus.UCSC.mm10</span><span class="op">)</span> </code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"methrix"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
   <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"methrix"</span><span class="op">)</span>
 <span class="op">}</span>
@@ -191,7 +187,7 @@
 <h2 class="hasAnchor">
 <a href="#sample-annotation" class="anchor"></a>Sample annotation</h2>
 <p>An annotation table is also necessary to perform analyses. The data will be added to the scMethrix object, as a <code>colData</code> slot.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">sample_anno</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>
   row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span>
   pattern <span class="op">=</span> <span class="st">".bed$"</span>,
@@ -211,7 +207,7 @@
 <h2 class="hasAnchor">
 <a href="#reading-bedgraph-files" class="anchor"></a>Reading bedGraph files</h2>
 <p><code>read_beds</code> function is a versatile bedgraph reader intended to import bedgraph files generated virtually by any sort of methylation calling program. It requires user to provide indices for chromosome names, start position and other required fields. There are also presets available to import <code>bedgraphs</code> from most common programs such as <code>Bismark</code> (.cov format), <code>MethylDackel</code>, and <code>MethylcTools</code>. In this case, there is no need to define e.g. <code>chr_idx</code> <code>start_idx</code> arguments, the function will automatically assign them. To know the exact parameters, it might worth to take a look at one of the files, to see the column order.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">fread</span><span class="op">(</span><span class="va">bed_files</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></code></pre></div>
 <p>The <code>read_beds</code> function adds CpGs missing from the reference set, and creates a methylation/coverage matrices. Once the process is complete - it returns an object of class <code>scMethrix</code> which in turn inherits <code>SingleCellExperiment</code> class. <code>scMethrix</code> object contains ‘methylation’ and (optionally) ‘coverage’ matrices (either in-memory or as on-disk HDF5 arrays) along with pheno-data and other basic info. This object can be passed to all downstream functions for various analysis. For further details on the data structure, see the <code>SingleCellExperiment</code> package.</p>
@@ -219,7 +215,7 @@
 <li>For computers with large memory, increase speed using <code>batch_size</code> parameter. This will open multiple files at once, but keep in mind that increasing the batch size will increase the memory needs as well.</li>
 </ul>
 <p>A more detailed description of the <code>read_beds</code> function is here: <a href="https://compepigen.github.io/WGBS_best_practice/read_bedgraphs.html">read_beds</a>)</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_beds.html">read_beds</a></span><span class="op">(</span>
   files <span class="op">=</span> <span class="va">bed_files</span>,
   ref_cpgs <span class="op">=</span> <span class="va">mm19_cpgs</span>,
@@ -245,7 +241,7 @@
 <a href="#initial-qc-and-summary" class="anchor"></a>Initial QC and summary</h2>
 <p>Without any further processing, we can create an interactive html report containing basic summary statistics of the <code>methrix</code> object with <code>methrix_report</code> function.</p>
 <p>The report can be accessed here: <a href="https://compepigen.github.io/WGBS_best_practice/initial_methrix_reports.html">Initial reports</a></p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">methrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/methrix_report.html">methrix_report</a></span><span class="op">(</span>meth <span class="op">=</span> <span class="va">meth</span>, output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, prefix <span class="op">=</span> <span class="st">"initial"</span><span class="op">)</span></code></pre></div>
 <p>In the report, we can check genome-wide and chromosome based statistics on coverage and methylation, in order to identify potential quality issues, for example:</p>
 <ul>
