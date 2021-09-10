@@ -555,11 +555,11 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
  
   # Determine the grids for the sinks
   if (n_threads == 0) {
-    files <- split_vector(files,batch_size,by="size")
+    files <- split_vector(files, size = batch_size)
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(unlist(files))),
                                            spacings = c(dimension, length(files[[1]]))) 
   } else {
-    files <- split_vector(files,ceiling(batch_size/n_threads),by="size")
+    files <- split_vector(files,size = ceiling(batch_size/n_threads))
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(unlist(files))),
                                            spacings = c(dimension, length(files[[1]]))) 
     cl <- parallel::makeCluster(n_threads)  
@@ -584,7 +584,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
                                                       viewport = grid[[i]], sink = cov_sink)
     } else {
 
-      bed <- parallel::parLapply(cl,split_vector(files[[i]],n_threads,by="chunks"),
+      bed <- parallel::parLapply(cl,split_vector(files[[i]],chunks=n_threads),
                                  fun=read_bed_by_index, ref_cpgs = ref_cpgs,
                                  col_list = col_list, zero_based = zero_based)
       
@@ -793,7 +793,7 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads 
     # Single thread functionality
     # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
     
-    files <- split_vector(files,batch_size,by="size")
+    files <- split_vector(files,size=batch_size)
     reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based, col_list = col_list)
   }
   

@@ -79,94 +79,43 @@ colbind = function(...) {
 }
 
 #' Splits a vector into list of vectors by \code{chunk} or \code{size}
-#' @details Splits a vector into a list of \code{num} vectors or vectors of \code{n} size. If \code{len(vec)%%num != 0},
-#' then the last vector will have a length of less than size \code{num}
+#' @details Splits a vector into consistantly sized sub-lists. The sub-list size will always be decreasing based on list order.
 #' @param vec vector; The vector to split
-#' @param num integer; The number to split by
-#' @param by string; Whether to split by '\code{chunks}' or by '\code{size}'
-#' @return A list of vectors
+#' @param chunks integer; The number of desired sub-lists
+#' @param percent integer; The maximum percentage of elements each sub-list should hold
+#' @param size integer; The maximum size of each sub-list
+#' @return A list of sub-vectors
 #' @examples
 #' # Split vector into 4 sub vectors
-#' split_vector(c(1,2,3,4,5,6,7,8),4,by="chunk")
+#' split_vector(c(1,2,3,4,5,6,7,8),chunks=4)
 #' 
 #' # Split vector into sub-vectors with a size of 2
-#' split_vector(c(1,2,3,4,5,6,7,8),2,by="size")
+#' split_vector(c(1,2,3,4,5,6,7,8),size=2)
+#' 
+#' # Split vector into sub-vectors each with 25% of the total elements
+#' split_vector(c(1,2,3,4,5,6,7,8),percent=25)
 #' @export
-split_vector = function(vec, num = 1, by = c('chunks', 'size')) {
+split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
 
-  if (!is.numeric(num)) {
-    stop("num must be numeric")
-  }
-  
-  type = match.arg(arg = by, choices = c('chunks', 'size'))
-  
-  if (type=="size") {
-    
-    vec <- split(vec, ceiling(seq_along(vec)/num))
-    return (unname(vec))
-    
-  } else {
-    
-    len <- length(vec)
-
-    if (len < num) num <- len
-    
-    #if (len/num < 2) stop("Length of input vector must be at least 2x greater than the number of chunks")
-    
-    chunks <- ceiling(len/num)*(1:(num-1))
-    idx <- c(0,chunks+1)
-    chunks <- c(chunks,len)
-    
-    return(lapply(1:num, function(i) {
-      return(vec[idx[i]:chunks[i]])
-    }))
-  }
-}
-
-#' Splits a \code{\link{GRanges}} object by \code{chunks}, \code{percent} or \code{size}
-#' @details Divides each region \code{\link{GRanges}} into equally-sized lists based on a chunking parameter. 
-#' If \code{len(gr) %% number != 0}, then the last vector will have a length of less than size \code{number}
-#' @param gr GRanges; The \code{\link{GRanges}} object
-#' @param chunks integer; The total number of desired chunks (rounded up to nearest int)
-#' @param percent numeric; The percentage of overall CpGs in each chunk
-#' @param size integer; The number of CpGs to include in each chunk
-#' @return \code{\link{GRangesList}} containing all the chunked \code{\link{GRanges}}
-#' @import GenomicRanges
-#' @examples
-#' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
-#' regions <- bin_granges(regions,bin_size=1)
-#' split_granges(regions, chunks=10)
-#' split_granges(regions, percent=10)
-#' split_granges(regions, size=10)
-#' @export
-split_granges = function(gr,chunks = NA, percent = NA, size = NA) { #=NULL, percent = NULL
-
-  if (!is(gr, "GRanges")) stop("Input must be a Granges object")
-  
   if (sum(is.na(c(chunks,percent,size))) != 2) stop("Invalid input. Must contain 1 of either chunks, percent, or size")
   
   if (!is.na(percent)) {
-    size <- floor(length(gr)*percent/(100))
-  }
-  
-  if (!is.na(chunks)) {
-    chunks = ceiling(chunks)
-    size <- ceiling(length(gr)/chunks)
-  }
-  
-  if (!is.na(size)) {
-    splits <- ceiling(length(gr)/size)
-    splits <- size*(0:(splits-1))+1
-  }
-  
-  grl <- list()
-  
-  for (i in 1:length(splits)) {
-    s <- splits[i]
-    grl[[i]] <- gr[s:min(s+size-1,length(gr))]
-  }
+    if (!is.numeric(percent)) stop("Invalid input. Percent must be numeric")
     
-  return (GenomicRanges::GRangesList(grl))
+    chunks = 100/percent
+  }
+ 
+  if (!is.na(size)) {
+    if (!is.numeric(size)) stop("Invalid input. Size must be numeric")
+    chunks = length(vec)/ceiling(size)
+  }
+
+  if (!is.numeric(chunks)) stop("Invalid input. Chunks must be numeric")
+  
+  chunks = max(1,chunks)
+  
+  return(unname(split(vec, sort(rep_len(1:ceiling(chunks), length(vec))))))
+
 }
 
 #' Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size} 

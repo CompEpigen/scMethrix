@@ -12,7 +12,7 @@
 #' @slot int_elementMetadata NULL 
 #' @exportClass scMethrix
 #' @importFrom stats median quantile sd
-#' @importFrom utils data head write.table
+#' @importFrom utils data head write.table menu
 #' @importFrom methods is as new
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #'
@@ -33,7 +33,7 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
 create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, 
                              genome_name = "hg19", chrom_size = NULL, desc = NULL, h5_dir = NULL, 
                              replace = FALSE, verbose=TRUE) {
-    
+
   if (is_hdf5) {
 
     sse <- SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "HDF5Array")), 
@@ -42,19 +42,14 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
                                                         metadata = list(genome = genome_name,
                                                                         chrom_size = chrom_size,
                                                                         descriptive_stats = desc,
-                                                                        is_h5 = TRUE, 
-                                                                        has_cov = ("count" %in% names(assays))))
-      #TODO: Cannot save to same directory input files exist in
+                                                                        is_h5 = TRUE))
+
       if (!is.null(h5_dir)) {
-        message("Writing to disk...",start_time())
-        
-        tryCatch(HDF5Array::saveHDF5SummarizedExperiment(x = sse, dir = h5_dir, replace = replace, 
-                                                         chunkdim = c(length(rowRanges),1), verbose=verbose), 
-                                                         error = function(e) message(e,"\nThe dataset is not 
+        tryCatch(save_HDF5_scMethrix(scm = sse, h5_dir = h5_dir, replace = replace, verbose = verbose),
+                 error = function(e) message(e,"\nThe dataset is not 
                                                          saved. Please save manually using the 
                                                          HDF5Array::saveSummarizedExperiment command."))
-        message("Written in ",stop_time())
-        }
+      }
       
     } else {
       
@@ -64,8 +59,7 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
                                                       metadata = list(genome = genome_name,
                                                                       chrom_size = chrom_size,
                                                                       descriptive_stats = desc,
-                                                                      is_h5 = FALSE, 
-                                                                      has_cov = ("count" %in% names(assays))))
+                                                                      is_h5 = FALSE))
     }
 
     return(scMethrix(sse))
