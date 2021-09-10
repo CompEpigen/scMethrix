@@ -165,20 +165,16 @@ Too many missing CpGs, if not expected, might indicate that something went wrong
 
 * A common mistake is falsely indicating strandedness and zero or one based positioning. The combination of the two might lead to only using C-s from one strand (due to a 1 bp shift), resulting lower coverage for the sites. A nice description of the zero- and one-based coordination system can be found [here](http://genome.ucsc.edu/blog/the-ucsc-genome-browser-coordinate-counting-systems/) 
 
-## Initial QC and summary
+## Extracting assay matricies
 
-Without any further processing, we can create an interactive html report containing basic summary statistics of the `methrix` object with `methrix_report` function. 
+After the experiment is created, an assay matrix can be generated. Genomic loci can also be added (`add_loci`), be formatted as a `GenomicRanges` object if desired, and ordered by variance (`order_by_sd`). Additionally, the methylation and coverage matrices can be directly obtained with the functions `score()` and `counts()`.
 
-The report can be accessed here: [Initial reports](https://compepigen.github.io/WGBS_best_practice/initial_methrix_reports.html)
-
-```{r, eval=FALSE}
-methrix::methrix_report(meth = meth, output_dir = getwd(), prefix = "initial")
+```{r eval=F}
+mtx <- get_matrix(meth, assay="score")
+head(mtx)
 ```
 
-In the report, we can check genome-wide and chromosome based statistics on coverage and methylation, in order to identify potential quality issues, for example:
-
-* samples with too high or too low genome-wide coverage or on a specific chromosome. In this case, there is also a possibility, that the sample is affected by copy number alterations. Both methylation levels and coverage therefore shows higher variation among cancer samples. 
-
-* samples with altered beta level distribution. 
-
-* A "bump" on the beta level density plot at 0.5 indicates the presence of single nucleotide polymorphisms (SNPs) -> see later.
+```{r eval=F}
+mtx <- get_matrix(meth, assay="score", add_loci = TRUE, in_granges=TRUE, order_by_sd = TRUE)
+head(mtx)
+```

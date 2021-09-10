@@ -15,11 +15,29 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+# Initial QC
+
+Once the experiment is generated, we can create an interactive html report containing basic summary statistics of the `scMethrix` object with `scMethrix_report` function. 
+
+The report can be accessed here: [Initial reports](https://compepigen.github.io/WGBS_best_practice/initial_methrix_reports.html)
+
+```{r, eval=FALSE}
+methrix::methrix_report(meth = meth, output_dir = getwd(), prefix = "initial")
+```
+
+In the report, we can check genome-wide and chromosome based statistics on coverage and methylation, in order to identify potential quality issues, for example:
+
+* samples with too high or too low genome-wide coverage or on a specific chromosome. In this case, there is also a possibility, that the sample is affected by copy number alterations. Both methylation levels and coverage therefore shows higher variation among cancer samples. 
+
+* samples with altered beta level distribution. 
+
+* A "bump" on the beta level density plot at 0.5 indicates the presence of single nucleotide polymorphisms (SNPs) -> see later.
+
 # Filtering
 
-## Masking low coverage CpGs 
+## Masking low/high coverage CpGs 
 
-To ensure the high quality of our dataset, the sites with very low (untrustworthy methylation level) or high coverage (technical problem) should not be used. We can mask these CpG sites. Please note, that the DSS we were using for Differential Methylation Region (DMR) calling, doesn't need the removal of the lowly covered sites, because it takes it into account by analysis. However, using a not too restrictive threshold won't interfere with DMR calling.
+To ensure the high quality of our dataset, the sites with very low coverage (untrustworthy methylation level) or high average coverage (technical problem) should not be used. We can mask these CpG sites. Please note, that the DSS we were using for Differential Methylation Region (DMR) calling, doesn't need the removal of the lowly covered sites, because it takes it into account by analysis. However, using a not too restrictive threshold won't interfere with DMR calling.
 
 ```{r eval=F}
 # Masking CpG sites with a coverage < 2 and an average coverage > 2
@@ -46,11 +64,11 @@ SNPs, mostly the C > T mutations can disrupt methylation calling. Therefore it i
 
 During filtering, we can select the population of interest and the minimum minor allele frequency (MAF) of the SNPs.
 
-SNP filtering is currently implemented for hg19 and hg38 assemblies. For mm10 assemblies, SNP filtering is not generally necessary due to high homogeneity in lab grown mice.
+SNP filtering is currently implemented for hg19 and hg38 assemblies. For mm10 assemblies, if the same strain of mice is used, SNP filtering is not generally necessary due to high homozygosity between individuals. SNP data for mice can be downloaded from here: https://www.sanger.ac.uk/science/data/mouse-genomes-project. 
 
 ```{r message=FALSE, warning=FALSE, eval=F}
 if(!requireNamespace("GenomicScores")) {
-BiocManager::install("GenomicScores")
+  BiocManager::install("GenomicScores")
 }
 library(GenomicScores) 
 ```
@@ -68,9 +86,6 @@ meth <- meth[[1]]
 pheatmap::pheatmap(get_matrix(order_by_sd(snps)[1:min(5000, length(snps)),]))
 ```
 
-* SNP removal in mouse data: 
-  Usually, there is no need to remove SNPs from mouse data, since for many experiments, the same strain of mice is used. However, there are cases, when different crosses of strains are used, for which, the level of heterozygosity might be different. SNP data for mice can be downloaded from here: https://www.sanger.ac.uk/science/data/mouse-genomes-project. The SNPs can be filtered out using the `subset_scMethrix` function. 
-  
 ## Filtering masked sites
 
 After masking is completed, we can remove those sites that are not covered by any of the samples. 
