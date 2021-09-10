@@ -17,32 +17,36 @@ vignette: >
 
 # Filtering
 
-## Coverage based filtering 
+## Masking low coverage CpGs 
 
-To ensure the high quality of our dataset, the sites with very low (untrustworthy methylation level) or high coverage (technical problem) should not be used. We can mask these CpG sites. Please note, that the DSS we were using for Differential Methylation Region (DMR) calling, doesn't need the removal of the lowly covered sites, because it takes it into account by analysis. However, using a not too restrictive threshold won't interfere with DMR calling. 
+To ensure the high quality of our dataset, the sites with very low (untrustworthy methylation level) or high coverage (technical problem) should not be used. We can mask these CpG sites. Please note, that the DSS we were using for Differential Methylation Region (DMR) calling, doesn't need the removal of the lowly covered sites, because it takes it into account by analysis. However, using a not too restrictive threshold won't interfere with DMR calling.
 
-```{r mask_methrix, eval=F}
+```{r eval=F}
+# Masking CpG sites with a coverage < 2 and an average coverage > 2
 meth <- scMethrix::mask_by_coverage(meth, low_threshold = 2, avg_threshold = 2) 
 ```
 
-Later we can remove those sites that are not covered by any of the samples. 
-
-```{r remove_uncovered, eval=F}
-meth <- scMethrix::remove_uncovered(meth) 
+```{r eval=F}
+# Masking CpG sites present in fewer than 2 samples
+meth <- scMethrix::mask_by_sample(meth, low_threshold = 2) 
 ```
 
-To reduce the data for future imputation/binning/clustering, we might want to remove non-variable CpG sites. The function `mask_by_variance` will calculate the variance of each CpG site and mask it if below a specified threshold. 
+## Masking low variance CpGs 
 
-```{r mast_by_variance, eval=F}
+CpG sites with a low inter-individual methylation variance can increase the risk of false discoveries and reduce statistical significance. We can mask the sites to prevent this, as well as decreasing computation time and data size. The function `mask_by_variance` will calculate the variance of each CpG site and mask it if below a specified threshold. 
+
+```{r eval=F}
+# Masking sites with a variance < 0.05
 meth <- scMethrix::mask_by_variance(meth, low_threshold = 0.05)
 ```
 
 ## SNP filtering
 
 SNPs, mostly the C > T mutations can disrupt methylation calling. Therefore it is essential to remove CpG sites that overlap with common variants, if we have variation in our study population. For example working with human, unpaired data, e.g. treated vs. untreated groups. 
-During filtering, we can select the population of interest and the minimum minor allele frequency (MAF) of the SNPs.
-SNP filtering is currently implemented for mm10, hg19 and hg38 assemblies. 
 
+During filtering, we can select the population of interest and the minimum minor allele frequency (MAF) of the SNPs.
+
+SNP filtering is currently implemented for hg19 and hg38 assemblies. For mm10 assemblies, SNP filtering is not generally necessary due to high homogeneity in lab grown mice.
 
 ```{r message=FALSE, warning=FALSE, eval=F}
 if(!requireNamespace("GenomicScores")) {
@@ -51,7 +55,7 @@ BiocManager::install("GenomicScores")
 library(GenomicScores) 
 ```
 
-```{r remove_snps, eval=F}
+```{r eval=F}
 meth <- scMethrix::remove_snps(meth, keep = TRUE)
 ```
 * There is a possibility to keep the sites possibly overlapping with SNPs. We can use this data for detecting possible sample mismatches. For this, we need to plot the most variable sites (probably the ones that are variable in our study population) and plot them on a heatmap. 
@@ -64,10 +68,47 @@ meth <- meth[[1]]
 pheatmap::pheatmap(get_matrix(order_by_sd(snps)[1:min(5000, length(snps)),]))
 ```
 
-
 * SNP removal in mouse data: 
   Usually, there is no need to remove SNPs from mouse data, since for many experiments, the same strain of mice is used. However, there are cases, when different crosses of strains are used, for which, the level of heterozygosity might be different. SNP data for mice can be downloaded from here: https://www.sanger.ac.uk/science/data/mouse-genomes-project. The SNPs can be filtered out using the `subset_scMethrix` function. 
   
+## Filtering masked sites
+
+After masking is completed, we can remove those sites that are not covered by any of the samples. 
+
+```{r eval=F}
+meth <- scMethrix::remove_uncovered(meth) 
+```
+
+# Querying
+
+Often, whole genome analysis using all samples is not necessary. This package includes multiple convenient options for querying - `regions`, `contigs`, or `samples` - and can processed as either inclusive or exclusive. Multiple query types can be given in each command. Subset operations in `scMethrix` make use of the fast binary search `data.table` that is several orders faster than bsseq or other similar packages. 
+
+```{r eval=F}
+# Subsetting to include only two samples
+meth <- scMethrix::subset_methrix(meth, contigs = c("GSM2553093", "GSM2553095"), by="include")
+colnames(inc)
+```
+
+```{r eval=F}
+# Subsetting to exclude two samples
+meth <- scMethrix::subset_methrix(meth, contigs = c("GSM2553093", "GSM2553095"), by="exclude")
+colnames(meth)
+```
+
+```{r eval=F}
+# Subsetting to include only chr1 and chr2
+meth <- scMethrix::subset_methrix(meth, contigs = c("chr1", "chr2"))
+meth
+GenomicRanges::seqinfo(SummarizedExperiment::rowRanges(meth))
+```
+
+```{r subset_scMethrix, eval=F}
+# Subsetting to include only bases 1:100M in chr1
+regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100000000)) 
+meth <- scMethrix::subset_methrix(meth, regions = regions)
+meth
+GenomicRanges::seqlengths(SummarizedExperiment::rowRanges(meth))
+```
 
 # Visualization and QC after filtering
 
@@ -88,12 +129,11 @@ There are additional possibilities to visualize the study. We can look at the de
 scMethrix::plot_coverage(meth, type = "dens")
 ```
 
-
 ```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
 scMethrix::plot_coverage(meth, type = "dens", pheno = "Day", perGroup = TRUE)
 ```
 
-We can visualize te beta value distribution as a violin plot or density plot. These plots (as well as the coverage plot) use the most variable 25000 CpG sites to ensure fast processing. `plot_density` and `plot_violin` has the option to use data only from a restricted region. 
+We can visualize te beta value distribution as a violin plot or density plot. These plots (as well as the coverage plot) use the 25000 most variable CpG sites to ensure fast processing. `plot_density` and `plot_violin` has the option to use data only from a restricted region. 
 
 ```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
 scMethrix::plot_density(meth)
@@ -101,6 +141,10 @@ scMethrix::plot_density(meth)
 
 ```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
 scMethrix::plot_density(meth, ranges = GRanges("chr1:1-10000000"))
+```
+
+```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
+scMethrix::plot_violin(meth)
 ```
 
 ## Dimensionality reduction 
