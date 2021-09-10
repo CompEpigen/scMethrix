@@ -27,6 +27,6 @@ BiocManager::install("CompEpigen/scMethrix")
 
 Installation from BioConductor requires the BioC and R versions to be the newest. This arises from the restrictions imposed by BioConductor community which might cause package incompatibilities with the earlier versions of R (for e.g; R < 4.0). In that case installing from GitHub might be easier since it is much more merciful with regards to versions.
 
-## Overview and usage functions of the package
+## Basic Overview
 
-<img src="https://github.com/CompEpigen/scMethrix/raw/master/vignettes/package_summary.png" height="75%" width="75%"/>
+<img src="https://github.com/CompEpigen/scMethrix/blob/97b06165946e6febd08435b2564cedf8d1dfe43b/vignettes/package_summary.PNG?raw=true" height="65%" width="65%"/>
