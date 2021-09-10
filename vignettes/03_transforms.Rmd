@@ -15,9 +15,25 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+# Transformations
 
-# Transforming assays and imputation
-Methylation data is presented in different ways based on the output pipeline. Scores are commonly reported with ranges such as [-1..1], [0..1], or [0..100]. Depending on your downstream analysis, it may be necessary to transform these values to another range. The `transform_assay` function allows and arbitrary function input to transform each element in the dataset. 
+## Merging experiment objects
+During analysis, it might be beneficial to split an experiment into smaller subset experiments, perform operations, and re-assemble the subset experiments back together. Merging can be done by either `row` or `col`. This function only affects assays; other experiment components like metadata and reduced dimensionality will be discarded.
+
+```{r, eval=F}
+m1 <- subset_scMethrix(meth, contigs = "chr1")
+m2 <- subset_scMethrix(meth, contigs = "chr2")
+meth <- scMethrix::merge_scMethrix(scm1 = m1, scm2 = m2, by="row")
+```
+
+```{r, eval=F}
+m1 <- subset_scMethrix(meth, samples = "GSM2553093")
+m2 <- subset_scMethrix(meth, samples = "GSM2553095")
+meth <- scMethrix::merge_scMethrix(scm1 = m1, scm2 = m2, by="col")
+```
+
+## Transforming assays and imputation
+It maybe necessary to perform an operation on each element of the assay. For instance, methylation data is presented in different ranges based on the output pipeline. Methylation scores are commonly reported with ranges of `[-1..1]`, `[0..1]`, or `[0..100]`. Depending on your downstream analysis, it may be necessary to transform these values to another range. The `transform_assay` function allows and arbitrary function input to transform each element in the dataset.
 
 ```{r, eval=F}
 #To convert [0..1] scores to [0..100] scores
@@ -25,14 +41,14 @@ fun <- function(x) round(x*100)
 meth <- scMethrix::transform_assay(meth, assay = "score" , new_assay = "score.100", trans = fun)
 ```
 
-Binarizing is a common operation for single cell methylation data as a majority of CpG sites have the same methylation status on both strands. A `binarize` function is included in the package. The function will automatically generate a threshold cutoff based on the mean methylation value.
+Binarizing is a common operation for single cell methylation data as a majority of CpG sites have the same methylation status on both strands. A `binarize` function is included in the package. The function will automatically generate a threshold cutoff based on the mean methylation value and classify each score.
 
 ```{r, eval=F}
 #To convert [0..1] scores to [0..100] scores
 meth <- scMethrix::transform_assay(meth, assay = "score" ,new_assay = "binarize", trans = binarize)
 ```
 
-# Binning
+## Binning
 CpG-level precision may not be necessary for downstream analysis, so binning can be used to drastically reduce the number of calculations necessary for computation. There are multiple options in which to determine binning. By default, entire chromosomes are used for binning, but a `region` list can be provided to limit binning to particular sections of the genome (e.g. only promoters). From there, binning can either be done by `bp` or by number of `cpg` sites.
 
 All assays in the `scMethrix` object will be binned. By default, the `count` assay will be summed during binning while the `score` assay and all other assays will use their mean values. It is possible to specify other operations, if desired.
@@ -48,7 +64,7 @@ meth <- scMethrix::bin_scMethrix(meth, bin_size = 1000, bin_by = "cpg", regions 
 meth <- scMethrix::bin_scMethrix(meth, bin_size = 100000, bin_by = "bp", trans=c(score= function(x) median(x,na.rm=TRUE)))
 ```
 
-# Imputation
+## Imputation
 As single cell bisulfite sequencing is typically very sparse, it is usually necessary to perform some imputation to fill NA elements, as most clustering and dimensionality reduction algorithms cannot handle large numbers of NA values. Imputation algorithms available here are k-nearest neighbour (`kNN`), iterative PCA (`iPCA`),or random forest (`RF`). As well, an arbitrary imputation function can be used here, provided that the final output is a matrix the same dimensions as the input matrix. By default, the entire chromosome is used for the imputation, but this is incredibly memory-intensive. A `region` list can be provided to impute small regions together, but an assumption for quasi-independence is typically needed (such as promoter regions).
 
 ```{r, eval=F}
@@ -63,7 +79,7 @@ fun <- function(mtx) missForest::missForest(mtx, ...)$ximp
 meth <- scMethrix::impute_regions(meth, assay = "score", new_assay = "impute", type = fun, regions = promoters)
 ```
 
-# Generating test sets
+## Generating test sets
 To judge the accuracy of imputation, it may be helpful to generate a test and training set. This is easily done with `generate_training_set`. A specified proportion of CpG sites will be subsetted into two `scMethrix` objects. 
 
 ```{r, eval=F}
