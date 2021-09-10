@@ -1,0 +1,184 @@
+---
+title: "01: Reading in the bedgraph data"
+author: "Andrew Lindsay, Reka Toth"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: true
+toc_depth: 3
+toc_float: true
+self_contained: yes
+highlight: pygments
+vignette: >
+  %\VignetteIndexEntry{01: Reading in the bedgraph data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r message=FALSE, warning=FALSE, eval=F}
+#Load library
+library(scMethrix)
+```
+
+# Download the data
+
+The example data analysis presented here uses the following publicly available whole genome bisulfite sequencing data from GEO:
+  [GSE97179](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE97179) 
+  
+Reference: Luo C, Keown CL, Kurihara L, Zhou J et al. Single-cell methylomes identify neuronal subtypes and regulatory elements in mammalian cortex. Science 2017 Aug 11;357(6351):600-604. [PMID: 28798132](https://www.ncbi.nlm.nih.gov/pubmed/28798132)
+
+The data can be directly downloaded from GEO, using the `GEOquery` package. The files will be downloaded into the working directory. 
+
+```{r message=FALSE, warning=FALSE, eval=F}
+if(!requireNamespace("GEOquery")) {
+  BiocManager::install("GEOquery")
+}
+library(GEOquery)  
+```
+
+```{r message=FALSE, warning=FALSE, eval=F}
+data_dir = "./GSE97179/"
+dir.create(path = data_dir, showWarnings = FALSE, recursive = TRUE)
+```
+
+```{r eval=F}
+lapply(c("GSM2553093", "GSM2553095", "GSM2553097", "GSM2553099", "GSM2553101", "GSM2553103"), function(gsm){
+  filePaths <-  GEOquery::getGEOSuppFiles(GEO = gsm, baseDir = data_dir, makeDirectory = TRUE)
+  
+  tar_dir <- paste0(data_dir,gsm,"/")
+  tar_file <- list.files(tar_dir,full.names=T)
+  untar(tar_file,exdir = tar_dir)
+  file.remove(tar_file)
+  
+  bed_dir <- paste0(tar_dir,list.files(tar_dir))
+  
+  invisible(lapply(list.files(bed_dir,full.names=T), function(file) {
+    gunzip(file,remove=T)
+  }))
+  
+  bed_files <- list.files(bed_dir,full.names=T)
+
+  bed <- do.call("rbind", lapply(bed_files, FUN = function(file) {
+    b <- fread(file, header=TRUE, sep="\t",drop=c(4,5))
+  }))
+
+  fwrite(bed,paste0(data_dir,gsm,".bed"),sep = "\t")
+  
+  unlink(tar_dir,recursive=TRUE,force=TRUE)
+  if (dir.exists(tar_dir)) warning(sprintf("Failed to remove data folder for [%s]", tar_dir))
+})
+```
+
+```{r message=FALSE, warning=FALSE, eval=F}
+bed_files <- list.files(
+  path = data_dir,
+  pattern = "*.bed$",
+  full.names = TRUE, 
+  recursive = TRUE
+)
+
+print(basename(bed_files))
+```
+
+# Processing
+
+## CpG annotation 
+As a first step, we need a list of CpG sites in the respective genome. The CpG sites are listed using the respective [BSgenome](https://bioconductor.org/packages/release/bioc/html/BSgenome.html) annotation package. The `read_beds` function is also able to extract CpG sites on it's own, however, it might be beneficial to do it separately. 
+
+```{r message=FALSE, warning=FALSE}
+#Genome of your preference to work with
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+library(BiocManager)
+if(!requireNamespace("BSgenome.Mmusculus.UCSC.mm10")) {
+  BiocManager::install("BSgenome.Mmusculus.UCSC.mm10")
+}
+library(BSgenome.Mmusculus.UCSC.mm10) 
+```
+
+```{r, ref_data, eval=F}
+if(!requireNamespace("methrix")) {
+  BiocManager::install("methrix")
+}
+library(methrix) 
+
+mm19_cpgs <- suppressWarnings(methrix::extract_CPGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10"))
+```
+
+## Sample annotation 
+An annotation table is also necessary to perform analyses. The data will be added to the scMethrix object, as a `colData` slot. 
+
+```{r, sample_anno, eval=F}
+sample_anno <- data.frame(
+  row.names = gsub(
+  pattern = ".bed$",
+  replacement = "",
+  x = basename(bed_files)
+  ),
+  Sample = gsub(
+  pattern = ".bed$", 
+  replacement = "",
+  x = basename(bed_files)
+  ),
+  stringsAsFactors = FALSE
+)
+knitr::kable(sample_anno)
+```
+
+
+## Reading bedGraph files
+`read_beds` function is a versatile bedgraph reader intended to import bedgraph files generated virtually by any sort of methylation calling program. It requires user to provide indices for chromosome names, start position and other required fields. There are also presets available to import `bedgraphs` from most common programs such as `Bismark` (.cov format), `MethylDackel`, and `MethylcTools`. In this case, there is no need to define e.g. `chr_idx` `start_idx` arguments, the function will automatically assign them. 
+To know the exact parameters, it might worth to take a look at one of the files, to see the column order. 
+
+```{r, eval=F}
+res <- fread(bed_files[1])
+head(res)
+```
+
+The `read_beds` function adds CpGs missing from the reference set, and creates a methylation/coverage matrices. Once the process is complete - it returns an object of class `scMethrix` which in turn inherits `SingleCellExperiment` class. `scMethrix` object contains ‘methylation’ and (optionally) ‘coverage’ matrices (either in-memory or as on-disk HDF5 arrays) along with pheno-data and other basic info. This object can be passed to all downstream functions for various analysis. For further details on the data structure, see the `SingleCellExperiment` package.
+
+* For computers with large memory, increase speed using `batch_size` parameter. This will open multiple files at once, but keep in mind that increasing the batch size will increase the memory needs as well. 
+
+A more detailed description of the `read_beds` function is here: [read_beds](https://compepigen.github.io/WGBS_best_practice/read_bedgraphs.html))
+
+```{r, read_beds, eval=F}
+meth <- read_beds(
+  files = bed_files,
+  ref_cpgs = mm19_cpgs,
+  chr_idx = 1,
+  start_idx = 2,
+  strand_idx = 3,
+  cov_idx = 4,
+  M_idx = 5,
+  stranded = FALSE,
+  zero_based = TRUE, 
+  #collapse_strands = FALSE, 
+  colData = sample_anno, 
+  batch_size = 2
+)
+```
+
+**Potential pitfalls: **
+Too many missing CpGs, if not expected, might indicate that something went wrong. 
+
+* An obvious error is using the wrong reference genome. 
+
+* A common mistake is falsely indicating strandedness and zero or one based positioning. The combination of the two might lead to only using C-s from one strand (due to a 1 bp shift), resulting lower coverage for the sites. A nice description of the zero- and one-based coordination system can be found [here](http://genome.ucsc.edu/blog/the-ucsc-genome-browser-coordinate-counting-systems/) 
+
+## Initial QC and summary
+
+Without any further processing, we can create an interactive html report containing basic summary statistics of the `methrix` object with `methrix_report` function. 
+
+The report can be accessed here: [Initial reports](https://compepigen.github.io/WGBS_best_practice/initial_methrix_reports.html)
+
+```{r, eval=FALSE}
+methrix::methrix_report(meth = meth, output_dir = getwd(), prefix = "initial")
+```
+
+In the report, we can check genome-wide and chromosome based statistics on coverage and methylation, in order to identify potential quality issues, for example:
+
+* samples with too high or too low genome-wide coverage or on a specific chromosome. In this case, there is also a possibility, that the sample is affected by copy number alterations. Both methylation levels and coverage therefore shows higher variation among cancer samples. 
+
+* samples with altered beta level distribution. 
+
+* A "bump" on the beta level density plot at 0.5 indicates the presence of single nucleotide polymorphisms (SNPs) -> see later.

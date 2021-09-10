@@ -605,7 +605,6 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' Generic imputation return function
 #' @details Uses the specified imputation operation to evaluation an scMethrix object.
 #' @param regions Granges; the regions to impute. Default is by chromosome.
-#' @param op closure; the imputation operation
 #' @param type string/closure; the imputation to perform "kNN","iPCA",or "RF". Otherwise, a closure can be specified that returns the imputed matrix. Default = "kNN"
 #' @param n_pc the range of principal components to check when using iPCA. Caution: this can be very time-intensive
 #' @inheritParams generic_scMethrix_function
@@ -621,7 +620,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @references Stekhoven, D. J., & Bühlmann, P. (2012). MissForest—non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.
 #' @references Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
 #' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
-impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regions = NULL, op = NULL, n_chunks = 1, 
+impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regions = NULL, n_chunks = 1, 
                                n_threads = 1, overlap_type="within", type="kNN", verbose = TRUE, k=10, n_pc=2,...) {
   
   yid <- NULL

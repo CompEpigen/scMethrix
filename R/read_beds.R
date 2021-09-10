@@ -161,13 +161,14 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 
     if(is.null(colData)) {
       colData <- data.frame()[1:(length(files)), ]
-      row.names(colData) <- colnames(reads$score)
+      row.names(colData) <- colData$Sample <- colnames(reads$score)
+      
     } else {
       cd <- data.frame()[1:(length(files)), ]
       cd$Sample <- colnames(reads$score)
       cd <- merge(cd,colData,by="Sample")
       row.names(cd) <- cd$Sample
-      cd$Sample <- NULL
+      #cd$Sample <- NULL
       colData <- cd
     }
 
@@ -441,13 +442,15 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
   . <- meths <- covs <- M <- U <- chr <- NULL
 
   for (i in 1:length(files)) {
-
+    
     bed <- data.table::fread(files[[i]], select = unname(col_list$col_idx),
                              col.names = names(col_list$col_idx), key = c("chr", "start"))
     n_bed <- nrow(bed)
     
+    if (!grepl("chr", bed[1,chr], fixed = TRUE)) bed[,chr := paste0("chr",chr)]
+    
     #Scale beta to [0,1]
-    if (!is.null(col_list$col_idx["beta"])) {
+    if (!is.na(col_list$col_idx["beta"])) {
       if(!is.null(col_list$max_value) && col_list$max_value != 1) {
         bed[,beta := (beta/col_list$max_value)]
       } else {
@@ -465,7 +468,7 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
       }
     }
     
-    bed[, c("end","strand"):=NULL] # TODO: this probably breaks stuff
+    suppressWarnings(bed[, c("end","strand"):=NULL]) # TODO: this probably breaks stuff
     
     # Bring bedgraphs to 1-based cordinate
     if (zero_based) {
@@ -487,7 +490,7 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
       bed[, `:=`(beta, M/cov)]
       bed[, `:=`(strand, "+")]
     }
-
+    
     meth <- bed[,c("chr","start","beta")]
     cov <- bed[,c("chr","start","cov")]
 
@@ -793,12 +796,12 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads 
     files <- split_vector(files,size=batch_size)
     reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based, col_list = col_list)
   }
-
+  
   if (col_list$has_cov) {
-    reads <- list(score = cbind(lapply(reads, `[[`, "beta")),
-                  counts = cbind(lapply(reads, `[[`, "cov")))
+    reads <- list(score = colbind(lapply(reads, `[[`, "beta")),
+                  counts = colbind(lapply(reads, `[[`, "cov")))
   } else {
-    reads <- list(score = cbind(lapply(reads, `[[`, "beta")))
+    reads <- list(score = colbind(lapply(reads, `[[`, "beta")))
   }
     
   reads <- lapply(reads,function(x) as.matrix(do.call(cbind, x)))

@@ -1,0 +1,48 @@
+---
+title: "04: Clustering and metacells"
+author: "Andrew Lindsay, Reka Toth"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: true
+toc_depth: 3
+toc_float: true
+self_contained: yes
+highlight: pygments
+vignette: >
+  %\VignetteIndexEntry{04: Clustering and metacells}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Clustering data
+Unlike bulk sequencing, where the measurements are averaged over many cells, single-cell sequencing allows the identification of cell type for individual cells. This is a common step in many single-cell expression workflows. Multiple algorithms and distance metrics are included in the package for maximum flexibility. 
+
+Most algorithms operate via a distance metric, an all-by-all matrix where each sample is numerically compared to each other sample. Samples with few methylated CpG sites in common will have a large distance metric, where as two samples with identical methylation will have a distance metric of zero. 
+
+Available distance metrics include `pearson`, `spearman`, and `tau` (all via `bioDist`); and `euclidean`, `maximum`, `manhattan`, `canberra`, `binary`, and `minkowski` (all via `stats::dist`). 
+
+```{r, eval=F}
+dist <- scMethrix::get_distance_matrix(meth, assay = "score" , type = "euclidean")
+dist <- scMethrix::get_distance_matrix(meth, assay = "score" , type = "pearson")
+dist <- scMethrix::get_distance_matrix(meth, assay = "score" , type = "canberra")
+```
+
+Clustering algorithms include `hierarchical` (via `stats::hclust`), `partition` (via `stats::kmeans`), and `model`-based (via `mclust::Mclust`). Distance metrics are not used for `model`-based clustering. The identified clusters will be stored in the `colData` slot of the output `scMethrix` object.
+
+```{r, eval=F}
+meth.cluster <- scMethrix::cluster_scMethrix(meth, assay = "score", dist = dist, n_clusters = 5, colname = "Heirarchical", type="hierarchical")
+colData(meth.cluster)
+
+meth.cluster <- scMethrix::cluster_scMethrix(meth, assay = "score", dist = dist, colname = "Model-based", type="model")
+colData(meth.cluster)
+```
+
+# Visualization
+
+For visualizing the clustering, the generated colData can be used for annotation in dimensionality reduction plots.
+
+```{r, eval=F}
+meth <- scMethrix::dim_red_scMethrix(meth,type="PCA",top_var = 10000, n_components = 20)
+plot_dim_red(meth,type="PCA",shape_anno = "Cluster",color_anno="Cluster")
+```

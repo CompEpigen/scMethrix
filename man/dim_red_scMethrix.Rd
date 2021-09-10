@@ -32,9 +32,9 @@ dim_red_scMethrix(
 
 \item{verbose}{boolean; flag to output messages or not}
 
-\item{n_components}{integer; Number of components to use for PCA}
+\item{n_components}{integer; Number of components to use}
 
-\item{n_neighbors}{integer; number of nearest neighbors}
+\item{n_neighbors}{integer; number of nearest neighbors for UMAP}
 
 \item{...}{Other arguments that can be passed to Rtsne}
 }
