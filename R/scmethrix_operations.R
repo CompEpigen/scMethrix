@@ -864,20 +864,8 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, 
   
   row_idx <- unique(c(low_row_idx,avg_row_idx))
   
-  if (length(row_idx) == 0) {
-    if (verbose) message("   No CpGs were masked")
-  } else if (length(row_idx) == nrow(scm)) {
-    stop("All CpGs were masked. Re-check threshold values.")
-  } else {
-    for (i in 1:length(assays(scm))) {
-      if (verbose) message("Masking ",names(assays(scm))[i]," assay")
-      assay(scm,i)[row_idx,] <- as.integer(NA)
-    }  
-  }
-  
-  if (verbose) message("Masked ",length(row_idx), 
-                       " [", round(length(row_idx)/nrow(scm) * 100, digits = 2), "%] CpG sites in ",stop_time())
-  
+  scm <- mask_helper(scm, row_idx, verbose = verbose)
+
   return(scm)
 }
 
@@ -947,19 +935,7 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
     
   }
   
-  if (length(row_idx) == 0) {
-    if (verbose) message("   No CpGs were masked")
-  } else if (length(row_idx) == nrow(scm)) {
-    stop("All CpGs were masked. Re-check threshold values.")
-  } else {
-    for (i in 1:length(assays(scm))) {
-      if (verbose) message("Masking '",names(assays(scm))[i],"' assay")
-      assay(scm,i)[row_idx,] <- as.integer(NA)
-    }  
-  }
-  
-  if (verbose) message("Masked ",length(row_idx), 
-                       " [", round(length(row_idx)/nrow(scm) * 100, digits = 2), "%] CpG sites in ",stop_time())
+  scm <- mask_helper(scm, row_idx, verbose = verbose)
   
   return(scm)
 }
@@ -995,29 +971,41 @@ mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, 
   
   row_idx <- which(vals <= low_threshold)
     
+  scm <- mask_helper(scm, row_idx, verbose = verbose)
+
+  return(scm)
+  
+}
+
+
+#' Helper function for masking. All rows in row_idx will be set to NA.
+#' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
+#'  by putting NA for assay values. The sites will remain in the object and all assays will be affected.
+#'  
+#'  \code{low_threshold} is used to mask sites with low overall cell counts. A site represented by a single sample is typically not useful.
+#'  \code{prop_threshold} is used to mask sites with a low proportional count  
+#'  
+#' @inheritParams generic_scMethrix_function
+#' @param row_idx numeric; A vector of row indexes for which to replace with NA
+#' @return An object of class \code{\link{scMethrix}}
+#' @importFrom SummarizedExperiment assays assays<-
+#' @export
+mask_helper <- function (scm, row_idx, verbose = TRUE) {
+  
   if (length(row_idx) == 0) {
-    message("   No CpGs found with a variability <= ",low_threshold)
+    if (verbose) message("   No CpGs were masked (",stop_time(),"elapsed)")
   } else if (length(row_idx) == nrow(scm)) {
-    message("   No CpGs were masked with a variability <= ",low_threshold)
+    stop("All CpGs were masked. Re-check threshold values.")
   } else {
     for (i in 1:length(assays(scm))) {
       assays(scm)[[i]][row_idx,] <- as.integer(NA)
     } 
-      
-    n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)) - n
-      
-    for (i in seq_along(colnames(scm))) {
-      if (n[i]==0) next
-      if (verbose) message(paste0("   Masked ", n[i], " CpGs due to low variability in sample ",  colnames(scm)[i], "."))
-    }
     
     if (verbose) message("Masked ",length(row_idx), 
                          " [", round(length(row_idx)/nrow(scm) * 100, digits = 2), "%] CpG sites in ",stop_time())
-    
   }
   
-  if (verbose) message("Masking finished in ",stop_time())
-  
   return(scm)
-  
+
 }
+

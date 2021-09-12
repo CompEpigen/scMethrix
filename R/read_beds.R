@@ -113,6 +113,19 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   
   gc()
   
+  # Get colData
+  if(is.null(colData)) {
+    colData <- data.frame()[1:(length(files)), ]
+    row.names(colData) <- colnames(reads$score)
+  } else {
+    cd <- data.frame()[1:(length(files)), ]
+    cd$Sample <- colnames(reads$score)
+    cd <- merge(cd,colData,by="Sample")
+    row.names(cd) <- cd$Sample
+    cd$Sample <- NULL
+    colData <- cd
+  }
+  
   if (h5) {
     
     if (is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
@@ -126,17 +139,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
                                                 zero_based = zero_based, verbose = verbose)
     message("Building scMethrix object")
     
-    if(is.null(colData)) {
-      colData <- data.frame()[1:(length(files)), ]
-      row.names(colData) <- colnames(reads$score)
-    } else {
-      cd <- data.frame()[1:(length(files)), ]
-      cd$Sample <- colnames(reads$score)
-      cd <- merge(cd,colData,by="Sample")
-      row.names(cd) <- cd$Sample
-      cd$Sample <- NULL
-      colData <- cd
-    }
+
     
     # if (is.null(colData)) colData <- data.frame()[1:(length(files)), ]
     # row.names(colData) <- unlist(lapply(files,get_sample_name))
@@ -158,19 +161,6 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
                            zero_based = zero_based,verbose = verbose)
     
     message("Building scMethrix object")
-
-    if(is.null(colData)) {
-      colData <- data.frame()[1:(length(files)), ]
-      row.names(colData) <- colData$Sample <- colnames(reads$score)
-      
-    } else {
-      cd <- data.frame()[1:(length(files)), ]
-      cd$Sample <- colnames(reads$score)
-      cd <- merge(cd,colData,by="Sample")
-      row.names(cd) <- cd$Sample
-      #cd$Sample <- NULL
-      colData <- cd
-    }
 
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
