@@ -2,7 +2,7 @@
 #' @details Utilizes mainly the bioDist package to determine various distance metrics to be used for later clustering. 
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object
 #' @param assay string; The assay to use. Default is 'score'
-#' @param type string; The type of distance metric to use. Available options are "pearson", "spearman", "tau", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski". An aribitrary distance function can also be used, so long as the input takes just the specified matrix.
+#' @param type string; The type of distance metric to use. Available options are "pearson", "spearman", "tau", "euclidean", "manhattan", "canberra", "binary", "minkowski". An aribitrary distance function can also be used, so long as the input takes just the specified matrix.
 #' @param verbose boolean; flag to output messages or not
 #' @return matrix; the distance matrix
 #' @import bioDist
@@ -28,7 +28,7 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
     stop("Assay does not exist in the object", call. = FALSE)
   }
 
-  if (typeof(type) != "closure" && !(type %in% c("pearson", "spearman", "tau", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"))) stop("Invalid type of distance calculation")
+  if (typeof(type) != "closure" && !(type %in% c("pearson", "spearman", "kendall", "euclidean", "manhattan", "canberra", "binary", "minkowski"))) stop("Invalid type of distance calculation")
   
   mtx <- as.matrix(t(get_matrix(scm,assay=assay)))
   
@@ -40,9 +40,9 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
     dist <- spearman.dist(mtx)
   } else if (type == "pearson") {
     dist <- cor.dist(mtx)
-  } else if (type == "tau") {
+  } else if (type == "kendall") {
     dist <- tau.dist(mtx)
-  } else if (type %in% c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")) {
+  } else if (type %in% c("euclidean", "manhattan", "canberra", "binary", "minkowski")) {
     dist <- dist(mtx, method = type)
   } else {
     stop("Invalid distance metric specified")
@@ -85,7 +85,7 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
 #' fun(dist) # Example of arbitrary function output 
 #' cluster_scMethrix(scMethrix_data, dist = dist, type = fun)
 #' @export
-cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay="score", colname = "Cluster", verbose = TRUE, type="hierarchical", ...) {
+cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay="score", colname = "Cluster", verbose = TRUE, type="heir", ...) {
 
   Cluster <- Sample <- NULL
   
@@ -97,20 +97,20 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
     stop("Assay does not exist in the object", call. = FALSE)
   }
   
-  if (typeof(type) != "closure" && !(type %in% c("hierarchical", "partition", "model"))) stop("Invalid type of clustering")
+  if (typeof(type) != "closure" && !(type %in% c("heir", "part", "model"))) stop("Invalid type of clustering")
   
   if (is.null(dist)) dist <- get_distance_matrix(scm, assay=assay)
   
   if (is.null(n_clusters)) n_clusters = attr(dist,"Size")
-  
+
   if (typeof(type) == "closure") {
     fit <- type(dist)
     colData <- data.frame(Sample = names(fit), Cluster = fit)
-  } else if (type=="hierarchical") {
+  } else if (type=="heir") {
     fit <- stats::hclust(dist, method="ward.D", ...)
     fit <- stats::cutree(fit, k=n_clusters)
     colData <- data.frame(Sample = names(fit), Cluster = fit)
-  } else if (type=="partition") {
+  } else if (type=="part") {
     fit <- stats::kmeans(dist, centers = min(n_clusters,attr(dist,"Size")-1)) # Max clusters = nrow(scm)-1
     colData <- data.frame(Sample = names(fit$cluster), Cluster = fit$cluster)
   } else if (type == "model") {
@@ -154,7 +154,7 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
 #' 
 #' @export
 append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
-  
+
   Sample <- NULL
   
   if (!is(scm, "scMethrix")) {

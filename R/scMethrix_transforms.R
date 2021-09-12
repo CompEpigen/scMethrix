@@ -692,6 +692,8 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     assays(scm)[[new_assay]] <- op(as.matrix(get_matrix(scm,assay)))
     
   }
+  
+  if (any(is.na(assay(scm,new_assay)))) warning("NAs still present in the new_assay. This should not happen.")
    
   if (verbose) message("Imputed in ",stop_time())
   

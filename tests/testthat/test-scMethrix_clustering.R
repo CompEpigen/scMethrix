@@ -1,6 +1,6 @@
 test_that("get_distance_matrix", {
   
-  types = c("pearson", "spearman", "tau", "euclidean", "maximum", 
+  types = c("pearson", "spearman", "kendall", "euclidean", 
             "manhattan", "canberra", "binary", "minkowski")
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
@@ -29,7 +29,7 @@ test_that("get_distance_matrix", {
 
 test_that("cluster_scMethrix", {
   
-  types = c("hierarchical", "partition", "model")
+  types = c("heir", "part", "model")
   name = "Cluster"
   n_clusters = 3
   
