@@ -15,7 +15,7 @@ rm(list.of.packages,new.packages)
 assign("time.all", numeric(), envir=topenv())
 assign("time.split", numeric(), envir=topenv())
 
-if (is.null(ref_cpgs)) ref_cpgs <- readRDS("D:/Git/sampleData/ref_cpgs.rds")
+if (!exists("ref_cpgs")) ref_cpgs <- readRDS("D:/Git/sampleData/ref_cpgs.rds")
 
 source("D:/Git/scMethrix/R/accessory_funcs.R")
 source("D:/Git/scMethrix/R/scMethrix_operations.R")
@@ -38,6 +38,7 @@ mm10_cpgs <- methrix::extract_CPGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10")
 mm10_cpgs <- mm10_cpgs$cpgs[,1:3]
 ref_cpgs <- mm10_cpgs
 rm(mm10_cpgs)
+saveRDS(ref_cpgs, file = "D:/Git/sampleData/ref_cpgs.rds")
 
 # Generic data import
 setwd("D:/Git/sampleData/Yunhee.GSE97179")
@@ -48,19 +49,22 @@ setwd("D:/Git/sampleData/100cell")
 
 setwd("D:/Git/sampleData/mini")
 
+setwd("D:/Git/sampleData/3samp")
+
 files <- list.files (getwd(),full.names = TRUE)
 
 files <- files[grepl(".*bedgraph$", files,ignore.case = TRUE)]
 
-files <- files[1:20]
+files <- files[1:590]
 
 col_list <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
 #With Coverage
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(tempdir(),"/sse"),ref_cpgs = ref_cpgs, replace=TRUE,
-                        chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6, colData = colData, n_threads=0, batch_size = 20)
+                        chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6, colData = colData, n_threads=0, batch_size = 10)
+saveHDF5SummarizedExperiment(scm.big.h5,dir="D:/Git/sampleData/3samp.h5",replace=TRUE)
 scm.big.h5 <- load_HDF5_scMethrix(dir="D:/Git/sampleData/500.h5")
-saveHDF5SummarizedExperiment(scm.big.h5,dir="D:/Git/sampleData/500.h5",replace=TRUE)
+scm.big.h5 <- load_HDF5_scMethrix(dir="D:/Git/sampleData/3samp.h5")
 
 scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 0, colData = colData,
                          chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
@@ -69,9 +73,9 @@ scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 0, colData = colData,
 
 scm.big.mem <- read_beds(files=files,h5=FALSE, ref_cpgs = mm10_cpgs$cpgs, n_threads = 8, 
                          chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
-scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(getwd(),"/sse"),cov=c(5),
-                        replace=TRUE, ref_cpgs = mm10_cpgs$cpgs, n_threads = 8,
-                        chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
+scm.big.h5 <- read_beds(files=files,h5=TRUE, h5_dir=paste0(tempdir(),"/sse"), replace=TRUE, ref_cpgs = ref_cpgs,
+                        chr_idx=1, start_idx=2, end_idx=3, beta_idx=4,
+                        colData = colData, n_threads=0, batch_size = 10)
 
 #Methrix input
 setwd("D:/Documents/School/Thesis/methrix/methrix_data_generation")
@@ -93,14 +97,17 @@ qhs = query(ah, c("RefSeq", "Mus musculus", "mm10"))
 genes = qhs[[1]]
 proms = promoters(genes)
 
-scm <- load_HDF5_scMethrix(dir="D:/Git/sampleData/500.h5")
-scm <- scm[,1:25]
-scm <- bin_scMethrix(scm,proms,h5_dir = paste0(tempdir(),"/h5"))
+scm <- load_HDF5_scMethrix(dir="D:/Git/sampleData/3samp.h5")
+scm <- mask_by_coverage(scm,avg_threshold=2)
+scm <- bin_scMethrix(scm,proms,h5_dir = paste0(tempdir(),"/h5bin"))
 scm <- convert_HDF5_scMethrix(scm)
-scm <- mask_by_sample(scm,low_threshold=NULL,prop_threshold=0.95)
-scm <- mask_by_variance(scm,low_threshold=0.05)
-scm <- remove_uncovered(scm)
-scm <- impute_regions(scm)
-scm <- transform_assay(scm,trans=binarize,assay="impute",new_assay="bin")
-scm <- dim_red_scMethrix(scm,assay="impute",type="UMAP")
-plot_dim_red(scm,"UMAP")
+saveRDS(scm, file = "D:/Git/sampleData/workingDir/scm_bin_100k.rds")
+scm.bin <- readRDS("D:/Git/sampleData/workingDir/scm_bin_100k.rds")
+scm.bin <- mask_by_sample(scm.bin,prop_threshold=.995)
+scm.bin <- remove_uncovered(scm.bin)
+scm.impute <- impute_regions(scm.bin,type="kNN")
+scm.binarize <- transform_assay(scm.impute,trans=binarize,assay="impute",new_assay="bin")
+scm.umap <- dim_red_scMethrix(scm.impute,assay="impute",type="tSNE",top_var = nrow(scm.impute))
+plot_dim_red(scm.umap,"tSNE",col_anno = "Cell")
+scm.cluster <- cluster_scMethrix(scm.impute,type="model")
+

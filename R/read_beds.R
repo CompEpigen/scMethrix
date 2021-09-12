@@ -125,7 +125,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
                                                 n_threads = n_threads, h5_temp = h5_temp, batch_size = batch_size,
                                                 zero_based = zero_based, verbose = verbose)
     message("Building scMethrix object")
-
+    
     if(is.null(colData)) {
       colData <- data.frame()[1:(length(files)), ]
       row.names(colData) <- colnames(reads$score)
@@ -442,9 +442,9 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
   . <- meths <- covs <- M <- U <- chr <- NULL
 
   for (i in 1:length(files)) {
-    
-    bed <- data.table::fread(files[[i]], select = unname(col_list$col_idx),
-                             col.names = names(col_list$col_idx), key = c("chr", "start"))
+
+    bed <- suppressWarnings(data.table::fread(files[[i]], select = unname(col_list$col_idx),
+                             col.names = names(col_list$col_idx), key = c("chr", "start")))
     n_bed <- nrow(bed)
     
     if (!grepl("chr", bed[1,chr], fixed = TRUE)) bed[,chr := paste0("chr",chr)]

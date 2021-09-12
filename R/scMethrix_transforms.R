@@ -73,7 +73,7 @@ transform_assay <- function(scm, assay = "score", new_assay = NULL, trans = NULL
 #' @param overlap_type character; defines the type of the overlap of the CpG sites with the target region. 
 #' Default value is `within`. For detailed description, see the \code{findOverlaps} function of the 
 #' \code{\link{IRanges}} package.
-#' @param batch_size integer; the number of files to process at once
+#' @param batch_size integer; the number of samples to process at once
 #' @param h5_dir directory to store an H5 based object
 #' @param replace boolean; flag for whether to delete the contents of h5_dir before saving 
 #' @return An \code{\link{scMethrix}} object
@@ -194,6 +194,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       sink <- AutoRealizationSink(c(length(rrng),ncol(scm)))
       grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rrng),length(cols[[1]])))
 
+      if (verbose) message("Generated ", length(cols), " chunks")
+      
       for (i in 1:length(cols)) {
         
         if (verbose) message("Processing chunk ",i)

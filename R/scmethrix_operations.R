@@ -814,8 +814,8 @@ remove_uncovered <- function(scm = NULL, verbose = TRUE) {
 #'  \code{avg_threshold} is used to mask sites with high aberrant counts. For single cell data, this is typically CpG sites with an average count > 2, as there are only two strands in a cell to sequence.
 #'  
 #' @inheritParams generic_scMethrix_function
-#' @param low_threshold numeric; The minimal coverage allowed. Everything below will get masked. If NULL, this will be ignored. Default = 0
-#' @param avg_threshold numeric; The max average coverage. If NULL, this will be ignored. Default = 2
+#' @param low_threshold numeric; The minimal coverage allowed. Everything below will get masked. If NULL, this will be ignored.
+#' @param avg_threshold numeric; The max average coverage. Typical value is 2, as there should only be 2 reads per cell. If NULL, this will be ignored. 
 #' @param n_threads integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
@@ -823,7 +823,7 @@ remove_uncovered <- function(scm = NULL, verbose = TRUE) {
 #' data('scMethrix_data')
 #' mask_by_coverage(scMethrix_data,low_threshold=2, avg_threshold=2)
 #' @export
-mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = 0, avg_threshold = 2, n_threads=1 , verbose = TRUE) {
+mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, avg_threshold = NULL, n_threads=1 , verbose = TRUE) {
   if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
   if (!is_h5(scm) && n_threads != 1) 
@@ -838,63 +838,45 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = 0, avg
   #   stop("Thresholds must be a numeric value.")
   # }
  
-  if (verbose) message("Masking CpG sites by coverage...",start_time())
+  if (verbose) message("Masking by coverage...",start_time())
+  
+  avg_row_idx <- low_row_idx <- NULL
   
   if (!is.null(low_threshold)) {
     
-    n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+    if (verbose) message("Finding low coverage CpG sites...")
     
-    row_idx <- which(DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"),na.rm=TRUE) < low_threshold)
+    low_row_idx <- which(DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"),na.rm=TRUE) < low_threshold)
+
+    if (verbose) message("   Found ",length(low_row_idx)," CpGs with coverage < ", low_threshold)
     
-    if (length(row_idx) == 0) {
-      message("   No CpGs found with coverage below ",low_threshold)
-    } else if (length(row_idx) == nrow(scm)) {
-      message("   No CpGs were masked with coverage below ",low_threshold)
-    } else {
-      for (i in 1:length(assays(scm))) {
-        assays(scm)[[i]][row_idx,] <- as.integer(NA)
-      } 
-      
-      n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)) - n
-      
-      for (i in seq_along(colnames(scm))) {
-        if (n[i]==0) next
-        if (verbose) message(paste0("   Masked ", n[i], " CpGs due to low coverage in sample ",  colnames(scm)[i], "."))
-      }
-      
-      if (verbose) message("Masked ",length(row_idx)," CpGs with coverage < ",low_threshold)
-    }
   }
   
   if (!is.null(avg_threshold)) {
     
-    if (verbose) message("Masking high average count CpG sites...")
+    if (verbose) message("Finding high average count CpG sites...")
     
-    n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+    avg_row_idx <- which(DelayedMatrixStats::rowMeans2(counts(scm), na.rm = TRUE) > avg_threshold)
     
-    row_idx <- which(DelayedMatrixStats::rowMeans2(counts(scm), na.rm = TRUE) > avg_threshold)
+    if (verbose) message("   Found ",length(avg_row_idx)," CpGs with average coverage > ",avg_threshold)
     
-    if (length(row_idx) == 0) {
-      message("   No CpGs found with average coverage > ",avg_threshold)
-    } else if (length(row_idx) == nrow(scm)) {
-      message("   No CpGs were masked with average count < ",avg_threshold)
-    } else {
-      for (i in 1:length(assays(scm))) {
-        assays(scm)[[i]][row_idx,] <- as.integer(NA)
-      }
-      
-      n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)) - n
-      
-      for (i in seq_along(colnames(scm))) {
-        if (n[i]==0) next
-        if (verbose) message(paste0("   Masked ", n[i], " CpGs due to high average coverage in sample ",  colnames(scm)[i], "."))
-      }
-      
-      if (verbose) message("Masked ",length(row_idx)," CpGs with average coverage > ",avg_threshold)
-    }
   }
   
-  if (verbose) message("Masking finished in ",stop_time())
+  row_idx <- unique(c(low_row_idx,avg_row_idx))
+  
+  if (length(row_idx) == 0) {
+    if (verbose) message("   No CpGs were masked")
+  } else if (length(row_idx) == nrow(scm)) {
+    stop("All CpGs were masked. Re-check threshold values.")
+  } else {
+    for (i in 1:length(assays(scm))) {
+      if (verbose) message("Masking ",names(assays(scm))[i]," assay")
+      assay(scm,i)[row_idx,] <- as.integer(NA)
+    }  
+  }
+  
+  if (verbose) message("Masked ",length(row_idx), 
+                       " [", round(length(row_idx)/nrow(scm) * 100, digits = 2), "%] CpG sites in ",stop_time())
   
   return(scm)
 }
@@ -908,17 +890,17 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = 0, avg
 #'  \code{prop_threshold} is used to mask sites with a low proportional count  
 #'  
 #' @inheritParams generic_scMethrix_function
-#' @param low_threshold numeric; The minimal cell count allowed. Everything below will get masked. Default = 0
-#' @param prop_threshold numeric; The minimal proportion of covered cells. Default = NULL.
+#' @param low_threshold numeric; The minimal cell count allowed. Everything below will get masked.
+#' @param prop_threshold numeric; The minimal proportion of covered cells.
 #' @param n_threads integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
 #' @examples
 #' data('scMethrix_data')
 #' mask_by_sample(scMethrix_data,low_threshold=2)
-#' mask_by_sample(scMethrix_data,low_threshold = NULL, prop_threshold=0.5) 
+#' mask_by_sample(scMethrix_data,prop_threshold=0.5) 
 #' @export
-mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = 0, prop_threshold = NULL, n_threads=1 , verbose = TRUE) {
+mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, prop_threshold = NULL, n_threads=1 , verbose = TRUE) {
   
   if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
   
@@ -941,58 +923,43 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = 0, prop_
   #   low_threshold <- ncol(scm)+ncol(scm)*prop_threshold
   # }
   
+  if (verbose) message("Masking by sample count...",start_time())
+  
+  row_idx <- NULL
+  
   if (!is.null(low_threshold)) {
     
-    n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+    if (verbose) message("Finding low coverage CpG sites...")
     
     row_idx <- which(DelayedMatrixStats::rowCounts(get_matrix(scm), 
-                                               value = as.integer(NA)) > (ncol(scm)-low_threshold))
+                                                   value = as.integer(NA)) > (ncol(scm)-low_threshold))
     
-    if (length(row_idx) == 0) {
-      message("   No CpGs found with cell count below ",low_threshold)
-    } else if (length(row_idx) == nrow(scm)) {
-      message("   No CpGs were masked with cell count below ",low_threshold)
-    } else {
-      for (i in 1:length(assays(scm))) {
-        assays(scm)[[i]][row_idx,] <- as.integer(NA)
-      } 
-      
-      n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)) - n
-      
-      for (i in seq_along(colnames(scm))) {
-        if (n[i]==0) next
-        if (verbose) message(paste0("   Masked ", n[i], " CpGs due to low count in sample ",  colnames(scm)[i], "."))
-      }
-      
-      if (verbose) message("Masked ",length(row_idx)," CpGs with count < ",low_threshold)
-    }
+    if (verbose) message("   Found ",length(row_idx)," CpGs with count < ",low_threshold)
+    
   } else if (!is.null(prop_threshold)) {
     
-    n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
+    if (verbose) message("Finding high average count CpG sites...")
     
     row_idx <- which(DelayedMatrixStats::rowCounts(get_matrix(scm), 
-                                                   value = as.integer(NA)) > ncol(scm)*prop_threshold)
+                                                   value = as.integer(NA)) > ncol(scm)*(1-prop_threshold))
     
-    if (length(row_idx) == 0) {
-      message("   No CpGs found with cell proportion below ",prop_threshold)
-    } else if (length(row_idx) == nrow(scm)) {
-      message("   No CpGs were masked with cell proportion below ",prop_threshold)
-    } else {
-      for (i in 1:length(assays(scm))) {
-        assays(scm)[[i]][row_idx,] <- as.integer(NA)
-      } 
-      
-      n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA)) - n
-      
-      for (i in seq_along(colnames(scm))) {
-        if (n[i]==0) next
-        if (verbose) message(paste0("   Masked ", n[i], " CpGs due to low proportion in sample ",  colnames(scm)[i], "."))
-      }
-      if (verbose) message("Masked ",length(row_idx)," CpGs with missing cell proportion > ",prop_threshold)
-    }
+    if (verbose) message("   Found ",length(row_idx)," CpGs with missing cell proportion > ",prop_threshold)
+    
   }
   
-  if (verbose) message("Masking finished in ",stop_time())
+  if (length(row_idx) == 0) {
+    if (verbose) message("   No CpGs were masked")
+  } else if (length(row_idx) == nrow(scm)) {
+    stop("All CpGs were masked. Re-check threshold values.")
+  } else {
+    for (i in 1:length(assays(scm))) {
+      if (verbose) message("Masking '",names(assays(scm))[i],"' assay")
+      assay(scm,i)[row_idx,] <- as.integer(NA)
+    }  
+  }
+  
+  if (verbose) message("Masked ",length(row_idx), 
+                       " [", round(length(row_idx)/nrow(scm) * 100, digits = 2), "%] CpG sites in ",stop_time())
   
   return(scm)
 }
@@ -1043,8 +1010,10 @@ mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, 
       if (n[i]==0) next
       if (verbose) message(paste0("   Masked ", n[i], " CpGs due to low variability in sample ",  colnames(scm)[i], "."))
     }
-      
-    if (verbose) message("Masked ",length(row_idx)," CpGs with variability <= ",low_threshold)
+    
+    if (verbose) message("Masked ",length(row_idx), 
+                         " [", round(length(row_idx)/nrow(scm) * 100, digits = 2), "%] CpG sites in ",stop_time())
+    
   }
   
   if (verbose) message("Masking finished in ",stop_time())

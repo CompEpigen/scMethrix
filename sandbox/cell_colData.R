@@ -1,3 +1,9 @@
+colData <- readRDS("D:/Git/sampleData/metadata/colData.rds")
+colData$Sample <- substr(colData$Sample,1,nchar(colData$Sample)-2)
+colData <- unique(colData)
+
+-----------------------------------------------------------
+
 setwd("D:/Git/sampleData/metadata")
 files <- list.files (getwd(),full.names = TRUE)
 files <- files[grepl(".*txt$", files,ignore.case = TRUE)]
@@ -20,6 +26,9 @@ colData <- rbind(colData,colData2)
 rm(colData2)
 colData <- colData[order(Sample),]
 
+table(colData$Cell)
+
+#---------------------------
 #Derive from exp
 
 scm = scm.impute
@@ -34,3 +43,18 @@ colData <- merge(samp,colData,all.x=TRUE)
 
 row.names(colData(scm)) <- colData$Sample
 colData(scm)$Cell = colData$Cell
+
+table(colData$Cell)
+
+#--- Generate 3 sample list -------------------------
+lst <- colData
+lst$Sample <- substr(lst$Sample,1,nchar(lst$Sample)-2)
+lst <- unique(lst)
+lst <- mPv <- lst[Cell=="mPv"]
+
+lst <- mL23 <- lst[Cell=="mL2-3"][1:200,]
+lst <- mL62 <- lst[Cell=="mL6-2"][1:200,]
+lst <- rbindlist(list(mL62,mL23,mPv))
+lst$Sample <- paste0("final_",lst$Sample,".sra_1*")
+
+write.table(lst, file='3_cell_types.tsv', quote=FALSE, sep='\t', col.names = NA)
