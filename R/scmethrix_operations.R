@@ -153,49 +153,6 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 }
 
 #------------------------------------------------------------------------------------------------------------
-#' Converts an \code{\link{scMethrix}} object to methrix object
-#' @details Removes extra slot data from an \code{\link{scMethrix}} object and changes structure to match
-#' \code{\link[methrix]{methrix}} format. A 'counts' assay for coverage values must be present. 
-#' Functionality not supported by methrix (e.g. reduced dimensionality)
-#' will be discarded.
-#' @inheritParams generic_scMethrix_function
-#' @param h5_dir Location to save the methrix H5 file
-#' @return a \code{\link[methrix]{methrix}} object
-#' @examples
-#' data('scMethrix_data')
-#' # convert_to_methrix(scMethrix_data)
-#' @export
-convert_to_methrix <- function(scm = NULL, h5_dir = NULL) {
-  chr <- m_obj <- NULL
-  
-  rrng <- as.data.table(rowRanges(scm))
-  rrng[,c("width","end") := NULL]
-  names(rrng) <- c("chr","start","strand")
-
-  chrom_size <- data.frame(contig=GenomeInfoDb::seqlevels(rowRanges(scm)),length=width(range(rowRanges(scm))))
-  ref_cpgs_chr <- data.frame(chr=GenomeInfoDb::seqlevels(rowRanges(scm)),N=summary(rrng$`chr`))
-           
-  if (!has_cov(scm)) {
-    stop("scMethrix does not contain coverage data. Cannot convert to methrix object")
-  }
-  
-  #TODO: Need to export create_methrix function in the methrix package to use this
-  if (is_h5(scm)) {
-    # m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="counts"),
-    #                                  cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = TRUE, genome_name = scm@metadata$genome,
-    #                                  col_data = scm@colData, h5_dir = h5_dir, ref_cpg_dt = ref_cpgs_chr,
-    #                                  chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
-  } else {
-    # m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="counts"),
-    #                                  cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = FALSE, 
-    #                                  genome_name = scm@metadata$genome, col_data = scm@colData, 
-    #                                  ref_cpg_dt = ref_cpgs_chr, chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
-  }
-  
-  return(m_obj) 
-}
-
-#------------------------------------------------------------------------------------------------------------
 #' Extracts and summarizes methylation or coverage info by regions of interest
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
 #' @inheritParams generic_scMethrix_function
@@ -840,12 +797,6 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
   if (!is.null(low_threshold) && (!is.numeric(low_threshold) || low_threshold < 0)) stop("low_threshold must be >= 0")
   if (!is.null(prop_threshold) && (!is.numeric(prop_threshold) || prop_threshold > 1 || prop_threshold < 0)) stop("prop_threshold must be between 0 and 1")
   
-  if (verbose) message("Masking CpG sites by cell count...",start_time())
-  
-  # if (!is.null(prop_threshold)) {
-  #   low_threshold <- ncol(scm)+ncol(scm)*prop_threshold
-  # }
-  
   if (verbose) message("Masking by sample count...",start_time())
   
   row_idx <- NULL
@@ -866,7 +817,7 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
     row_idx <- which(DelayedMatrixStats::rowCounts(get_matrix(scm), 
                                                    value = as.integer(NA)) > ncol(scm)*(1-prop_threshold))
     
-    if (verbose) message("   Found ",length(row_idx)," CpGs with missing cell proportion > ",prop_threshold)
+    if (verbose) message("   Found ",length(row_idx)," CpGs with missing cell proportion < ",prop_threshold)
     
   }
   
