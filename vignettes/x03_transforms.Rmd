@@ -15,16 +15,30 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+# Transformations
 
-# Transforming assays and imputation
-Methylation data is presented in different ways based on the output pipeline. Scores are commonly reported with ranges such as [-1..1], [0..1], or [0..100]. Depending on your downstream analysis, it may be necessary to transform these values to another range. The `transform_assay` function allows and arbitrary function input to transform each element in the dataset. 
+## Merging experiment objects
+During analysis, it might be beneficial to split an experiment into smaller subset experiments, perform operations, and re-assemble the subset experiments back together. Merging can be done by either `row` or `col`. This function only affects assays; other experiment components like metadata and reduced dimensionality will be discarded.
+
+```{r, eval=F}
+m1 <- subset_scMethrix(meth, contigs = "chr1")
+m2 <- subset_scMethrix(meth, contigs = "chr2")
+meth <- scMethrix::merge_scMethrix(scm1 = m1, scm2 = m2, by="row")
+```
+
+```{r, eval=F}
+m1 <- subset_scMethrix(meth, samples = "GSM2553093")
+m2 <- subset_scMethrix(meth, samples = "GSM2553095")
+meth <- scMethrix::merge_scMethrix(scm1 = m1, scm2 = m2, by="col")
+```
+
+## Transforming assays and imputation
+Methylation beta values are presented in different ways based on the upstream pipeline. Scores are commonly reported with ranges such as [-1..1], [0..1], or [0..100]. Depending on your downstream analysis, it may be necessary to transform these values to another range. The `transform_assay` function allows and arbitrary function input to transform each element in the dataset. 
 
 ```{r, eval=F}
 #To convert [0..1] scores to [0..100] scores
 fun <- function(x) round(x*100)
-scm <- scMethrix::transform_assay(scm, assay = "score" , new_assay = "score.100", trans = fun)
-assayNames(scm)
-head(get_matrix(scm,"score.100"))
+meth <- scMethrix::transform_assay(meth, assay = "score" , new_assay = "score.100", trans = fun)
 ```
 
 There is an accessible `binarize` function to transform data into the [0..1] range used by this package for beta values. The function will automatically generate a threshold cutoff based on the mean beta value. This is often useful after imputation.
@@ -87,7 +101,7 @@ fun <- function(mtx) missForest::missForest(mtx, ...)$ximp
 scm <- scMethrix::impute_regions(scm, assay = "score", new_assay = "impute", type = fun)
 ```
 
-# Generating test sets
+## Generating test sets
 To judge the accuracy of imputation, it may be helpful to generate a test and training set. This is easily done with `generate_training_set`. A specified proportion of CpG sites will be subsetted into two `scMethrix` objects. 
 
 ```{r, eval=F}

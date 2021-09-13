@@ -153,6 +153,7 @@ meth <- read_beds(
   stranded = FALSE,
   zero_based = TRUE, 
   #collapse_strands = FALSE, 
+
   colData = sample_anno
 )
 ```
@@ -164,6 +165,21 @@ Too many missing CpGs, if not expected, might indicate that something went wrong
 
 * A common mistake is falsely indicating strandedness and zero or one based positioning. The combination of the two might lead to only using C-s from one strand (due to a 1 bp shift), resulting lower coverage for the sites. A nice description of the zero- and one-based coordination system can be found [here](http://genome.ucsc.edu/blog/the-ucsc-genome-browser-coordinate-counting-systems/) 
 
+
+## Extracting assay matricies
+
+After the experiment is created, an assay matrix can be generated. Genomic loci can also be added (`add_loci`), be formatted as a `GenomicRanges` object if desired, and ordered by variance (`order_by_sd`). Additionally, the methylation and coverage matrices can be directly obtained with the functions `score()` and `counts()`.
+
+```{r eval=F}
+mtx <- get_matrix(meth, assay="score")
+head(mtx)
+```
+
+```{r eval=F}
+# Add genomic loci, put in a GRanges object, and order by SD
+mtx <- get_matrix(meth, assay="score", add_loci = TRUE, in_granges=TRUE, order_by_sd = TRUE)
+head(mtx)
+```
 ## Initial QC and summary
 
 Without any further processing, we can create an interactive html report containing basic summary statistics of the `methrix` object with `methrix_report` function. 
@@ -181,3 +197,4 @@ In the report, we can check genome-wide and chromosome based statistics on cover
 * samples with altered beta level distribution. 
 
 * A "bump" on the beta level density plot at 0.5 indicates the presence of single nucleotide polymorphisms (SNPs) -> see later.
+

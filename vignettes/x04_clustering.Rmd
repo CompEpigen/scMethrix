@@ -34,7 +34,6 @@ fun <- function(mtx) dist(mtx, method = "euclidean")
 scMethrix::get_distance_matrix(scm, assay = "score" , type = fun)
 ```
 
-
 ## Clustering
 Clustering algorithms include `hierarchical` (via `stats::hclust`), `partition` (via `stats::kmeans`), and `model`-based (via `mclust::Mclust`). Distance metrics are not used for model-based clustering. The identified clusters will be stored in the `colData` slot of the output `scMethrix` object.
 
