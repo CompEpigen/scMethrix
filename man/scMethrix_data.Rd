@@ -18,6 +18,11 @@ data('scMethrix_data')
 scMethrix_data
 }
 \references{
-Luo, C. et al. (2017). Single-cell methylomes identify neuronal subtypes and regulatory
+Luo, C. et al. (2017). Single-cell methylomes identify neuronal subtypes and regulatory elements in mammalian cortex
+}
+\seealso{
+\url{https://pubmed.ncbi.nlm.nih.gov/28798132/}
+
+\url{https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE97179}
 }
 \keyword{datasets}

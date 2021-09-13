@@ -7,7 +7,7 @@
 mask_by_sample(
   scm = NULL,
   assay = "score",
-  low_threshold = 0,
+  low_threshold = NULL,
   prop_threshold = NULL,
   n_threads = 1,
   verbose = TRUE
@@ -18,9 +18,9 @@ mask_by_sample(
 
 \item{assay}{string; name of an existing assay. Default = "score"}
 
-\item{low_threshold}{numeric; The minimal cell count allowed. Everything below will get masked. Default = 0}
+\item{low_threshold}{numeric; The minimal cell count allowed. Everything below will get masked.}
 
-\item{prop_threshold}{numeric; The minimal proportion of covered cells. Default = NULL.}
+\item{prop_threshold}{numeric; The minimal proportion of covered cells.}
 
 \item{n_threads}{integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.}
 
@@ -42,5 +42,5 @@ by putting NA for assay values. The sites will remain in the object and all assa
 \examples{
 data('scMethrix_data')
 mask_by_sample(scMethrix_data,low_threshold=2)
-mask_by_sample(scMethrix_data,low_threshold = NULL, prop_threshold=0.5) 
+mask_by_sample(scMethrix_data,prop_threshold=0.5) 
 }

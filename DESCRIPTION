@@ -43,7 +43,9 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: 
     rmarkdown,
-    testthat
+    testthat,
+    knitr
 URL: https://github.com/CompEpigen/scMethrix
 BugReports: https://github.com/CompEpigen/scMethrix/issues
 biocViews: DNAMethylation, Sequencing, Coverage
+VignetteBuilder: knitr

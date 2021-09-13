@@ -2,10 +2,11 @@ pandoc: 2.11.4
 pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
-  01_load_data: 01_load_data.html
-  02_qc: 02_qc.html
-  03_transforms: 03_transforms.html
-  04_clustering: 04_clustering.html
-  05_hdf5: 05_hdf5.html
-last_built: 2021-09-10T08:10Z
+  x01_load_data: x01_load_data.html
+  x02_qc: x02_qc.html
+  x03_transforms: x03_transforms.html
+  x04_clustering: x04_clustering.html
+  x05_hdf5: x05_hdf5.html
+  x06_exporting: x06_exporting.html
+last_built: 2021-09-13T06:42Z
 

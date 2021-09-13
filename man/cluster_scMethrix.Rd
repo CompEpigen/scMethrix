@@ -11,7 +11,7 @@ cluster_scMethrix(
   assay = "score",
   colname = "Cluster",
   verbose = TRUE,
-  type = "hierarchical",
+  type = "heir",
   ...
 )
 }
