@@ -18,24 +18,43 @@ vignette: >
 # Clustering data
 Unlike bulk sequencing, where the measurements are averaged over many cells, single-cell sequencing allows the identification of cell type for individual cells. This is a common step in many single-cell expression workflows. Multiple algorithms and distance metrics are included in the package for maximum flexibility. 
 
+## Distance metrics
 Most algorithms operate via a distance metric, an all-by-all matrix where each sample is numerically compared to each other sample. Samples with few methylated CpG sites in common will have a large distance metric, where as two samples with identical methylation will have a distance metric of zero. 
 
 Available distance metrics include `pearson`, `spearman`, and `tau` (all via `bioDist`); and `euclidean`, `maximum`, `manhattan`, `canberra`, `binary`, and `minkowski` (all via `stats::dist`). 
 
 ```{r, eval=F}
-dist <- scMethrix::get_distance_matrix(meth, assay = "score" , type = "euclidean")
-dist <- scMethrix::get_distance_matrix(meth, assay = "score" , type = "pearson")
-dist <- scMethrix::get_distance_matrix(meth, assay = "score" , type = "canberra")
+scMethrix::get_distance_matrix(scm, assay = "score" , type = "pearson")
 ```
 
+Additional distance metrics can be used via an arbitrary function input. The input must the assay matrix and output must be an all-by-all matrix filled with distance values for each respective pair. It will be internally cast with `as.dist()` before computation.
+
+```{r, eval=F}
+fun <- function(mtx) dist(mtx, method = "euclidean")
+scMethrix::get_distance_matrix(scm, assay = "score" , type = fun)
+```
+
+
+## Clustering
 Clustering algorithms include `hierarchical` (via `stats::hclust`), `partition` (via `stats::kmeans`), and `model`-based (via `mclust::Mclust`). Distance metrics are not used for model-based clustering. The identified clusters will be stored in the `colData` slot of the output `scMethrix` object.
 
 ```{r, eval=F}
-meth.cluster <- scMethrix::cluster_scMethrix(meth, assay = "score", dist = dist, n_clusters = 2, colname = "Heirarchical", type="hierarchical")
-colData(meth.cluster)
+scm.cluster <- scMethrix::cluster_scMethrix(scm, assay = "score", dist = dist, n_clusters = 2, colname = "Heirarchical", type="hierarchical")
+colData(scm.cluster)
+```
 
-meth.cluster <- scMethrix::cluster_scMethrix(meth, assay = "score", dist = dist, colname = "Model-based", type="model")
-colData(meth.cluster)
+Like the distance metric, an arbitrary clustering algorithm can be used. It must accept a `dist` object, and return a `data.frame` with two columns named "Sample" and "Cluster". The column "Cluster" will be renamed by the value in `colname` before returning, if given. 
+
+```{r, eval=F}
+fun <- function (dist) {
+  fit <- stats::hclust(dist, method="ward.D")
+  fit <- stats::cutree(fit, k=ncol(dist)/2)
+  colData <- data.frame(Sample = names(fit), Cluster = fit)
+  colData
+}
+
+scm.cluster <- scMethrix::cluster_scMethrix(scm, assay = "score", dist = dist, n_clusters = 2, colname = "Heir", type=fun)
+colData(scm.cluster)
 ```
 
 # Visualization
@@ -43,6 +62,6 @@ colData(meth.cluster)
 For visualizing the clustering, the generated colData can be used for annotation in dimensionality reduction plots.
 
 ```{r, eval=F}
-meth <- scMethrix::dim_red_scMethrix(meth,type="PCA",top_var = 10000)
-plot_dim_red(meth,type="PCA",shape_anno = "Cluster",color_anno="Cluster")
+scm <- scMethrix::dim_red_scMethrix(scm,type="PCA",top_var = 10000)
+plot_dim_red(scm,type="PCA",shape_anno = "Cluster",color_anno="Cluster")
 ```

@@ -17,7 +17,7 @@ vignette: >
 
 # Filtering
 
-## Coverage based filtering 
+## Coverage filtering 
 
 To ensure the high quality of our dataset, the sites with very low (untrustworthy methylation level) or high coverage (technical problem) should not be used. We can mask these CpG sites. Please note, that the DSS we were using for Differential Methylation Region (DMR) calling, doesn't need the removal of the lowly covered sites, because it takes it into account by analysis. However, using a not too restrictive threshold won't interfere with DMR calling. 
 
@@ -30,6 +30,16 @@ Later we can remove those sites that are not covered by any of the samples.
 ```{r remove_uncovered, eval=F}
 meth <- scMethrix::remove_uncovered(meth) 
 ```
+
+## Sample count filtering
+
+If the coverage matrix is absent, filtering can be done via sample count instead. Two options are available here - `low_threshold` or `prop_threshold`. 
+
+```{r mask_methrix, eval=F}
+meth <- scMethrix::mask_by_coverage(meth, low_threshold = 2, avg_threshold = 2) 
+```
+
+## Variance filtering
 
 To reduce the data for future imputation/binning/clustering, we might want to remove non-variable CpG sites. The function `mask_by_variance` will calculate the variance of each CpG site and mask it if below a specified threshold. 
 
@@ -129,12 +139,11 @@ At visualization, we can provide the `methrix` object to allow color or shape an
 scMethrix::plot_pca(meth, col_anno = "Day", shape_anno = "Replicate")
 ```
 
-`scMethrix` offers the possibility of region based filtering. With this option, selected regions, e.g. promoters can be visualized. We will use the `AnnotationHub` package to assess basic annotation categories. 
+`scMethrix` offers the possibility of region based filtering. With this option, selected regions (e.g. promoters) can be visualized. We will use the `AnnotationHub` package to assess basic annotation categories. 
 
 ```{r message=FALSE, warning=FALSE, eval=FALSE}
-if(!requireNamespace("AnnotationHub")) {
+if(!requireNamespace("AnnotationHub")) 
   BiocManager::install("AnnotationHub", update = F)
-}
 ```
 
 ```{r message=FALSE, warning=FALSE, eval=FALSE}
