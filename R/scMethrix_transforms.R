@@ -8,7 +8,7 @@
 #' data('scMethrix_data')
 #' transform_assay(scMethrix_data,assay="score",new_assay="plus1",trans=function(x){x+1})
 #' @export
-transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h5_temp = NULL) {
+transform_assay <- function(scm, assay = "score", new_assay = NULL, trans = NULL, h5_temp = NULL) {
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -34,7 +34,7 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
                                            spacings = c(length(scm), 1L)) 
     
     trans_sink <- HDF5Array::HDF5RealizationSink(dim = dim(scm),
-                                                 dimnames = list(NULL,row.names(colData(scm))), type = "integer",
+                                                 dimnames = list(NULL,row.names(colData(scm))), type = "double",
                                                  filepath = tempfile(pattern="trans_sink_",tmpdir=h5_temp),
                                                  name = new_assay, level = 6)
     
@@ -70,12 +70,6 @@ transform_assay <- function(scm, assay = NULL, new_assay = NULL, trans = NULL, h
 #' @param bin_by character; can create bins by # of base pairs "bp" or by # of CpG sites "cpg". Default "bp"
 #' @param trans named vector of closures; The transforms for each assay in a named vector. Default NULL, meaning that 
 #' operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is mean(x, na.rm=TRUE)
-#' @param overlap_type character; defines the type of the overlap of the CpG sites with the target region. 
-#' Default value is `within`. For detailed description, see the \code{findOverlaps} function of the 
-#' \code{\link{IRanges}} package.
-#' @param batch_size integer; the number of files to process at once
-#' @param h5_dir directory to store an H5 based object
-#' @param replace boolean; flag for whether to delete the contents of h5_dir before saving 
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
@@ -126,7 +120,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
   colnames(overlap_indices) <- c("xid", "yid")
   overlap_indices[,yid := paste0("rid_", yid)]
-  
+
   if (!is.null(bin_size)) {
     
     if (verbose) message("Binning by ",bin_by," with size of ",bin_size,"...")
@@ -140,7 +134,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
         if (verbose) message("   Processing region ",rid,"/",length(regions$rid))
         
         idx <- which(overlap_indices[,yid == regions$rid[rid]])
-        idx <- split_vector(idx,num = bin_size, by = "size")
+        idx <- split_vector(idx,size=bin_size)
         
         for(i in idx) {
           gr <- range(rowRanges(scm[c(i[1],i[length(i)]),]))
@@ -150,10 +144,11 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       }
       
     } else if (bin_by == "bp") {
-      
-      rrng <- unlist(tile(regions, width = bin_size)) #TODO: Should switch this to using RLE lookup
+
+      rrng <- sort(unlist(tile(regions, width = bin_size))) #TODO: Should switch this to using RLE lookup
       
       idx <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type))
+      idx <- idx[order(idx$subjectHits),]
       
       rrng <- rrng[unique(idx$subjectHits)]
       rrng$n_cpgs <- rle(idx$subjectHits)$lengths
@@ -189,10 +184,12 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 
       setAutoRealizationBackend("HDF5Array")
       
-      cols <- split_vector(1:ncol(scm),batch_size,by="size")
+      cols <- split_vector(1:ncol(scm),size=batch_size)
       sink <- AutoRealizationSink(c(length(rrng),ncol(scm)))
       grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rrng),length(cols[[1]])))
 
+      if (verbose) message("Generated ", length(cols), " chunks")
+      
       for (i in 1:length(cols)) {
         
         if (verbose) message("Processing chunk ",i)
@@ -499,6 +496,108 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 # }
 # 
 
+#' Collapses multiple samples into a single sample
+#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. Typically, most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be  from \pkg{DelayedMatrixStats}.
+#' 
+#' In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs.
+#' @inheritParams generic_scMethrix_function
+#' @param colname string; The colname from \code{colData(scm)} indicating which samples should be collapse together
+#' @param trans named vector of closures; The transforms for each assay in a named vector. Default NULL, meaning that 
+#' operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is mean(x, na.rm=TRUE)
+#' \code{\link{IRanges}} package.
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' regions <- GRanges(seqnames = c("chr1"), ranges = IRanges(1,200000000)) 
+#' regions <- unlist(tile(regions,10))
+#' bin_scMethrix(scMethrix_data, regions = regions)
+#' @export
+collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = NULL, batch_size = 20, batch_size = 20, n_threads = 1, replace = FALSE, verbose = TRUE) {
+  
+  if (!is(scm, "scMethrix")) {
+    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
+  }
+  
+  if (!(colname %in% colnames(colData(scm)))) {
+    stop("Column '",colname,"' is not present in colData")
+  }
+  
+  if (is.null(h5_dir) && is_h5(scm)) stop("Output directory must be specified")
+  
+  if (is.null(trans)) {
+    trans <- c(counts = function(x) sum(x,na.rm=TRUE))
+  } else if (is.null(trans[["counts"]])) {
+    trans <- c(trans, c(counts = function(x) sum(x,na.rm=TRUE)))
+  }
+  
+  members <- data.frame(Sample = row.names(colData(scm)), Group = factor(scm@colData[,colname]))
+
+  for (name in SummarizedExperiment::assayNames(scm)) {
+    
+    if (verbose) message("   Collapsing samples for the ",name," assay...")
+    
+    if (is.null(trans[[name]])) { # If no named vector is specified, default to mean
+      op <- function(x) mean(x,na.rm=TRUE)
+    } else {
+      op <- trans[[name]]
+    }
+    
+    if (is_h5(scm)) {
+      
+      
+      
+      
+    } else {
+      
+      mtx <- data.table(get_matrix(scm,assay=name)) #TODO: Somehow missing rows if not subset, not sure why
+      mtx <- setDT(lapply(split.default(mtx, group$Group), rowSums))[]
+
+      assays[[name]] <- as(mtx,class(get_matrix(scm,assay=name)))
+      
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #------------------------------------------------------------------------------------------------------------
@@ -689,6 +788,8 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     assays(scm)[[new_assay]] <- op(as.matrix(get_matrix(scm,assay)))
     
   }
+  
+  if (any(is.na(assay(scm,new_assay)))) warning("NAs still present in the new_assay. This should not happen.")
    
   if (verbose) message("Imputed in ",stop_time())
   

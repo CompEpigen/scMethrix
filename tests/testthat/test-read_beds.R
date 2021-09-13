@@ -29,7 +29,9 @@ test_that("read_bed - HDF5, no coverage", {
   
   expect_error(read_beds(files,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, h5=TRUE,h5_dir=NULL))
   
-  path <- paste0(h5_dir,"HDF5mem")
+  path <- paste0(h5_dir,"/HDF5mem")
+  unlink(path, recursive = TRUE)
+  suppressWarnings(dir.create(path,recursive=TRUE))
   
   scm1 <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
   scm2 <- load_HDF5_scMethrix(dir=path)
@@ -45,22 +47,14 @@ test_that("read_bed - HDF5, no coverage", {
   
 })
 
-test_that("read_bed - in-memory, no coverage", {
-  
-  scm <- read_beds(files,h5=FALSE, chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
-  
-  expect_equal(class(scm)[1],"scMethrix")
-  expect_equal(class(get_matrix(scm))[[1]],"matrix")
-  expect_equal(dim(scm),c(n_cpg,4))
-  
-})
-
 test_that("read_bed - HDF5, with coverage", {
   
   expect_error(read_beds(files,h5=TRUE,h5_dir=NULL,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5),
                "Output directory must be specified")
   
-  path <- paste0(h5_dir,"HDF5mem")
+  path <- paste0(h5_dir,"/HDF5mem")
+  unlink(path, recursive = TRUE)
+  suppressWarnings(dir.create(path,recursive=TRUE))
   
   scm1 <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
   scm2 <- load_HDF5_scMethrix(dir=path)
@@ -74,6 +68,16 @@ test_that("read_bed - HDF5, with coverage", {
   expect_equivalent(scm1,scm2)
   
   unlink(path, recursive = TRUE)
+  
+})
+
+test_that("read_bed - in-memory, no coverage", {
+  
+  scm <- read_beds(files,h5=FALSE, chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
+  
+  expect_equal(class(scm)[1],"scMethrix")
+  expect_equal(class(get_matrix(scm))[[1]],"matrix")
+  expect_equal(dim(scm),c(n_cpg,4))
   
 })
 

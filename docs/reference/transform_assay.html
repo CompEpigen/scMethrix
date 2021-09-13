@@ -95,19 +95,22 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/01_load_data.html">01: Reading in the bedgraph data</a>
+      <a href="../articles/x01_load_data.html">01: Reading in the bedgraph data</a>
     </li>
     <li>
-      <a href="../articles/02_qc.html">02: QC and reports</a>
+      <a href="../articles/x02_qc.html">02: QC and reports</a>
     </li>
     <li>
-      <a href="../articles/03_transforms.html">03: Transformations and Imputations</a>
+      <a href="../articles/x03_transforms.html">03: Transformations and Imputations</a>
     </li>
     <li>
-      <a href="../articles/04_clustering.html">04: Clustering and metacells</a>
+      <a href="../articles/x04_clustering.html">04: Clustering and metacells</a>
     </li>
     <li>
-      <a href="../articles/05_hdf5.html">05: Working with large cohorts</a>
+      <a href="../articles/x05_hdf5.html">05: Working with large cohorts</a>
+    </li>
+    <li>
+      <a href="../articles/x06_exporting.html">06: Exporting Downstream</a>
     </li>
   </ul>
 </li>
@@ -146,7 +149,7 @@
 
     <pre class="usage"><span class='fu'>transform_assay</span><span class='op'>(</span>
   <span class='va'>scm</span>,
-  assay <span class='op'>=</span> <span class='cn'>NULL</span>,
+  assay <span class='op'>=</span> <span class='st'>"score"</span>,
   new_assay <span class='op'>=</span> <span class='cn'>NULL</span>,
   trans <span class='op'>=</span> <span class='cn'>NULL</span>,
   h5_temp <span class='op'>=</span> <span class='cn'>NULL</span>

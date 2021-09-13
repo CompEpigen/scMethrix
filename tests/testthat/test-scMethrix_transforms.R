@@ -4,6 +4,7 @@ test_that("bin_scMethrix", {
   expect_error(bin_scMethrix(scm.h5),"Output directory must be specified")
 
   path <- paste0(h5_dir,"bin")
+  regions <- GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,1000000000)) 
   
  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     # Check default conditions and threading
@@ -41,6 +42,10 @@ test_that("bin_scMethrix", {
     
     vals <- DelayedMatrixStats::colSums2(get_matrix(sub,assay="bin2"),na.rm=T)
     expect_equal(as.numeric(get_matrix(bin2,assay="bin2")[1,]),as.numeric(vals))
+    
+    #Check for region subsetting
+    bin <- bin_scMethrix(scm,regions=regions,bin_size=1000,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin3"), replace = T)
+    expect_equal(sum(rowRanges(bin)$n_cpgs),n_cpg)
   }))
 })
 

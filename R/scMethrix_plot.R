@@ -438,8 +438,8 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
   dim_red$row_names = rownames(dim_red)
   
   if (!is.null(col_anno)) {
-    if (colnames(colData(scm)) %in% col_anno) {
-      dim_red$color_me <- unlist(as.data.table(colData(scm))[,..col_anno]) #TODO: make colData a data.table
+    if (col_anno  %in% colnames(colData(scm))) {
+      dim_red$color_me <- as.factor(unlist(as.data.table(colData(scm))[,..col_anno])) #TODO: make colData a data.table
       colors <- scale_color_manual(values= get_palette(length(unique(dim_red$color_me)),col_palette = "Dark2"))
     } else {
       stop(paste0(col_anno, " not found in provided scMethrix object"))
@@ -447,7 +447,7 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
   }
     
   if (!is.null(shape_anno)) {
-    if (colnames(colData(scm)) %in% shape_anno) {
+    if (shape_anno %in% colnames(colData(scm))) {
       dim_red$shape_me <- unlist(as.data.table(colData(scm))[,..shape_anno]) #TODO: make colData a data.table
       shapes <- scale_shape_manual(values = get_shape(length(unique(dim_red$shape_me))))
     } else {

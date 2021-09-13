@@ -12,7 +12,7 @@
 #' @slot int_elementMetadata NULL 
 #' @exportClass scMethrix
 #' @importFrom stats median quantile sd
-#' @importFrom utils data head write.table
+#' @importFrom utils data head write.table menu
 #' @importFrom methods is as new
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #'
@@ -33,7 +33,7 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
 create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, 
                              genome_name = "hg19", chrom_size = NULL, desc = NULL, h5_dir = NULL, 
                              replace = FALSE, verbose=TRUE) {
-    
+
   if (is_hdf5) {
 
     sse <- SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "HDF5Array")), 
@@ -42,19 +42,14 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
                                                         metadata = list(genome = genome_name,
                                                                         chrom_size = chrom_size,
                                                                         descriptive_stats = desc,
-                                                                        is_h5 = TRUE, 
-                                                                        has_cov = ("count" %in% names(assays))))
-      #TODO: Cannot save to same directory input files exist in
+                                                                        is_h5 = TRUE))
+
       if (!is.null(h5_dir)) {
-        message("Writing to disk...",start_time())
-        
-        tryCatch(HDF5Array::saveHDF5SummarizedExperiment(x = sse, dir = h5_dir, replace = replace, 
-                                                         chunkdim = c(length(rowRanges),1), verbose=verbose), 
-                                                         error = function(e) message(e,"\nThe dataset is not 
+        tryCatch(save_HDF5_scMethrix(scm = sse, h5_dir = h5_dir, replace = replace, verbose = verbose),
+                 error = function(e) message(e,"\nThe dataset is not 
                                                          saved. Please save manually using the 
                                                          HDF5Array::saveSummarizedExperiment command."))
-        message("Written in ",stop_time())
-        }
+      }
       
     } else {
       
@@ -64,8 +59,7 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
                                                       metadata = list(genome = genome_name,
                                                                       chrom_size = chrom_size,
                                                                       descriptive_stats = desc,
-                                                                      is_h5 = FALSE, 
-                                                                      has_cov = ("count" %in% names(assays))))
+                                                                      is_h5 = FALSE))
     }
 
     return(scMethrix(sse))
@@ -86,7 +80,9 @@ setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
 #' @param trans closure; The transformation function. Default = mean
 #' @param verbose boolean; Flag for outputting function status messages. Default = TRUE 
 #' @param n_chunks integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1
-#' @param n_threads integer; Number of parallel instances. \code{n_threads} should be less than or equal to \code{n_chunks}. Default = 1
+#' @param n_threads integer; Maximum number of parallel instances. Default = 1
+#' @param batch_size integer; The maximum number of elements to process at once.
 #' @param h5_dir string; The directory to use. Will be created if it does not exist. Default = NULL
+#' @param replace boolean; flag for whether to delete the contents of h5_dir before saving 
 #' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 generic_scMethrix_function <- function(scm, assay, new_assay, trans, verbose, n_chunks, n_threads, h5_dir, overlap_type) {}

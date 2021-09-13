@@ -9,7 +9,6 @@ impute_regions(
   assay = "score",
   new_assay = "impute",
   regions = NULL,
-  op = NULL,
   n_chunks = 1,
   n_threads = 1,
   overlap_type = "within",
@@ -28,8 +27,6 @@ impute_regions(
 \item{new_assay}{string; name for transformed assay. Default = "new_assay"}
 
 \item{regions}{Granges; the regions to impute. Default is by chromosome.}
-
-\item{op}{closure; the imputation operation}
 
 \item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1}
 

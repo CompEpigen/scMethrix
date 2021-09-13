@@ -113,6 +113,19 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   
   gc()
   
+  # Get colData
+  if(is.null(colData)) {
+    colData <- data.frame()[1:(length(files)), ]
+    row.names(colData) <- colnames(reads$score)
+  } else {
+    cd <- data.frame()[1:(length(files)), ]
+    cd$Sample <- colnames(reads$score)
+    cd <- merge(cd,colData,by="Sample")
+    row.names(cd) <- cd$Sample
+    cd$Sample <- NULL
+    colData <- cd
+  }
+  
   if (h5) {
     
     if (is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
@@ -125,18 +138,8 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
                                                 n_threads = n_threads, h5_temp = h5_temp, batch_size = batch_size,
                                                 zero_based = zero_based, verbose = verbose)
     message("Building scMethrix object")
+    
 
-    if(is.null(colData)) {
-      colData <- data.frame()[1:(length(files)), ]
-      row.names(colData) <- colnames(reads$score)
-    } else {
-      cd <- data.frame()[1:(length(files)), ]
-      cd$Sample <- colnames(reads$score)
-      cd <- merge(cd,colData,by="Sample")
-      row.names(cd) <- cd$Sample
-      cd$Sample <- NULL
-      colData <- cd
-    }
     
     # if (is.null(colData)) colData <- data.frame()[1:(length(files)), ]
     # row.names(colData) <- unlist(lapply(files,get_sample_name))
@@ -158,19 +161,6 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
                            zero_based = zero_based,verbose = verbose)
     
     message("Building scMethrix object")
-
-    if(is.null(colData)) {
-      colData <- data.frame()[1:(length(files)), ]
-      row.names(colData) <- colData$Sample <- colnames(reads$score)
-      
-    } else {
-      cd <- data.frame()[1:(length(files)), ]
-      cd$Sample <- colnames(reads$score)
-      cd <- merge(cd,colData,by="Sample")
-      row.names(cd) <- cd$Sample
-      #cd$Sample <- NULL
-      colData <- cd
-    }
 
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
@@ -442,9 +432,9 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
   . <- meths <- covs <- M <- U <- chr <- NULL
 
   for (i in 1:length(files)) {
-    
-    bed <- data.table::fread(files[[i]], select = unname(col_list$col_idx),
-                             col.names = names(col_list$col_idx), key = c("chr", "start"))
+
+    bed <- suppressWarnings(data.table::fread(files[[i]], select = unname(col_list$col_idx),
+                             col.names = names(col_list$col_idx), key = c("chr", "start")))
     n_bed <- nrow(bed)
     
     if (!grepl("chr", bed[1,chr], fixed = TRUE)) bed[,chr := paste0("chr",chr)]
@@ -555,11 +545,11 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
  
   # Determine the grids for the sinks
   if (n_threads == 0) {
-    files <- split_vector(files,batch_size,by="size")
+    files <- split_vector(files, size = batch_size)
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(unlist(files))),
                                            spacings = c(dimension, length(files[[1]]))) 
   } else {
-    files <- split_vector(files,ceiling(batch_size/n_threads),by="size")
+    files <- split_vector(files,size = ceiling(batch_size/n_threads))
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(unlist(files))),
                                            spacings = c(dimension, length(files[[1]]))) 
     cl <- parallel::makeCluster(n_threads)  
@@ -584,7 +574,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
                                                       viewport = grid[[i]], sink = cov_sink)
     } else {
 
-      bed <- parallel::parLapply(cl,split_vector(files[[i]],n_threads,by="chunks"),
+      bed <- parallel::parLapply(cl,split_vector(files[[i]],chunks=n_threads),
                                  fun=read_bed_by_index, ref_cpgs = ref_cpgs,
                                  col_list = col_list, zero_based = zero_based)
       
@@ -793,7 +783,7 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads 
     # Single thread functionality
     # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
     
-    files <- split_vector(files,batch_size,by="size")
+    files <- split_vector(files,size=batch_size)
     reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based, col_list = col_list)
   }
   

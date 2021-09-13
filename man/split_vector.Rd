@@ -4,29 +4,33 @@
 \alias{split_vector}
 \title{Splits a vector into list of vectors by \code{chunk} or \code{size}}
 \usage{
-split_vector(vec, num = 1, by = c("chunks", "size"))
+split_vector(vec, chunks = NA, percent = NA, size = NA)
 }
 \arguments{
 \item{vec}{vector; The vector to split}
 
-\item{num}{integer; The number to split by}
+\item{chunks}{integer; The number of desired sub-lists}
 
-\item{by}{string; Whether to split by '\code{chunks}' or by '\code{size}'}
+\item{percent}{integer; The maximum percentage of elements each sub-list should hold}
+
+\item{size}{integer; The maximum size of each sub-list}
 }
 \value{
-A list of vectors
+A list of sub-vectors
 }
 \description{
 Splits a vector into list of vectors by \code{chunk} or \code{size}
 }
 \details{
-Splits a vector into a list of \code{num} vectors or vectors of \code{n} size. If \code{len(vec)\%\%num != 0},
-then the last vector will have a length of less than size \code{num}
+Splits a vector into consistantly sized sub-lists. The sub-list size will always be decreasing based on list order.
 }
 \examples{
 # Split vector into 4 sub vectors
-split_vector(c(1,2,3,4,5,6,7,8),4,by="chunk")
+split_vector(c(1,2,3,4,5,6,7,8),chunks=4)
 
 # Split vector into sub-vectors with a size of 2
-split_vector(c(1,2,3,4,5,6,7,8),2,by="size")
+split_vector(c(1,2,3,4,5,6,7,8),size=2)
+
+# Split vector into sub-vectors each with 25\% of the total elements
+split_vector(c(1,2,3,4,5,6,7,8),percent=25)
 }

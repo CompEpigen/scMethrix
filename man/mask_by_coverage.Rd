@@ -7,8 +7,8 @@
 mask_by_coverage(
   scm = NULL,
   assay = "score",
-  low_threshold = 0,
-  avg_threshold = 2,
+  low_threshold = NULL,
+  avg_threshold = NULL,
   n_threads = 1,
   verbose = TRUE
 )
@@ -18,9 +18,9 @@ mask_by_coverage(
 
 \item{assay}{string; name of an existing assay. Default = "score"}
 
-\item{low_threshold}{numeric; The minimal coverage allowed. Everything below will get masked. If NULL, this will be ignored. Default = 0}
+\item{low_threshold}{numeric; The minimal coverage allowed. Everything below will get masked. If NULL, this will be ignored.}
 
-\item{avg_threshold}{numeric; The max average coverage. If NULL, this will be ignored. Default = 2}
+\item{avg_threshold}{numeric; The max average coverage. Typical value is 2, as there should only be 2 reads per cell. If NULL, this will be ignored.}
 
 \item{n_threads}{integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1}
 

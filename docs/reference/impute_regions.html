@@ -95,19 +95,22 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/01_load_data.html">01: Reading in the bedgraph data</a>
+      <a href="../articles/x01_load_data.html">01: Reading in the bedgraph data</a>
     </li>
     <li>
-      <a href="../articles/02_qc.html">02: QC and reports</a>
+      <a href="../articles/x02_qc.html">02: QC and reports</a>
     </li>
     <li>
-      <a href="../articles/03_transforms.html">03: Transformations and Imputations</a>
+      <a href="../articles/x03_transforms.html">03: Transformations and Imputations</a>
     </li>
     <li>
-      <a href="../articles/04_clustering.html">04: Clustering and metacells</a>
+      <a href="../articles/x04_clustering.html">04: Clustering and metacells</a>
     </li>
     <li>
-      <a href="../articles/05_hdf5.html">05: Working with large cohorts</a>
+      <a href="../articles/x05_hdf5.html">05: Working with large cohorts</a>
+    </li>
+    <li>
+      <a href="../articles/x06_exporting.html">06: Exporting Downstream</a>
     </li>
   </ul>
 </li>
@@ -149,7 +152,6 @@
   assay <span class='op'>=</span> <span class='st'>"score"</span>,
   new_assay <span class='op'>=</span> <span class='st'>"impute"</span>,
   regions <span class='op'>=</span> <span class='cn'>NULL</span>,
-  op <span class='op'>=</span> <span class='cn'>NULL</span>,
   n_chunks <span class='op'>=</span> <span class='fl'>1</span>,
   n_threads <span class='op'>=</span> <span class='fl'>1</span>,
   overlap_type <span class='op'>=</span> <span class='st'>"within"</span>,
@@ -178,10 +180,6 @@
     <tr>
       <th>regions</th>
       <td><p>Granges; the regions to impute. Default is by chromosome.</p></td>
-    </tr>
-    <tr>
-      <th>op</th>
-      <td><p>closure; the imputation operation</p></td>
     </tr>
     <tr>
       <th>n_chunks</th>

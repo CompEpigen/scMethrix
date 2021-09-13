@@ -36,7 +36,6 @@ In the report, we can check genome-wide and chromosome based statistics on cover
 # Filtering
 
 ## Masking low/high coverage CpGs 
-
 To ensure the high quality of our dataset, the sites with very low coverage (untrustworthy methylation level) or high average coverage (technical problem) should not be used. We can mask these CpG sites. Please note, that the DSS we were using for Differential Methylation Region (DMR) calling, doesn't need the removal of the lowly covered sites, because it takes it into account by analysis. However, using a not too restrictive threshold won't interfere with DMR calling.
 
 ```{r eval=F}
@@ -44,13 +43,15 @@ To ensure the high quality of our dataset, the sites with very low coverage (unt
 meth <- scMethrix::mask_by_coverage(meth, low_threshold = 2, avg_threshold = 2) 
 ```
 
+## Sample count filtering
+If the coverage matrix is absent, filtering can be done via sample count instead. Two options are available here - `low_threshold` or `prop_threshold`. 
+
 ```{r eval=F}
 # Masking CpG sites present in fewer than 2 samples
 meth <- scMethrix::mask_by_sample(meth, low_threshold = 2) 
 ```
 
 ## Masking low variance CpGs 
-
 CpG sites with a low inter-individual methylation variance can increase the risk of false discoveries and reduce statistical significance. We can mask the sites to prevent this, as well as decreasing computation time and data size. The function `mask_by_variance` will calculate the variance of each CpG site and mask it if below a specified threshold. 
 
 ```{r eval=F}
@@ -69,6 +70,7 @@ SNP filtering is currently implemented for hg19 and hg38 assemblies. For mm10 as
 ```{r message=FALSE, warning=FALSE, eval=F}
 if(!requireNamespace("GenomicScores")) {
   BiocManager::install("GenomicScores")
+
 }
 library(GenomicScores) 
 ```
@@ -188,12 +190,11 @@ At visualization, we can provide the `methrix` object to allow color or shape an
 scMethrix::plot_pca(meth, col_anno = "Day", shape_anno = "Replicate")
 ```
 
-`scMethrix` offers the possibility of region based filtering. With this option, selected regions, e.g. promoters can be visualized. We will use the `AnnotationHub` package to assess basic annotation categories. 
+`scMethrix` offers the possibility of region based filtering. With this option, selected regions (e.g. promoters) can be visualized. We will use the `AnnotationHub` package to assess basic annotation categories. 
 
 ```{r message=FALSE, warning=FALSE, eval=FALSE}
-if(!requireNamespace("AnnotationHub")) {
+if(!requireNamespace("AnnotationHub")) 
   BiocManager::install("AnnotationHub", update = F)
-}
 ```
 
 ```{r message=FALSE, warning=FALSE, eval=FALSE}
