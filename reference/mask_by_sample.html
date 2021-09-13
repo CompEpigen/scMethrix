@@ -95,19 +95,22 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/01_load_data.html">01: Reading in the bedgraph data</a>
+      <a href="../articles/x01_load_data.html">01: Reading in the bedgraph data</a>
     </li>
     <li>
-      <a href="../articles/02_qc.html">02: QC and reports</a>
+      <a href="../articles/x02_qc.html">02: QC and reports</a>
     </li>
     <li>
-      <a href="../articles/03_transforms.html">03: Transformations and Imputations</a>
+      <a href="../articles/x03_transforms.html">03: Transformations and Imputations</a>
     </li>
     <li>
-      <a href="../articles/04_clustering.html">04: Clustering and metacells</a>
+      <a href="../articles/x04_clustering.html">04: Clustering and metacells</a>
     </li>
     <li>
-      <a href="../articles/05_hdf5.html">05: Working with large cohorts</a>
+      <a href="../articles/x05_hdf5.html">05: Working with large cohorts</a>
+    </li>
+    <li>
+      <a href="../articles/x06_exporting.html">06: Exporting Downstream</a>
     </li>
   </ul>
 </li>
@@ -147,7 +150,7 @@
     <pre class="usage"><span class='fu'>mask_by_sample</span><span class='op'>(</span>
   scm <span class='op'>=</span> <span class='cn'>NULL</span>,
   assay <span class='op'>=</span> <span class='st'>"score"</span>,
-  low_threshold <span class='op'>=</span> <span class='fl'>0</span>,
+  low_threshold <span class='op'>=</span> <span class='cn'>NULL</span>,
   prop_threshold <span class='op'>=</span> <span class='cn'>NULL</span>,
   n_threads <span class='op'>=</span> <span class='fl'>1</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
@@ -166,11 +169,11 @@
     </tr>
     <tr>
       <th>low_threshold</th>
-      <td><p>numeric; The minimal cell count allowed. Everything below will get masked. Default = 0</p></td>
+      <td><p>numeric; The minimal cell count allowed. Everything below will get masked.</p></td>
     </tr>
     <tr>
       <th>prop_threshold</th>
-      <td><p>numeric; The minimal proportion of covered cells. Default = NULL.</p></td>
+      <td><p>numeric; The minimal proportion of covered cells.</p></td>
     </tr>
     <tr>
       <th>n_threads</th>
@@ -195,15 +198,15 @@ by putting NA for assay values. The sites will remain in the object and all assa
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
 <span class='fu'>mask_by_sample</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,low_threshold<span class='op'>=</span><span class='fl'>2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Masking CpG sites by cell count...</span></div><div class='output co'>#&gt; <span class='message'>   Masked 20 CpGs due to low count in sample C1.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 12 CpGs due to low count in sample C2.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 22 CpGs due to low count in sample C3.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 13 CpGs due to low count in sample C4.</span></div><div class='output co'>#&gt; <span class='message'>Masked 67 CpGs with count &lt; 2</span></div><div class='output co'>#&gt; <span class='message'>Masking finished in 0.11s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Masking CpG sites by cell count...</span></div><div class='output co'>#&gt; <span class='message'>Masking by sample count...</span></div><div class='output co'>#&gt; <span class='message'>Finding low coverage CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Found 67 CpGs with count &lt; 2</span></div><div class='output co'>#&gt; <span class='message'>Masked 67 [23.43%] CpG sites in 0.06s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 286
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts
 #&gt;    reduced dims: 
 #&gt;    is_h5: FALSE
 #&gt;    Reference: hg19
-#&gt;    Physical size: 41.3 Kb</div><div class='input'><span class='fu'>mask_by_sample</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,low_threshold <span class='op'>=</span> <span class='cn'>NULL</span>, prop_threshold<span class='op'>=</span><span class='fl'>0.5</span><span class='op'>)</span> 
-</div><div class='output co'>#&gt; <span class='message'>Masking CpG sites by cell count...</span></div><div class='output co'>#&gt; <span class='message'>   Masked 20 CpGs due to low proportion in sample C1.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 12 CpGs due to low proportion in sample C2.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 22 CpGs due to low proportion in sample C3.</span></div><div class='output co'>#&gt; <span class='message'>   Masked 13 CpGs due to low proportion in sample C4.</span></div><div class='output co'>#&gt; <span class='message'>Masked 67 CpGs with missing cell proportion &gt; 0.5</span></div><div class='output co'>#&gt; <span class='message'>Masking finished in 0.10s</span></div><div class='output co'>#&gt; An object of class scMethrix
+#&gt;    Physical size: 41.3 Kb</div><div class='input'><span class='fu'>mask_by_sample</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,prop_threshold<span class='op'>=</span><span class='fl'>0.5</span><span class='op'>)</span> 
+</div><div class='output co'>#&gt; <span class='message'>Masking CpG sites by cell count...</span></div><div class='output co'>#&gt; <span class='message'>Masking by sample count...</span></div><div class='output co'>#&gt; <span class='message'>Finding high average count CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Found 67 CpGs with missing cell proportion &gt; 0.5</span></div><div class='output co'>#&gt; <span class='message'>Masked 67 [23.43%] CpG sites in 0.07s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 286
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts
