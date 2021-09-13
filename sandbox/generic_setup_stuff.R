@@ -3,7 +3,7 @@ list.of.packages <- c("SingleCellExperiment","data.table","plyr","HDF5Array","ti
                       "tools","microbenchmark","measurements","magrittr","doParallel","parallel",
                       "Cairo","ggplot2","methrix","BSgenome","BSgenome.Hsapiens.UCSC.hg19","usethis",
                       "BSgenome.Mmusculus.UCSC.mm10","pkgdown","umap","stringi","missMDA","Rtsne","missForest",
-                      "impute","profvis",'Melissa','Metrics','SimDesign','bioDist','dbscan','AnnotationHub')
+                      "impute","profvis",'Melissa','Metrics','SimDesign','bioDist','dbscan','AnnotationHub','mclust')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) {
   install.packages(new.packages)
@@ -107,7 +107,25 @@ scm.bin <- mask_by_sample(scm.bin,prop_threshold=.995)
 scm.bin <- remove_uncovered(scm.bin)
 scm.impute <- impute_regions(scm.bin,type="kNN")
 scm.binarize <- transform_assay(scm.impute,trans=binarize,assay="impute",new_assay="bin")
-scm.umap <- dim_red_scMethrix(scm.impute,assay="impute",type="tSNE",top_var = nrow(scm.impute))
-plot_dim_red(scm.umap,"tSNE",col_anno = "Cell")
-scm.cluster <- cluster_scMethrix(scm.impute,type="model")
+scm.umap <- dim_red_scMethrix(scm.impute, assay="impute",type="tSNE",top_var = nrow(scm.impute))
 
+CairoWin(width=5,height=5)
+plot_dim_red(scm.umap,"tSNE",col_anno = "Cell") + ggtitle("tSNE") + geom_point(alpha = 1/10) + 
+  theme(plot.title = element_text(hjust = 0.5)) + theme(text = element_text(size=20))
+dist <- get_distance_matrix(scm.umap,assay="impute",type="euclidean")
+
+scm.cluster <- scm.umap
+
+scm.cluster <- cluster_scMethrix(scm.umap, dist = dist, 
+               assay = "impute",type = "model",colname = "model")
+plot_dim_red(scm.cluster,"tSNE",col_anno = "model") + ggtitle("Model-based") + geom_point(alpha = 1/10) + 
+  theme(plot.title = element_text(hjust = 0.5)) + theme(text = element_text(size=20)) +
+  scale_fill_discrete(name = "Cluster")
+
+scm.cluster <- cluster_scMethrix(scm.cluster,dist = dist, assay="impute",type="heir",colname="heir",n_clusters=4)
+plot_dim_red(scm.cluster,"tSNE",col_anno = "heir") + ggtitle("Heirarchical") + geom_point(alpha = 1/10) + 
+  theme(plot.title = element_text(hjust = 0.5)) + theme(text = element_text(size=20))
+
+scm.cluster <- cluster_scMethrix(scm.cluster,dist = dist, assay="impute",type="part",colname="part",n_clusters=3)
+plot_dim_red(scm.cluster,"tSNE",col_anno = "part") + ggtitle("Partitioned") + geom_point(alpha = 1/10) + 
+  theme(plot.title = element_text(hjust = 0.5)) + theme(text = element_text(size=20))

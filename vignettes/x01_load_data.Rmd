@@ -153,8 +153,7 @@ meth <- read_beds(
   stranded = FALSE,
   zero_based = TRUE, 
   #collapse_strands = FALSE, 
-  colData = sample_anno, 
-  batch_size = 2
+  colData = sample_anno
 )
 ```
 

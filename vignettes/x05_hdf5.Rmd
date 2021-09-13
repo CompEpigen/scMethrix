@@ -19,6 +19,7 @@ vignette: >
 
 ## `read_beds` function 
 For memory efficient read in, one can use an HDF5 based `scMethrix` object. A small number of bedgraph files are in the memory at the same time, while the resulting object won't be stored in the memory, but on-disk. 
+
 Additional arguments to use HDF5:
 
   * Set `h5=TRUE` 
@@ -43,12 +44,7 @@ meth <- read_beds(
 )
 ```
 
-
 Basic `scMethrix` operations work with HDF5-based objects as well. Functions relying on external packages (e.g. imputation and clustering) will require casting to an in-memory matrix before processing. 
-
-```{r, eval=F}
-meth <- scMethrix::remove_uncovered(meth)
-```
 
 It is also possible to transform non-HDF5-based objects to HDF5-based ones and back. 
 
@@ -57,11 +53,9 @@ m <- convert_HDF5_scMethrix(meth)
 m2 <- convert_scMethrix(m)
 ```
 
-
 ## Saving and loading
 
 Saving and loading of an HDF5-based object is not possible using the standard save or saveRDS functions. `scMethrix` offers easy to use saving and loading tools, which are essentially wrappers around the `saveHDF5SummarizedExperiment` and `loadHDF5SummarizedExperiment` functions. 
-
 
 ```{r eval=FALSE}
 target_dir = paste0( getwd(), '/temp/')
@@ -77,22 +71,3 @@ Functions currently supporting the arguments `batch_size` and `n_threads`:
 `get_region_summary`
 
 The multicore option is platform independent.
-
-# Integration with other tools
-
-`scMethrix` has multiple options to export data for different purposes. The `write_bedgraph` function supports a bedgraph format, that can be directly uploaded to UCSC. The `multibed` option generates a file with all samples as columns. The `metilene` option ensures that this file is in the correct format for [metilene](http://www.bioinf.uni-leipzig.de/Software/metilene/), a command line DMR caller.  
-
-
-```{r eval=FALSE}
-# UCSC browser
-export_bedgraphs(m = meth, output_dir = ".")
-# Metilene
-write_bedgraphs(m = meth, output_dir = ".", rm_NA = FALSE, metilene = TRUE,multiBed = "metline_ip", phenoCol = "Day")
-```
-
-We also support bigWig format.
-
-```{r, eval=F}
-write_bigwigs(meth, output_dir = ".", samp_names = NULL)
-```
-

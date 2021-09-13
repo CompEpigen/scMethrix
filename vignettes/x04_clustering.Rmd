@@ -28,10 +28,10 @@ dist <- scMethrix::get_distance_matrix(meth, assay = "score" , type = "pearson")
 dist <- scMethrix::get_distance_matrix(meth, assay = "score" , type = "canberra")
 ```
 
-Clustering algorithms include `hierarchical` (via `stats::hclust`), `partition` (via `stats::kmeans`), and `model`-based (via `mclust::Mclust`). Distance metrics are not used for `model`-based clustering. The identified clusters will be stored in the `colData` slot of the output `scMethrix` object.
+Clustering algorithms include `hierarchical` (via `stats::hclust`), `partition` (via `stats::kmeans`), and `model`-based (via `mclust::Mclust`). Distance metrics are not used for model-based clustering. The identified clusters will be stored in the `colData` slot of the output `scMethrix` object.
 
 ```{r, eval=F}
-meth.cluster <- scMethrix::cluster_scMethrix(meth, assay = "score", dist = dist, n_clusters = 5, colname = "Heirarchical", type="hierarchical")
+meth.cluster <- scMethrix::cluster_scMethrix(meth, assay = "score", dist = dist, n_clusters = 2, colname = "Heirarchical", type="hierarchical")
 colData(meth.cluster)
 
 meth.cluster <- scMethrix::cluster_scMethrix(meth, assay = "score", dist = dist, colname = "Model-based", type="model")
@@ -43,6 +43,6 @@ colData(meth.cluster)
 For visualizing the clustering, the generated colData can be used for annotation in dimensionality reduction plots.
 
 ```{r, eval=F}
-meth <- scMethrix::dim_red_scMethrix(meth,type="PCA",top_var = 10000, n_components = 20)
+meth <- scMethrix::dim_red_scMethrix(meth,type="PCA",top_var = 10000)
 plot_dim_red(meth,type="PCA",shape_anno = "Cluster",color_anno="Cluster")
 ```
