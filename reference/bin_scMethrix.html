@@ -188,13 +188,11 @@ operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is
     </tr>
     <tr>
       <th>overlap_type</th>
-      <td><p>character; defines the type of the overlap of the CpG sites with the target region.
-Default value is <code>within</code>. For detailed description, see the <code>findOverlaps</code> function of the
-<code>IRanges</code> package.</p></td>
+      <td><p>defines the type of the overlap of the CpG sites with the target region. Default value is <code>within</code>. For detailed description, see the <code>findOverlaps</code> function of the <code>IRanges</code> package.</p></td>
     </tr>
     <tr>
       <th>h5_dir</th>
-      <td><p>directory to store an H5 based object</p></td>
+      <td><p>string; The directory to use. Will be created if it does not exist. Default = NULL</p></td>
     </tr>
     <tr>
       <th>verbose</th>
@@ -202,11 +200,11 @@ Default value is <code>within</code>. For detailed description, see the <code>fi
     </tr>
     <tr>
       <th>batch_size</th>
-      <td><p>integer; the number of samples to process at once</p></td>
+      <td><p>integer; The maximum number of elements to process at once.</p></td>
     </tr>
     <tr>
       <th>n_threads</th>
-      <td><p>integer; Number of parallel instances. <code>n_threads</code> should be less than or equal to <code>n_chunks</code>. Default = 1</p></td>
+      <td><p>integer; Maximum number of parallel instances. Default = 1</p></td>
     </tr>
     <tr>
       <th>replace</th>
@@ -227,7 +225,7 @@ Default value is <code>within</code>. For detailed description, see the <code>fi
 <span class='va'>regions</span> <span class='op'>&lt;-</span> <span class='fu'>GRanges</span><span class='op'>(</span>seqnames <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"chr1"</span><span class='op'>)</span>, ranges <span class='op'>=</span> <span class='fu'>IRanges</span><span class='op'>(</span><span class='fl'>1</span>,<span class='fl'>200000000</span><span class='op'>)</span><span class='op'>)</span> 
 <span class='va'>regions</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span><span class='op'>(</span><span class='fu'>tile</span><span class='op'>(</span><span class='va'>regions</span>,<span class='fl'>10</span><span class='op'>)</span><span class='op'>)</span>
 <span class='fu'>bin_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, regions <span class='op'>=</span> <span class='va'>regions</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Binning experiment...</span></div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.12s</span></div><div class='output co'>#&gt; <span class='message'>Subsetting for 10 input regions...</span></div><div class='output co'>#&gt; <span class='message'>Binning by bp with size of 1e+05...</span></div><div class='output co'>#&gt; <span class='message'>Generated 131 bins in 0.16s</span></div><div class='output co'>#&gt; <span class='message'>   Filling bins for the score assay...</span></div><div class='output co'>#&gt; <span class='message'>Bins filled in 0.55s</span></div><div class='output co'>#&gt; <span class='message'>   Filling bins for the counts assay...</span></div><div class='output co'>#&gt; <span class='message'>Bins filled in 0.02s</span></div><div class='output co'>#&gt; <span class='message'>Rebuilding experiment...</span></div><div class='output co'>#&gt; <span class='message'>Experiment binned for 10 regions containing 131 total bins in 0.94s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Binning experiment...</span></div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.10s</span></div><div class='output co'>#&gt; <span class='message'>Subsetting for 10 input regions...</span></div><div class='output co'>#&gt; <span class='message'>Binning by bp with size of 1e+05...</span></div><div class='output co'>#&gt; <span class='message'>Generated 131 bins in 0.19s</span></div><div class='output co'>#&gt; <span class='message'>   Filling bins for the score assay...</span></div><div class='output co'>#&gt; <span class='message'>Bins filled in 0.62s</span></div><div class='output co'>#&gt; <span class='message'>   Filling bins for the counts assay...</span></div><div class='output co'>#&gt; <span class='message'>Bins filled in 0.03s</span></div><div class='output co'>#&gt; <span class='message'>Rebuilding experiment...</span></div><div class='output co'>#&gt; <span class='message'>Experiment binned for 10 regions containing 131 total bins in 1.11s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 131
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts

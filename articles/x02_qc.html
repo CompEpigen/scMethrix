@@ -100,7 +100,7 @@
       <h1 data-toc-skip>02: QC and reports</h1>
                         <h4 class="author">Andrew Lindsay, Reka Toth</h4>
             
-            <h4 class="date">2021-09-13</h4>
+            <h4 class="date">2021-09-14</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/CompEpigen/scMethrix/blob/master/vignettes/x02_qc.Rmd"><code>vignettes/x02_qc.Rmd</code></a></small>
       <div class="hidden name"><code>x02_qc.Rmd</code></div>
@@ -109,46 +109,102 @@
 
     
     
+<div id="initial-qc" class="section level1">
+<h1 class="hasAnchor">
+<a href="#initial-qc" class="anchor"></a>Initial QC</h1>
+<p>Once the experiment is generated, we can create an interactive html report containing basic summary statistics of the <code>scMethrix</code> object with <code>scMethrix_report</code> function.</p>
+<p>The report can be accessed here: <a href="https://compepigen.github.io/WGBS_best_practice/initial_methrix_reports.html">Initial reports</a></p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">methrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/methrix_report.html">methrix_report</a></span><span class="op">(</span>meth <span class="op">=</span> <span class="va">meth</span>, output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, prefix <span class="op">=</span> <span class="st">"initial"</span><span class="op">)</span></code></pre></div>
+<p>In the report, we can check genome-wide and chromosome based statistics on coverage and methylation, in order to identify potential quality issues, for example:</p>
+<ul>
+<li><p>samples with too high or too low genome-wide coverage or on a specific chromosome. In this case, there is also a possibility, that the sample is affected by copy number alterations. Both methylation levels and coverage therefore shows higher variation among cancer samples.</p></li>
+<li><p>samples with altered beta level distribution.</p></li>
+<li><p>A “bump” on the beta level density plot at 0.5 indicates the presence of single nucleotide polymorphisms (SNPs) -&gt; see later.</p></li>
+</ul>
+</div>
 <div id="filtering" class="section level1">
 <h1 class="hasAnchor">
 <a href="#filtering" class="anchor"></a>Filtering</h1>
-<div id="coverage-based-filtering" class="section level2">
+<div id="masking-lowhigh-coverage-cpgs" class="section level2">
 <h2 class="hasAnchor">
-<a href="#coverage-based-filtering" class="anchor"></a>Coverage based filtering</h2>
-<p>To ensure the high quality of our dataset, the sites with very low (untrustworthy methylation level) or high coverage (technical problem) should not be used. We can mask these CpG sites. Please note, that the DSS we were using for Differential Methylation Region (DMR) calling, doesn’t need the removal of the lowly covered sites, because it takes it into account by analysis. However, using a not too restrictive threshold won’t interfere with DMR calling.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/mask_by_coverage.html">mask_by_coverage</a></span><span class="op">(</span><span class="va">meth</span>, low_threshold <span class="op">=</span> <span class="fl">2</span>, avg_threshold <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> </code></pre></div>
-<p>Later we can remove those sites that are not covered by any of the samples.</p>
+<a href="#masking-lowhigh-coverage-cpgs" class="anchor"></a>Masking low/high coverage CpGs</h2>
+<p>To ensure the high quality of our dataset, the sites with very low coverage (untrustworthy methylation level) or high average coverage (technical problem) should not be used. We can mask these CpG sites. Please note, that the DSS we were using for Differential Methylation Region (DMR) calling, doesn’t need the removal of the lowly covered sites, because it takes it into account by analysis. However, using a not too restrictive threshold won’t interfere with DMR calling.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/remove_uncovered.html">remove_uncovered</a></span><span class="op">(</span><span class="va">meth</span><span class="op">)</span> </code></pre></div>
-<p>To reduce the data for future imputation/binning/clustering, we might want to remove non-variable CpG sites. The function <code>mask_by_variance</code> will calculate the variance of each CpG site and mask it if below a specified threshold.</p>
+<code class="sourceCode R"><span class="co"># Masking CpG sites with a coverage &lt; 2 and an average coverage &gt; 2</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/mask_by_coverage.html">mask_by_coverage</a></span><span class="op">(</span><span class="va">meth</span>, low_threshold <span class="op">=</span> <span class="fl">2</span>, avg_threshold <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> </code></pre></div>
+</div>
+<div id="sample-count-filtering" class="section level2">
+<h2 class="hasAnchor">
+<a href="#sample-count-filtering" class="anchor"></a>Sample count filtering</h2>
+<p>If the coverage matrix is absent, filtering can be done via sample count instead. Two options are available here - <code>low_threshold</code> or <code>prop_threshold</code>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/mask_by_variance.html">mask_by_variance</a></span><span class="op">(</span><span class="va">meth</span>, low_threshold <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="co"># Masking CpG sites present in fewer than 2 samples</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/mask_by_sample.html">mask_by_sample</a></span><span class="op">(</span><span class="va">meth</span>, low_threshold <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> </code></pre></div>
+</div>
+<div id="masking-low-variance-cpgs" class="section level2">
+<h2 class="hasAnchor">
+<a href="#masking-low-variance-cpgs" class="anchor"></a>Masking low variance CpGs</h2>
+<p>CpG sites with a low inter-individual methylation variance can increase the risk of false discoveries and reduce statistical significance. We can mask the sites to prevent this, as well as decreasing computation time and data size. The function <code>mask_by_variance</code> will calculate the variance of each CpG site and mask it if below a specified threshold.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Masking sites with a variance &lt; 0.05</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/mask_by_variance.html">mask_by_variance</a></span><span class="op">(</span><span class="va">meth</span>, low_threshold <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="snp-filtering" class="section level2">
 <h2 class="hasAnchor">
 <a href="#snp-filtering" class="anchor"></a>SNP filtering</h2>
-<p>SNPs, mostly the C &gt; T mutations can disrupt methylation calling. Therefore it is essential to remove CpG sites that overlap with common variants, if we have variation in our study population. For example working with human, unpaired data, e.g. treated vs. untreated groups. During filtering, we can select the population of interest and the minimum minor allele frequency (MAF) of the SNPs. SNP filtering is currently implemented for mm10, hg19 and hg38 assemblies.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>SNPs, mostly the C &gt; T mutations can disrupt methylation calling. Therefore it is essential to remove CpG sites that overlap with common variants, if we have variation in our study population. For example working with human, unpaired data, e.g. treated vs. untreated groups.</p>
+<p>During filtering, we can select the population of interest and the minimum minor allele frequency (MAF) of the SNPs.</p>
+<p>SNP filtering is currently implemented for hg19 and hg38 assemblies. For mm10 assemblies, if the same strain of mice is used, SNP filtering is not generally necessary due to high homozygosity between individuals. SNP data for mice can be downloaded from here: <a href="https://www.sanger.ac.uk/science/data/mouse-genomes-project" class="uri">https://www.sanger.ac.uk/science/data/mouse-genomes-project</a>.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"GenomicScores"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
-<span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"GenomicScores"</span><span class="op">)</span>
+  <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"GenomicScores"</span><span class="op">)</span>
+
 <span class="op">}</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">GenomicScores</span><span class="op">)</span> </code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/remove_snps.html">remove_snps</a></span><span class="op">(</span><span class="va">meth</span>, keep <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <ul>
 <li>There is a possibility to keep the sites possibly overlapping with SNPs. We can use this data for detecting possible sample mismatches. For this, we need to plot the most variable sites (probably the ones that are variable in our study population) and plot them on a heatmap.</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"pheatmap"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>
     <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"pheatmap"</span><span class="op">)</span>
 <span class="va">snps</span> <span class="op">&lt;-</span> <span class="va">meth</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>
 <span class="va">meth</span> <span class="op">&lt;-</span> <span class="va">meth</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>
 <span class="fu">pheatmap</span><span class="fu">::</span><span class="fu">pheatmap</span><span class="op">(</span><span class="fu"><a href="../reference/get_matrix.html">get_matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/order_by_sd.html">order_by_sd</a></span><span class="op">(</span><span class="va">snps</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">snps</span><span class="op">)</span><span class="op">)</span>,<span class="op">]</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<ul>
-<li>SNP removal in mouse data: Usually, there is no need to remove SNPs from mouse data, since for many experiments, the same strain of mice is used. However, there are cases, when different crosses of strains are used, for which, the level of heterozygosity might be different. SNP data for mice can be downloaded from here: <a href="https://www.sanger.ac.uk/science/data/mouse-genomes-project" class="uri">https://www.sanger.ac.uk/science/data/mouse-genomes-project</a>. The SNPs can be filtered out using the <code>subset_scMethrix</code> function.</li>
-</ul>
 </div>
+<div id="filtering-masked-sites" class="section level2">
+<h2 class="hasAnchor">
+<a href="#filtering-masked-sites" class="anchor"></a>Filtering masked sites</h2>
+<p>After masking is completed, we can remove those sites that are not covered by any of the samples.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/remove_uncovered.html">remove_uncovered</a></span><span class="op">(</span><span class="va">meth</span><span class="op">)</span> </code></pre></div>
+</div>
+</div>
+<div id="querying" class="section level1">
+<h1 class="hasAnchor">
+<a href="#querying" class="anchor"></a>Querying</h1>
+<p>Often, whole genome analysis using all samples is not necessary. This package includes multiple convenient options for querying - <code>regions</code>, <code>contigs</code>, or <code>samples</code> - and can processed as either inclusive or exclusive. Multiple query types can be given in each command. Subset operations in <code>scMethrix</code> make use of the fast binary search <code>data.table</code> that is several orders faster than bsseq or other similar packages.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Subsetting to include only two samples</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/subset_methrix.html">subset_methrix</a></span><span class="op">(</span><span class="va">meth</span>, contigs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"GSM2553093"</span>, <span class="st">"GSM2553095"</span><span class="op">)</span>, by<span class="op">=</span><span class="st">"include"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">inc</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Subsetting to exclude two samples</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/subset_methrix.html">subset_methrix</a></span><span class="op">(</span><span class="va">meth</span>, contigs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"GSM2553093"</span>, <span class="st">"GSM2553095"</span><span class="op">)</span>, by<span class="op">=</span><span class="st">"exclude"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">meth</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Subsetting to include only chr1 and chr2</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/subset_methrix.html">subset_methrix</a></span><span class="op">(</span><span class="va">meth</span>, contigs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"chr1"</span>, <span class="st">"chr2"</span><span class="op">)</span><span class="op">)</span>
+<span class="va">meth</span>
+<span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu">seqinfo</span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html">rowRanges</a></span><span class="op">(</span><span class="va">meth</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Subsetting to include only bases 1:100M in chr1</span>
+<span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html">GRanges</a></span><span class="op">(</span>seqnames <span class="op">=</span> <span class="st">"chr1"</span>, ranges <span class="op">=</span> <span class="fu">IRanges</span><span class="op">(</span><span class="fl">1</span>,<span class="fl">100000000</span><span class="op">)</span><span class="op">)</span> 
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/subset_methrix.html">subset_methrix</a></span><span class="op">(</span><span class="va">meth</span>, regions <span class="op">=</span> <span class="va">regions</span><span class="op">)</span>
+<span class="va">meth</span>
+<span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu">seqlengths</span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html">rowRanges</a></span><span class="op">(</span><span class="va">meth</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="visualization-and-qc-after-filtering" class="section level1">
 <h1 class="hasAnchor">
@@ -158,48 +214,49 @@
 <a href="#scmethrix-report" class="anchor"></a>scMethrix report</h2>
 <p>After filtering, it worth running a report again, to see if any of the samples were so lowly covered that it warrants an action (e.g. removal of the sample)</p>
 <p><strong>Important:</strong> Don’t forget to set the <code>recal_stats</code> to <code>TRUE</code>, since the object changed since reading in. The output directory has to be different from last time, to avoid using the intermediate files calculated during the last run.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">methrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/methrix_report.html">methrix_report</a></span><span class="op">(</span>meth <span class="op">=</span> <span class="va">meth</span>, output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, recal_stats <span class="op">=</span> <span class="cn">TRUE</span>, prefix<span class="op">=</span><span class="st">"processed"</span><span class="op">)</span></code></pre></div>
 <p>The report can be found here: <a href="https://compepigen.github.io/WGBS_best_practice/processed_methrix_reports.html">processed_methrix_reports.html</a></p>
 <p>There are additional possibilities to visualize the study. We can look at the density of coverage both sample- and group-wise:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/plot_coverage.html">plot_coverage</a></span><span class="op">(</span><span class="va">meth</span>, type <span class="op">=</span> <span class="st">"dens"</span><span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/plot_coverage.html">plot_coverage</a></span><span class="op">(</span><span class="va">meth</span>, type <span class="op">=</span> <span class="st">"dens"</span>, pheno <span class="op">=</span> <span class="st">"Day"</span>, perGroup <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
-<p>We can visualize te beta value distribution as a violin plot or density plot. These plots (as well as the coverage plot) use the most variable 25000 CpG sites to ensure fast processing. <code>plot_density</code> and <code>plot_violin</code> has the option to use data only from a restricted region.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<p>We can visualize te beta value distribution as a violin plot or density plot. These plots (as well as the coverage plot) use the 25000 most variable CpG sites to ensure fast processing. <code>plot_density</code> and <code>plot_violin</code> has the option to use data only from a restricted region.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/plot_density.html">plot_density</a></span><span class="op">(</span><span class="va">meth</span><span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/plot_density.html">plot_density</a></span><span class="op">(</span><span class="va">meth</span>, ranges <span class="op">=</span> <span class="fu">GRanges</span><span class="op">(</span><span class="st">"chr1:1-10000000"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/plot_violin.html">plot_violin</a></span><span class="op">(</span><span class="va">meth</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="dimensionality-reduction" class="section level2">
 <h2 class="hasAnchor">
 <a href="#dimensionality-reduction" class="anchor"></a>Dimensionality reduction</h2>
 <p><code>scMethrix</code> offers principal component analysis (PCA), uniform manifold approximation and projection (UMAP), and t-distributed stochastic neighbor embedding (tSNE) to conduct and visualize dimensionality reduction. The resulting reduction is stored in the scMethrix object, and can be accessed via reducedDim(). First, the model is calculated, then a number of sites are selected for plotting, either random or based on variance (<code>var</code> option). This ensures that the calculations remain feasible.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/dim_red_scMethrix.html">dim_red_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>,type<span class="op">=</span><span class="st">"PCA"</span>,top_var <span class="op">=</span> <span class="fl">10000</span>, n_components <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>
 <span class="fu"><a href="../reference/plot_dim_red.html">plot_dim_red</a></span><span class="op">(</span><span class="va">meth</span>,type<span class="op">=</span><span class="st">"PCA"</span><span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/dim_red_scMethrix.html">dim_red_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>,type<span class="op">=</span><span class="st">"UMAP"</span>,top_var <span class="op">=</span> <span class="fl">10000</span>, n_neighbors <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>
 <span class="fu"><a href="../reference/plot_dim_red.html">plot_dim_red</a></span><span class="op">(</span><span class="va">meth</span>,type<span class="op">=</span><span class="st">"UMAP"</span><span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/dim_red_scMethrix.html">dim_red_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>,type<span class="op">=</span><span class="st">"tSNE"</span>,top_var <span class="op">=</span> <span class="fl">10000</span>, n_components <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>
 <span class="fu"><a href="../reference/plot_dim_red.html">plot_dim_red</a></span><span class="op">(</span><span class="va">meth</span>,type<span class="op">=</span><span class="st">"tSNE"</span><span class="op">)</span></code></pre></div>
 <p>At visualization, we can provide the <code>methrix</code> object to allow color or shape annotation of groups or samples.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">meth</span>, col_anno <span class="op">=</span> <span class="st">"Day"</span>, shape_anno <span class="op">=</span> <span class="st">"Replicate"</span><span class="op">)</span></code></pre></div>
-<p><code>scMethrix</code> offers the possibility of region based filtering. With this option, selected regions, e.g. promoters can be visualized. We will use the <code>AnnotationHub</code> package to assess basic annotation categories.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"AnnotationHub"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
-  <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"AnnotationHub"</span>, update <span class="op">=</span> <span class="cn">F</span><span class="op">)</span>
-<span class="op">}</span></code></pre></div>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<p><code>scMethrix</code> offers the possibility of region based filtering. With this option, selected regions (e.g. promoters) can be visualized. We will use the <code>AnnotationHub</code> package to assess basic annotation categories.</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"AnnotationHub"</span><span class="op">)</span><span class="op">)</span> 
+  <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"AnnotationHub"</span>, update <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="st">"AnnotationHub"</span><span class="op">)</span>
 <span class="va">ah</span> <span class="op">=</span> <span class="fu">AnnotationHub</span><span class="op">(</span><span class="op">)</span>
 <span class="va">qhs</span> <span class="op">=</span> <span class="fu">query</span><span class="op">(</span><span class="va">ah</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"RefSeq"</span>, <span class="st">"Mus musculus"</span>, <span class="st">"mm10"</span><span class="op">)</span><span class="op">)</span>
 <span class="va">genes</span> <span class="op">=</span> <span class="va">qhs</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>
 <span class="va">promotors</span> <span class="op">=</span> <span class="fu">promoters</span><span class="op">(</span><span class="va">genes</span><span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">meth.subset</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/methrix/man/subset_methrix.html">subset_methrix</a></span><span class="op">(</span><span class="va">meth</span>,regions <span class="op">=</span> <span class="va">promotors</span><span class="op">)</span>
 <span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/dim_red_scMethrix.html">dim_red_scMethrix</a></span><span class="op">(</span><span class="va">meth.subset</span>,type<span class="op">=</span><span class="st">"PCA"</span>,top_var <span class="op">=</span> <span class="fl">10000</span>, n_components <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>
 <span class="fu"><a href="../reference/plot_dim_red.html">plot_dim_red</a></span><span class="op">(</span><span class="va">meth</span>,type<span class="op">=</span><span class="st">"PCA"</span><span class="op">)</span></code></pre></div>

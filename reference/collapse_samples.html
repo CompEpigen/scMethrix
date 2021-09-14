@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Masks non-variable CpGs — mask_by_variance • scMethrix</title>
+<title>Collapses multiple samples into a single sample — collapse_samples • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Masks non-variable CpGs — mask_by_variance" />
-<meta property="og:description" content="Masks non-variable CpGs" />
+<meta property="og:title" content="Collapses multiple samples into a single sample — collapse_samples" />
+<meta property="og:description" content="Collapses multiple samples into a single sample" />
 
 
 
@@ -138,20 +138,23 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Masks non-variable CpGs</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>mask_by_variance.Rd</code></div>
+    <h1>Collapses multiple samples into a single sample</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_transforms.R'><code>R/scMethrix_transforms.R</code></a></small>
+    <div class="hidden name"><code>collapse_samples.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Masks non-variable CpGs</p>
+    <p>Collapses multiple samples into a single sample</p>
     </div>
 
-    <pre class="usage"><span class='fu'>mask_by_variance</span><span class='op'>(</span>
+    <pre class="usage"><span class='fu'>collapse_samples</span><span class='op'>(</span>
   scm <span class='op'>=</span> <span class='cn'>NULL</span>,
-  assay <span class='op'>=</span> <span class='st'>"score"</span>,
-  low_threshold <span class='op'>=</span> <span class='fl'>0.05</span>,
+  colname <span class='op'>=</span> <span class='cn'>NULL</span>,
+  trans <span class='op'>=</span> <span class='cn'>NULL</span>,
+  h5_dir <span class='op'>=</span> <span class='cn'>NULL</span>,
+  batch_size <span class='op'>=</span> <span class='fl'>20</span>,
   n_threads <span class='op'>=</span> <span class='fl'>1</span>,
+  replace <span class='op'>=</span> <span class='cn'>FALSE</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
@@ -163,16 +166,30 @@
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
-      <th>assay</th>
-      <td><p>string; name of an existing assay. Default = "score"</p></td>
+      <th>colname</th>
+      <td><p>string; The colname from <code>colData(scm)</code> indicating which samples should be collapse together</p></td>
     </tr>
     <tr>
-      <th>low_threshold</th>
-      <td><p>numeric; The variability threshold. Masking is done for all CpGs less than or equal to this value. A CpG that is methylated or unmethylated in all samples will have a variability of 0, whereas a completely variable CpG will have a value of 1. Default = 0.05.</p></td>
+      <th>trans</th>
+      <td><p>named vector of closures; The transforms for each assay in a named vector. Default NULL, meaning that
+operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is mean(x, na.rm=TRUE)
+<code>IRanges</code> package.</p></td>
+    </tr>
+    <tr>
+      <th>h5_dir</th>
+      <td><p>string; The directory to use. Will be created if it does not exist. Default = NULL</p></td>
+    </tr>
+    <tr>
+      <th>batch_size</th>
+      <td><p>integer; The maximum number of elements to process at once.</p></td>
     </tr>
     <tr>
       <th>n_threads</th>
-      <td><p>integer; Number of parallel instances. Can only be used if <code><a href='scMethrix-class.html'>scMethrix</a></code> is in HDF5 format. Default = 1.</p></td>
+      <td><p>integer; Maximum number of parallel instances. Default = 1</p></td>
+    </tr>
+    <tr>
+      <th>replace</th>
+      <td><p>boolean; flag for whether to delete the contents of h5_dir before saving</p></td>
     </tr>
     <tr>
       <th>verbose</th>
@@ -182,22 +199,25 @@
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An object of class <code><a href='scMethrix-class.html'>scMethrix</a></code></p>
+    <p>An <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Takes <code><a href='scMethrix-class.html'>scMethrix</a></code> object and masks CpGs with low variability by putting NA for assay values. The sites will remain in the object and all assays will be affected.</p>
+    <p>Uses the inputted function to transform an assay in the <code><a href='scMethrix-class.html'>scMethrix</a></code> object. Typically, most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be  from <span class="pkg">DelayedMatrixStats</span>.</p>
+<p>In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>mask_by_variance</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,low_threshold<span class='op'>=</span><span class='fl'>0.05</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Masking non-variable CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>Masked 225 [78.67%] CpG sites in 0.09s</span></div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 286
+<span class='va'>regions</span> <span class='op'>&lt;-</span> <span class='fu'>GRanges</span><span class='op'>(</span>seqnames <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"chr1"</span><span class='op'>)</span>, ranges <span class='op'>=</span> <span class='fu'>IRanges</span><span class='op'>(</span><span class='fl'>1</span>,<span class='fl'>200000000</span><span class='op'>)</span><span class='op'>)</span> 
+<span class='va'>regions</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span><span class='op'>(</span><span class='fu'>tile</span><span class='op'>(</span><span class='va'>regions</span>,<span class='fl'>10</span><span class='op'>)</span><span class='op'>)</span>
+<span class='fu'><a href='bin_scMethrix.html'>bin_scMethrix</a></span><span class='op'>(</span><span class='va'>scMethrix_data</span>, regions <span class='op'>=</span> <span class='va'>regions</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Binning experiment...</span></div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by regions</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.07s</span></div><div class='output co'>#&gt; <span class='message'>Subsetting for 10 input regions...</span></div><div class='output co'>#&gt; <span class='message'>Binning by bp with size of 1e+05...</span></div><div class='output co'>#&gt; <span class='message'>Generated 131 bins in 0.12s</span></div><div class='output co'>#&gt; <span class='message'>   Filling bins for the score assay...</span></div><div class='output co'>#&gt; <span class='message'>Bins filled in 0.10s</span></div><div class='output co'>#&gt; <span class='message'>   Filling bins for the counts assay...</span></div><div class='output co'>#&gt; <span class='message'>Bins filled in 0.04s</span></div><div class='output co'>#&gt; <span class='message'>Rebuilding experiment...</span></div><div class='output co'>#&gt; <span class='message'>Experiment binned for 10 regions containing 131 total bins in 0.56s</span></div><div class='output co'>#&gt; An object of class scMethrix
+#&gt;    n_CpGs: 131
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts
 #&gt;    reduced dims: 
 #&gt;    is_h5: FALSE
 #&gt;    Reference: hg19
-#&gt;    Physical size: 41.3 Kb</div></pre>
+#&gt;    Physical size: 37.3 Kb</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Masks non-variable CpGs — mask_by_variance • scMethrix</title>
+<title>Converts an scMethrix object to methrix object — export_methrix • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Masks non-variable CpGs — mask_by_variance" />
-<meta property="og:description" content="Masks non-variable CpGs" />
+<meta property="og:title" content="Converts an scMethrix object to methrix object — export_methrix" />
+<meta property="og:description" content="Converts an scMethrix object to methrix object" />
 
 
 
@@ -138,22 +138,16 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Masks non-variable CpGs</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>mask_by_variance.Rd</code></div>
+    <h1>Converts an <code><a href='scMethrix-class.html'>scMethrix</a></code> object to methrix object</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_export.R'><code>R/scMethrix_export.R</code></a></small>
+    <div class="hidden name"><code>export_methrix.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Masks non-variable CpGs</p>
+    <p>Converts an <code><a href='scMethrix-class.html'>scMethrix</a></code> object to methrix object</p>
     </div>
 
-    <pre class="usage"><span class='fu'>mask_by_variance</span><span class='op'>(</span>
-  scm <span class='op'>=</span> <span class='cn'>NULL</span>,
-  assay <span class='op'>=</span> <span class='st'>"score"</span>,
-  low_threshold <span class='op'>=</span> <span class='fl'>0.05</span>,
-  n_threads <span class='op'>=</span> <span class='fl'>1</span>,
-  verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>export_methrix</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, h5_dir <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -163,41 +157,25 @@
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
-      <th>assay</th>
-      <td><p>string; name of an existing assay. Default = "score"</p></td>
-    </tr>
-    <tr>
-      <th>low_threshold</th>
-      <td><p>numeric; The variability threshold. Masking is done for all CpGs less than or equal to this value. A CpG that is methylated or unmethylated in all samples will have a variability of 0, whereas a completely variable CpG will have a value of 1. Default = 0.05.</p></td>
-    </tr>
-    <tr>
-      <th>n_threads</th>
-      <td><p>integer; Number of parallel instances. Can only be used if <code><a href='scMethrix-class.html'>scMethrix</a></code> is in HDF5 format. Default = 1.</p></td>
-    </tr>
-    <tr>
-      <th>verbose</th>
-      <td><p>boolean; Flag for outputting function status messages. Default = TRUE</p></td>
+      <th>h5_dir</th>
+      <td><p>Location to save the methrix H5 file</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An object of class <code><a href='scMethrix-class.html'>scMethrix</a></code></p>
+    <p>a <code><a href='https://rdrr.io/pkg/methrix/man/methrix-class.html'>methrix</a></code> object</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Takes <code><a href='scMethrix-class.html'>scMethrix</a></code> object and masks CpGs with low variability by putting NA for assay values. The sites will remain in the object and all assays will be affected.</p>
+    <p>Removes extra slot data from an <code><a href='scMethrix-class.html'>scMethrix</a></code> object and changes structure to match
+<code><a href='https://rdrr.io/pkg/methrix/man/methrix-class.html'>methrix</a></code> format. A 'counts' assay for coverage values must be present.
+Functionality not supported by methrix (e.g. reduced dimensionality)
+will be discarded.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>mask_by_variance</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,low_threshold<span class='op'>=</span><span class='fl'>0.05</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Masking non-variable CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>Masked 225 [78.67%] CpG sites in 0.09s</span></div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 286
-#&gt;    n_samples: 4
-#&gt;    assays: score, counts
-#&gt;    reduced dims: 
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 41.3 Kb</div></pre>
+<span class='co'># convert_to_methrix(scMethrix_data)</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

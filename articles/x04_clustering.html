@@ -100,7 +100,7 @@
       <h1 data-toc-skip>04: Clustering and metacells</h1>
                         <h4 class="author">Andrew Lindsay, Reka Toth</h4>
             
-            <h4 class="date">2021-09-13</h4>
+            <h4 class="date">2021-09-14</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/CompEpigen/scMethrix/blob/master/vignettes/x04_clustering.Rmd"><code>vignettes/x04_clustering.Rmd</code></a></small>
       <div class="hidden name"><code>x04_clustering.Rmd</code></div>
@@ -113,27 +113,45 @@
 <h1 class="hasAnchor">
 <a href="#clustering-data" class="anchor"></a>Clustering data</h1>
 <p>Unlike bulk sequencing, where the measurements are averaged over many cells, single-cell sequencing allows the identification of cell type for individual cells. This is a common step in many single-cell expression workflows. Multiple algorithms and distance metrics are included in the package for maximum flexibility.</p>
+<div id="distance-metrics" class="section level2">
+<h2 class="hasAnchor">
+<a href="#distance-metrics" class="anchor"></a>Distance metrics</h2>
 <p>Most algorithms operate via a distance metric, an all-by-all matrix where each sample is numerically compared to each other sample. Samples with few methylated CpG sites in common will have a large distance metric, where as two samples with identical methylation will have a distance metric of zero.</p>
 <p>Available distance metrics include <code>pearson</code>, <code>spearman</code>, and <code>tau</code> (all via <code>bioDist</code>); and <code>euclidean</code>, <code>maximum</code>, <code>manhattan</code>, <code>canberra</code>, <code>binary</code>, and <code>minkowski</code> (all via <code><a href="https://rdrr.io/r/stats/dist.html">stats::dist</a></code>).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">dist</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/get_distance_matrix.html">get_distance_matrix</a></span><span class="op">(</span><span class="va">meth</span>, assay <span class="op">=</span> <span class="st">"score"</span> , type <span class="op">=</span> <span class="st">"euclidean"</span><span class="op">)</span>
-<span class="va">dist</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/get_distance_matrix.html">get_distance_matrix</a></span><span class="op">(</span><span class="va">meth</span>, assay <span class="op">=</span> <span class="st">"score"</span> , type <span class="op">=</span> <span class="st">"pearson"</span><span class="op">)</span>
-<span class="va">dist</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/get_distance_matrix.html">get_distance_matrix</a></span><span class="op">(</span><span class="va">meth</span>, assay <span class="op">=</span> <span class="st">"score"</span> , type <span class="op">=</span> <span class="st">"canberra"</span><span class="op">)</span></code></pre></div>
-<p>Clustering algorithms include <code>hierarchical</code> (via <code><a href="https://rdrr.io/r/stats/hclust.html">stats::hclust</a></code>), <code>partition</code> (via <code><a href="https://rdrr.io/r/stats/kmeans.html">stats::kmeans</a></code>), and <code>model</code>-based (via <code><a href="https://mclust-org.github.io/mclust/reference/Mclust.html">mclust::Mclust</a></code>). Distance metrics are not used for model-based clustering. The identified clusters will be stored in the <code>colData</code> slot of the output <code>scMethrix</code> object.</p>
+<code class="sourceCode R"><span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/get_distance_matrix.html">get_distance_matrix</a></span><span class="op">(</span><span class="va">scm</span>, assay <span class="op">=</span> <span class="st">"score"</span> , type <span class="op">=</span> <span class="st">"pearson"</span><span class="op">)</span></code></pre></div>
+<p>Additional distance metrics can be used via an arbitrary function input. The input must the assay matrix and output must be an all-by-all matrix filled with distance values for each respective pair. It will be internally cast with <code><a href="https://rdrr.io/r/stats/dist.html">as.dist()</a></code> before computation.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">meth.cluster</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/cluster_scMethrix.html">cluster_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>, assay <span class="op">=</span> <span class="st">"score"</span>, dist <span class="op">=</span> <span class="va">dist</span>, n_clusters <span class="op">=</span> <span class="fl">2</span>, colname <span class="op">=</span> <span class="st">"Heirarchical"</span>, type<span class="op">=</span><span class="st">"hierarchical"</span><span class="op">)</span>
-<span class="fu">colData</span><span class="op">(</span><span class="va">meth.cluster</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">mtx</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">mtx</span>, method <span class="op">=</span> <span class="st">"euclidean"</span><span class="op">)</span>
+<span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/get_distance_matrix.html">get_distance_matrix</a></span><span class="op">(</span><span class="va">scm</span>, assay <span class="op">=</span> <span class="st">"score"</span> , type <span class="op">=</span> <span class="va">fun</span><span class="op">)</span></code></pre></div>
+</div>
+<div id="clustering" class="section level2">
+<h2 class="hasAnchor">
+<a href="#clustering" class="anchor"></a>Clustering</h2>
+<p>Clustering algorithms include <code>hierarchical</code> (via <code><a href="https://rdrr.io/r/stats/hclust.html">stats::hclust</a></code>), <code>partition</code> (via <code><a href="https://rdrr.io/r/stats/kmeans.html">stats::kmeans</a></code>), and <code>model</code>-based (via <code><a href="https://mclust-org.github.io/mclust/reference/Mclust.html">mclust::Mclust</a></code>). Distance metrics are not used for model-based clustering. The identified clusters will be stored in the <code>colData</code> slot of the output <code>scMethrix</code> object.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">scm.cluster</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/cluster_scMethrix.html">cluster_scMethrix</a></span><span class="op">(</span><span class="va">scm</span>, assay <span class="op">=</span> <span class="st">"score"</span>, dist <span class="op">=</span> <span class="va">dist</span>, n_clusters <span class="op">=</span> <span class="fl">2</span>, colname <span class="op">=</span> <span class="st">"Heirarchical"</span>, type<span class="op">=</span><span class="st">"hierarchical"</span><span class="op">)</span>
+<span class="fu">colData</span><span class="op">(</span><span class="va">scm.cluster</span><span class="op">)</span></code></pre></div>
+<p>Like the distance metric, an arbitrary clustering algorithm can be used. It must accept a <code>dist</code> object, and return a <code>data.frame</code> with two columns named “Sample” and “Cluster”. The column “Cluster” will be renamed by the value in <code>colname</code> before returning, if given.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">fun</span> <span class="op">&lt;-</span> <span class="kw">function</span> <span class="op">(</span><span class="va">dist</span><span class="op">)</span> <span class="op">{</span>
+  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/hclust.html">hclust</a></span><span class="op">(</span><span class="va">dist</span>, method<span class="op">=</span><span class="st">"ward.D"</span><span class="op">)</span>
+  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/cutree.html">cutree</a></span><span class="op">(</span><span class="va">fit</span>, k<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">dist</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span>
+  <span class="va">colData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>Sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>, Cluster <span class="op">=</span> <span class="va">fit</span><span class="op">)</span>
+  <span class="va">colData</span>
+<span class="op">}</span>
 
-<span class="va">meth.cluster</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/cluster_scMethrix.html">cluster_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>, assay <span class="op">=</span> <span class="st">"score"</span>, dist <span class="op">=</span> <span class="va">dist</span>, colname <span class="op">=</span> <span class="st">"Model-based"</span>, type<span class="op">=</span><span class="st">"model"</span><span class="op">)</span>
-<span class="fu">colData</span><span class="op">(</span><span class="va">meth.cluster</span><span class="op">)</span></code></pre></div>
+<span class="va">scm.cluster</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/cluster_scMethrix.html">cluster_scMethrix</a></span><span class="op">(</span><span class="va">scm</span>, assay <span class="op">=</span> <span class="st">"score"</span>, dist <span class="op">=</span> <span class="va">dist</span>, n_clusters <span class="op">=</span> <span class="fl">2</span>, colname <span class="op">=</span> <span class="st">"Heir"</span>, type<span class="op">=</span><span class="va">fun</span><span class="op">)</span>
+<span class="fu">colData</span><span class="op">(</span><span class="va">scm.cluster</span><span class="op">)</span></code></pre></div>
+</div>
 </div>
 <div id="visualization" class="section level1">
 <h1 class="hasAnchor">
 <a href="#visualization" class="anchor"></a>Visualization</h1>
 <p>For visualizing the clustering, the generated colData can be used for annotation in dimensionality reduction plots.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/dim_red_scMethrix.html">dim_red_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>,type<span class="op">=</span><span class="st">"PCA"</span>,top_var <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span>
-<span class="fu"><a href="../reference/plot_dim_red.html">plot_dim_red</a></span><span class="op">(</span><span class="va">meth</span>,type<span class="op">=</span><span class="st">"PCA"</span>,shape_anno <span class="op">=</span> <span class="st">"Cluster"</span>,color_anno<span class="op">=</span><span class="st">"Cluster"</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">scm</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/dim_red_scMethrix.html">dim_red_scMethrix</a></span><span class="op">(</span><span class="va">scm</span>,type<span class="op">=</span><span class="st">"PCA"</span>,top_var <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span>
+<span class="fu"><a href="../reference/plot_dim_red.html">plot_dim_red</a></span><span class="op">(</span><span class="va">scm</span>,type<span class="op">=</span><span class="st">"PCA"</span>,shape_anno <span class="op">=</span> <span class="st">"Cluster"</span>,color_anno<span class="op">=</span><span class="st">"Cluster"</span><span class="op">)</span></code></pre></div>
 </div>
   </div>
 

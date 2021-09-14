@@ -100,7 +100,7 @@
       <h1 data-toc-skip>03: Transformations and Imputations</h1>
                         <h4 class="author">Andrew Lindsay, Reka Toth</h4>
             
-            <h4 class="date">2021-09-13</h4>
+            <h4 class="date">2021-09-14</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/CompEpigen/scMethrix/blob/master/vignettes/x03_transforms.Rmd"><code>vignettes/x03_transforms.Rmd</code></a></small>
       <div class="hidden name"><code>x03_transforms.Rmd</code></div>
@@ -109,60 +109,88 @@
 
     
     
-<div id="transforming-assays-and-imputation" class="section level1">
+<div id="transformations" class="section level1">
 <h1 class="hasAnchor">
-<a href="#transforming-assays-and-imputation" class="anchor"></a>Transforming assays and imputation</h1>
-<p>Methylation data is presented in different ways based on the output pipeline. Scores are commonly reported with ranges such as [-1..1], [0..1], or [0..100]. Depending on your downstream analysis, it may be necessary to transform these values to another range. The <code>transform_assay</code> function allows and arbitrary function input to transform each element in the dataset.</p>
+<a href="#transformations" class="anchor"></a>Transformations</h1>
+<div id="merging-experiment-objects" class="section level2">
+<h2 class="hasAnchor">
+<a href="#merging-experiment-objects" class="anchor"></a>Merging experiment objects</h2>
+<p>During analysis, it might be beneficial to split an experiment into smaller subset experiments, perform operations, and re-assemble the subset experiments back together. Merging can be done by either <code>row</code> or <code>col</code>. This function only affects assays; other experiment components like metadata and reduced dimensionality will be discarded.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">m1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subset_scMethrix.html">subset_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>, contigs <span class="op">=</span> <span class="st">"chr1"</span><span class="op">)</span>
+<span class="va">m2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subset_scMethrix.html">subset_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>, contigs <span class="op">=</span> <span class="st">"chr2"</span><span class="op">)</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/merge_scMethrix.html">merge_scMethrix</a></span><span class="op">(</span>scm1 <span class="op">=</span> <span class="va">m1</span>, scm2 <span class="op">=</span> <span class="va">m2</span>, by<span class="op">=</span><span class="st">"row"</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">m1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subset_scMethrix.html">subset_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>, samples <span class="op">=</span> <span class="st">"GSM2553093"</span><span class="op">)</span>
+<span class="va">m2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subset_scMethrix.html">subset_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>, samples <span class="op">=</span> <span class="st">"GSM2553095"</span><span class="op">)</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/merge_scMethrix.html">merge_scMethrix</a></span><span class="op">(</span>scm1 <span class="op">=</span> <span class="va">m1</span>, scm2 <span class="op">=</span> <span class="va">m2</span>, by<span class="op">=</span><span class="st">"col"</span><span class="op">)</span></code></pre></div>
+</div>
+<div id="transforming-assays-and-imputation" class="section level2">
+<h2 class="hasAnchor">
+<a href="#transforming-assays-and-imputation" class="anchor"></a>Transforming assays and imputation</h2>
+<p>Methylation beta values are presented in different ways based on the upstream pipeline. Scores are commonly reported with ranges such as [-1..1], [0..1], or [0..100]. Depending on your downstream analysis, it may be necessary to transform these values to another range. The <code>transform_assay</code> function allows and arbitrary function input to transform each element in the dataset.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#To convert [0..1] scores to [0..100] scores</span>
 <span class="va">fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">x</span><span class="op">*</span><span class="fl">100</span><span class="op">)</span>
 <span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/transform_assay.html">transform_assay</a></span><span class="op">(</span><span class="va">meth</span>, assay <span class="op">=</span> <span class="st">"score"</span> , new_assay <span class="op">=</span> <span class="st">"score.100"</span>, trans <span class="op">=</span> <span class="va">fun</span><span class="op">)</span></code></pre></div>
-<p>Binarizing is a common operation for single cell methylation data as a majority of CpG sites have the same methylation status on both strands. A <code>binarize</code> function is included in the package. The function will automatically generate a threshold cutoff based on the mean methylation value.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">#To convert [0..1] scores to [0..100] scores</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/transform_assay.html">transform_assay</a></span><span class="op">(</span><span class="va">meth</span>, assay <span class="op">=</span> <span class="st">"score"</span> ,new_assay <span class="op">=</span> <span class="st">"binarize"</span>, trans <span class="op">=</span> <span class="va">binarize</span><span class="op">)</span></code></pre></div>
+<p>There is an accessible <code>binarize</code> function to transform data into the [0..1] range used by this package for beta values. The function will automatically generate a threshold cutoff based on the mean beta value. This is often useful after imputation.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">scm</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/transform_assay.html">transform_assay</a></span><span class="op">(</span><span class="va">scm</span>, assay <span class="op">=</span> <span class="st">"score.100"</span> ,new_assay <span class="op">=</span> <span class="st">"binarize"</span>, trans <span class="op">=</span> <span class="va">binarize</span><span class="op">)</span></code></pre></div>
+</div>
 </div>
 <div id="binning" class="section level1">
 <h1 class="hasAnchor">
 <a href="#binning" class="anchor"></a>Binning</h1>
-<p>CpG-level precision may not be necessary for downstream analysis, so binning can be used to drastically reduce the number of calculations necessary for computation. There are multiple options in which to determine binning. By default, entire chromosomes are used for binning, but a <code>region</code> list can be provided to limit binning to particular sections of the genome (e.g. only promoters). From there, binning can either be done by <code>bp</code> or by number of <code>cpg</code> sites.</p>
+<p>CpG-level precision may not be necessary for downstream analysis, so binning can be used to drastically reduce the number of calculations necessary for computation. There are multiple options in which to determine binning. The <code>bin_size</code> can be specified for either base pairs (<code>bp</code>) or by the number of CpGs (<code>cpg</code>) per bin. By default, entire chromosomes are used for binning.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">#Divide the whole genome into 100kbp bins</span>
+<span class="va">scm</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/bin_scMethrix.html">bin_scMethrix</a></span><span class="op">(</span><span class="va">scm</span>, bin_size <span class="op">=</span> <span class="fl">100000</span>, bin_by <span class="op">=</span> <span class="st">"bp"</span><span class="op">)</span></code></pre></div>
 <p>All assays in the <code>scMethrix</code> object will be binned. By default, the <code>count</code> assay will be summed during binning while the <code>score</code> assay and all other assays will use their mean values. It is possible to specify other operations, if desired.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">#Divide the genome into 100kbp bins</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/bin_scMethrix.html">bin_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>, bin_size <span class="op">=</span> <span class="fl">100000</span>, bin_by <span class="op">=</span> <span class="st">"bp"</span><span class="op">)</span>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">#Divides genome into groups of 1000 CpGs, but use the median value for the score assay</span>
+<span class="va">scm</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/bin_scMethrix.html">bin_scMethrix</a></span><span class="op">(</span><span class="va">scm</span>, bin_size <span class="op">=</span> <span class="fl">1000</span>, bin_by <span class="op">=</span> <span class="st">"cpg"</span>, trans <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>score<span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html">median</a></span><span class="op">(</span><span class="va">x</span>,na.rm<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<p>If whole chromosome binning is not desired, a <code>GRanges</code> <code>region</code> list can be provided to bin individual regions of the genome (e.g. promoters), and then re-assemble them into combined object. Typically, one bin will contain one region, but these regions can be further subdivided by <code>bp</code> or <code>cpg</code> sites, as shown before.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Binning each promoter</span>
+<span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"AnnotationHub"</span><span class="op">)</span><span class="op">)</span> 
+  <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"AnnotationHub"</span>, update <span class="op">=</span> <span class="cn">F</span><span class="op">)</span>
 
-<span class="co">#Divides promoters into groups of 100 CpGs</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/bin_scMethrix.html">bin_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>, bin_size <span class="op">=</span> <span class="fl">1000</span>, bin_by <span class="op">=</span> <span class="st">"cpg"</span>, regions <span class="op">=</span> <span class="va">promoters</span><span class="op">)</span>
+<span class="va">ah</span> <span class="op">=</span> <span class="fu">AnnotationHub</span><span class="op">(</span><span class="op">)</span>
+<span class="va">qhs</span> <span class="op">=</span> <span class="fu">query</span><span class="op">(</span><span class="va">ah</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"RefSeq"</span>, <span class="st">"Mus musculus"</span>, <span class="st">"mm10"</span><span class="op">)</span><span class="op">)</span>
+<span class="va">genes</span> <span class="op">=</span> <span class="va">qhs</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>
+<span class="va">proms</span> <span class="op">=</span> <span class="fu">promoters</span><span class="op">(</span><span class="va">genes</span><span class="op">)</span>
 
-<span class="co">#Divide the genome into 100kbp bins, but use the median value for the score assay</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/bin_scMethrix.html">bin_scMethrix</a></span><span class="op">(</span><span class="va">meth</span>, bin_size <span class="op">=</span> <span class="fl">100000</span>, bin_by <span class="op">=</span> <span class="st">"bp"</span>, trans<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>score<span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html">median</a></span><span class="op">(</span><span class="va">x</span>,na.rm<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<span class="va">scm</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/bin_scMethrix.html">bin_scMethrix</a></span><span class="op">(</span><span class="va">scm</span>, regions<span class="op">=</span><span class="va">proms</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="imputation" class="section level1">
 <h1 class="hasAnchor">
 <a href="#imputation" class="anchor"></a>Imputation</h1>
-<p>As single cell bisulfite sequencing is typically very sparse, it is usually necessary to perform some imputation to fill NA elements, as most clustering and dimensionality reduction algorithms cannot handle large numbers of NA values. Imputation algorithms available here are k-nearest neighbour (<code>kNN</code>), iterative PCA (<code>iPCA</code>),or random forest (<code>RF</code>). As well, an arbitrary imputation function can be used here, provided that the final output is a matrix the same dimensions as the input matrix. By default, the entire chromosome is used for the imputation, but this is incredibly memory-intensive. A <code>region</code> list can be provided to impute small regions together, but an assumption for quasi-independence is typically needed (such as promoter regions).</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>As single cell bisulfite sequencing is typically very sparse, it is usually necessary to perform some imputation to fill NA elements, as most clustering and dimensionality reduction algorithms cannot handle large numbers of NA values. Imputation algorithms available here are k-nearest neighbour (<code>kNN</code>), iterative PCA (<code>iPCA</code>),or random forest (<code>RF</code>).</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Impute the whole genome via kNN</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/impute_regions.html">impute_regions</a></span><span class="op">(</span><span class="va">meth</span>, assay <span class="op">=</span> <span class="st">"score"</span>, new_assay <span class="op">=</span> <span class="st">"impute"</span>, type <span class="op">=</span> <span class="st">"kNN"</span>, k <span class="op">=</span> <span class="fl">10</span><span class="op">)</span>
-
-<span class="co">#Impute promoter regions via random forest</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/impute_regions.html">impute_regions</a></span><span class="op">(</span><span class="va">meth</span>, assay <span class="op">=</span> <span class="st">"score"</span>, new_assay <span class="op">=</span> <span class="st">"impute"</span>, type <span class="op">=</span> <span class="st">"RF"</span>, regions <span class="op">=</span> <span class="va">promoters</span><span class="op">)</span>
-
-<span class="co">#Impute via an arbitrary imputation function.</span>
+<span class="va">scm</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/impute_regions.html">impute_regions</a></span><span class="op">(</span><span class="va">scm</span>, assay <span class="op">=</span> <span class="st">"score"</span>, new_assay <span class="op">=</span> <span class="st">"impute"</span>, type <span class="op">=</span> <span class="st">"kNN"</span>, k <span class="op">=</span> <span class="fl">10</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu">score</span><span class="op">(</span><span class="va">scm</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<p>By default, the entire chromosome is used for the imputation, but this is incredibly memory-intensive. A <code>GRanges</code> <code>region</code> list can be provided to subset the assay, impute each region individually, then combine them back together. However, there is an assumption for quasi-independence of each region by doing this.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">#Impute promoter regions via random forest</span>
+<span class="va">scm</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/impute_regions.html">impute_regions</a></span><span class="op">(</span><span class="va">scm</span>, assay <span class="op">=</span> <span class="st">"score"</span>, new_assay <span class="op">=</span> <span class="st">"impute"</span>, type <span class="op">=</span> <span class="st">"RF"</span>, regions <span class="op">=</span> <span class="va">promoters</span><span class="op">)</span></code></pre></div>
+<p>For using imputation methods not included in this package, an arbitrary imputation function can be specified. However, the return value must be the imputed matrix with the same dimensions as the input matrix, and in the same column order.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">#Impute via an arbitrary imputation function.</span>
 <span class="va">fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">mtx</span><span class="op">)</span> <span class="fu">missForest</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/missForest/man/missForest.html">missForest</a></span><span class="op">(</span><span class="va">mtx</span>, <span class="va">...</span><span class="op">)</span><span class="op">$</span><span class="va">ximp</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/impute_regions.html">impute_regions</a></span><span class="op">(</span><span class="va">meth</span>, assay <span class="op">=</span> <span class="st">"score"</span>, new_assay <span class="op">=</span> <span class="st">"impute"</span>, type <span class="op">=</span> <span class="va">fun</span>, regions <span class="op">=</span> <span class="va">promoters</span><span class="op">)</span></code></pre></div>
-</div>
-<div id="generating-test-sets" class="section level1">
-<h1 class="hasAnchor">
-<a href="#generating-test-sets" class="anchor"></a>Generating test sets</h1>
+<span class="va">scm</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/impute_regions.html">impute_regions</a></span><span class="op">(</span><span class="va">scm</span>, assay <span class="op">=</span> <span class="st">"score"</span>, new_assay <span class="op">=</span> <span class="st">"impute"</span>, type <span class="op">=</span> <span class="va">fun</span><span class="op">)</span></code></pre></div>
+<div id="generating-test-sets" class="section level2">
+<h2 class="hasAnchor">
+<a href="#generating-test-sets" class="anchor"></a>Generating test sets</h2>
 <p>To judge the accuracy of imputation, it may be helpful to generate a test and training set. This is easily done with <code>generate_training_set</code>. A specified proportion of CpG sites will be subsetted into two <code>scMethrix</code> objects.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Generate a training set that contains 20% of the total CpG sites.</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/generate_training_set.html">generate_training_set</a></span><span class="op">(</span><span class="va">meth</span>, training_prop <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></code></pre></div>
+<span class="va">scm</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/generate_training_set.html">generate_training_set</a></span><span class="op">(</span><span class="va">scm</span>, training_prop <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></code></pre></div>
 <p>For small-scale testing purposes, a randomized miniature scMethrix object may be useful</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Generate a training set that contains 20% of the total CpG sites.</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/generate_random_subset.html">generate_random_subset</a></span><span class="op">(</span><span class="va">meth</span>, n_cpgs <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></code></pre></div>
+<span class="va">scm</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/generate_random_subset.html">generate_random_subset</a></span><span class="op">(</span><span class="va">scm</span>, n_cpgs <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></code></pre></div>
+</div>
 </div>
   </div>
 
