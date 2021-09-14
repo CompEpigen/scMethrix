@@ -512,7 +512,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 #' regions <- unlist(tile(regions,10))
 #' bin_scMethrix(scMethrix_data, regions = regions)
 #' @export
-collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = NULL, batch_size = 20, batch_size = 20, n_threads = 1, replace = FALSE, verbose = TRUE) {
+collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = NULL, batch_size = 20, n_threads = 1, replace = FALSE, verbose = TRUE) {
   
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
@@ -530,7 +530,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
     trans <- c(trans, c(counts = function(x) sum(x,na.rm=TRUE)))
   }
   
-  members <- data.frame(Sample = row.names(colData(scm)), Group = factor(scm@colData[,colname]))
+  overlaps_indicies <- data.frame(Sample = row.names(colData(scm)), Group = factor(scm@colData[,colname]))
 
   for (name in SummarizedExperiment::assayNames(scm)) {
     
@@ -550,7 +550,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
     } else {
       
       mtx <- data.table(get_matrix(scm,assay=name)) #TODO: Somehow missing rows if not subset, not sure why
-      mtx <- setDT(lapply(split.default(mtx, group$Group), rowSums))[]
+      mtx <- setDT(lapply(split.default(mtx, overlaps_indicies$Group), rowSums))[]
 
       assays[[name]] <- as(mtx,class(get_matrix(scm,assay=name)))
       

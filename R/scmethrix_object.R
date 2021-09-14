@@ -85,4 +85,4 @@ setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
 #' @param h5_dir string; The directory to use. Will be created if it does not exist. Default = NULL
 #' @param replace boolean; flag for whether to delete the contents of h5_dir before saving 
 #' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
-generic_scMethrix_function <- function(scm, assay, new_assay, trans, verbose, n_chunks, n_threads, h5_dir, overlap_type) {}
+generic_scMethrix_function <- function(scm, assay, new_assay, trans, verbose, n_chunks, n_threads, h5_dir, overlap_type, batch_size, replace) {}
