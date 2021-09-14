@@ -7,6 +7,7 @@ test_that("bin_scMethrix", {
   regions <- GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,1000000000)) 
   
  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+   
     # Check default conditions and threading
     bin <- bin_scMethrix(scm, h5_dir = paste0(h5_dir,"/bin1"), n_threads = 2, replace = T)
     expect_equal(dim(bin),c(258,4))
@@ -34,6 +35,9 @@ test_that("bin_scMethrix", {
     expect_equal(as.numeric(get_matrix(bin,assay="bin")[1,]),as.numeric(vals))
     
     #Check the custom transform function  (should be mean, but specified as sum)
+    expect_error(bin_scMethrix(scm,trans="Not a trans"))
+    
+    
     bin2 <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg",trans = c(bin2 = function(x) sum(x,na.rm=TRUE)), 
                           h5_dir = paste0(h5_dir,"/bin2"),replace=T)
     expect_equal(score(bin),score(bin2), check.attributes = FALSE)
@@ -46,6 +50,33 @@ test_that("bin_scMethrix", {
     #Check for region subsetting
     bin <- bin_scMethrix(scm,regions=regions,bin_size=1000,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin3"), replace = T)
     expect_equal(sum(rowRanges(bin)$n_cpgs),n_cpg)
+  }))
+})
+
+test_that("collapse_samples", {
+  
+  expect_error(collapse_samples("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  
+  #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+  invisible(lapply(list(scm.mem), function(scm) {
+  
+    groups <- sort(rep_len(c("Grp1","Grp2"),nrow(colData(scm))))
+    
+    colData(scm)["Cluster"] <- groups #TODO Should be dynamic in case input data changes
+    
+    expect_error(collapse_samples(scm, colname="Not a colname"),"Cannot find column")
+    expect_error(collapse_samples(scm, colname = "Cluster",trans="not a trans"))
+    
+    expect_is(scm.col <- collapse_samples(scm, colname = "Cluster"),"scMethrix")
+    
+    expect_equal(sort(row.names(colData(scm.col))),sort(unique(colData(scm)$Cluster)))
+    
+    grp_len = sum(groups == groups[1])
+    
+    expect_equal(as.vector(score(scm.col)[,group]),rowSums(score(scm)[,1:grp_len]))
+    expect_equal(as.vector(counts(scm.col[,group])),rowSums(counts(scm)[,1:grp_len]))
+    expect_equal(colData(scm.col)$n_Samples,as.vector(table(groups)))
+    
   }))
 })
 

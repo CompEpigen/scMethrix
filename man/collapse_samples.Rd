@@ -2,7 +2,7 @@
 % Please edit documentation in R/scMethrix_transforms.R
 \name{collapse_samples}
 \alias{collapse_samples}
-\title{Collapses multiple samples into a single sample}
+\title{Collapses multiple samples into a single sample by group}
 \usage{
 collapse_samples(
   scm = NULL,
@@ -38,16 +38,15 @@ operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is
 An \code{\link{scMethrix}} object
 }
 \description{
-Collapses multiple samples into a single sample
+Collapses multiple samples into a single sample by group
 }
 \details{
-Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. Typically, most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be  from \pkg{DelayedMatrixStats}.
+Multiple samples can be collapsed into a single meta-sample. Grouping for samples can be defined via colData. The collapse function can accept an arbitrary function for each assay on how to handle the collapsing (typically \code{mean} for scores, and \code{sum} for counts).
 
-In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs.
+In the output object, \code{colData()} will contain a comma-delimited list of samples (\code{Samples}) that each group contains as well as the total number of CpGs in the group (\code{n_Samples}).
 }
 \examples{
 data('scMethrix_data')
-regions <- GRanges(seqnames = c("chr1"), ranges = IRanges(1,200000000)) 
-regions <- unlist(tile(regions,10))
-bin_scMethrix(scMethrix_data, regions = regions)
+colData(scMethrix_data)["Cluster"] = c("X","X","Y","Y")
+collapse_samples(scMethrix_data, colname = "Cluster")
 }

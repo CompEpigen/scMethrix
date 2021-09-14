@@ -32,7 +32,7 @@ m2 <- subset_scMethrix(meth, samples = "GSM2553095")
 meth <- scMethrix::merge_scMethrix(scm1 = m1, scm2 = m2, by="col")
 ```
 
-## Transforming assays and imputation
+# Transforming assays
 Methylation beta values are presented in different ways based on the upstream pipeline. Scores are commonly reported with ranges such as [-1..1], [0..1], or [0..100]. Depending on your downstream analysis, it may be necessary to transform these values to another range. The `transform_assay` function allows and arbitrary function input to transform each element in the dataset. 
 
 ```{r, eval=F}
@@ -75,6 +75,25 @@ genes = qhs[[1]]
 proms = promoters(genes)
 
 scm <- scMethrix::bin_scMethrix(scm, regions=proms)
+```
+
+# Collapse samples
+It may be desirable to collapse multiple samples into a single meta-sample. Using simple grouping, samples can be collapsed via any arbitrary function
+
+```{r, eval=F}
+# Collapse into simulated cluster_scMethrix() output
+colData(scm)["Cluster"] = rep_len(c("Grp1","Grp2"),nrow(colData(scm)))
+scm <- scMethrix::collapse_samples(scm, colname, colname = "Cluster")
+scm
+colData(scm)
+```
+
+```{r, eval=F}
+# Collapse the samples while using a median opertion for the score assay
+colData(scm)["Cluster"] = rep_len(c("Grp1","Grp2"),nrow(colData(scm)))
+scm <- scMethrix::collapse_samples(scm, colname, colname = "Cluster", trans = c(score=median))
+scm
+colData(scm)
 ```
 
 # Imputation
