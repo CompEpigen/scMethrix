@@ -92,10 +92,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
   if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
   
-  if (is.null(trans)) {
-    trans <- c(counts = function(x) sum(x,na.rm=TRUE))
-  } else if (is.null(trans[["counts"]])) {
-    trans <- c(trans, c(counts = function(x) sum(x,na.rm=TRUE)))
+  if (is.null(trans[["counts"]])) {
+    trans <- c(trans, c(counts = function(x) sum(x,na.rm=TRUE)))#DelayedMatrixStats::colSums2(x,na.rm=TRUE)))
   }
   
  # if (is_h5(scm) && is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
@@ -178,7 +176,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
     if (verbose) message("   Filling bins for the ",name," assay...")
     
     if (is.null(trans[[name]])) { # If no named vector is specified, default to mean
-      op <- function(x) mean(x,na.rm=TRUE)
+      op <- function(x) mean(x,na.rm=TRUE)#DelayedMatrixStats::colMeans2(x,na.rm=TRUE)
     } else {
       op <- trans[[name]]
     }
@@ -511,6 +509,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 #' @param colname string; The colname from \code{colData(scm)} indicating which samples should be collapse together
 #' @param trans named vector of closures; The transforms for each assay in a named vector. Default NULL, meaning that 
 #' operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is mean(x, na.rm=TRUE)
+#' @param batch_size The number of CpGs to calculate at once.
 #' \code{\link{IRanges}} package.
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -518,7 +517,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 #' colData(scMethrix_data)["Cluster"] = c("X","X","Y","Y")
 #' collapse_samples(scMethrix_data, colname = "Cluster")
 #' @export
-collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = NULL, batch_size = 20, n_threads = 1, replace = FALSE, verbose = TRUE) {
+collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = NULL, batch_size = 100000, n_threads = 1, replace = FALSE, verbose = TRUE) {
   
   Group <- NULL
   
@@ -532,10 +531,8 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   
   #if (is.null(h5_dir) && is_h5(scm)) stop("Output directory must be specified")
   
-  if (is.null(trans)) {
-    trans <- c(counts = function(x) sum(x,na.rm=TRUE))
-  } else if (is.null(trans[["counts"]])) {
-    trans <- c(trans, c(counts = function(x) sum(x,na.rm=TRUE)))
+  if (is.null(trans[["counts"]])) {
+    trans <- c(trans, c(counts = function(x) rowSums(x,na.rm=TRUE)))#DelayedMatrixStats::rowSums2(x,na.rm=TRUE)))
   }
   
   if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
@@ -550,7 +547,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
     if (verbose) message("   Collapsing samples for the ",name," assay...")
     
     if (is.null(trans[[name]])) { # If no named vector is specified, default to mean
-      op <- function(x) mean(x,na.rm=TRUE)
+      op <- function(x) rowMeans(x,na.rm=TRUE)#DelayedMatrixStats::rowMeans2(x,na.rm=TRUE)
     } else {
       op <- trans[[name]]
     }
@@ -559,29 +556,47 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
       
       setAutoRealizationBackend("HDF5Array")
       
-      cols <- split_vector(1:ncol(scm),size=batch_size)
-      sink <- AutoRealizationSink(c(length(rowRanges(scm)),ncol(scm)))
-      grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rowRanges(scm)),length(cols[[1]])))
+      grps <- split(1:nrow(overlaps_indicies), overlaps_indicies$Group)
+      cpgs <- split_vector(1:nrow(scm),size = batch_size)
+      sink <- AutoRealizationSink(c(length(rowRanges(scm)),uniqueN(overlaps_indicies$Group)))
+      grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rowRanges(scm)),1))
+
+      if (verbose) message("Generated ", length(grps)*length(cpgs), " chunks")
+      chunk = 0
       
+      for (i in 1:length(grps)) {
+        
+        col <- NULL
+
+        for (cpg in cpgs) {
+          if (verbose) message("Processing chunk ", chunk <- chunk+1)
+          mtx <- get_matrix(scm,assay=name)[cpg,grps[[i]]]
+          mtx <- as.matrix(op(mtx))
+          col <- rbind(col,mtx)
+        }
+        
+        colnames(col) <- names(grps[i])
+        DelayedArray::write_block(block = col, viewport = grid[[as.integer(i)]], sink = sink)
+
+      }
       
-      
-      
-      
+      assays[[name]] <- sink
       
     } else {
       
       mtx <- data.table(get_matrix(scm,assay=name)) #TODO: Somehow missing rows if not subset, not sure why
-      mtx <- setDT(lapply(split.default(mtx, overlaps_indicies$Group), rowSums))[]
+      mtx <- setDT(lapply(split.default(mtx, overlaps_indicies$Group), op))[]
       assays[[name]] <- as(mtx,class(get_matrix(scm,assay=name)))
       
     }
 
-    colData <- data.frame(row.names = colnames(mtx),
-                          Samples= sapply(colnames(mtx),function(grp) {
-                            paste(overlaps_indicies[Group == grp]$Sample,collapse=",")}),
-                          n_Samples = as.vector(table(overlaps_indicies$Group)))
-
   }
+  
+  colData <- data.frame(row.names = levels(overlaps_indicies$Group),
+                        Samples= sapply(levels(overlaps_indicies$Group),function(grp) {
+                          paste(overlaps_indicies[Group == grp]$Sample,collapse=",")}),
+                        n_Samples = as.vector(table(overlaps_indicies$Group)))
+  
   
   if (verbose) message("Rebuilding experiment...")
   

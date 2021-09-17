@@ -71,10 +71,11 @@ test_that("collapse_samples", {
     
     expect_equal(sort(row.names(colData(scm.col))),sort(unique(colData(scm)$Cluster)))
     
-    grp_len = sum(groups == groups[1])
+    grp = groups[1]
+    grp_len = sum(groups == grp)
     
-    expect_equal(as.vector(score(scm.col)[,group]),rowSums(score(scm)[,1:grp_len]))
-    expect_equal(as.vector(counts(scm.col[,group])),rowSums(counts(scm)[,1:grp_len]))
+    expect_equal(as.vector(score(scm.col)[,grp]),rowMeans(score(scm)[,1:grp_len],na.rm=TRUE))
+    expect_equal(as.vector(counts(scm.col[,grp])),rowSums(counts(scm)[,1:grp_len],na.rm=TRUE))
     expect_equal(colData(scm.col)$n_Samples,as.vector(table(groups)))
     
   }))

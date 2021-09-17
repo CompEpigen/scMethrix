@@ -53,6 +53,8 @@ Bins the ranges of an \code{\link{scMethrix}} object.
 Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. Typically, most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be  from \pkg{DelayedMatrixStats}.
 
 In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs.
+
+Reduced dimensionality data will be discarded.
 }
 \examples{
 data('scMethrix_data')
