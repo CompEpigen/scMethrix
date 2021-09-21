@@ -43,12 +43,17 @@ To ensure the high quality of our dataset, the sites with very low coverage (unt
 meth <- scMethrix::mask_by_coverage(meth, low_threshold = 2, avg_threshold = 2) 
 ```
 
-## Sample count filtering
-If the coverage matrix is absent, filtering can be done via sample count instead. Two options are available here - `low_threshold` or `prop_threshold`. 
+## Masking low sample count
+If the coverage matrix is absent, filtering can be done via sample count instead. Similar to `mask_by_coverage`, `low_threshold` masks be low sample count, whereas `prop_threshold` will mask sites that appear in less than a certain proportion of all input samples.
 
 ```{r eval=F}
 # Masking CpG sites present in fewer than 2 samples
 meth <- scMethrix::mask_by_sample(meth, low_threshold = 2) 
+```
+
+```{r eval=F}
+# Masking CpG sites present in fewer than 5% of samples
+meth <- scMethrix::mask_by_sample(meth, prop_threshold = 0.05) 
 ```
 
 ## Masking low variance CpGs 
@@ -61,7 +66,7 @@ meth <- scMethrix::mask_by_variance(meth, low_threshold = 0.05)
 
 ## SNP filtering
 
-SNPs, mostly the C > T mutations can disrupt methylation calling. Therefore it is essential to remove CpG sites that overlap with common variants, if we have variation in our study population. For example working with human, unpaired data, e.g. treated vs. untreated groups. 
+With SNPs, the C > T mutations can disrupt methylation calling. Therefore, it is essential to remove CpG sites that overlap with common variants, if we have variation in our study population. For example working with human, unpaired data, e.g. treated vs. untreated groups. 
 
 During filtering, we can select the population of interest and the minimum minor allele frequency (MAF) of the SNPs.
 
@@ -120,8 +125,8 @@ GenomicRanges::seqinfo(SummarizedExperiment::rowRanges(meth))
 ```
 
 ```{r subset_scMethrix, eval=F}
-# Subsetting to include only bases 1:100M in chr1
-regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100000000)) 
+# Subsetting to include only bases 1:10M in chr1
+regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,10000000)) 
 meth <- scMethrix::subset_methrix(meth, regions = regions)
 meth
 GenomicRanges::seqlengths(SummarizedExperiment::rowRanges(meth))
@@ -210,7 +215,3 @@ meth.subset <- subset_methrix(meth,regions = promotors)
 meth <- scMethrix::dim_red_scMethrix(meth.subset,type="PCA",top_var = 10000, n_components = 20)
 plot_dim_red(meth,type="PCA")
 ```
-
-  
-  
-  

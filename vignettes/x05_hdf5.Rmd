@@ -74,20 +74,3 @@ Functions currently supporting the arguments `batch_size` and `n_threads`:
 `get_region_summary`
 
 The multicore option is platform independent.
-
-# Integration with other tools
-
-`scMethrix` has multiple options to export data for different purposes. The `write_bedgraph` function supports a bedgraph format, that can be directly uploaded to UCSC. The `multibed` option generates a file with all samples as columns. The `metilene` option ensures that this file is in the correct format for [metilene](http://www.bioinf.uni-leipzig.de/Software/metilene/), a command line DMR caller.  
-
-```{r eval=FALSE}
-# UCSC browser
-export_bedgraphs(m = meth, output_dir = ".")
-# Metilene
-write_bedgraphs(m = meth, output_dir = ".", rm_NA = FALSE, metilene = TRUE,multiBed = "metline_ip", phenoCol = "Day")
-```
-
-We also support bigWig format.
-
-```{r, eval=F}
-write_bigwigs(meth, output_dir = ".", samp_names = NULL)
-```

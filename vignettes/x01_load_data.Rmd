@@ -15,7 +15,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r message=FALSE, warning=FALSE, eval=F}
+```{r message=FALSE, warning=FALSE, eval=T}
 #Load library
 library(scMethrix)
 ```
@@ -29,19 +29,19 @@ Reference: Luo C, Keown CL, Kurihara L, Zhou J et al. Single-cell methylomes ide
 
 The data can be directly downloaded from GEO, using the `GEOquery` package. The files will be downloaded into the working directory. 
 
-```{r message=FALSE, warning=FALSE, eval=F}
+```{r message=FALSE, warning=FALSE, eval=T}
 if(!requireNamespace("GEOquery")) {
   BiocManager::install("GEOquery")
 }
 library(GEOquery)  
 ```
 
-```{r message=FALSE, warning=FALSE, eval=F}
-data_dir = "./GSE97179/"
+```{r message=FALSE, warning=FALSE, eval=T}
+data_dir = paste0(tempdir(),"/GSE97179/")
 dir.create(path = data_dir, showWarnings = FALSE, recursive = TRUE)
 ```
 
-```{r eval=F}
+```{r cache=T}
 lapply(c("GSM2553093", "GSM2553095", "GSM2553097", "GSM2553099", "GSM2553101", "GSM2553103"), function(gsm){
   filePaths <-  GEOquery::getGEOSuppFiles(GEO = gsm, baseDir = data_dir, makeDirectory = TRUE)
   
@@ -106,7 +106,7 @@ mm19_cpgs <- suppressWarnings(methrix::extract_CPGs(ref_genome = "BSgenome.Mmusc
 ```
 
 ## Sample annotation 
-An annotation table is also necessary to perform analyses. The data will be added to the scMethrix object, as a `colData` slot. 
+An annotation table is also necessary to perform some analyses. The data will be added to the `scMethrix` object, as a `colData` slot. Each row of the table represents a single sample. Sample names are taken from the input file names, and stored as row.names. Subsequent information about each sample (e.g., cell type, alternate IDs, sample source, etc) are stored as columns within this `data.frame`. To access this data, see [Saving experiment metadata].
 
 ```{r, sample_anno, eval=F}
 sample_anno <- data.frame(
@@ -125,7 +125,6 @@ sample_anno <- data.frame(
 knitr::kable(sample_anno)
 ```
 
-
 ## Reading bedGraph files
 `read_beds` function is a versatile bedgraph reader intended to import bedgraph files generated virtually by any sort of methylation calling program. It requires user to provide indices for chromosome names, start position and other required fields. There are also presets available to import `bedgraphs` from most common programs such as `Bismark` (.cov format), `MethylDackel`, and `MethylcTools`. In this case, there is no need to define e.g. `chr_idx` `start_idx` arguments, the function will automatically assign them. 
 To know the exact parameters, it might worth to take a look at one of the files, to see the column order. 
@@ -135,7 +134,7 @@ res <- fread(bed_files[1])
 head(res)
 ```
 
-The `read_beds` function adds CpGs missing from the reference set, and creates a methylation/coverage matrices. Once the process is complete - it returns an object of class `scMethrix` which in turn inherits `SingleCellExperiment` class. `scMethrix` object contains ‘methylation’ and (optionally) ‘coverage’ matrices (either in-memory or as on-disk HDF5 arrays) along with pheno-data and other basic info. This object can be passed to all downstream functions for various analysis. For further details on the data structure, see the `SingleCellExperiment` package.
+The `read_beds` function adds CpGs missing from the reference set, and creates a methylation/coverage matrices. Once the process is complete - it returns an object of class `scMethrix` which in turn inherits `SingleCellExperiment` class. `scMethrix` object contains ‘methylation’ and (optionally) ‘coverage’ matrices (either in-memory or as on-disk HDF5 arrays) along with pheno-data and other basic info. This object can be passed to all downstream functions for various analysis. For further details on the data structure, see the `SingleCellExperiment` package: [SingleCellExperiment](https://bioconductor.org/packages/release/bioc/html/SingleCellExperiment.html)
 
 * For computers with large memory, increase speed using `batch_size` parameter. This will open multiple files at once, but keep in mind that increasing the batch size will increase the memory needs as well. 
 
@@ -158,13 +157,14 @@ meth <- read_beds(
 )
 ```
 
+Certain operations will cause metadata to be destroyed. For range metadata, `bin_scMethrix()` will discard row metadata, as will `collapse_samples` for column (sample) metadata. It is advised to extract this data from `mcols()` and `colData()`, respectively, and store it within `metadata()` instead.
+
 **Potential pitfalls: **
 Too many missing CpGs, if not expected, might indicate that something went wrong. 
 
 * An obvious error is using the wrong reference genome. 
 
 * A common mistake is falsely indicating strandedness and zero or one based positioning. The combination of the two might lead to only using C-s from one strand (due to a 1 bp shift), resulting lower coverage for the sites. A nice description of the zero- and one-based coordination system can be found [here](http://genome.ucsc.edu/blog/the-ucsc-genome-browser-coordinate-counting-systems/) 
-
 
 ## Extracting assay matricies
 
@@ -180,21 +180,26 @@ head(mtx)
 mtx <- get_matrix(meth, assay="score", add_loci = TRUE, in_granges=TRUE, order_by_sd = TRUE)
 head(mtx)
 ```
-## Initial QC and summary
 
-Without any further processing, we can create an interactive html report containing basic summary statistics of the `methrix` object with `methrix_report` function. 
+## Saving experiment metadata
 
-The report can be accessed here: [Initial reports](https://compepigen.github.io/WGBS_best_practice/initial_methrix_reports.html)
+scMethrix can store experiment metadata. Depending on the type of data, it is stored in different places:
 
-```{r, eval=FALSE}
-methrix::methrix_report(meth = meth, output_dir = getwd(), prefix = "initial")
+1. Experiment-wide metadata: General information is stored in metadata() as a named `list`. This can be information like genome accession, GEO IDs, authors, or any other information that needs just a single variable.
+
+```{r eval=F}
+metadata(scm)
 ```
 
-In the report, we can check genome-wide and chromosome based statistics on coverage and methylation, in order to identify potential quality issues, for example:
+2. Range metadata: Information about ranges is stored as a `data.frame` in mcols(). This is stored within the rowRanges() sub-object inside  
 
-* samples with too high or too low genome-wide coverage or on a specific chromosome. In this case, there is also a possibility, that the sample is affected by copy number alterations. Both methylation levels and coverage therefore shows higher variation among cancer samples. 
+```{r eval=F}
+mcols(scm)
+```
 
-* samples with altered beta level distribution. 
+3. Sample metadata: Information about samples is stored as a `data.frame` in colData(). This can include alternate samples IDs, run IDs, tissue types, or anything associated with individual samples.
 
-* A "bump" on the beta level density plot at 0.5 indicates the presence of single nucleotide polymorphisms (SNPs) -> see later.
+```{r eval=F}
+colData(scm)
+```
 
