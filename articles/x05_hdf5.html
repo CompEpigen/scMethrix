@@ -100,7 +100,7 @@
       <h1 data-toc-skip>05: Working with large cohorts</h1>
                         <h4 class="author">Andrew Lindsay, Reka Toth</h4>
             
-            <h4 class="date">2021-09-17</h4>
+            <h4 class="date">2021-09-21</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/CompEpigen/scMethrix/blob/master/vignettes/x05_hdf5.Rmd"><code>vignettes/x05_hdf5.Rmd</code></a></small>
       <div class="hidden name"><code>x05_hdf5.Rmd</code></div>
@@ -163,19 +163,6 @@
 <a href="#working-with-large-number-of-samples" class="anchor"></a>Working with large number of samples</h1>
 <p>The primary goal of <code>scMethrix</code> is to allow users to handle the whole-genome methylation data. The functions are optimized to keep the speed high and the memory need low. However, additional efforts were taken to allow <code>scMethrix</code> to handle large number of samples (even &gt; 1000) in the samples in the same, efficient way. Therefore, many functions implement the argument <code>batch_size</code> to split these datasets into digestible chunks and <code>n_threads</code> to parallelize the processing of these chunks. Functions currently supporting the arguments <code>batch_size</code> and <code>n_threads</code>: <code>read_beds</code> <code>get_region_summary</code></p>
 <p>The multicore option is platform independent.</p>
-</div>
-<div id="integration-with-other-tools" class="section level1">
-<h1 class="hasAnchor">
-<a href="#integration-with-other-tools" class="anchor"></a>Integration with other tools</h1>
-<p><code>scMethrix</code> has multiple options to export data for different purposes. The <code>write_bedgraph</code> function supports a bedgraph format, that can be directly uploaded to UCSC. The <code>multibed</code> option generates a file with all samples as columns. The <code>metilene</code> option ensures that this file is in the correct format for <a href="http://www.bioinf.uni-leipzig.de/Software/metilene/">metilene</a>, a command line DMR caller.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># UCSC browser</span>
-<span class="fu">export_bedgraphs</span><span class="op">(</span>m <span class="op">=</span> <span class="va">meth</span>, output_dir <span class="op">=</span> <span class="st">"."</span><span class="op">)</span>
-<span class="co"># Metilene</span>
-<span class="fu"><a href="https://rdrr.io/pkg/methrix/man/write_bedgraphs.html">write_bedgraphs</a></span><span class="op">(</span>m <span class="op">=</span> <span class="va">meth</span>, output_dir <span class="op">=</span> <span class="st">"."</span>, rm_NA <span class="op">=</span> <span class="cn">FALSE</span>, metilene <span class="op">=</span> <span class="cn">TRUE</span>,multiBed <span class="op">=</span> <span class="st">"metline_ip"</span>, phenoCol <span class="op">=</span> <span class="st">"Day"</span><span class="op">)</span></code></pre></div>
-<p>We also support bigWig format.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/write_bigwigs.html">write_bigwigs</a></span><span class="op">(</span><span class="va">meth</span>, output_dir <span class="op">=</span> <span class="st">"."</span>, samp_names <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div>
 </div>
   </div>
 
