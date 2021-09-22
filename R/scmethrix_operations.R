@@ -73,10 +73,23 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #' Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
 #' @details Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.
 #' 
-#' If merging by rows, all CpG sites must be unique and samples must be identical
-#' If merging by columns, all samples must be unique and CpG sites must be identical. 
+#' Requirements for merging
+#'    - If merging by rows, all CpG sites must be unique and samples must be identical
+#'    - If merging by columns, all samples must be unique and CpG sites must be identical
 #' 
-#' Metadata will be retained in certain situations. Merging by row will keep the rowRanges metadata, but merging by column will not. For experiment metadata, only metadata from scm1 will be retained. Custom experiment metadata can manually be added via \code{metadata<-}, or to rowRanges via \code{mcols}.
+#' Metadata will be retained in certain situations:#' 
+#'    For row merges:
+#'       - Ranges metadata (\code{mcols()}) will be merged, with missing columns in either assay filled with NAs
+#'       - Sample metadata (\code{colData()}) will attempt to be merged. Overlapping, non-identical columns will be appended with `.1` and `.2`.
+#'
+#'    For row merges:
+#'       - Ranges metadata (\code{mcols()}) will attempt to be merged. Overlapping, non-identical columns will be appended with `.1` and `.2`.
+#'       - Sample metadata (\code{colData()}) will be merged, with missing columns in either assay filled with NAs
+#' 
+#'    For both merges:
+#'       - Experiment metadata (\code{metadata()}) will attempt to be merged. Overlapping, non-identical columns will be appended with `.1` and `.2`.
+#'  
+#'    Custom experiment metadata can manually be added via \code{metadata() <-}, or to rowRanges via \code{mcols() <-}.
 #' 
 #' @param scm1 A \code{\link{scMethrix}} object
 #' @param scm2 A \code{\link{scMethrix}} object
@@ -88,7 +101,7 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #' merge_scMethrix(scMethrix_data[,1:2],scMethrix_data[,3:4],by="col")
 #' @export
 merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
-  
+
   if (!is(scm1, "scMethrix") || !is(scm2, "scMethrix")){
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
@@ -108,46 +121,138 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
   
   by <- match.arg(arg = by, choices = c("row", "col"), several.ok = FALSE)
   
-  if (by == "row") {
-    if (nrow(colData(scm1)) != nrow(colData(scm2)) || !all(rownames(scm1@colData) == rownames(scm2@colData))) {
-      stop("You have different samples in your dataset. You need the same samples in your datasets. ")
-    } else {
-      scm <- rbind(scm1, scm2)
-    }
-    if (any(duplicated(rowRanges(scm)))) {
-      stop("There are overlapping regions in your datasets. Each object must contain unique regions. ")
-    }
-  }
-  if (by == "col") {
-    if (any(rownames(scm1@colData) %in% rownames(scm2@colData))) {
-      stop("You have the same samples in your datasets. You need different samples for this merging.  ")
+  # Fix duplicate names in metadata
+  slots <- c(metadata)
+  
+  if (by == "row") slots <- c(slots,colData,int_colData)
+  if (by == "col") slots <- c(slots,mcols,elementMetadata,int_elementMetadata)
+
+  invisible(lapply(slots, function(op) {
+
+    if (!isTRUE(all.equal(op(scm1),op(scm2)))) {
+
+      meta1 <- intersect(names(op(scm1)), names(op(scm2)))
+      meta2 <- intersect(names(op(scm2)), names(op(scm1)))
+      
+      if (length(c(meta1,meta2)) != 0) {
+        warning("Same metadata columns are present in ",op@generic,"(). These will be appended with `.1` or `.2`")
+
+        sapply(1:2, function(s) {
+          names <- paste0("names(",op@generic,"(scm",s,"))")
+          do <- paste0(names,"[",names," %in% meta",s,"] <<- paste0(",names,"[",names," %in% meta",s,"],'.",s,"')")
+          eval(parse(text = eval(expression(do))))
+        })
+      }
     } 
+  }))
+
+  # Merge by row
+  if (by == "row") {
+    if (nrow(colData(scm1)) != nrow(colData(scm2)) || !all(rownames(scm1@colData) == rownames(scm2@colData))) 
+      stop("You have different samples in your dataset. You need the same samples in your datasets. ")
     
-    if (ncol(mcols(rowRanges(scm1))) != 0 || ncol(mcols(rowRanges(scm2))) != 0) {
-      warning("Metadata contained in rowRanges will be erased when merged by column")
-      mcols(scm1) <- subset(mcols(scm1),select = NULL)
-      mcols(scm2) <- subset(mcols(scm2),select = NULL)
-    }
+    if (length(intersect(rowRanges(scm1),rowRanges(scm2))) != 0)
+      stop("There are overlapping regions in your datasets. Each object must contain unique regions. ")
     
-    if (!identical(rowRanges(scm1),rowRanges(scm2))) {
-      stop("There are non-overlapping regions in your datasets. This function only takes identical regions. ")
-    } else {
-      scm <- cbind(scm1, scm2)
-    }
+    scm <- rbind(scm1, scm2)
   }
   
-  metadata(scm) <- metadata(scm1)
-  int_metadata(scm) <- int_metadata(scm1)
+  # Merge by col
+  if (by == "col") {
+    if (any(rownames(scm1@colData) %in% rownames(scm2@colData))) 
+      stop("You have the same samples in your datasets. You need different samples for this merging.  ")
+    
+    
+    if (length(intersect(rowRanges(scm1),rowRanges(scm2))) != length(rowRanges(scm1))) 
+      stop("There are non-overlapping regions in your datasets. This function only takes identical regions. ")
+
+    # Merge sample metadata. Ensure the column names match, fill with NAs if not
+    colData(scm1)[setdiff(names(colData(scm2)), names( colData(scm1)))] <- NA
+    colData(scm2)[setdiff(names( colData(scm1)), names(colData(scm2)))] <- NA
+      
+    scm <- cbind(scm1, scm2)
+  }
   
-  # colorder <- order(colnames(scm))
+  
   # 
-  # for (name in SummarizedExperiment::assayNames(scm)) {
+  # 
+  # # Merge by row
+  # if (by == "row") {
+  #   if (nrow(colData(scm1)) != nrow(colData(scm2)) || !all(rownames(scm1@colData) == rownames(scm2@colData))) 
+  #     stop("You have different samples in your dataset. You need the same samples in your datasets. ")
   #   
-  #   dimnames(assays(scm)[[name]])[[2]] <- dimnames(scm)[[2]][order(colnames(scm))] #Sort cols
+  #   if (length(intersect(rowRanges(scm1),rowRanges(scm2))) != 0)
+  #     stop("There are overlapping regions in your datasets. Each object must contain unique regions. ")
+  #   
+  #   # Merge sample metadata. Append if same columns are present
+  #   if (!all.equal(colData(scm1),colData(scm2))) {
+  #     meta1 <- intersect(colnames(colData(scm1)), colnames(colData(scm2)))
+  #     meta2 <- intersect(colnames(colData(scm2)), colnames(colData(scm1)))
+  #     
+  #     if (length(c(meta1,meta2)) != 0) {
+  #       warning("Same metadata columns are present in rowRanges(). These will be appended with `.1` or `.2`")
+  #       colnames(colData(scm1))[colnames(colData(scm1)) %in% meta1] <- paste0(colnames(colData(scm1))[colnames(colData(scm1)) %in% meta1],".1")
+  #       colnames(colData(scm2))[colnames(colData(scm2)) %in% meta2] <- paste0(colnames(colData(scm2))[colnames(colData(scm2)) %in% meta1],".2")
+  #     }
+  #   }
+  #   scm <- rbind(scm1, scm2)
+  # }
   # 
+  # # Merge by col
+  # if (by == "col") {
+  #   if (any(rownames(scm1@colData) %in% rownames(scm2@colData))) 
+  #     stop("You have the same samples in your datasets. You need different samples for this merging.  ")
+  #   
+  #   
+  #   if (length(intersect(rowRanges(scm1),rowRanges(scm2))) != length(rowRanges(scm1))) 
+  #     stop("There are non-overlapping regions in your datasets. This function only takes identical regions. ")
+  #   
+  #   # Merge rowRanges metadata. Append if same columns are present
+  #   if (!all.equal(mcols(scm1),mcols(scm2))) {
+  #     meta1 <- intersect(colnames(mcols(scm1)), colnames(mcols(scm2)))
+  #     meta2 <- intersect(colnames(mcols(scm2)), colnames(mcols(scm1)))
+  #     
+  #     if (length(c(meta1,meta2)) != 0) {
+  #       warning("Same metadata columns are present in rowRanges(). These will be appended with `.1` or `.2`")
+  #       
+  #       colnames(mcols(scm1))[colnames(mcols(scm1)) %in% meta1] <- paste0(colnames(mcols(scm1))[colnames(mcols(scm1)) %in% meta1],".1")
+  #       colnames(mcols(scm2))[colnames(mcols(scm2)) %in% meta2] <- paste0(colnames(mcols(scm2))[colnames(mcols(scm2)) %in% meta1],".2")
+  #     }
+  #   }
+  #   
+  #   # Merge sample metadata. Ensure the column names match, fill with NAs if not
+  #   colData(scm1)[setdiff(names(colData(scm2)), names( colData(scm1)))] <- NA
+  #   colData(scm2)[setdiff(names( colData(scm1)), names(colData(scm2)))] <- NA
+  #   
+  #   scm <- cbind(scm1, scm2)
+  # }
+  # 
+  # # Data in other slots is cbinded as well. This removes the duplicate entries in each list
+  # 
+  
+  ##  Merge experiment metadata. Append if same columns are present
+  # if (!all.equal(metadata(scm1),metadata(scm2))) {
+  #   meta1 <- intersect(names(metadata(scm1)), names(metadata(scm2)))
+  #   meta2 <- intersect(names(metadata(scm2)), names(metadata(scm1)))
+  #   
+  #   names(metadata(scm1))[names(metadata(scm1)) %in% meta1] <- paste0(names(metadata(scm1))[names(metadata(scm1)) %in% meta1],".1")
+  #   names(metadata(scm2))[names(metadata(scm2)) %in% meta2] <- paste0(names(metadata(scm2))[names(metadata(scm2)) %in% meta2],".2")
+  # } else {
+  #   metadata(scm) <- metadata(scm1)
   # }
   
-  #chrom_size = range(rowRanges(scm))@ranges@width
+  
+  #Remove duplicate experiment metadata
+  invisible(lapply(c(metadata,int_metadata), function(op) {
+
+    eval(parse(text = eval(expression(paste0(op@generic,"(scm) <<- ",op@generic,"(scm)[unique(names(",op@generic,"(scm)))]")))))
+
+  }))
+
+  
+  # Sort the metadata into alphabetical order (so it ignores the order of scm1 and scm2)
+  colData(scm) <- colData(scm)[ , order(names(colData(scm)))]
+  mcols(scm) <- mcols(scm)[ , order(names(mcols(scm)))]
   
   return(sort(scm))
 }

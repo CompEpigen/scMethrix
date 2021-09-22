@@ -44,23 +44,52 @@ test_that("merge_scMethrix", {
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
    
-    #same samples
+    ### Column tests
+    # Same samples
     expect_error(merge_scMethrix(scm,scm,by="col"), "You have the same samples in your datasets. ") 
-    #different regions
+    # Different regions
     expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="col"),"There are non-overlapping regions in your datasets.") 
-    #different metadata
-    expect_warning(merge_scMethrix(get_metadata_stats(scm[,1:2]),scm[,3:4],by="col"))
+    # Merging colData 
+    scm1 <- scMethrix_data[,1:2]
+    scm2 <- scMethrix_data[,3:4]
+    colData(scm1)$Sample <- 1
+    colData(scm2)$Sample <- 2
+    colData(scm1)$ID <- 1
+    scm12 = merge_scMethrix(scm1,scm2,by="col")
+    expect_equal(colData(scm12)$Sample,c(rep(1,ncol(scm1)),rep(2,ncol(scm2))))
+    expect_equal(colData(scm12)$ID,c(rep(1,ncol(scm1)),rep(NA,ncol(scm2))))
+    # Merging mcols 
+    mcols(scm1)$CpG <- 1
+    mcols(scm2)$CpG <- 2
+    mcols(scm1)$ID <- 1
+    expect_warning(scm12 <- merge_scMethrix(scm1,scm2,by="col"),"Same metadata columns are present")
+    expect_true(setequal(names(mcols(scm12)),c("CpG.1","ID","CpG.2")))
     
-    #same regions
+    ### Row tests
+    # Same regions
     expect_error(merge_scMethrix(scm,scm,by="row"),"There are overlapping regions in your datasets.") 
-    #different samples
+    # Different samples
     expect_error(merge_scMethrix(scm[1,1],scm[2,2],by="row"),"You have different samples in your dataset.") 
-    #different metadata
-    expect_s4_class(merge_scMethrix(get_metadata_stats(scm[1:2]),scm[3:4]),'scMethrix')
-
-    #different assays
-    expect_warning(merge_scMethrix(remove_assay(scm,assay="counts")[,1],scm[,2],by="col")) 
+    # Merging mcols
+    scm1 <- scm[1:5]
+    scm2 <- scm[6:10]
+    mcols(scm1)$CpG <- 1
+    mcols(scm2)$CpG <- 2
+    mcols(scm1)$ID <- 1
+    scm12 = merge_scMethrix(scm1,scm2,by="row")
+    expect_equal(mcols(scm12)$CpG,c(rep(1,nrow(scm1)),rep(2,nrow(scm2))))
+    expect_equal(mcols(scm12)$ID,c(rep(1,nrow(scm1)),rep(NA,nrow(scm2))))
+    # Merging colData
+    colData(scm1)$Sample <- 1
+    colData(scm2)$Sample <- 2
+    colData(scm1)$ID <- 1
+    expect_warning(scm12 <- merge_scMethrix(scm1,scm2,by="row"),"Same metadata columns are present")
+    expect_true(setequal(names(colData(scm12)),c("Sample.1","ID","Sample.2")))
     
+    # Different assays
+    expect_warning(merge_scMethrix(remove_assay(scm,assay="counts")[,1],scm[,2],by="col"),"Assay list not identical") 
+    
+    # Check equality of merged object
     if (!is_h5(scm)) {
       expect_equal(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row"),scm)
       expect_equal(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"),scm)
@@ -69,8 +98,8 @@ test_that("merge_scMethrix", {
       expect_equal(merge_scMethrix(scm[1], scm[2:nrow(scm)],by="row"),
                    merge_scMethrix(scm[2:nrow(scm)], scm[1],by="row"))
       
-      # expect_equal(merge_scMethrix(scm[,1], scm[,2:ncol(scm)],by="col"),  #colbind is currently position dependant
-      #              merge_scMethrix(scm[,2:ncol(scm)], scm[,1],by="col"))
+       # expect_equal(merge_scMethrix(scm[,1], scm[,2:ncol(scm)],by="col"),  #colbind is currently position dependant
+       #              merge_scMethrix(scm[,2:ncol(scm)], scm[,1],by="col"))
     } else { # Test is less stringent on HDF5-stored objects due since the seed value for delayed operations is not reflected in the parent object
       expect_equal(as.matrix(score(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row"))),as.matrix(score(scm)))
       expect_equal(as.matrix(score(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"))),as.matrix(score(scm)))
