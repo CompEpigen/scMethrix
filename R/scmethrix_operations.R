@@ -16,27 +16,16 @@ get_metadata_stats <- function(scm) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
   
-  if (is_h5(scm)) {
-    stats <-
-      data.table::data.table(
-        mean_meth = DelayedMatrixStats::rowMeans2(score(scm), na.rm = TRUE),
-        median_meth = DelayedMatrixStats::rowMedians(score(scm), na.rm = TRUE),
-        sd_meth = DelayedMatrixStats::rowSds(score(scm), na.rm = TRUE),
-        cells = ncol(scm)-DelayedMatrixStats::rowCounts(score(scm), value = NA)
-      )
-    
-    if(has_cov(scm)) stats[,"counts" := DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"), na.rm = TRUE)] 
-    
-  } else {
-    stats <- data.table::data.table(
-        mean_meth = matrixStats::rowMeans2(get_matrix(scm), na.rm = TRUE),
-        median_meth = matrixStats::rowMedians(get_matrix(scm), na.rm = TRUE),
-        sd_meth = matrixStats::rowSds(get_matrix(scm), na.rm = TRUE),
-        cells = ncol(scm)-matrixStats::rowCounts(score(scm), value = NA)
+  stats <-
+    data.table::data.table(
+      mean_meth = DelayedMatrixStats::rowMeans2(score(scm), na.rm = TRUE),
+      median_meth = DelayedMatrixStats::rowMedians(score(scm), na.rm = TRUE),
+      sd_meth = DelayedMatrixStats::rowSds(score(scm), na.rm = TRUE),
+      cells = ncol(scm)-DelayedMatrixStats::rowCounts(score(scm), value = NA)
     )
     
-    if(has_cov(scm)) stats[,"counts" := matrixStats::rowSums2(get_matrix(scm,assay="counts"), na.rm = TRUE)] 
-  }
+  if(has_cov(scm)) stats[,"counts" := DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"), na.rm = TRUE)] 
+  
   mcols(scm) <- stats
   return(scm)
 }
@@ -173,80 +162,9 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
     scm <- cbind(scm1, scm2)
   }
   
-  
-  # 
-  # 
-  # # Merge by row
-  # if (by == "row") {
-  #   if (nrow(colData(scm1)) != nrow(colData(scm2)) || !all(rownames(scm1@colData) == rownames(scm2@colData))) 
-  #     stop("You have different samples in your dataset. You need the same samples in your datasets. ")
-  #   
-  #   if (length(intersect(rowRanges(scm1),rowRanges(scm2))) != 0)
-  #     stop("There are overlapping regions in your datasets. Each object must contain unique regions. ")
-  #   
-  #   # Merge sample metadata. Append if same columns are present
-  #   if (!all.equal(colData(scm1),colData(scm2))) {
-  #     meta1 <- intersect(colnames(colData(scm1)), colnames(colData(scm2)))
-  #     meta2 <- intersect(colnames(colData(scm2)), colnames(colData(scm1)))
-  #     
-  #     if (length(c(meta1,meta2)) != 0) {
-  #       warning("Same metadata columns are present in rowRanges(). These will be appended with `.1` or `.2`")
-  #       colnames(colData(scm1))[colnames(colData(scm1)) %in% meta1] <- paste0(colnames(colData(scm1))[colnames(colData(scm1)) %in% meta1],".1")
-  #       colnames(colData(scm2))[colnames(colData(scm2)) %in% meta2] <- paste0(colnames(colData(scm2))[colnames(colData(scm2)) %in% meta1],".2")
-  #     }
-  #   }
-  #   scm <- rbind(scm1, scm2)
-  # }
-  # 
-  # # Merge by col
-  # if (by == "col") {
-  #   if (any(rownames(scm1@colData) %in% rownames(scm2@colData))) 
-  #     stop("You have the same samples in your datasets. You need different samples for this merging.  ")
-  #   
-  #   
-  #   if (length(intersect(rowRanges(scm1),rowRanges(scm2))) != length(rowRanges(scm1))) 
-  #     stop("There are non-overlapping regions in your datasets. This function only takes identical regions. ")
-  #   
-  #   # Merge rowRanges metadata. Append if same columns are present
-  #   if (!all.equal(mcols(scm1),mcols(scm2))) {
-  #     meta1 <- intersect(colnames(mcols(scm1)), colnames(mcols(scm2)))
-  #     meta2 <- intersect(colnames(mcols(scm2)), colnames(mcols(scm1)))
-  #     
-  #     if (length(c(meta1,meta2)) != 0) {
-  #       warning("Same metadata columns are present in rowRanges(). These will be appended with `.1` or `.2`")
-  #       
-  #       colnames(mcols(scm1))[colnames(mcols(scm1)) %in% meta1] <- paste0(colnames(mcols(scm1))[colnames(mcols(scm1)) %in% meta1],".1")
-  #       colnames(mcols(scm2))[colnames(mcols(scm2)) %in% meta2] <- paste0(colnames(mcols(scm2))[colnames(mcols(scm2)) %in% meta1],".2")
-  #     }
-  #   }
-  #   
-  #   # Merge sample metadata. Ensure the column names match, fill with NAs if not
-  #   colData(scm1)[setdiff(names(colData(scm2)), names( colData(scm1)))] <- NA
-  #   colData(scm2)[setdiff(names( colData(scm1)), names(colData(scm2)))] <- NA
-  #   
-  #   scm <- cbind(scm1, scm2)
-  # }
-  # 
-  # # Data in other slots is cbinded as well. This removes the duplicate entries in each list
-  # 
-  
-  ##  Merge experiment metadata. Append if same columns are present
-  # if (!all.equal(metadata(scm1),metadata(scm2))) {
-  #   meta1 <- intersect(names(metadata(scm1)), names(metadata(scm2)))
-  #   meta2 <- intersect(names(metadata(scm2)), names(metadata(scm1)))
-  #   
-  #   names(metadata(scm1))[names(metadata(scm1)) %in% meta1] <- paste0(names(metadata(scm1))[names(metadata(scm1)) %in% meta1],".1")
-  #   names(metadata(scm2))[names(metadata(scm2)) %in% meta2] <- paste0(names(metadata(scm2))[names(metadata(scm2)) %in% meta2],".2")
-  # } else {
-  #   metadata(scm) <- metadata(scm1)
-  # }
-  
-  
   #Remove duplicate experiment metadata
   invisible(lapply(c(metadata,int_metadata), function(op) {
-
     eval(parse(text = eval(expression(paste0(op@generic,"(scm) <<- ",op@generic,"(scm)[unique(names(",op@generic,"(scm)))]")))))
-
   }))
 
   
@@ -968,14 +886,8 @@ mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, 
   
 }
 
-
 #' Helper function for masking. All rows in row_idx will be set to NA.
-#' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
-#'  by putting NA for assay values. The sites will remain in the object and all assays will be affected.
-#'  
-#'  \code{low_threshold} is used to mask sites with low overall cell counts. A site represented by a single sample is typically not useful.
-#'  \code{prop_threshold} is used to mask sites with a low proportional count  
-#'  
+#' @details Used with mask_by_sample, mask_by_coverage, and mask_by_variance. It iterates through all assays in the inputted \code{\link{scMethrix}} object and replaces all rows in row_idx with NA.  
 #' @inheritParams generic_scMethrix_function
 #' @param row_idx numeric; A vector of row indexes for which to replace with NA
 #' @return An object of class \code{\link{scMethrix}}
