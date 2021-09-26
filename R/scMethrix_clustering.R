@@ -119,6 +119,9 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
     colData <- data.frame(Sample = names(fit$classification), Cluster = fit$classification)
   }
   
+  row.names(colData) <- colData$Sample
+  colData <- subset(colData, select=-Sample)
+
   names(colData)[names(colData) == "Cluster"] <- colname
   
   # else if (type == "density") {
@@ -134,7 +137,7 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
 #' Appends colData in an scMethrix object
 #' @details Typically used for clustering. Allows additional information to be added to colData in an scMethrix object after the object creation. It does this via a left join on the original colData. Any samples not included in the colData object will be filled with NAs.
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object
-#' @param colData dataframe-like or named vector; For a dataframe-like, Must contain either a column labelled "Sample" or row names that correspond with the input \code{\link{scMethrix}} object. For a named vector, vector names must correspond to the row names of the input \code{\link{scMethrix}} object
+#' @param colData dataframe-like or named vector; For a dataframe-like, must contain row names that correspond with the input \code{\link{scMethrix}} object. For a named vector, vector names must correspond to the row names of the input \code{\link{scMethrix}} object
 #' @param name string; the name of the column for named vector input. Ignored for matrix input
 #' @return An \code{\link{scMethrix}} object
 #' @examples
@@ -155,37 +158,32 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
 #' @export
 append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
 
-  Sample <- NULL
-  
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }
-  
-  colData <- data.frame(colData) #TODO: test better for inputs
-  if (ncol(colData) == 1) colnames(colData) = name
-  
-  # if (!is(colData, "vector")) {
-  #   stop("A valid colData object must be supplied (named vector or dataframe-like).", call. = FALSE)
-  # }
+
+  # Convert vector to data.frame
+  if (is.vector(colData)) {
+    colData <- as.data.frame(colData)
+    colnames(colData) <- name
+  }
 
   cd <- colData(scm)
-  cols <- colnames(colData) %in% colnames(cd)
   
-  if (any(cols)) {
-    warning("Colnames of colData already exist in scMethrix object (",colnames(colData)[cols],"). These will be overwritten.")
-    cd <- cd[ , !(names(cd) %in% colnames(colData)[cols])]
+  cols <- intersect(colnames(colData), colnames(colData(scm)))
+
+  if (length(cols) > 0) {
+    warning("Colnames of colData already exist in scMethrix object (",paste(cols,collapse=", "),"). These will be overwritten.")
+    cd <- cd[, !(colnames(cd) %in% cols), drop=FALSE]
   }
   
-  if (!("Sample" %in% colnames(colData))) colData["Sample"] <- rownames(colData)
-  
-  cd["Sample"] <- rownames(cd)
-  n_samples <- length(intersect(cd$Sample,colData$Sample))
+  n_samples <- length(intersect(row.names(cd),row.names(colData)))
   
   if (n_samples != nrow(cd)) warning(nrow(cd)-n_samples," samples are not specified in colData")
 
-  cd <- merge(cd,colData,by="Sample", all.x = TRUE)
-  row.names(cd) <- cd$Sample
-  cd <- subset(cd, select=-c(Sample))
+  cd <- merge(cd,colData,by=0, all.x = TRUE)
+  row.names(cd) <- cd$Row.names
+  cd <- subset(cd, select=-c(Row.names))
   colData(scm) <- cd
   
   return(scm)

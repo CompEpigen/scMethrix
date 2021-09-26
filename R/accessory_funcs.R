@@ -209,7 +209,7 @@ split_time <- function() {
 stop_time <- function() {
   time <- get("time.all", envir=topenv())
   if (!is.numeric(time)) {
-    warning("start_time() not set")
+    #warning("start_time() not set")
     return("[unknown time]")
   }
   time <- proc.time()["elapsed"]-get("time.all", envir=topenv())

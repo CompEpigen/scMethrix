@@ -48,28 +48,23 @@ test_that("cluster_scMethrix", {
     
     expect_error(cluster_scMethrix(scm,assay="impute",type="not a type"), "Invalid type of clustering")
     
-    dist <- get_distance_matrix(scm, assay="impute")
+    #dist <- get_distance_matrix(scm, assay="impute")
 
-    expect_equivalent(ncol(colData(scm)),0) # Check there's no colData before clustering
+    #expect_equivalent(ncol(colData(scm)),0) # Check there's no colData before clustering
     
     invisible(lapply(types, function(type) {
-
-      # Looks weird, but should throw warning if running the same cluster_scMethrix command back to back (replaces the colData "Cluster" column)
+      scm.c <- scm
       if (type == "model") {
         expect_warning(
-          scm <- cluster_scMethrix(scm,n_clusters=n_clusters,assay="impute",type=type,colname=name)
-        ,"n_clusters is ignored")
-        expect_warning(
-          scm <- cluster_scMethrix(scm,n_clusters=n_clusters,assay="impute",type=type,colname=name)
-          ,"Colnames of colData already exist")
+          scm.c <- cluster_scMethrix(scm.c,n_clusters=n_clusters,assay="impute",type=type,colname=name)
+          ,"n_clusters is ignored")
       } else {
-        scm <- cluster_scMethrix(scm,n_clusters=n_clusters,assay="impute",type=type,colname=name)
-        expect_warning(scm <- cluster_scMethrix(scm,n_clusters=n_clusters,assay="impute",type=type,colname=name),"Colnames of colData already exist")
+        scm.c <- cluster_scMethrix(scm.c,n_clusters=n_clusters,assay="impute",type=type,colname=name)
       }
       
-      cd <- colData(scm)
-      expect_is(scm,"scMethrix")
-      expect_equivalent(colnames(cd),name)
+      cd <- colData(scm.c)
+      expect_is(scm.c,"scMethrix")
+      expect_equivalent(colnames(cd),c(colnames(colData(scm)),name))
       expect_true(all(cd$Cluster %in% 1:n_clusters))
     }))
   }))
@@ -82,25 +77,27 @@ test_that("append_colData", {
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
-    expect_equivalent(ncol(colData(scm)),0) # Check there's no colData before appending
-    
+   # expect_equivalent(ncol(colData(scm)),0) # Check there's no colData before appending
+
     name = "Cluster"
     vals <- 1:ncol(scm)
     
     #Dataframe input
     colData <- colData(scm)
     colData[name] <- vals
-    app <- append_colData(scm, colData=colData,name=name)
-    
-    expect_equivalent(colnames(colData(app)),name)
+    colData <- subset(colData, select=name)
+    app <- append_colData(scm, colData=colData)
+    expect_warning(app <- append_colData(app, colData=colData),"Colnames of colData already exist")
+    expect_equivalent(colnames(colData(app)),c(colnames(colData(scm)),name))
     expect_equivalent(colData(app)[,name],vals)
-    
+
     #Named vector input
     colData <- vals
     names(colData) <- rownames(colData(scm))
     app <- append_colData(scm, colData=colData,name=name)
-    
-    expect_equivalent(colnames(colData(app)),name)
+    expect_warning(app <- append_colData(app, colData=colData,name=name),"Colnames of colData already exist")
+    expect_equivalent(colnames(colData(app)),c(colnames(colData(scm)),name))
     expect_equivalent(colData(app)[,name],vals)
+
   }))
 })

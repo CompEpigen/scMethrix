@@ -28,8 +28,8 @@ test_that("bin_granges",{
 })
 
 test_that("start,split,stop_time",{
-  expect_warning(stop_time())
-  expect_warning(split_time())
+ # expect_warning(stop_time())
+#  expect_warning(split_time())
   
   start_time()
   
