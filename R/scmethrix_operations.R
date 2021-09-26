@@ -99,7 +99,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
   
   names1 = SummarizedExperiment::assayNames(scm1)
   names2 = SummarizedExperiment::assayNames(scm2)
-  
+
   if (!all((sort(names1)==sort(names2)))) {
     warning("Assay list not identical. All non-identical assays will be dropped from merged object.")
     a1 <- intersect(names1, names2)
@@ -110,7 +110,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
   
   by <- match.arg(arg = by, choices = c("row", "col"), several.ok = FALSE)
   
-  # Fix duplicate names in metadata
+  # Fix duplicate names in metadata, append if there are common elements that have different values
   slots <- c(metadata)
   
   if (by == "row") slots <- c(slots,colData,int_colData)
@@ -118,7 +118,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 
   invisible(lapply(slots, function(op) {
 
-    if (!isTRUE(all.equal(op(scm1),op(scm2)))) {
+    if (!isTRUE(all.equal(op(scm1),op(scm2))) && length(op(scm1))>0) {
 
       meta1 <- intersect(names(op(scm1)), names(op(scm2)))
       meta2 <- intersect(names(op(scm2)), names(op(scm1)))
@@ -144,10 +144,12 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
       stop("There are overlapping regions in your datasets. Each object must contain unique regions. ")
     
     scm <- rbind(scm1, scm2)
+    scm <- sort(scm)
   }
   
   # Merge by col
   if (by == "col") {
+    
     if (any(rownames(scm1@colData) %in% rownames(scm2@colData))) 
       stop("You have the same samples in your datasets. You need different samples for this merging.  ")
     
@@ -160,19 +162,31 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
     colData(scm2)[setdiff(names( colData(scm1)), names(colData(scm2)))] <- NA
       
     scm <- cbind(scm1, scm2)
+
+    # Ensure object is consistent regardless the order of scm1 and scm2
+    ord <- order(colnames(scm))
+    colData(scm) <- colData(scm)[ord , order(names(colData(scm))), drop=FALSE]
+    
+    dimnames(scm)[[2]] <- sort(colnames(scm))
+    
+    for (name in SummarizedExperiment::assayNames(scm)) {
+      assay(scm,name,withDimnames = F) <- assay(scm,name,withDimnames = F)[ , ord]
+    }
   }
   
-  #Remove duplicate experiment metadata
+  #Realize if HDF5
+  if (is_h5(scm)) {
+    for (name in SummarizedExperiment::assayNames(scm)) {
+       assay(scm,name) <- as(assay(scm,name), "HDF5Array")
+    }
+  }
+  
+  # Remove duplicate experiment metadata
   invisible(lapply(c(metadata,int_metadata), function(op) {
     eval(parse(text = eval(expression(paste0(op@generic,"(scm) <<- ",op@generic,"(scm)[unique(names(",op@generic,"(scm)))]")))))
   }))
 
-  
-  # Sort the metadata into alphabetical order (so it ignores the order of scm1 and scm2)
-  colData(scm) <- colData(scm)[ , order(names(colData(scm)))]
-  mcols(scm) <- mcols(scm)[ , order(names(mcols(scm)))]
-  
-  return(sort(scm))
+  return(scm)
 }
 
 #------------------------------------------------------------------------------------------------------------
