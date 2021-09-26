@@ -37,7 +37,6 @@ test_that("bin_scMethrix", {
     #Check the custom transform function  (should be mean, but specified as sum)
     expect_error(bin_scMethrix(scm,trans="Not a trans"))
     
-    
     bin2 <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg",trans = c(bin2 = function(x) sum(x,na.rm=TRUE)), 
                           h5_dir = paste0(h5_dir,"/bin2"),replace=T)
     expect_equal(score(bin),score(bin2), check.attributes = FALSE)

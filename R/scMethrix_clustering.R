@@ -158,6 +158,8 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
 #' @export
 append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
 
+  Row.names <- NULL
+  
   if (!is(scm, "scMethrix")) {
     stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
   }

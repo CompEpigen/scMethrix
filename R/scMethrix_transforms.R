@@ -296,7 +296,6 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       mtx <- mtx[,overlap_indices:=NULL]
 
       assays[[name]] <- as(mtx,class(get_matrix(scm,assay=name)))
-      
     }
     
     if (verbose) message("Bins filled in ",split_time())
@@ -586,6 +585,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
       
       mtx <- data.table(get_matrix(scm,assay=name)) #TODO: Somehow missing rows if not subset, not sure why
       mtx <- setDT(lapply(split.default(mtx, overlaps_indicies$Group), op))[]
+
       assays[[name]] <- as(mtx,class(get_matrix(scm,assay=name)))
       
     }
@@ -614,43 +614,6 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   return (m_obj)
   
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #------------------------------------------------------------------------------------------------------------
 #' Imputes the NA values of a \code{\link{scMethrix}} object.

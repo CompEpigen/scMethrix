@@ -9,7 +9,7 @@ append_colData(scm = NULL, colData = NULL, name = "Data")
 \arguments{
 \item{scm}{scMethrix; Input \code{\link{scMethrix}} object}
 
-\item{colData}{dataframe-like or named vector; For a dataframe-like, Must contain either a column labelled "Sample" or row names that correspond with the input \code{\link{scMethrix}} object. For a named vector, vector names must correspond to the row names of the input \code{\link{scMethrix}} object}
+\item{colData}{dataframe-like or named vector; For a dataframe-like, must contain row names that correspond with the input \code{\link{scMethrix}} object. For a named vector, vector names must correspond to the row names of the input \code{\link{scMethrix}} object}
 
 \item{name}{string; the name of the column for named vector input. Ignored for matrix input}
 }

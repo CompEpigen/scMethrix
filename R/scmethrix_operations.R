@@ -111,10 +111,8 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
   by <- match.arg(arg = by, choices = c("row", "col"), several.ok = FALSE)
   
   # Fix duplicate names in metadata, append if there are common elements that have different values
-  slots <- c(metadata)
-  
-  if (by == "row") slots <- c(slots,colData,int_colData)
-  if (by == "col") slots <- c(slots,mcols,elementMetadata,int_elementMetadata)
+  if (by == "row") slots <- c(metadata,colData,int_colData)
+  if (by == "col") slots <- c(metadata,mcols,elementMetadata,int_elementMetadata)
 
   invisible(lapply(slots, function(op) {
 
@@ -158,8 +156,8 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
       stop("There are non-overlapping regions in your datasets. This function only takes identical regions. ")
 
     # Merge sample metadata. Ensure the column names match, fill with NAs if not
-    colData(scm1)[setdiff(names(colData(scm2)), names( colData(scm1)))] <- NA
-    colData(scm2)[setdiff(names( colData(scm1)), names(colData(scm2)))] <- NA
+    colData(scm1)[setdiff(names(colData(scm2)), names(colData(scm1)))] <- NA
+    colData(scm2)[setdiff(names(colData(scm1)), names(colData(scm2)))] <- NA
       
     scm <- cbind(scm1, scm2)
 

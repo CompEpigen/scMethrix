@@ -22,10 +22,25 @@ Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
 \details{
 Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.
 
-If merging by rows, all CpG sites must be unique and samples must be identical
-If merging by columns, all samples must be unique and CpG sites must be identical.
+Requirements for merging
+\itemize{
+\item If merging by rows, all CpG sites must be unique and samples must be identical
+\item If merging by columns, all samples must be unique and CpG sites must be identical
+}
 
-Metadata will be retained in certain situations. Merging by row will keep the rowRanges metadata, but merging by column will not. For experiment metadata, only metadata from scm1 will be retained. Custom experiment metadata can manually be added via \code{metadata<-}, or to rowRanges via \code{mcols}.
+Metadata will be retained in certain situations:#'
+For row merges:
+- Ranges metadata (\code{mcols()}) will be merged, with missing columns in either assay filled with NAs
+- Sample metadata (\code{colData()}) will attempt to be merged. Overlapping, non-identical columns will be appended with \code{.1} and \code{.2}.
+
+For row merges:
+- Ranges metadata (\code{mcols()}) will attempt to be merged. Overlapping, non-identical columns will be appended with \code{.1} and \code{.2}.
+- Sample metadata (\code{colData()}) will be merged, with missing columns in either assay filled with NAs
+
+For both merges:
+- Experiment metadata (\code{metadata()}) will attempt to be merged. Overlapping, non-identical columns will be appended with \code{.1} and \code{.2}.
+
+Custom experiment metadata can manually be added via \code{metadata() <-}, or to rowRanges via \code{mcols() <-}.
 }
 \examples{
 data('scMethrix_data')

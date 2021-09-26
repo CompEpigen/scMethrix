@@ -20,9 +20,5 @@ An object of class \code{\link{scMethrix}}
 Helper function for masking. All rows in row_idx will be set to NA.
 }
 \details{
-Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
-by putting NA for assay values. The sites will remain in the object and all assays will be affected.
-
-\code{low_threshold} is used to mask sites with low overall cell counts. A site represented by a single sample is typically not useful.
-\code{prop_threshold} is used to mask sites with a low proportional count
+Used with mask_by_sample, mask_by_coverage, and mask_by_variance. It iterates through all assays in the inputted \code{\link{scMethrix}} object and replaces all rows in row_idx with NA.
 }
