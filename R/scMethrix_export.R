@@ -140,56 +140,51 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts") {
 
 #' Exports methrix object as bigWigs
 #' @param scm \code{\link{methrix}} object
-#' @param output_dir Output directory name where the files should be saved. Default getwd()
-#' @param samp_names sample names to export
+#' @param assay string; the assay to export. Default is "score"
+#' @param output_dir string; Output directory name where the files should be saved. Default tempdir()
+#' @param samp_names string; List of sample names to export
 #' @examples
-#' \dontrun{
-#' data('methrix_data')
-#' write_bigwigs(m = methrix_data, output_dir = './temp')
-#' }
+#' data('scMethrix_data')
+#' export_bigwig(scm = scMethrix_data, assay = "score", output_dir = tempdir())
 #' @return NULL
 #' @importFrom rtracklayer export
 #' @export
-# 
-# export_bigwigs = function(scm, output_dir = getwd(), samp_names = NULL){
-# 
-#   if (!is(scm, "scMethrix") || is.null(path)){
-#     stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
-#   }
-# 
-# 
-#   if (!dir.exists(output_dir)) {
-#     dir.create(path = output_dir, showWarnings = FALSE, recursive = TRUE)
-#   }
-# 
-#   mat_gr <- methrix::get_matrix(scm, type = "M", add_loci = TRUE, in_granges = TRUE)
-# 
-#   seql = scm@metadata$chrom_sizes$length
-#   names(seql) = scm@metadata$chrom_sizes$contig
-# 
-#   all_samps = names(mcols(mat_gr))
-# 
-#   if(is.null(samp_names)){
-#     samp_names = all_samps
-#   }else{
-#     samp_names = intersect(samp_names, all_samps)
-#     if(length(samp_names) == 0){
-#       stop("Incorrect sample names!")
-#     }
-#   }
-# 
-#   message("----------------------")
-#   for(samp in samp_names){
-#     op_bw = paste0(output_dir, "/", samp, ".bw")
-#     message("*Writing ", op_bw)
-#     samp_gr = mat_gr[,samp]
-#     names(mcols(samp_gr)) = "score"
-#     samp_gr = samp_gr[!is.na(samp_gr$score)]
-#     seqlengths(samp_gr) = seql[names(seqlengths(samp_gr))]
-#     rtracklayer::export(samp_gr, con = paste0(output_dir, "/", samp, ".bw"), format="bigWig")
-#   }
-#   message("----------------------")
-# }
+export_bigwig = function(scm, assay = "score", output_dir = tempdir(), samp_names = NULL){
+
+  if (!is(scm, "scMethrix") || is.null(path)){
+    stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
+  }
+
+  if (!dir.exists(output_dir)) {
+    dir.create(path = output_dir, showWarnings = FALSE, recursive = TRUE)
+  }
+  
+  message("Generating bigWig files...",start_time())
+  
+  mat_gr <- get_matrix(scm = scm, assay = assay, add_loci = TRUE, in_granges = TRUE)
+  
+  seql = width(range(rowRanges(scm)))
+  names(seql) = levels(seqnames(scm))
+  
+  if(is.null(samp_names)){
+    samp_names = all_samps
+  }else{
+    samp_names = intersect(samp_names, names(mcols(mat_gr)))
+    if(length(samp_names) == 0) stop("Incorrect sample names! No matching samples in the experiment")
+  }
+  
+  for(samp in samp_names){
+    op_bw = paste0(output_dir, "/", samp, ".bw")
+    message("   Writing ", op_bw)
+    samp_gr = mat_gr[,samp]
+    names(mcols(samp_gr)) = "score"
+    samp_gr = samp_gr[!is.na(samp_gr$score)]
+    seqlengths(samp_gr) = seql[names(seqlengths(samp_gr))]
+    rtracklayer::export(samp_gr, con = paste0(output_dir, "/", samp, ".bw"), format="bigWig")
+  }
+  
+  message("Files generated in ",stop_time())
+}
 
 # 
 # export_seurat <- function(scm) {
