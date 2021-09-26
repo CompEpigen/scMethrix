@@ -158,7 +158,7 @@
     </tr>
     <tr>
       <th>colData</th>
-      <td><p>dataframe-like or named vector; For a dataframe-like, Must contain either a column labelled "Sample" or row names that correspond with the input <code><a href='scMethrix-class.html'>scMethrix</a></code> object. For a named vector, vector names must correspond to the row names of the input <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
+      <td><p>dataframe-like or named vector; For a dataframe-like, must contain row names that correspond with the input <code><a href='scMethrix-class.html'>scMethrix</a></code> object. For a named vector, vector names must correspond to the row names of the input <code><a href='scMethrix-class.html'>scMethrix</a></code> object</p></td>
     </tr>
     <tr>
       <th>name</th>
@@ -182,7 +182,7 @@
 <span class='va'>scMethrix_data</span> <span class='op'>&lt;-</span> <span class='fu'>append_colData</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,<span class='va'>colData</span><span class='op'>)</span>
 <span class='fu'>colData</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; DataFrame with 4 rows and 1 column
-#&gt;         Data
+#&gt;      Cluster
 #&gt;    &lt;integer&gt;
 #&gt; C1         1
 #&gt; C2         2
@@ -192,14 +192,14 @@
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
 <span class='va'>colData</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>C1<span class='op'>=</span><span class='fl'>1</span>,C2<span class='op'>=</span><span class='fl'>1</span>,C3<span class='op'>=</span><span class='fl'>1</span>,C4<span class='op'>=</span><span class='fl'>2</span><span class='op'>)</span>
 <span class='va'>scMethrix_data</span> <span class='op'>&lt;-</span> <span class='fu'>append_colData</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,<span class='va'>colData</span>, name<span class='op'>=</span><span class='st'>"Cluster"</span><span class='op'>)</span>
-<span class='fu'>colData</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; DataFrame with 4 rows and 2 columns
-#&gt;         Data   Cluster
-#&gt;    &lt;integer&gt; &lt;numeric&gt;
-#&gt; C1         1         1
-#&gt; C2         2         1
-#&gt; C3         3         1
-#&gt; C4         4         2</div><div class='input'>
+</div><div class='output co'>#&gt; <span class='warning'>Warning: Colnames of colData already exist in scMethrix object (Cluster). These will be overwritten.</span></div><div class='input'><span class='fu'>colData</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; DataFrame with 4 rows and 1 column
+#&gt;      Cluster
+#&gt;    &lt;numeric&gt;
+#&gt; C1         1
+#&gt; C2         1
+#&gt; C3         1
+#&gt; C4         2</div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

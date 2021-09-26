@@ -171,10 +171,7 @@
     <p>An object of class <code><a href='scMethrix-class.html'>scMethrix</a></code></p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Takes <code><a href='scMethrix-class.html'>scMethrix</a></code> object and masks sites with too high or too low coverage
-by putting NA for assay values. The sites will remain in the object and all assays will be affected.</p>
-<p><code>low_threshold</code> is used to mask sites with low overall cell counts. A site represented by a single sample is typically not useful.
-<code>prop_threshold</code> is used to mask sites with a low proportional count</p>
+    <p>Used with mask_by_sample, mask_by_coverage, and mask_by_variance. It iterates through all assays in the inputted <code><a href='scMethrix-class.html'>scMethrix</a></code> object and replaces all rows in row_idx with NA.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

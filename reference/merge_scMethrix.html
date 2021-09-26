@@ -172,9 +172,21 @@
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>Merges the assay data from two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.</p>
-<p>If merging by rows, all CpG sites must be unique and samples must be identical
-If merging by columns, all samples must be unique and CpG sites must be identical.</p>
-<p>Metadata will be retained in certain situations. Merging by row will keep the rowRanges metadata, but merging by column will not. For experiment metadata, only metadata from scm1 will be retained. Custom experiment metadata can manually be added via <code>metadata&lt;-</code>, or to rowRanges via <code>mcols</code>.</p>
+<p>Requirements for merging</p><ul>
+<li><p>If merging by rows, all CpG sites must be unique and samples must be identical</p></li>
+<li><p>If merging by columns, all samples must be unique and CpG sites must be identical</p></li>
+</ul>
+
+<p>Metadata will be retained in certain situations:#'
+For row merges:
+- Ranges metadata (<code>mcols()</code>) will be merged, with missing columns in either assay filled with NAs
+- Sample metadata (<code>colData()</code>) will attempt to be merged. Overlapping, non-identical columns will be appended with <code>.1</code> and <code>.2</code>.</p>
+<p>For row merges:
+- Ranges metadata (<code>mcols()</code>) will attempt to be merged. Overlapping, non-identical columns will be appended with <code>.1</code> and <code>.2</code>.
+- Sample metadata (<code>colData()</code>) will be merged, with missing columns in either assay filled with NAs</p>
+<p>For both merges:
+- Experiment metadata (<code>metadata()</code>) will attempt to be merged. Overlapping, non-identical columns will be appended with <code>.1</code> and <code>.2</code>.</p>
+<p>Custom experiment metadata can manually be added via <code>metadata() &lt;-</code>, or to rowRanges via <code>mcols() &lt;-</code>.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
