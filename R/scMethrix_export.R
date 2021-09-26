@@ -13,9 +13,9 @@
 #' @return nothing
 #' @examples
 #' data('scMethrix_data')
-#' export_bed(scMethrix_data,path=paste0(tempdir(),"/export"))
+#' export_beds(scMethrix_data,path=paste0(tempdir(),"/export"))
 #' @export
-export_bed <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE, include = FALSE, na.rm = TRUE, header = FALSE) {
+export_beds <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE, include = FALSE, na.rm = TRUE, header = FALSE) {
   
   meth <- cov <- NULL
   
@@ -113,6 +113,7 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
 #' @param c_assay matrix; the assay containing count scores
 #' @return An object of class \code{bsseq}
 #' @examples
+#' \dontrun{
 #' data('scMethrix_data')
 #' export_bsseq(scMethrix_data)
 #' }
@@ -138,18 +139,21 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts") {
   return(b)
 }
 
-#' Exports methrix object as bigWigs
-#' @param scm \code{\link{methrix}} object
+#' Exports scMethrix object as bigWigs
+#' @param scm \code{\link{scMethrix}} object
 #' @param assay string; the assay to export. Default is "score"
 #' @param output_dir string; Output directory name where the files should be saved. Default tempdir()
 #' @param samp_names string; List of sample names to export
 #' @examples
+#' \dontrun{
 #' data('scMethrix_data')
-#' export_bigwig(scm = scMethrix_data, assay = "score", output_dir = tempdir())
+#' export_bigwigs(scm = scMethrix_data, assay = "score", output_dir = tempdir())
+#' }
 #' @return NULL
 #' @importFrom rtracklayer export
+#' @importFrom GenomeInfoDb seqlengths
 #' @export
-export_bigwig = function(scm, assay = "score", output_dir = tempdir(), samp_names = NULL){
+export_bigwigs = function(scm, assay = "score", output_dir = tempdir(), samp_names = NULL){
 
   if (!is(scm, "scMethrix") || is.null(path)){
     stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
@@ -167,7 +171,7 @@ export_bigwig = function(scm, assay = "score", output_dir = tempdir(), samp_name
   names(seql) = levels(seqnames(scm))
   
   if(is.null(samp_names)){
-    samp_names = all_samps
+    samp_names = names(mcols(mat_gr))
   }else{
     samp_names = intersect(samp_names, names(mcols(mat_gr)))
     if(length(samp_names) == 0) stop("Incorrect sample names! No matching samples in the experiment")
@@ -179,7 +183,7 @@ export_bigwig = function(scm, assay = "score", output_dir = tempdir(), samp_name
     samp_gr = mat_gr[,samp]
     names(mcols(samp_gr)) = "score"
     samp_gr = samp_gr[!is.na(samp_gr$score)]
-    seqlengths(samp_gr) = seql[names(seqlengths(samp_gr))]
+    GenomeInfoDb::seqlengths(samp_gr) = seql[names(GenomeInfoDb::seqlengths(samp_gr))]
     rtracklayer::export(samp_gr, con = paste0(output_dir, "/", samp, ".bw"), format="bigWig")
   }
   
