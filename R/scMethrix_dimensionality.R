@@ -13,17 +13,12 @@
 #' data('scMethrix_data')
 #' reduce_cpgs(scMethrix_data)
 #' @export
-reduce_cpgs <- function(scm, assay = "score", var = "top", top_var = 1000, na.rm = FALSE, verbose = FALSE) {
+reduce_cpgs <- function(scm, assay = "score", var =  c("top", "rand"), top_var = 1000, na.rm = FALSE, verbose = FALSE) {
 
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
-  }
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
   
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
-    stop("Assay does not exist in the object", call. = FALSE)
-  }
-
-  var_select <- match.arg(var, c("top", "rand"))
+  var = arg.match(reduce_cpgs,var)
   
   if (verbose) message("Generating reduced dataset...")
   
@@ -34,7 +29,7 @@ reduce_cpgs <- function(scm, assay = "score", var = "top", top_var = 1000, na.rm
     
     top_var <- as.integer(as.character(top_var))
     
-    if (var_select == "rand") {
+    if (var == "rand") {
       message("Random CpGs within provided GRanges will be used for the reduction")
       meth_sub <- get_matrix(scm = scm, assay = assay, add_loci = FALSE)
       ids <- sample(x = 1:nrow(meth_sub), replace = FALSE, size = min(top_var, nrow(meth_sub)))
@@ -91,6 +86,11 @@ reduce_cpgs <- function(scm, assay = "score", var = "top", top_var = 1000, na.rm
 #' 
 #' @export
 dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), var = "top", top_var = 1000, perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
+  
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
+  
+  type = arg.match(dim_red_scMethrix,type)
   
   if (verbose) message("Starting imputation...",start_time())
   

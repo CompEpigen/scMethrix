@@ -18,18 +18,12 @@
 #' fun <- bioDist::spearman.dist
 #' get_distance_matrix(scMethrix_data,assay = "impute",type = bioDist::spearman.dist)
 #' @export
-get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE) {
+get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman", "kendall", "euclidean", "manhattan", "canberra", "binary", "minkowski"),verbose=TRUE) {
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
-    stop("Assay does not exist in the object", call. = FALSE)
-  }
-
-  if (typeof(type) != "closure" && !(type %in% c("pearson", "spearman", "kendall", "euclidean", "manhattan", "canberra", "binary", "minkowski"))) stop("Invalid type of distance calculation")
-  
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
+  if (typeof(type) != "closure") type = arg.match(get_distance_matrix,type)
+    
   mtx <- as.matrix(t(get_matrix(scm,assay=assay)))
   
   if (any(is.na(mtx))) stop("There are NA values present in the matrix. Please fill/impute/bin to remove NAs.")
@@ -60,7 +54,7 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object. If this is specified the distance matrix will be a generic \code{\link[bioDist]{spearman.dist}} distance
 #' @param dist dist; Optional. A distance matrix generated for an assay. Will use default paramaters for \code{\link{get_distance_matrix}}.
 #' @param assay string; The assay to use. Default is 'score'
-#' @param type string; The type of distance metric to use. Available options are 'hierarchical', 'partition', "model". An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. \code{c(C1=1,C2=1,C3=1,C4=2)})
+#' @param type string; The type of distance metric to use. Available options are 'hierarchical', 'partition', "model". An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. \code{c(C1=1,C2=1,C3=1,C4=2)}).
 #' @param n_clusters integer; the desired number of clusters. This is ignored for model-based clustering
 #' @param colname string; the name of the colData column that contains the cluster information
 #' @param verbose boolean; flag to output messages or not
@@ -85,20 +79,14 @@ get_distance_matrix <- function(scm, assay="score",type="euclidean",verbose=TRUE
 #' fun(dist) # Example of arbitrary function output 
 #' cluster_scMethrix(scMethrix_data, dist = dist, type = fun)
 #' @export
-cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay="score", colname = "Cluster", verbose = TRUE, type="heir", ...) {
+cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay="score", colname = "Cluster", verbose = TRUE, type=c("hierarchical", "partition", "model"), ...) {
 
   Cluster <- Sample <- NULL
-  
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
-    stop("Assay does not exist in the object", call. = FALSE)
-  }
-  
-  if (typeof(type) != "closure" && !(type %in% c("heir", "part", "model"))) stop("Invalid type of clustering")
-  
+
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
+  if (typeof(type) != "closure") type = arg.match(cluster_scMethrix,type)
+
   if (is.null(dist)) dist <- get_distance_matrix(scm, assay=assay)
   
   if (is.null(n_clusters)) n_clusters = attr(dist,"Size")
@@ -106,11 +94,11 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
   if (typeof(type) == "closure") {
     fit <- type(dist)
     colData <- data.frame(Sample = names(fit), Cluster = fit)
-  } else if (type=="heir") {
+  } else if (type=="hierarchical") {
     fit <- stats::hclust(dist, method="ward.D", ...)
     fit <- stats::cutree(fit, k=n_clusters)
     colData <- data.frame(Sample = names(fit), Cluster = fit)
-  } else if (type=="part") {
+  } else if (type=="partition") {
     fit <- stats::kmeans(dist, centers = min(n_clusters,attr(dist,"Size")-1)) # Max clusters = nrow(scm)-1
     colData <- data.frame(Sample = names(fit$cluster), Cluster = fit$cluster)
   } else if (type == "model") {
@@ -160,9 +148,7 @@ append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
 
   Row.names <- NULL
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
 
   # Convert vector to data.frame
   if (is.vector(colData)) {

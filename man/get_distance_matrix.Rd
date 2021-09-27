@@ -4,7 +4,13 @@
 \alias{get_distance_matrix}
 \title{Get the pair-wise distance matrix for an assay}
 \usage{
-get_distance_matrix(scm, assay = "score", type = "euclidean", verbose = TRUE)
+get_distance_matrix(
+  scm,
+  assay = "score",
+  type = c("pearson", "spearman", "kendall", "euclidean", "manhattan", "canberra",
+    "binary", "minkowski"),
+  verbose = TRUE
+)
 }
 \arguments{
 \item{scm}{scMethrix; Input \code{\link{scMethrix}} object}

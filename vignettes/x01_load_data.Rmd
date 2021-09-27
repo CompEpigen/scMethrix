@@ -15,7 +15,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r message=FALSE, warning=FALSE, eval=T}
+```{r message=FALSE, warning=FALSE, eval=F}
 #Load library
 library(scMethrix)
 ```
@@ -29,19 +29,19 @@ Reference: Luo C, Keown CL, Kurihara L, Zhou J et al. Single-cell methylomes ide
 
 The data can be directly downloaded from GEO, using the `GEOquery` package. The files will be downloaded into the working directory. 
 
-```{r message=FALSE, warning=FALSE, eval=T}
+```{r message=FALSE, warning=FALSE, eval=F}
 if(!requireNamespace("GEOquery")) {
   BiocManager::install("GEOquery")
 }
 library(GEOquery)  
 ```
 
-```{r message=FALSE, warning=FALSE, eval=T}
+```{r message=FALSE, warning=FALSE, eval=F}
 data_dir = paste0(tempdir(),"/GSE97179/")
 dir.create(path = data_dir, showWarnings = FALSE, recursive = TRUE)
 ```
 
-```{r cache=T}
+```{r eval=F}
 lapply(c("GSM2553093", "GSM2553095", "GSM2553097", "GSM2553099", "GSM2553101", "GSM2553103"), function(gsm){
   filePaths <-  GEOquery::getGEOSuppFiles(GEO = gsm, baseDir = data_dir, makeDirectory = TRUE)
   

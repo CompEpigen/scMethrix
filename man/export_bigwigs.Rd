@@ -4,19 +4,16 @@
 \alias{export_bigwigs}
 \title{Exports scMethrix object as bigWigs}
 \usage{
-export_bigwigs(scm, assay = "score", output_dir = tempdir(), samp_names = NULL)
+export_bigwigs(scm, assay = "score", path = tempdir(), samp_names = NULL)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}} object}
 
 \item{assay}{string; the assay to export. Default is "score"}
 
-\item{output_dir}{string; Output directory name where the files should be saved. Default tempdir()}
+\item{path}{string; Output directory name where the files should be saved. Default tempdir()}
 
 \item{samp_names}{string; List of sample names to export}
-}
-\value{
-nothing
 }
 \description{
 Exports scMethrix object as bigWigs

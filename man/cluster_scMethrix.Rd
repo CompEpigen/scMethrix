@@ -11,7 +11,7 @@ cluster_scMethrix(
   assay = "score",
   colname = "Cluster",
   verbose = TRUE,
-  type = "heir",
+  type = c("hierarchical", "partition", "model"),
   ...
 )
 }
@@ -28,7 +28,7 @@ cluster_scMethrix(
 
 \item{verbose}{boolean; flag to output messages or not}
 
-\item{type}{string; The type of distance metric to use. Available options are 'hierarchical', 'partition', "model". An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. \code{c(C1=1,C2=1,C3=1,C4=2)})}
+\item{type}{string; The type of distance metric to use. Available options are 'hierarchical', 'partition', "model". An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. \code{c(C1=1,C2=1,C3=1,C4=2)}).}
 
 \item{...}{Additional parameters for the clustering functions}
 }

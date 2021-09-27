@@ -26,7 +26,7 @@ Additional arguments to use HDF5:
   * h5_dir --> a directory to save the final object. It is possible to save the object later. It increases the processing time significantly.  
   * h5_temp --> a temporary directory to use during data processing. Set this if for example the default temporary location doesn't have enough free space to store the temporary data. 
 
-```{r hdf5_read_in, eval=TRUE, include=TRUE, eval=F}
+```{r hdf5_read_in, include=TRUE, eval=F}
 meth <- read_beds(
   files = bed_files,
   ref_cpgs = mm19_cpgs,

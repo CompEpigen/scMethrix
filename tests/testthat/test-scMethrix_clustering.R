@@ -15,7 +15,7 @@ test_that("get_distance_matrix", {
       scm <- impute_regions(scm) 
     }
     
-    expect_error(get_distance_matrix(scm,assay="impute",type="not a metric"),"Invalid type of distance calculation")
+    expect_error(get_distance_matrix(scm,assay="impute",type="not a metric"),"Invalid input")
     
     invisible(lapply(types, function(metric) {
       dist <- get_distance_matrix(scm, assay="impute",type=metric)
@@ -29,7 +29,7 @@ test_that("get_distance_matrix", {
 
 test_that("cluster_scMethrix", {
   
-  types = c("heir", "part", "model")
+  types = c("hier", "part", "model")
   name = "Cluster"
   n_clusters = 3
   
@@ -46,7 +46,7 @@ test_that("cluster_scMethrix", {
       scm <- impute_regions(scm) 
     }
     
-    expect_error(cluster_scMethrix(scm,assay="impute",type="not a type"), "Invalid type of clustering")
+    expect_error(cluster_scMethrix(scm,assay="impute",type="not a type"), "Invalid input")
     
     #dist <- get_distance_matrix(scm, assay="impute")
 

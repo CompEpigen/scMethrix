@@ -4,7 +4,7 @@
 \alias{export_bsseq}
 \title{Convert \code{\link{scMethrix}} to \code{bsseq} object}
 \usage{
-export_bsseq(scm, m_assay = "score", c_assay = "counts")
+export_bsseq(scm, m_assay = "score", c_assay = "counts", path = NULL)
 }
 \arguments{
 \item{scm}{\code{\link{methrix}} object}
@@ -12,6 +12,8 @@ export_bsseq(scm, m_assay = "score", c_assay = "counts")
 \item{m_assay}{matrix; the assay containing methylation scores}
 
 \item{c_assay}{matrix; the assay containing count scores}
+
+\item{path}{string; the path of the export directory}
 }
 \value{
 An object of class \code{bsseq}

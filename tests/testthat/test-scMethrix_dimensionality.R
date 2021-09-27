@@ -4,7 +4,7 @@ test_that("reduce_cpgs", {
     
     expect_error(reduce_cpgs(scm="not scMethrix"),"A valid scMethrix object needs to be supplied")
     expect_error(reduce_cpgs(scm,assay="not an assay"),"Assay does not exist in the object")
-    expect_error(reduce_cpgs(scm,var="not a var"),"'arg' should be one of")
+    expect_error(reduce_cpgs(scm,var="not a var"),"Invalid input")
     expect_error(reduce_cpgs(scm,top_var = 0,var="top"),"Zero loci available post NA removal")
     
     expect_equal(reduce_cpgs(scm,top_var = NULL),score(scm))

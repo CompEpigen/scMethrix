@@ -10,21 +10,12 @@
 #' @export
 transform_assay <- function(scm, assay = "score", new_assay = NULL, trans = NULL, h5_temp = NULL) {
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  if (typeof(trans) != "closure") stop("A valid transform function must be specified.", call. = FALSE)
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
   
-  if (typeof(trans) != "closure") {
-    stop("A valid transform function must be specified.", call. = FALSE)
-  }
-  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
-    stop("Assay does not exist in the object", call. = FALSE)
-  }
-  
-  if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
+  if (new_assay %in% SummarizedExperiment::assayNames(scm)) 
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
-  }
   
   if (is_h5(scm)) {
     
@@ -84,12 +75,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 
   yid <- NULL
 
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
   if (is.null(h5_dir) && is_h5(scm)) stop("Output directory must be specified")
-  
   if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
   
   if (is.null(trans[["counts"]])) {
@@ -98,7 +85,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
  # if (is_h5(scm) && is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
   
-  bin_by = match.arg(arg = bin_by, choices = c("bp","cpg"))
+  bin_by = arg.match(bin_scMethrix,bin_by)
   
   if (verbose) message("Binning experiment...")
   
@@ -520,19 +507,14 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   
   Group <- NULL
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (!(colname %in% colnames(colData(scm)))) {
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  if (!(colname %in% colnames(colData(scm)))) 
     stop("Cannot find column `",colname,"` in colData (Avail: ",paste(names(colData(scm)),collapse=", "),")")
-  }
   
   #if (is.null(h5_dir) && is_h5(scm)) stop("Output directory must be specified")
   
-  if (is.null(trans[["counts"]])) {
+  if (is.null(trans[["counts"]])) 
     trans <- c(trans, c(counts = function(x) rowSums(x,na.rm=TRUE)))#DelayedMatrixStats::rowSums2(x,na.rm=TRUE)))
-  }
   
   if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
   
@@ -631,23 +613,15 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   
   . <- NULL
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
-    stop("Assay does not exist in the object", call. = FALSE)
-  }
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm)))  stop("Assay does not exist in the object", call. = FALSE)
   
   if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
     if (new_assay == "score") stop("Cannot overwrite the score assay")
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   }
   
-  if (is_h5(scm)) {
-    warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
-  }
+  if (is_h5(scm)) warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
   
   scm <- transform_assay(scm, assay = assay, new_assay = "binary", trans = binarize)
 
@@ -734,26 +708,21 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @references Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
 #' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
 impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regions = NULL, n_chunks = 1, 
-                               n_threads = 1, overlap_type="within", type="kNN", verbose = TRUE, k=10, n_pc=2,...) {
+                               n_threads = 1, overlap_type="within", type=c("kNN","iPCA","RF"), verbose = TRUE, k=10, n_pc=2,...) {
   
   yid <- NULL
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
-    stop("Assay does not exist in the object", call. = FALSE)
-  }
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
   
   if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
     if (new_assay == "score") stop("Cannot overwrite the score assay")
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   }
   
-  if (is_h5(scm)) {
-    warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation. This is very memory-instensive.")
-  }
+  type = arg.match(impute_regions,type)
+  
+  if (is_h5(scm)) warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
 
   if (verbose) message("Starting imputation by ",type,start_time())
   
@@ -824,13 +793,10 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
 #' generate_training_set(scMethrix_data, training_prop = 0.2)
 #' @export
 generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123") {
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
   
-  if (training_prop > 1 || training_prop < 0) {
-    stop("training_prop must in the range of [0,1]", call. = FALSE)
-  }
+  if (training_prop > 1 || training_prop < 0) stop("training_prop must in the range of [0,1]", call. = FALSE)
+  
   set.seed(seed)
   idx <- sort(sample(1:nrow(scm),floor(nrow(scm)*training_prop)))
   
@@ -855,9 +821,7 @@ generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123")
 #' @export
 generate_random_subset <- function(scm = NULL, n_cpgs = 10000, seed = "123") {
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
   
   if (n_cpgs > nrow(scm) || n_cpgs < 1) {
     n_cpgs = max(1,n_cpgs)

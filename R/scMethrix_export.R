@@ -111,6 +111,7 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
 #' @param scm \code{\link{methrix}} object
 #' @param m_assay matrix; the assay containing methylation scores
 #' @param c_assay matrix; the assay containing count scores
+#' @param path string; the path of the export directory
 #' @return An object of class \code{bsseq}
 #' @examples
 #' \dontrun{
@@ -118,11 +119,9 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
 #' export_bsseq(scMethrix_data)
 #' }
 #' @export
-export_bsseq <- function(scm, m_assay = "score", c_assay="counts") {
+export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) {
 
-  if (!is(scm, "scMethrix") || is.null(path)){
-    stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
-  }
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
   
   if (!has_cov(scm)) stop("BSSeq requires a coverage matrix.", call. = FALSE)
 
@@ -142,7 +141,7 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts") {
 #' Exports scMethrix object as bigWigs
 #' @param scm \code{\link{scMethrix}} object
 #' @param assay string; the assay to export. Default is "score"
-#' @param output_dir string; Output directory name where the files should be saved. Default tempdir()
+#' @param path string; Output directory name where the files should be saved. Default tempdir()
 #' @param samp_names string; List of sample names to export
 #' @examples
 #' \dontrun{
@@ -153,14 +152,14 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts") {
 #' @importFrom rtracklayer export
 #' @importFrom GenomeInfoDb seqlengths
 #' @export
-export_bigwigs = function(scm, assay = "score", output_dir = tempdir(), samp_names = NULL){
+export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = NULL){
 
   if (!is(scm, "scMethrix") || is.null(path)){
     stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
   }
 
-  if (!dir.exists(output_dir)) {
-    dir.create(path = output_dir, showWarnings = FALSE, recursive = TRUE)
+  if (!dir.exists(path)) {
+    dir.create(path = path, showWarnings = FALSE, recursive = TRUE)
   }
   
   message("Generating bigWig files...",start_time())
@@ -178,25 +177,22 @@ export_bigwigs = function(scm, assay = "score", output_dir = tempdir(), samp_nam
   }
   
   for(samp in samp_names){
-    op_bw = paste0(output_dir, "/", samp, ".bw")
+    op_bw = paste0(path, "/", samp, ".bw")
     message("   Writing ", op_bw)
     samp_gr = mat_gr[,samp]
     names(mcols(samp_gr)) = "score"
     samp_gr = samp_gr[!is.na(samp_gr$score)]
     GenomeInfoDb::seqlengths(samp_gr) = seql[names(GenomeInfoDb::seqlengths(samp_gr))]
-    rtracklayer::export(samp_gr, con = paste0(output_dir, "/", samp, ".bw"), format="bigWig")
+    rtracklayer::export(samp_gr, con = paste0(path, "/", samp, ".bw"), format="bigWig")
   }
   
   message("Files generated in ",stop_time())
 }
 
 
-export_seurat <- function(scm,assay="score") {
-
-  if (!is(scm, "scMethrix") || is.null(path)){
-    stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
-  }
+export_seurat <- function(scm,assay="score", path = NULL) {
   
+  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
   if (!has_cov(scm)) stop("Seurat requires a coverage matrix.", call. = FALSE)
   
   cnt <- counts(scm)
@@ -207,8 +203,8 @@ export_seurat <- function(scm,assay="score") {
   rownames(scr) <- paste0("CpG",1:nrow(scr))
   scr[is.na(scr)] <- 0
   
-  seur <- CreateSeuratObject(counts = cnt, meta.data = as.data.frame(colData(scm)))
-  seur <- SetAssayData(object = seur, slot = "data", new.data = scr)
+  seur <- Seurat::CreateSeuratObject(counts = cnt, meta.data = as.data.frame(colData(scm)))
+  seur <- Seurat::SetAssayData(object = seur, slot = "data", new.data = scr)
   
   return(seur)
 }

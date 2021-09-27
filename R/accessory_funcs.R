@@ -378,3 +378,22 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
                 has_cov = has_cov,
                 select = FALSE))
 }
+
+#' Allows partial pattern matching in a responsive manner
+#' @details Check the parent function input arguments to see whether the inputted value is part of the set. Will return a formatted error message with the incorrect variable name and all the acceptable inputs
+#' @param parent closure; the parent function in which to check the input
+#' @param arg varibale; the variable in which to check
+#' @return arg, if the value is in the function definition.
+arg.match <- function(parent,arg) {
+  
+  sub = substitute(arg)
+  arg <- tryCatch(
+    {
+      match.arg(arg = arg, choices = eval(formals(parent)[[sub]]))
+    },
+    error=function(cond) {
+      stop(paste0("Invalid input for '",paste(sub),"'. Must match one of '",paste0(eval(formals(parent)[[sub]]), collapse="', '"),"'"), call. = FALSE)
+    }
+  )    
+  return(arg)
+}
