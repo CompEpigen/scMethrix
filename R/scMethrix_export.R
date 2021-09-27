@@ -190,10 +190,25 @@ export_bigwigs = function(scm, assay = "score", output_dir = tempdir(), samp_nam
   message("Files generated in ",stop_time())
 }
 
-# 
-# export_seurat <- function(scm) {
-# 
-#   if (!is(scm, "scMethrix") || is.null(path)){
-#     stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
-#   }
-# }
+
+export_seurat <- function(scm,assay="score") {
+
+  if (!is(scm, "scMethrix") || is.null(path)){
+    stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
+  }
+  
+  if (!has_cov(scm)) stop("Seurat requires a coverage matrix.", call. = FALSE)
+  
+  cnt <- counts(scm)
+  rownames(cnt) <- paste0("CpG",1:nrow(cnt))
+  cnt[is.na(cnt)] <- 0
+  
+  scr <- get_matrix(scm = scm, assay = assay)
+  rownames(scr) <- paste0("CpG",1:nrow(scr))
+  scr[is.na(scr)] <- 0
+  
+  seur <- CreateSeuratObject(counts = cnt, meta.data = as.data.frame(colData(scm)))
+  seur <- SetAssayData(object = seur, slot = "data", new.data = scr)
+  
+  return(seur)
+}
