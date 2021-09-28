@@ -1,11 +1,9 @@
 test_that("is_h5",{
-  expect_error(is_h5("not a scMethrix"),"A valid scMethrix object needs to be supplied.")
   expect_true(is_h5(scm.h5))
   expect_false(is_h5(scm.mem))
 })
 
 test_that("has_cov",{
-  expect_error(has_cov("not a scMethrix"),"A valid scMethrix object needs to be supplied.")
   expect_true(has_cov(scm.mem))
   expect_false(has_cov(remove_assay(scm.mem,assay="counts")))
 })
@@ -94,4 +92,10 @@ test_that("subset_ref_cpgs",{
   
   expect_equal(ref_cpgs[1:3,],sub_cpgs)
   
+})
+
+test_that("check.scm",{
+  expect_error(check.scm("not scMethrix"),msg.check.scm)
+  expect_true(check.scm(scm.mem))
+  expect_true(check.scm(scm.h5))
 })

@@ -20,8 +20,8 @@
 #' @export
 get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman", "kendall", "euclidean", "manhattan", "canberra", "binary", "minkowski"),verbose=TRUE) {
   
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
+  check.scm(scm)
+  assay <- assay.match(scm,assay)
   if (typeof(type) != "closure") type = arg.match(get_distance_matrix,type)
     
   mtx <- as.matrix(t(get_matrix(scm,assay=assay)))
@@ -83,8 +83,8 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
 
   Cluster <- Sample <- NULL
 
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
+  check.scm(scm)
+  assay <- assay.match(scm,assay)
   if (typeof(type) != "closure") type = arg.match(cluster_scMethrix,type)
 
   if (is.null(dist)) dist <- get_distance_matrix(scm, assay=assay)
@@ -148,7 +148,7 @@ append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
 
   Row.names <- NULL
   
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  check.scm(scm)
 
   # Convert vector to data.frame
   if (is.vector(colData)) {

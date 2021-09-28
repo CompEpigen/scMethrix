@@ -10,9 +10,9 @@
 #' @export
 transform_assay <- function(scm, assay = "score", new_assay = NULL, trans = NULL, h5_temp = NULL) {
   
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  check.scm(scm)
   if (typeof(trans) != "closure") stop("A valid transform function must be specified.", call. = FALSE)
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
+  assay <- assay.match(scm,assay)
   
   if (new_assay %in% SummarizedExperiment::assayNames(scm)) 
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
@@ -75,7 +75,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 
   yid <- NULL
 
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  check.scm(scm)
   if (is.null(h5_dir) && is_h5(scm)) stop("Output directory must be specified")
   if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
   
@@ -507,7 +507,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   
   Group <- NULL
   
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  check.scm(scm)
   if (!(colname %in% colnames(colData(scm)))) 
     stop("Cannot find column `",colname,"` in colData (Avail: ",paste(names(colData(scm)),collapse=", "),")")
   
@@ -613,8 +613,8 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   
   . <- NULL
   
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm)))  stop("Assay does not exist in the object", call. = FALSE)
+  check.scm(scm)
+  assay <- assay.match(scm,assay)
   
   if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
     if (new_assay == "score") stop("Cannot overwrite the score assay")
@@ -712,8 +712,8 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   
   yid <- NULL
   
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
+  check.scm(scm)
+  assay <- assay.match(scm,assay)
   
   if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
     if (new_assay == "score") stop("Cannot overwrite the score assay")
@@ -793,7 +793,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
 #' generate_training_set(scMethrix_data, training_prop = 0.2)
 #' @export
 generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123") {
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  check.scm(scm)
   
   if (training_prop > 1 || training_prop < 0) stop("training_prop must in the range of [0,1]", call. = FALSE)
   
@@ -821,7 +821,7 @@ generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123")
 #' @export
 generate_random_subset <- function(scm = NULL, n_cpgs = 10000, seed = "123") {
   
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  check.scm(scm)
   
   if (n_cpgs > nrow(scm) || n_cpgs < 1) {
     n_cpgs = max(1,n_cpgs)

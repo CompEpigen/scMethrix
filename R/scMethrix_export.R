@@ -19,8 +19,10 @@ export_beds <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE, 
   
   meth <- cov <- NULL
   
-  if (!is(scm, "scMethrix") || is.null(path)){
-    stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
+  check.scm(scm)
+  
+  if (is.null(path)){
+    stop("A valid path needs to be supplied.", call. = FALSE)
   }
   
   if (verbose) message("Exporting beds to ",path,start_time())
@@ -121,7 +123,7 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
 #' @export
 export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) {
 
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  check.scm(scm)
   
   if (!has_cov(scm)) stop("BSSeq requires a coverage matrix.", call. = FALSE)
 
@@ -154,8 +156,10 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) 
 #' @export
 export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = NULL){
 
-  if (!is(scm, "scMethrix") || is.null(path)){
-    stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
+  check.scm(scm)
+  
+  if (is.null(path)){
+    stop("A valid path needs to be supplied.", call. = FALSE)
   }
 
   if (!dir.exists(path)) {
@@ -192,7 +196,7 @@ export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = N
 
 export_seurat <- function(scm,assay="score", path = NULL) {
   
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
+  check.scm(scm)
   if (!has_cov(scm)) stop("Seurat requires a coverage matrix.", call. = FALSE)
   
   cnt <- counts(scm)

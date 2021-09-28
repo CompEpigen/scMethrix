@@ -3,11 +3,13 @@ test_that("get_distance_matrix", {
   types = c("pearson", "spearman", "kendall", "euclidean", 
             "manhattan", "canberra", "binary", "minkowski")
   
+  expect_error(get_distance_matrix("not scMethrix"),msg.check.scm)
+  
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
-    expect_error(get_distance_matrix(scm="not scMethrix"),"A valid scMethrix object needs to be supplied")
+    expect_error(get_distance_matrix(scm="not scMethrix"),msg.check.scm)
     expect_error(get_distance_matrix(scm),"There are NA values present")
-    expect_error(get_distance_matrix(scm,assay="not an assay"),"Assay does not exist")
+    expect_error(get_distance_matrix(scm,assay="not an assay"),msg.assay.match)
     
     if (is_h5(scm)) {
       expect_warning(scm <- impute_regions(scm), "Imputation cannot be done on HDF5 data.")
@@ -33,12 +35,12 @@ test_that("cluster_scMethrix", {
   name = "Cluster"
   n_clusters = 3
   
-  expect_error(cluster_scMethrix(scm="not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(cluster_scMethrix("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
-    expect_error(cluster_scMethrix(scm="not scMethrix"),"A valid scMethrix object needs to be supplied")
-    expect_error(cluster_scMethrix(scm,assay="not an assay"),"Assay does not exist")
+    expect_error(cluster_scMethrix(scm="not scMethrix"),msg.check.scm)
+    expect_error(cluster_scMethrix(scm,assay="not an assay"),msg.assay.match)
     
     if (is_h5(scm)) {
       expect_warning(scm <- impute_regions(scm), "Imputation cannot be done on HDF5 data.")
@@ -72,7 +74,7 @@ test_that("cluster_scMethrix", {
 
 test_that("append_colData", {
 
-  expect_error(append_colData(scm="not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(append_colData("not scMethrix"),msg.check.scm)
   #expect_error(append_colData(scm=scm.mem, colData=NULL),"A valid colData object must be supplied")
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {

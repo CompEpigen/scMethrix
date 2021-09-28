@@ -1,5 +1,6 @@
 test_that("prepare_plot_data", {
-  expect_error(prepare_plot_data("not scMethrix") ,"A valid scMethrix object needs to be supplied")
+  expect_error(get_region_summary("not scMethrix"),msg.check.scm)
+  
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(prepare_plot_data(scm, n_cpgs = "not an int"),"n_cpgs must be numeric.")
     expect_error(prepare_plot_data(scm, regions = "not a range"),"Invalid input class for regions. Must be a GRanges or data.frame-like")
@@ -40,9 +41,9 @@ test_that("plot_sparsity", {
 })
 
 test_that("plot_stats", {
- # expect_error(plot_stats("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(plot_stats("not scMethrix"),msg.check.scm)
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    plot = plot_stats(get_stats(scm))
+    plot = plot_stats(scm)
     expect_true("ggplot" %in% class(plot))
     expect_equal(sort(unique(plot$data$Sample_Name)),sort(colnames(scm)))
     expect_equal(sort(unique(plot$data$Chromosome)),sort(levels(seqnames(scm))))
@@ -50,7 +51,7 @@ test_that("plot_stats", {
 })
 
 test_that("plot_dim_red", {
-  
+  expect_error(plot_dim_red("not scMethrix"),msg.check.scm)
   #PCA
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     plot <- plot_dim_red(dim_red_scMethrix(scm,type = "PCA"),dim_red="PCA")

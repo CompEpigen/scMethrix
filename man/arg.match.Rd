@@ -2,7 +2,7 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{arg.match}
 \alias{arg.match}
-\title{Allows partial pattern matching in a responsive manner}
+\title{Allows partial pattern matching of function arguements in a responsive manner}
 \usage{
 arg.match(parent, arg)
 }
@@ -15,7 +15,7 @@ arg.match(parent, arg)
 arg, if the value is in the function definition.
 }
 \description{
-Allows partial pattern matching in a responsive manner
+Allows partial pattern matching of function arguements in a responsive manner
 }
 \details{
 Check the parent function input arguments to see whether the inputted value is part of the set. Will return a formatted error message with the incorrect variable name and all the acceptable inputs

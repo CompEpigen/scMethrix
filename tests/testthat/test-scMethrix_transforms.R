@@ -1,6 +1,6 @@
 test_that("bin_scMethrix", {
 
-  expect_error(bin_scMethrix("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(bin_scMethrix("not scMethrix"),msg.check.scm)
   expect_error(bin_scMethrix(scm.h5),"Output directory must be specified")
 
   path <- paste0(h5_dir,"bin")
@@ -54,7 +54,7 @@ test_that("bin_scMethrix", {
 
 test_that("collapse_samples", {
   
-  expect_error(collapse_samples("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(collapse_samples("not scMethrix"),msg.check.scm)
   
   #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   invisible(lapply(list(scm.mem), function(scm) {
@@ -82,7 +82,7 @@ test_that("collapse_samples", {
 
 test_that("transform_assay", {
   
-  expect_error(transform_assay("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(transform_assay("not scMethrix"),msg.check.scm)
   trans <- function(x) x+1
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
@@ -103,7 +103,7 @@ test_that("transform_assay", {
 })
 
 test_that("impute_regions", {
-  expect_error(impute_regions("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(impute_regions("not scMethrix"),msg.check.scm)
   expect_warning(impute_regions(scm.h5),"Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
   
   suppressWarnings(
@@ -132,7 +132,7 @@ test_that("impute_regions", {
 
 test_that("generate_training_set", {
   
-  expect_error(generate_training_set("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(generate_training_set("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(generate_training_set(scm,training_prop = 2),"training_prop must in the range of")
@@ -149,7 +149,7 @@ test_that("generate_training_set", {
 
 test_that("generate_random_subset", {
   
-  expect_error(generate_training_set("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(generate_random_subset("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_warning(generate_random_subset(scm,n_cpgs = nrow(scm)+1))

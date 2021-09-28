@@ -6,11 +6,7 @@
 #' is_h5(scMethrix_data)
 #' @export
 is_h5 = function(scm) {
-  
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
+  check.scm(scm)
   return(scm@metadata$is_h5)
 }
 
@@ -22,11 +18,7 @@ is_h5 = function(scm) {
 #' has_cov(scMethrix_data)
 #' @export
 has_cov = function(scm) {
-  
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
+  check.scm(scm)
   return("counts" %in% SummarizedExperiment::assayNames(scm))
 }
 
@@ -379,7 +371,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
                 select = FALSE))
 }
 
-#' Allows partial pattern matching in a responsive manner
+#' Allows partial pattern matching of function arguements in a responsive manner
 #' @details Check the parent function input arguments to see whether the inputted value is part of the set. Will return a formatted error message with the incorrect variable name and all the acceptable inputs
 #' @param parent closure; the parent function in which to check the input
 #' @param arg varibale; the variable in which to check
@@ -396,4 +388,37 @@ arg.match <- function(parent,arg) {
     }
   )    
   return(arg)
+}
+
+#' Allows partial pattern matching for assays
+#' @details Check the assays in an scMethrix object and partial matches
+#' @param scm scMethrix; the experiment object
+#' @param assay string; the name of the assay
+#' @param throw boolean; throw an error if true, return false if not
+#' @return string; the name of the matched assay
+assay.match <- function(scm = NULL,assay = NULL, throw = TRUE) {
+  
+  check.scm(scm)
+  
+  assay <- tryCatch(
+    {
+      match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm))
+    },
+    error=function(cond) {
+      if (throw) {
+      stop(paste0("Invalid assay. No assay named '",assay,"' found in the experiment '",substitute(scm),"'"), call. = FALSE)
+      } else {
+        return(FALSE)
+      }
+    }
+  )
+  return(assay)
+}
+
+#' Checks to see if object is a proper scMethrix object
+#' @param scm scMethrix; the experiment object to test
+#' @return invisible(TRUE), if the object is valid. Error if not.
+check.scm <- function(scm) {
+  if (!is(scm, "scMethrix")) stop(paste0("A valid scMethrix object needs to be supplied for '",substitute(scm),"'"), call. = FALSE)  
+  return(invisible(TRUE))
 }

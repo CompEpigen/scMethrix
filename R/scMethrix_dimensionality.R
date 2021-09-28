@@ -15,8 +15,8 @@
 #' @export
 reduce_cpgs <- function(scm, assay = "score", var =  c("top", "rand"), top_var = 1000, na.rm = FALSE, verbose = FALSE) {
 
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
+  check.scm(scm)
+  assay <- assay.match(scm,assay)
   
   var = arg.match(reduce_cpgs,var)
   
@@ -87,8 +87,8 @@ reduce_cpgs <- function(scm, assay = "score", var =  c("top", "rand"), top_var =
 #' @export
 dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), var = "top", top_var = 1000, perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
   
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.", call. = FALSE)  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) stop("Assay does not exist in the object", call. = FALSE)
+  check.scm(scm)
+  assay <- assay.match(scm,assay)
   
   type = arg.match(dim_red_scMethrix,type)
   
