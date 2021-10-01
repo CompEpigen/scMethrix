@@ -7,7 +7,7 @@
 reduce_cpgs(
   scm,
   assay = "score",
-  var = "top",
+  var = c("top", "rand"),
   top_var = 1000,
   na.rm = FALSE,
   verbose = FALSE

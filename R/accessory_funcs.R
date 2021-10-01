@@ -6,11 +6,7 @@
 #' is_h5(scMethrix_data)
 #' @export
 is_h5 = function(scm) {
-  
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
+  .validateExp(scm)
   return(scm@metadata$is_h5)
 }
 
@@ -22,11 +18,7 @@ is_h5 = function(scm) {
 #' has_cov(scMethrix_data)
 #' @export
 has_cov = function(scm) {
-  
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
+  .validateExp(scm)
   return("counts" %in% SummarizedExperiment::assayNames(scm))
 }
 
@@ -377,4 +369,137 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
                 fix_missing = fix_missing,
                 has_cov = has_cov,
                 select = FALSE))
+}
+
+#' Validates arguments. Allows partial matching.
+#' @details Check the parent function input arguments to see whether the inputted value is part of the set. Will return a formatted error message with the incorrect variable name and all the acceptable inputs.
+#' 
+#' To use, it can be called as such:
+#' 
+#' genericFunc <- function(values = c("apple","orange","banana")) {
+#' 
+#'    values <- .validateArg(values)
+#' 
+#' }
+#' 
+#' If the argument for values is acceptable (e.g. "apple" or "ban"), it will return the matched string.
+#' 
+#' This is incompatible with pipes.
+#' 
+#' @param parent closure; the parent function in which to check the input
+#' @param arg varibale; the variable in which to check
+#' @return arg, if the value is in the function definition.
+.validateArg <- function(arg, parent = NULL) {
+
+  if (is.null(parent)) {
+    parent <- deparse(sys.calls()[[sys.nframe()-1]])
+    parent <- unlist(strsplit(parent, "[(]"))[[1]]
+  }
+  
+  sub = substitute(arg)
+  
+  arg <- tryCatch(
+    {
+      match.arg(arg = tolower(arg), choices = tolower(eval(formals(parent)[[sub]])))
+    },
+    error=function(cond) {
+      stop(paste0("Invalid arg input for '",paste(sub),"'. Found: '",arg,"'; Must match: '",paste0(eval(formals(parent)[[sub]]), collapse="', '"),"'"), call. = FALSE)
+    }
+  )    
+  return(arg)
+}
+
+#' Validates an assay is in the object. Allows partial pattern.
+#' @details Check the assays in an scMethrix object and partial matches 
+#' @param scm scMethrix; the experiment object
+#' @param assay string; the name of the assay
+#' @param throw boolean; throw an error if true, return false if not
+#' @return string; the name of the matched assay
+.validateAssay <- function(scm = NULL,assay = NULL, throw = TRUE) {
+  
+  .validateExp(scm)
+  
+  if (is.null(assay)) stop("Invalid assay. Assay argument is NULL.", call. = FALSE)
+  
+  assay <- tryCatch(
+    {
+      match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm))
+    },
+    error=function(cond) {
+      if (throw) {
+      stop(paste0("Invalid assay. No assay named '",assay,"' found in the experiment '",substitute(scm),"'"), call. = FALSE)
+      } else {
+        return(FALSE)
+      }
+    }
+  )
+  return(assay)
+}
+
+.validateType <- function(input = NULL, type=c("integer","numeric","character","string","boolean","logical","vector",
+                                               "list","file","directory","granges","function","null")) {
+  
+  if (length(type) == length(eval(formals(.validateType)[["type"]]))) {
+    stop("No type specified.")
+  }
+  
+  types = sapply(type,function(type) .validateArg(type,.validateType))
+  inputs <- list(input,NULL) # necessary to avoid iterating through iterable objects (e.g. GRanges)
+  valid = F
+    
+  for (input in inputs[1:(length(inputs)-1)]) {
+    for (type in types) {
+
+      if (type == "integer") {
+        if(all(is.numeric(input))) valid <- input == round(input)
+      } else if (type == "numeric") {
+        valid = is.numeric(input) 
+      } else if (type == "character") {
+        valid = is.character(input) && nchar(input)==1
+      } else if (type == "string") {
+        valid = is.character(input) 
+      } else if(type == "boolean" | type == "logical"){
+        valid <- is.logical(input)
+      } else if(type == "vector"){
+        valid <- is.vector(input)
+      } else if(type == "list"){
+        valid <- is.list(input)
+      } else if (type == "file") {
+        valid <- all(file.exists(input))
+      } else if (type == "directory") {
+        valid <- all(dir.exists(input))
+      } else if(type == "granges"){
+        valid <- is(input, "GRanges")
+      } else if (type == "function") {
+        valid <- is.function(input)
+      } else if (type == "null") {
+        valid <- is.null(input) 
+      } else if (type == "null") {
+        valid <- is.null(input) 
+      } else if (type == "null") {
+        valid <- is.null(input) 
+      } else if (type == "null") {
+        valid <- is.null(input) 
+      } else if (type == "null") {
+        valid <- is.null(input) 
+      } else {
+        stop("Invalid type with '",type,"'. This type is not supported. Also, this should never be reached.")
+      }
+      
+      if (valid) {
+        break
+      } else if (type == types[length(types)]) {
+        stop("Invalid type input for '",substitute(input),"'. Must be of type: '",paste0(type, collapse="', '"),"'", call. = FALSE)
+      }
+    }
+  }
+  return(invisible(TRUE))
+}
+
+#' Validates to see if object is a proper scMethrix object
+#' @param scm scMethrix; the experiment object to test
+#' @return invisible(TRUE), if the object is valid. Error if not.
+.validateExp <- function(scm) {
+  if (!is(scm, "scMethrix")) stop(paste0("Invalid scMethrix object supplied for '",substitute(scm),"'"), call. = FALSE)  
+  return(invisible(TRUE))
 }

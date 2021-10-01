@@ -5,7 +5,7 @@
 \title{Plot descriptive statistics}
 \usage{
 plot_stats(
-  plot_dat,
+  scm,
   assay = "score",
   stat = "mean",
   ignore_chr = NULL,
@@ -15,7 +15,7 @@ plot_stats(
 )
 }
 \arguments{
-\item{plot_dat}{data.table or scMethrix; results from \code{\link{get_stats}}. If an \code{\link{scMethrix}} object is supplied, \code{\link{get_stats}} will be run for the specified assay}
+\item{scm}{scMethrix; \code{\link{get_stats}} will be run for the specified assay}
 
 \item{assay}{string; Which assay to get the stats of. Default "score"}
 
@@ -40,8 +40,7 @@ plot descriptive statistics results from \code{\link{get_stats}}
 }
 \examples{
 data('scMethrix_data')
-gs = get_stats(scMethrix_data)
-plot_stats(gs)
+plot_stats(scMethrix_data)
 }
 \seealso{
 \code{\link{get_stats}}

@@ -12,9 +12,7 @@
 #' @export
 get_metadata_stats <- function(scm) {
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
+  .validateExp(scm)
   
   stats <-
     data.table::data.table(
@@ -41,17 +39,9 @@ get_metadata_stats <- function(scm) {
 #' @export
 remove_assay <- function(scm=NULL, assay=NULL) {
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (!(assay %in% SummarizedExperiment::assayNames(scm))) {
-    stop("Assay is not in object.", call. = FALSE)
-  }
-  
-  if (assay == "score") {
-    stop("Score assay cannot be removed.", call. = FALSE)
-  }
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
+  if (assay == "score") stop("Score assay cannot be removed.", call. = FALSE)
   
   assays(scm) <- assays(scm)[-which(SummarizedExperiment::assayNames(scm) == assay)]
   
@@ -66,7 +56,7 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #'    - If merging by rows, all CpG sites must be unique and samples must be identical
 #'    - If merging by columns, all samples must be unique and CpG sites must be identical
 #' 
-#' Metadata will be retained in certain situations:#' 
+#' Metadata will be retained in certain situations:
 #'    For row merges:
 #'       - Ranges metadata (\code{mcols()}) will be merged, with missing columns in either assay filled with NAs
 #'       - Sample metadata (\code{colData()}) will attempt to be merged. Overlapping, non-identical columns will be appended with `.1` and `.2`.
@@ -76,7 +66,7 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #'       - Sample metadata (\code{colData()}) will be merged, with missing columns in either assay filled with NAs
 #' 
 #'    For both merges:
-#'       - Experiment metadata (\code{metadata()}) will attempt to be merged. Overlapping, non-identical columns will be appended with `.1` and `.2`.
+#'       - Experiment metadata (\code{metadata()}) will attempt to be merged. Overlapping, non-identical elements will be appended with `.1` and `.2`.
 #'  
 #'    Custom experiment metadata can manually be added via \code{metadata() <-}, or to rowRanges via \code{mcols() <-}.
 #' 
@@ -91,11 +81,12 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #' @export
 merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 
-  if (!is(scm1, "scMethrix") || !is(scm2, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
+  .validateExp(scm1)
+  .validateExp(scm2)
+
   if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.")
+  
+  by = .validateArg(by,merge_scMethrix)
   
   names1 = SummarizedExperiment::assayNames(scm1)
   names2 = SummarizedExperiment::assayNames(scm2)
@@ -107,8 +98,6 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
     assays(scm1) <- assays(scm1)[a1]
     assays(scm2) <- assays(scm2)[a2]
   } 
-  
-  by <- match.arg(arg = by, choices = c("row", "col"), several.ok = FALSE)
   
   # Fix duplicate names in metadata, append if there are common elements that have different values
   if (by == "row") slots <- c(metadata,colData,int_colData)
@@ -192,8 +181,8 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
 #' @inheritParams generic_scMethrix_function
 #' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object
-#' @param type string; the assay to be summarized. Default 'score'
-#' @param how closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'
+#' @param assay string; the assay to be summarized. Default 'score'
+#' @param by closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'
 #' @param overlap_type string; defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #' #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.
 #' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
@@ -205,14 +194,12 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 #' data('scMethrix_data')
 #' get_region_summary(scMethrix_data,
 #'    regions = data.table(chr = c('chr1','chr2'), start = c(1), end =  c(10000000)),
-#'    type = 'score', how = 'mean')
+#'    assay = 'score', by = 'mean')
 #' @export
-get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads = 1, type="score", how = "mean", 
+get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads = 1, assay="score", by = c('mean', 'median', 'max', 'min', 'sum', 'sd'), 
                                overlap_type = "within", verbose = TRUE, group = NULL) {
   
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
+  .validateExp(scm) 
   
   if (!is.null(group) && !(group %in% colnames(scm@colData))){
     stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
@@ -225,8 +212,9 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
   
   if(verbose) message("Generating region summary...",start_time())
   
-  type = match.arg(arg = type, choices = SummarizedExperiment::assayNames(scm))
-  how = match.arg(arg = how, choices = c('mean', 'median', 'max', 'min', 'sum', 'sd'))
+  assay = .validateAssay(scm,assay)
+  by = .validateArg(by,get_region_summary)
+  
   yid  <- NULL
   
   if (!is.null(regions)) {
@@ -249,9 +237,9 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
   colnames(n_overlap_cpgs) = c('rid', 'n_overlap_CpGs')
   
   if(n_chunks==1){
-    if (type == "score") {
+    if (assay == "score") {
       dat = get_matrix(scm = scm[overlap_indices$xid,], assay = "score", add_loci = TRUE)
-    } else if (type == "counts") {
+    } else if (assay == "counts") {
       dat = get_matrix(scm = scm[overlap_indices$xid,], assay = "counts", add_loci = TRUE)
     }
   } else {
@@ -281,7 +269,7 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
                                                         ceiling(length(overlap_indices$xid)/n_chunks)))
 
     data <- parallel::parLapply(cl,chunk_overlaps,fun=function(i) {
-      get_matrix(scm[i,], assay = type, add_loci = TRUE) # TODO: object of type 'S4' is not subsettable
+      get_matrix(scm[i,], assay = assay, add_loci = TRUE) # TODO: object of type 'S4' is not subsettable
     })
 
     parallel::stopCluster(cl)
@@ -297,26 +285,23 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
   dat = cbind(overlap_indices, dat)
   
   #message("-Summarizing overlaps..\n")
-  if(how == "mean") {
+  if(by == "mean") {
     message("Summarizing by average")
-    
     output = dat[, lapply(.SD, mean, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))]
-  } else if (how == "median") {
+  } else if (by == "median") {
     message("Summarizing by median")
     output = dat[, lapply(.SD, median, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))]
-  } else if (how == "max") {
+  } else if (by == "max") {
     message("Summarizing by maximum")
     output = suppressWarnings(
       dat[, lapply(.SD, max, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))])
-    
     for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
-  } else if (how == "min") {
+  } else if (by == "min") {
     message("Summarizing by minimum")
     output = suppressWarnings(
-      
       dat[, lapply(.SD, min, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))])
     for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
-  } else if (how == "sum") {
+  } else if (by == "sum") {
     message("Summarizing by sum")
     output = dat[, lapply(.SD, sum, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))]
   }
@@ -365,16 +350,13 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
 #--------------------------------------------------------------------------------------------------------------------------
 get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges=FALSE, order_by_sd=FALSE) {
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
+  .validateExp(scm)
   
-  if (add_loci == FALSE & in_granges == TRUE) {
+  if (add_loci == FALSE & in_granges == TRUE)
     warning("Without genomic locations (add_loci= FALSE), it is not possible to convert the results to GRanges, ", 
             "the output will be a data.frame object. ")
-  }
   
-  assay <- match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm))
+  assay <- .validateAssay(scm,assay)
   mtx <- SummarizedExperiment::assay(x = scm, i = which(assay == SummarizedExperiment::assayNames(scm)))
   
   if (order_by_sd) {
@@ -502,13 +484,8 @@ load_HDF5_scMethrix <- function(dir = NULL, verbose = TRUE, ...) {
 #' @export
 convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
   
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (!is_h5(scm)) {
-    stop("Input scMethrix must be in HDF5 format.")
-  }
+  .validateExp(scm) 
+  if (!is_h5(scm)) stop("Input scMethrix must be in HDF5 format.")
   
   if (verbose) message("Converting HDF5 scMethrix to in-memory", start_time())
   
@@ -533,13 +510,8 @@ convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
 #' @export
 convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
   
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
-  
-  if (is_h5(scm)) {
-    stop("Input scMethrix is already in HDF5 format.")
-  }
+  .validateExp(scm)
+  if (is_h5(scm)) stop("Input scMethrix is already in HDF5 format.")
   
   if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
 
@@ -585,16 +557,14 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 #' @export
 subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), overlap_type="within",verbose=TRUE) {
   
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
+  .validateExp(scm)  
   
   if (is.null(regions) & is.null(contigs) & is.null(samples)) {
     warning("At least 1 argument mandatory for subsetting. No subset generated")
     return(scm)
   }
   
-  by <- match.arg(arg = by, choices = c("include", "exclude"), several.ok = FALSE)
+  by = .validateArg(by,subset_scMethrix)
   
   if (by == "exclude") {
     
@@ -664,9 +634,8 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE) {
 
   x <- NULL
   
-  if (!is(scm, "scMethrix")) {
-    stop("A valid scMethrix object needs to be supplied.", call. = FALSE)
-  }
+  .validateExp(scm)  
+  assay <- .validateAssay(scm,assay)
   
   message("Getting descriptive statistics...",start_time())
 
@@ -710,17 +679,17 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE) {
 #' @examples
 #' data('scMethrix_data')
 #' # Remove uncovered CpGs after subsetting to a single sample
-#' remove_uncovered(subset_scMethrix(scMethrix_data, samples = "df1", by="include"))
+#' remove_uncovered(subset_scMethrix(scMethrix_data, samples = "C1", by="include"))
 #' @export
 remove_uncovered <- function(scm = NULL, verbose = TRUE) {
-  
-  if (!is(scm, "scMethrix")){
-    stop("A valid scMethrix object needs to be supplied.")
-  }
+
+  .validateExp(scm)
   
   if (verbose) message("Removing uncovered CpGs...", start_time())
   
   row_idx <- DelayedMatrixStats::rowSums2(!is.na(get_matrix(scm)))==0
+  
+  if (sum(row_idx) == nrow(scm)) stop("All CpGs were masked. No methylation data must be present.")
   
   if (verbose) message(paste0("Removed ", format(sum(row_idx), big.mark = ","),
                  " [", round(sum(row_idx)/nrow(scm) * 100, digits = 2), "%] uncovered loci of ",
@@ -751,7 +720,9 @@ remove_uncovered <- function(scm = NULL, verbose = TRUE) {
 #' mask_by_coverage(scMethrix_data,low_threshold=2, avg_threshold=2)
 #' @export
 mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, avg_threshold = NULL, n_threads=1 , verbose = TRUE) {
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
+  
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
   
   if (!is_h5(scm) && n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
@@ -772,9 +743,7 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, 
   if (!is.null(low_threshold)) {
     
     if (verbose) message("Finding low coverage CpG sites...")
-    
     low_row_idx <- which(DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"),na.rm=TRUE) < low_threshold)
-
     if (verbose) message("   Found ",length(low_row_idx)," CpGs with coverage < ", low_threshold)
     
   }
@@ -782,15 +751,12 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, 
   if (!is.null(avg_threshold)) {
     
     if (verbose) message("Finding high average count CpG sites...")
-    
     avg_row_idx <- which(DelayedMatrixStats::rowMeans2(counts(scm), na.rm = TRUE) > avg_threshold)
-    
     if (verbose) message("   Found ",length(avg_row_idx)," CpGs with average coverage > ",avg_threshold)
     
   }
   
   row_idx <- unique(c(low_row_idx,avg_row_idx))
-  
   scm <- mask_helper(scm, row_idx, verbose = verbose)
 
   return(scm)
@@ -817,7 +783,8 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, 
 #' @export
 mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, prop_threshold = NULL, n_threads=1 , verbose = TRUE) {
   
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
   
   if (!is_h5(scm) & n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
@@ -833,27 +800,18 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
   if (!is.null(prop_threshold) && (!is.numeric(prop_threshold) || prop_threshold > 1 || prop_threshold < 0)) stop("prop_threshold must be between 0 and 1")
   
   if (verbose) message("Masking by sample count...",start_time())
-  
   row_idx <- NULL
   
   if (!is.null(low_threshold)) {
-    
     if (verbose) message("Finding low coverage CpG sites...")
-    
     row_idx <- which(DelayedMatrixStats::rowCounts(get_matrix(scm), 
                                                    value = as.integer(NA)) > (ncol(scm)-low_threshold))
-    
     if (verbose) message("   Found ",length(row_idx)," CpGs with count < ",low_threshold)
-    
   } else if (!is.null(prop_threshold)) {
-    
     if (verbose) message("Finding high average count CpG sites...")
-    
     row_idx <- which(DelayedMatrixStats::rowCounts(get_matrix(scm), 
                                                    value = as.integer(NA)) > ncol(scm)*(1-prop_threshold))
-    
     if (verbose) message("   Found ",length(row_idx)," CpGs with missing cell proportion < ",prop_threshold)
-    
   }
   
   scm <- mask_helper(scm, row_idx, verbose = verbose)
@@ -873,8 +831,9 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
 #' mask_by_variance(scMethrix_data,low_threshold=0.05)
 #' @export
 mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, n_threads = 1, verbose = TRUE) {
-  
-  if (!is(scm, "scMethrix")) stop("A valid scMethrix object needs to be supplied.")
+
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
   
   if (!is_h5(scm) & n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
@@ -906,21 +865,20 @@ mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, 
 #' @importFrom SummarizedExperiment assays assays<-
 #' @export
 mask_helper <- function (scm, row_idx, verbose = TRUE) {
-  
-  if (length(row_idx) == 0) {
-    if (verbose) message("   No CpGs were masked (",stop_time(),"elapsed)")
-  } else if (length(row_idx) == nrow(scm)) {
-    stop("All CpGs were masked. Re-check threshold values.")
-  } else {
+
+  # if (length(row_idx) == 0) {
+  #   if (verbose) message("   No CpGs were masked (",stop_time(),"elapsed)")
+  # } else if (length(row_idx) == nrow(scm)) {
+  #   stop("All CpGs were masked. Re-check threshold values.")
+  # } else {
     for (i in 1:length(assays(scm))) {
       assays(scm)[[i]][row_idx,] <- as.integer(NA)
     } 
     
     if (verbose) message("Masked ",length(row_idx), 
                          " [", round(length(row_idx)/nrow(scm) * 100, digits = 2), "%] CpG sites in ",stop_time())
-  }
+  # }
   
   return(scm)
-
 }
 

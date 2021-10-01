@@ -28,7 +28,7 @@ Requirements for merging
 \item If merging by columns, all samples must be unique and CpG sites must be identical
 }
 
-Metadata will be retained in certain situations:#'
+Metadata will be retained in certain situations:
 For row merges:
 - Ranges metadata (\code{mcols()}) will be merged, with missing columns in either assay filled with NAs
 - Sample metadata (\code{colData()}) will attempt to be merged. Overlapping, non-identical columns will be appended with \code{.1} and \code{.2}.
@@ -38,7 +38,7 @@ For row merges:
 - Sample metadata (\code{colData()}) will be merged, with missing columns in either assay filled with NAs
 
 For both merges:
-- Experiment metadata (\code{metadata()}) will attempt to be merged. Overlapping, non-identical columns will be appended with \code{.1} and \code{.2}.
+- Experiment metadata (\code{metadata()}) will attempt to be merged. Overlapping, non-identical elements will be appended with \code{.1} and \code{.2}.
 
 Custom experiment metadata can manually be added via \code{metadata() <-}, or to rowRanges via \code{mcols() <-}.
 }

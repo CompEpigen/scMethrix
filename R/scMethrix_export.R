@@ -13,14 +13,16 @@
 #' @return nothing
 #' @examples
 #' data('scMethrix_data')
-#' export_bed(scMethrix_data,path=paste0(tempdir(),"/export"))
+#' export_beds(scMethrix_data,path=paste0(tempdir(),"/export"))
 #' @export
-export_bed <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE, include = FALSE, na.rm = TRUE, header = FALSE) {
+export_beds <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE, include = FALSE, na.rm = TRUE, header = FALSE) {
   
   meth <- cov <- NULL
   
-  if (!is(scm, "scMethrix") || is.null(path)){
-    stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
+  .validateExp(scm)
+  
+  if (is.null(path)){
+    stop("A valid path needs to be supplied.", call. = FALSE)
   }
   
   if (verbose) message("Exporting beds to ",path,start_time())
@@ -106,94 +108,107 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
   return(m_obj) 
 }
 
-# Convert \code{\link{methrix}} to \code{bsseq} object
-# @details Takes \code{\link{methrix}} object and returns a \code{bsseq} object
-# @param scm \code{\link{methrix}} object
-# @return An object of class \code{bsseq}
-# @examples
-# \dontrun{
-# data('methrix_data')
-# methrix2bsseq(m = methrix_data)
-# }
-# @export
-#
-# export_bsseq <- function(scm) {
-  # 
-  # if (!is(scm, "scMethrix") || is.null(path)){
-  #   stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
-  # }
-  # 
-  # n_samps <- nrow(SummarizedExperiment::colData(x = scm))
-  # M_clean <- get_matrix(scm) * get_matrix(scm, type = "C")
-  # M_clean[is.na(M_clean)] <- 0
-  # assays(scm)[[2]][is.na(assays(scm)[[2]])] <- 0
-  # 
-  # b <- bsseq::BSseq(M = M_clean, Cov = get_matrix(scm, type = "C"), pData = colData(x = scm),
-  #                   pos = rowData(x = scm)[, "start"], chr = rowData(x = scm)[, "chr"],
-  #                   sampleNames = rownames(scm@colData))
-#   b
-# }
+#' Convert \code{\link{scMethrix}} to \code{bsseq} object
+#' @details Takes \code{\link{scMethrix}} object and returns a \code{bsseq} object. 
+#' @param scm \code{\link{methrix}} object
+#' @param m_assay matrix; the assay containing methylation scores
+#' @param c_assay matrix; the assay containing count scores
+#' @param path string; the path of the export directory
+#' @return An object of class \code{bsseq}
+#' @examples
+#' \dontrun{
+#' data('scMethrix_data')
+#' export_bsseq(scMethrix_data)
+#' }
+#' @export
+export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) {
 
-# Exports methrix object as bigWigs
-# @param scm \code{\link{methrix}} object
-# @param output_dir Output directory name where the files should be saved. Default getwd()
-# @param samp_names sample names to export
-# @examples
-# \dontrun{
-# data('methrix_data')
-# write_bigwigs(m = methrix_data, output_dir = './temp')
-# }
-# @return NULL
-# @importFrom rtracklayer export
-# @export
+  .validateExp(scm)
+  
+  if (!has_cov(scm)) stop("BSSeq requires a coverage matrix.", call. = FALSE)
 
-# export_bigwigs = function(scm, output_dir = getwd(), samp_names = NULL){
-  # 
-  # if (!is(scm, "scMethrix") || is.null(path)){
-  #   stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
-  # }
-  # 
-  # 
-  # if (!dir.exists(output_dir)) {
-  #   dir.create(path = output_dir, showWarnings = FALSE, recursive = TRUE)
-  # }
-  # 
-  # mat_gr <- methrix::get_matrix(scm, type = "M", add_loci = TRUE, in_granges = TRUE)
-  # 
-  # seql = scm@metadata$chrom_sizes$length
-  # names(seql) = scm@metadata$chrom_sizes$contig
-  # 
-  # all_samps = names(mcols(mat_gr))  
-  # 
-  # if(is.null(samp_names)){
-  #   samp_names = all_samps
-  # }else{
-  #   samp_names = intersect(samp_names, all_samps)
-  #   if(length(samp_names) == 0){
-  #     stop("Incorrect sample names!")
-  #   }
-  # }
-  # 
-  # message("----------------------")
-  # for(samp in samp_names){
-  #   op_bw = paste0(output_dir, "/", samp, ".bw")
-  #   message("*Writing ", op_bw)
-  #   samp_gr = mat_gr[,samp]
-  #   names(mcols(samp_gr)) = "score"
-  #   samp_gr = samp_gr[!is.na(samp_gr$score)]
-  #   seqlengths(samp_gr) = seql[names(seqlengths(samp_gr))]
-  #   rtracklayer::export(samp_gr, con = paste0(output_dir, "/", samp, ".bw"), format="bigWig")
-  # }
-  # message("----------------------")
-# }
+  # if (anyNA(get_matrix(scm,m_assay)) || anyNA(get_matrix(scm,c_assay)))
+  #   warning("NAs present in assay. These will be filled with zero values.")
+  
+  M_clean <- get_matrix(scm,m_assay) * get_matrix(scm,c_assay)
+  M_clean[is.na(M_clean)] <- 0
+  C_clean <- get_matrix(scm,c_assay)
+  C_clean[is.na(counts(scm))] <- 0
+  
+  b <- bsseq::BSseq(M = M_clean, Cov = C_clean, pData = colData(scm),
+                    gr = rowRanges(scm), sampleNames = rownames(colData(scm)))
+  return(b)
+}
 
-# 
-# export_seurat <- function(scm) {
-#   
-#   if (!is(scm, "scMethrix") || is.null(path)){
-#     stop("A valid scMethrix object and path needs to be supplied.", call. = FALSE)
-#   }
-#   
-#   
-#   
-# }
+#' Exports scMethrix object as bigWigs
+#' @param scm \code{\link{scMethrix}} object
+#' @param assay string; the assay to export. Default is "score"
+#' @param path string; Output directory name where the files should be saved. Default tempdir()
+#' @param samp_names string; List of sample names to export
+#' @examples
+#' \dontrun{
+#' data('scMethrix_data')
+#' export_bigwigs(scm = scMethrix_data, assay = "score", output_dir = tempdir())
+#' }
+#' @return NULL
+#' @importFrom rtracklayer export
+#' @importFrom GenomeInfoDb seqlengths
+#' @export
+export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = NULL){
+
+  .validateExp(scm)
+  
+  if (is.null(path)){
+    stop("A valid path needs to be supplied.", call. = FALSE)
+  }
+
+  if (!dir.exists(path)) {
+    dir.create(path = path, showWarnings = FALSE, recursive = TRUE)
+  }
+  
+  message("Generating bigWig files...",start_time())
+  
+  mat_gr <- get_matrix(scm = scm, assay = assay, add_loci = TRUE, in_granges = TRUE)
+  
+  seql = width(range(rowRanges(scm)))
+  names(seql) = levels(seqnames(scm))
+  
+  if(is.null(samp_names)){
+    samp_names = names(mcols(mat_gr))
+  }else{
+    samp_names = intersect(samp_names, names(mcols(mat_gr)))
+    if(length(samp_names) == 0) stop("Incorrect sample names! No matching samples in the experiment")
+  }
+  
+  for(samp in samp_names){
+    op_bw = paste0(path, "/", samp, ".bw")
+    message("   Writing ", op_bw)
+    samp_gr = mat_gr[,samp]
+    names(mcols(samp_gr)) = "score"
+    samp_gr = samp_gr[!is.na(samp_gr$score)]
+    GenomeInfoDb::seqlengths(samp_gr) = seql[names(GenomeInfoDb::seqlengths(samp_gr))]
+    rtracklayer::export(samp_gr, con = paste0(path, "/", samp, ".bw"), format="bigWig")
+  }
+  
+  message("Files generated in ",stop_time())
+}
+
+
+export_seurat <- function(scm,assay="score", path = NULL) {
+  
+  .validateExp(scm)
+  if (!has_cov(scm)) stop("Seurat requires a coverage matrix.", call. = FALSE)
+  
+  cnt <- counts(scm)
+  rownames(cnt) <- paste0("CpG",1:nrow(cnt))
+  cnt[is.na(cnt)] <- 0
+  
+  scr <- get_matrix(scm = scm, assay = assay)
+  rownames(scr) <- paste0("CpG",1:nrow(scr))
+  scr[is.na(scr)] <- 0
+  
+  seur <- Seurat::CreateSeuratObject(counts = cnt, meta.data = as.data.frame(colData(scm)))
+  seur <- Seurat::SetAssayData(object = seur, slot = "data", new.data = scr)
+  
+  return(seur)
+}

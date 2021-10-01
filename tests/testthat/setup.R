@@ -20,13 +20,21 @@ mcols(scm.h5)$CpG <- mcols(scm.mem)$CpG <- 1:nrow(scm.mem)
 n_cpg <- nrow(scm.mem)
 n_samples <- ncol(scm.mem)
 
+# These should match the error messages given in the respective functions in accessory_funcs.R
+msg.check.scm <- "Invalid scMethrix"
+msg.assay.match <- "Invalid assay"
+msg.arg.match <- "Invalid arg"
+msg.type.match <- "Invalid type"
+
 # scMethrix_data <- scm.mem
 # usethis::use_data(scMethrix_data,overwrite=TRUE)
+
+
 
 message("Test setup completed")
 
 imputation_test_helper <- function(func) {
-  expect_error(func("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(imputation_test_helper("not scMethrix"),msg.check.scm)
   
   #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   invisible(lapply(list(scm.mem), function(scm) {
@@ -49,7 +57,7 @@ imputation_test_helper <- function(func) {
 }
 
 graph_test_helper <- function(func, indiv_samples = TRUE) {
-  expect_error(func("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(func("not scMethrix"),msg.check.scm)
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     plot <- func(scm)
     expect_true("ggplot" %in% class(plot))

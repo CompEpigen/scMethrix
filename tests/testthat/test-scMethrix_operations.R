@@ -1,6 +1,6 @@
 test_that("get_metadata_stats", {
   
-  expect_error(get_metadata_stats("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(get_metadata_stats("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
     expect_error(get_metadata_stats(scm="not scMethrix"))
@@ -23,12 +23,11 @@ test_that("get_metadata_stats", {
 
 test_that("remove_assay", {
   
-  expect_error(remove_assay("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(remove_assay("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(remove_assay(scm="not scMethrix"))
-    expect_error(remove_assay(scm, assay="not an assay"))
-    expect_error(remove_assay(scm, assay="score"))
+    expect_error(remove_assay(scm, assay="not an assay"),msg.assay.match)
+    expect_error(remove_assay(scm, assay="score"),"Score assay cannot be removed")
     
     plus1 <- transform_assay(scm,trans=function(x) x+1,assay="score",new_assay="plus1")
     expect_false(isTRUE(all.equal(assays(scm), assays(plus1))))
@@ -39,8 +38,7 @@ test_that("remove_assay", {
 
 test_that("merge_scMethrix", {
   
-  expect_error(merge_scMethrix(scm1=scm.mem,scm2="not scMethrix"),"A valid scMethrix object needs to be supplied")
-  expect_error(merge_scMethrix(scm1="not scMethrix",scm2=scm.mem),"A valid scMethrix object needs to be supplied")
+  expect_error(merge_scMethrix("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
    
@@ -157,7 +155,7 @@ test_that("merge_scMethrix", {
 
 test_that("convert_HDF5_scMethrix", {
 
-  expect_error(subset_scMethrix("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(convert_HDF5_scMethrix("not scMethrix"),msg.check.scm)
   
   expect_true(is_h5(scm.h5))
   expect_equal(class(get_matrix(scm.h5))[1],"HDF5Matrix")
@@ -173,7 +171,7 @@ test_that("convert_HDF5_scMethrix", {
 
 test_that("convert_scMethrix", {
   
-  expect_error(convert_scMethrix("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(convert_scMethrix("not scMethrix"),msg.check.scm)
   
   expect_false(is_h5(scm.mem))
   expect_equal(class(get_matrix(scm.mem))[1],"matrix") 
@@ -189,7 +187,7 @@ test_that("convert_scMethrix", {
 
 test_that("subset_scMethrix", {
   
-  expect_error(subset_scMethrix("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(subset_scMethrix("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
@@ -236,7 +234,7 @@ test_that("subset_scMethrix", {
 
 test_that("get_matrix", {
  
-    expect_error(get_matrix("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(get_matrix("not scMethrix"),msg.check.scm)
   
     s <- get_matrix(scm.h5)
     expect_equal(dim(s),c(n_cpg,4))  
@@ -266,7 +264,7 @@ test_that("get_matrix", {
 
 test_that("remove_uncovered", {
   
-  expect_error(remove_uncovered("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(remove_uncovered("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
@@ -280,7 +278,7 @@ test_that("remove_uncovered", {
 
 test_that("get_stats", {
   
-  expect_error(get_stats("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(get_stats("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     chr <- length(seqlengths(rowRanges(scm)))
@@ -304,7 +302,7 @@ test_that("get_stats", {
 
 test_that("get_region_summary", {
   
-  expect_error(get_region_summary("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(get_region_summary("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(get_region_summary(scm,group="not a group"))
@@ -321,8 +319,8 @@ test_that("get_region_summary", {
 })
 
 test_that("mask_by_coverage", {
-
-  expect_error(mask_by_coverage("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(mask_by_coverage("not scMethrix"),msg.check.scm)
+  expect_error(mask_by_coverage(scm.mem,assay="not an assay"),"Invalid assay")
   expect_error(mask_by_coverage(remove_assay(scm.mem,assay="counts")))
   expect_error(mask_by_coverage(scm.mem,n_threads=2))
   expect_error(mask_by_coverage(scm.mem,low_threshold=-1),"low_threshold")
@@ -344,8 +342,8 @@ test_that("mask_by_coverage", {
 })
 
 test_that("mask_by_sample", {
-  
-  expect_error(mask_by_sample("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(mask_by_sample("not scMethrix"),msg.check.scm)
+  expect_error(mask_by_sample(scm.mem,assay="not an assay"),"Invalid assay")
   expect_error(mask_by_sample(scm.mem,n_threads=2))
   expect_error(mask_by_sample(scm.mem,low_threshold=2,prop_threshold=1))
   expect_error(mask_by_sample(scm.mem,low_threshold=-1),"low_threshold")
@@ -368,8 +366,8 @@ test_that("mask_by_sample", {
 })
 
 test_that("mask_by_variance", {
-  
-  expect_error(mask_by_variance("not scMethrix"),"A valid scMethrix object needs to be supplied")
+  expect_error(mask_by_variance("not scMethrix"),msg.check.scm)
+  expect_error(mask_by_variance(scm.mem,assay="not an assay"),"Invalid assay")
   expect_error(mask_by_variance(scm.mem,n_threads=2))
   expect_error(mask_by_variance(scm.mem,low_threshold=2,"low_threshold must be between 0 and 1"))
   expect_error(mask_by_variance(scm.mem,low_threshold=-1,"low_threshold must be between 0 and 1"))

@@ -9,8 +9,8 @@ get_region_summary(
   regions = NULL,
   n_chunks = 1,
   n_threads = 1,
-  type = "score",
-  how = "mean",
+  assay = "score",
+  by = c("mean", "median", "max", "min", "sum", "sd"),
   overlap_type = "within",
   verbose = TRUE,
   group = NULL
@@ -25,9 +25,9 @@ get_region_summary(
 
 \item{n_threads}{Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.}
 
-\item{type}{string; the assay to be summarized. Default 'score'}
+\item{assay}{string; the assay to be summarized. Default 'score'}
 
-\item{how}{closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'}
+\item{by}{closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'}
 
 \item{overlap_type}{string; defines the type of the overlap of the CpG sites with the target region. Default value is \code{within}. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.}
@@ -49,5 +49,5 @@ Takes \code{\link{scMethrix}} object and summarizes regions
 data('scMethrix_data')
 get_region_summary(scMethrix_data,
    regions = data.table(chr = c('chr1','chr2'), start = c(1), end =  c(10000000)),
-   type = 'score', how = 'mean')
+   assay = 'score', by = 'mean')
 }
