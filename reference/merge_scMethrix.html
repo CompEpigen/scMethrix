@@ -177,7 +177,7 @@
 <li><p>If merging by columns, all samples must be unique and CpG sites must be identical</p></li>
 </ul>
 
-<p>Metadata will be retained in certain situations:#'
+<p>Metadata will be retained in certain situations:
 For row merges:
 - Ranges metadata (<code>mcols()</code>) will be merged, with missing columns in either assay filled with NAs
 - Sample metadata (<code>colData()</code>) will attempt to be merged. Overlapping, non-identical columns will be appended with <code>.1</code> and <code>.2</code>.</p>
@@ -185,7 +185,7 @@ For row merges:
 - Ranges metadata (<code>mcols()</code>) will attempt to be merged. Overlapping, non-identical columns will be appended with <code>.1</code> and <code>.2</code>.
 - Sample metadata (<code>colData()</code>) will be merged, with missing columns in either assay filled with NAs</p>
 <p>For both merges:
-- Experiment metadata (<code>metadata()</code>) will attempt to be merged. Overlapping, non-identical columns will be appended with <code>.1</code> and <code>.2</code>.</p>
+- Experiment metadata (<code>metadata()</code>) will attempt to be merged. Overlapping, non-identical elements will be appended with <code>.1</code> and <code>.2</code>.</p>
 <p>Custom experiment metadata can manually be added via <code>metadata() &lt;-</code>, or to rowRanges via <code>mcols() &lt;-</code>.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
@@ -198,7 +198,7 @@ For row merges:
 #&gt;    reduced dims: 
 #&gt;    is_h5: FALSE
 #&gt;    Reference: hg19
-#&gt;    Physical size: 30.5 Kb</div><div class='input'><span class='fu'>merge_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>[</span>,<span class='fl'>1</span><span class='op'>:</span><span class='fl'>2</span><span class='op'>]</span>,<span class='va'>scMethrix_data</span><span class='op'>[</span>,<span class='fl'>3</span><span class='op'>:</span><span class='fl'>4</span><span class='op'>]</span>,by<span class='op'>=</span><span class='st'>"col"</span><span class='op'>)</span>
+#&gt;    Physical size: 30.9 Kb</div><div class='input'><span class='fu'>merge_scMethrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>[</span>,<span class='fl'>1</span><span class='op'>:</span><span class='fl'>2</span><span class='op'>]</span>,<span class='va'>scMethrix_data</span><span class='op'>[</span>,<span class='fl'>3</span><span class='op'>:</span><span class='fl'>4</span><span class='op'>]</span>,by<span class='op'>=</span><span class='st'>"col"</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 286
 #&gt;    n_samples: 4
@@ -206,7 +206,7 @@ For row merges:
 #&gt;    reduced dims: 
 #&gt;    is_h5: FALSE
 #&gt;    Reference: hg19
-#&gt;    Physical size: 41.3 Kb</div></pre>
+#&gt;    Physical size: 47 Kb</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

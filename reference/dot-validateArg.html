@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Remove loci that are uncovered across all samples — remove_uncovered • scMethrix</title>
+<title>Validates arguments. Allows partial matching. — .validateArg • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Remove loci that are uncovered across all samples — remove_uncovered" />
-<meta property="og:description" content="Remove loci that are uncovered across all samples" />
+<meta property="og:title" content="Validates arguments. Allows partial matching. — .validateArg" />
+<meta property="og:description" content="Validates arguments. Allows partial matching." />
 
 
 
@@ -138,49 +138,41 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Remove loci that are uncovered across all samples</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scmethrix_operations.R'><code>R/scmethrix_operations.R</code></a></small>
-    <div class="hidden name"><code>remove_uncovered.Rd</code></div>
+    <h1>Validates arguments. Allows partial matching.</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/accessory_funcs.R'><code>R/accessory_funcs.R</code></a></small>
+    <div class="hidden name"><code>dot-validateArg.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Remove loci that are uncovered across all samples</p>
+    <p>Validates arguments. Allows partial matching.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>remove_uncovered</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, verbose <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>.validateArg</span><span class='op'>(</span><span class='va'>arg</span>, parent <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>scm</th>
-      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
+      <th>arg</th>
+      <td><p>varibale; the variable in which to check</p></td>
     </tr>
     <tr>
-      <th>verbose</th>
-      <td><p>boolean; Flag for outputting function status messages. Default = TRUE</p></td>
+      <th>parent</th>
+      <td><p>closure; the parent function in which to check the input</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An object of class <code><a href='scMethrix-class.html'>scMethrix</a></code></p>
+    <p>arg, if the value is in the function definition.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Takes <code><a href='scMethrix-class.html'>scMethrix</a></code> object and removes loci that are uncovered across all samples</p>
+    <p>Check the parent function input arguments to see whether the inputted value is part of the set. Will return a formatted error message with the incorrect variable name and all the acceptable inputs.</p>
+<p>To use, it can be called as such:</p>
+<p>genericFunc &lt;- function(values = c("apple","orange","banana")) values &lt;- .validateArg(values)</p>
+<p>If the argument for values is acceptable (e.g. "apple" or "ban"), it will return the matched string.</p>
+<p>This is incompatible with pipes.</p>
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='co'># Remove uncovered CpGs after subsetting to a single sample</span>
-<span class='fu'>remove_uncovered</span><span class='op'>(</span><span class='fu'><a href='subset_scMethrix.html'>subset_scMethrix</a></span><span class='op'>(</span><span class='va'>scMethrix_data</span>, samples <span class='op'>=</span> <span class='st'>"C1"</span>, by<span class='op'>=</span><span class='st'>"include"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Subsetting CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Subsetting by samples</span></div><div class='output co'>#&gt; <span class='message'>Subset in 0.07s</span></div><div class='output co'>#&gt; <span class='message'>Removing uncovered CpGs...</span></div><div class='output co'>#&gt; <span class='message'>Removed 105 [36.71%] uncovered loci of 286 sites (0.01s)</span></div><div class='output co'>#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 181
-#&gt;    n_samples: 1
-#&gt;    assays: score, counts
-#&gt;    reduced dims: 
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 33.9 Kb</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

@@ -210,14 +210,14 @@ operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
 <span class='fu'>colData</span><span class='op'>(</span><span class='va'>scMethrix_data</span><span class='op'>)</span><span class='op'>[</span><span class='st'>"Cluster"</span><span class='op'>]</span> <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"X"</span>,<span class='st'>"X"</span>,<span class='st'>"Y"</span>,<span class='st'>"Y"</span><span class='op'>)</span>
 <span class='fu'>collapse_samples</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, colname <span class='op'>=</span> <span class='st'>"Cluster"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Starting to collapse experiment...</span></div><div class='output co'>#&gt; <span class='message'>   Collapsing samples for the score assay...</span></div><div class='output co'>#&gt; <span class='message'>   Collapsing samples for the counts assay...</span></div><div class='output co'>#&gt; <span class='message'>Rebuilding experiment...</span></div><div class='output co'>#&gt; <span class='message'>Experiment collapsed into 2 sample groups in 0.22s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Starting to collapse experiment...</span></div><div class='output co'>#&gt; <span class='message'>   Collapsing samples for the score assay...</span></div><div class='output co'>#&gt; <span class='message'>   Collapsing samples for the counts assay...</span></div><div class='output co'>#&gt; <span class='message'>Rebuilding experiment...</span></div><div class='output co'>#&gt; <span class='message'>Experiment collapsed into 2 sample groups in 0.25s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 286
 #&gt;    n_samples: 2
 #&gt;    assays: score, counts
 #&gt;    reduced dims: 
 #&gt;    is_h5: FALSE
 #&gt;    Reference: hg19
-#&gt;    Physical size: 40.8 Kb</div></pre>
+#&gt;    Physical size: 42.1 Kb</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

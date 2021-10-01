@@ -152,8 +152,8 @@
   regions <span class='op'>=</span> <span class='cn'>NULL</span>,
   n_chunks <span class='op'>=</span> <span class='fl'>1</span>,
   n_threads <span class='op'>=</span> <span class='fl'>1</span>,
-  type <span class='op'>=</span> <span class='st'>"score"</span>,
-  how <span class='op'>=</span> <span class='st'>"mean"</span>,
+  assay <span class='op'>=</span> <span class='st'>"score"</span>,
+  by <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"mean"</span>, <span class='st'>"median"</span>, <span class='st'>"max"</span>, <span class='st'>"min"</span>, <span class='st'>"sum"</span>, <span class='st'>"sd"</span><span class='op'>)</span>,
   overlap_type <span class='op'>=</span> <span class='st'>"within"</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>,
   group <span class='op'>=</span> <span class='cn'>NULL</span>
@@ -179,11 +179,11 @@
       <td><p>Number of parallel instances. <code>n_cores</code> should be less than or equal to <code>n_chunks</code>. If <code>n_chunks</code> is not specified, then <code>n_chunks</code> is initialized to be equal to <code>n_cores</code>. Default = 1.</p></td>
     </tr>
     <tr>
-      <th>type</th>
+      <th>assay</th>
       <td><p>string; the assay to be summarized. Default 'score'</p></td>
     </tr>
     <tr>
-      <th>how</th>
+      <th>by</th>
       <td><p>closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'</p></td>
     </tr>
     <tr>
@@ -212,10 +212,10 @@
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
 <span class='fu'>get_region_summary</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,
    regions <span class='op'>=</span> <span class='fu'>data.table</span><span class='op'>(</span>chr <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>'chr1'</span>,<span class='st'>'chr2'</span><span class='op'>)</span>, start <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>)</span>, end <span class='op'>=</span>  <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>10000000</span><span class='op'>)</span><span class='op'>)</span>,
-   type <span class='op'>=</span> <span class='st'>'score'</span>, how <span class='op'>=</span> <span class='st'>'mean'</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Generating region summary...</span></div><div class='output co'>#&gt; <span class='message'>Summarizing by average</span></div><div class='output co'>#&gt; <span class='message'>Region summary generating in 0.16s</span></div><div class='output co'>#&gt;     chr start      end n_overlap_CpGs rid        C1  C2  C3  C4
-#&gt; 1: chr1     1 10000000              2   1 100.00000 100 100 100
-#&gt; 2: chr2     1 10000000              6   2  83.33333   0 100   0</div></pre>
+   assay <span class='op'>=</span> <span class='st'>'score'</span>, by <span class='op'>=</span> <span class='st'>'mean'</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Generating region summary...</span></div><div class='output co'>#&gt; <span class='message'>Summarizing by average</span></div><div class='output co'>#&gt; <span class='message'>Region summary generating in 0.13s</span></div><div class='output co'>#&gt;     chr start      end n_overlap_CpGs rid        C1 C2 C3 C4
+#&gt; 1: chr1     1 10000000              2   1 1.0000000  1  1  1
+#&gt; 2: chr2     1 10000000              6   2 0.8333333  0  1  0</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

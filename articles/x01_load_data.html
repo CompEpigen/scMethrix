@@ -100,7 +100,7 @@
       <h1 data-toc-skip>01: Reading in the bedgraph data</h1>
                         <h4 class="author">Andrew Lindsay, Reka Toth</h4>
             
-            <h4 class="date">2021-09-26</h4>
+            <h4 class="date">2021-10-01</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/CompEpigen/scMethrix/blob/master/vignettes/x01_load_data.Rmd"><code>vignettes/x01_load_data.Rmd</code></a></small>
       <div class="hidden name"><code>x01_load_data.Rmd</code></div>
@@ -152,24 +152,7 @@
   <span class="fu"><a href="https://rdrr.io/r/base/unlink.html">unlink</a></span><span class="op">(</span><span class="va">tar_dir</span>,recursive<span class="op">=</span><span class="cn">TRUE</span>,force<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
   <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.exists</a></span><span class="op">(</span><span class="va">tar_dir</span><span class="op">)</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/warning.html">warning</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">"Failed to remove data folder for [%s]"</span>, <span class="va">tar_dir</span><span class="op">)</span><span class="op">)</span>
 <span class="op">}</span><span class="op">)</span></code></pre></div>
-<pre><code>## [[1]]
-## NULL
-## 
-## [[2]]
-## NULL
-## 
-## [[3]]
-## NULL
-## 
-## [[4]]
-## NULL
-## 
-## [[5]]
-## NULL
-## 
-## [[6]]
-## NULL</code></pre>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">bed_files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span>
   path <span class="op">=</span> <span class="va">data_dir</span>,
   pattern <span class="op">=</span> <span class="st">"*.bed$"</span>,
@@ -186,7 +169,7 @@
 <h2 class="hasAnchor">
 <a href="#cpg-annotation" class="anchor"></a>CpG annotation</h2>
 <p>As a first step, we need a list of CpG sites in the respective genome. The CpG sites are listed using the respective <a href="https://bioconductor.org/packages/release/bioc/html/BSgenome.html">BSgenome</a> annotation package. The <code>read_beds</code> function is also able to extract CpG sites on it’s own, however, it might be beneficial to do it separately.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Genome of your preference to work with</span>
 <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"BiocManager"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>
   <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span>
@@ -195,7 +178,7 @@
   <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"BSgenome.Mmusculus.UCSC.mm10"</span><span class="op">)</span>
 <span class="op">}</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">BSgenome.Mmusculus.UCSC.mm10</span><span class="op">)</span> </code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"methrix"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
   <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"methrix"</span><span class="op">)</span>
 <span class="op">}</span>
@@ -207,7 +190,7 @@
 <h2 class="hasAnchor">
 <a href="#sample-annotation" class="anchor"></a>Sample annotation</h2>
 <p>An annotation table is also necessary to perform some analyses. The data will be added to the <code>scMethrix</code> object, as a <code>colData</code> slot. Each row of the table represents a single sample. Sample names are taken from the input file names, and stored as row.names. Subsequent information about each sample (e.g., cell type, alternate IDs, sample source, etc) are stored as columns within this <code>data.frame</code>. To access this data, see <a href="#saving-experiment-metadata">Saving experiment metadata</a>.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">sample_anno</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>
   row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span>
   pattern <span class="op">=</span> <span class="st">".bed$"</span>,
@@ -227,7 +210,7 @@
 <h2 class="hasAnchor">
 <a href="#reading-bedgraph-files" class="anchor"></a>Reading bedGraph files</h2>
 <p><code>read_beds</code> function is a versatile bedgraph reader intended to import bedgraph files generated virtually by any sort of methylation calling program. It requires user to provide indices for chromosome names, start position and other required fields. There are also presets available to import <code>bedgraphs</code> from most common programs such as <code>Bismark</code> (.cov format), <code>MethylDackel</code>, and <code>MethylcTools</code>. In this case, there is no need to define e.g. <code>chr_idx</code> <code>start_idx</code> arguments, the function will automatically assign them. To know the exact parameters, it might worth to take a look at one of the files, to see the column order.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">fread</span><span class="op">(</span><span class="va">bed_files</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></code></pre></div>
 <p>The <code>read_beds</code> function adds CpGs missing from the reference set, and creates a methylation/coverage matrices. Once the process is complete - it returns an object of class <code>scMethrix</code> which in turn inherits <code>SingleCellExperiment</code> class. <code>scMethrix</code> object contains ‘methylation’ and (optionally) ‘coverage’ matrices (either in-memory or as on-disk HDF5 arrays) along with pheno-data and other basic info. This object can be passed to all downstream functions for various analysis. For further details on the data structure, see the <code>SingleCellExperiment</code> package: <a href="https://bioconductor.org/packages/release/bioc/html/SingleCellExperiment.html">SingleCellExperiment</a></p>
@@ -235,7 +218,7 @@
 <li>For computers with large memory, increase speed using <code>batch_size</code> parameter. This will open multiple files at once, but keep in mind that increasing the batch size will increase the memory needs as well.</li>
 </ul>
 <p>A more detailed description of the <code>read_beds</code> function is here: <a href="https://compepigen.github.io/WGBS_best_practice/read_bedgraphs.html">read_beds</a>)</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_beds.html">read_beds</a></span><span class="op">(</span>
   files <span class="op">=</span> <span class="va">bed_files</span>,
   ref_cpgs <span class="op">=</span> <span class="va">mm19_cpgs</span>,
@@ -261,10 +244,10 @@
 <h2 class="hasAnchor">
 <a href="#extracting-assay-matricies" class="anchor"></a>Extracting assay matricies</h2>
 <p>After the experiment is created, an assay matrix can be generated. Genomic loci can also be added (<code>add_loci</code>), be formatted as a <code>GenomicRanges</code> object if desired, and ordered by variance (<code>order_by_sd</code>). Additionally, the methylation and coverage matrices can be directly obtained with the functions <code>score()</code> and <code>counts()</code>.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">mtx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_matrix.html">get_matrix</a></span><span class="op">(</span><span class="va">meth</span>, assay<span class="op">=</span><span class="st">"score"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">mtx</span><span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Add genomic loci, put in a GRanges object, and order by SD</span>
 <span class="va">mtx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_matrix.html">get_matrix</a></span><span class="op">(</span><span class="va">meth</span>, assay<span class="op">=</span><span class="st">"score"</span>, add_loci <span class="op">=</span> <span class="cn">TRUE</span>, in_granges<span class="op">=</span><span class="cn">TRUE</span>, order_by_sd <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">mtx</span><span class="op">)</span></code></pre></div>
@@ -276,17 +259,17 @@
 <ol style="list-style-type: decimal">
 <li>Experiment-wide metadata: General information is stored in metadata() as a named <code>list</code>. This can be information like genome accession, GEO IDs, authors, or any other information that needs just a single variable.</li>
 </ol>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">metadata</span><span class="op">(</span><span class="va">scm</span><span class="op">)</span></code></pre></div>
 <ol start="2" style="list-style-type: decimal">
 <li>Range metadata: Information about ranges is stored as a <code>data.frame</code> in mcols(). This is stored within the rowRanges() sub-object inside</li>
 </ol>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">mcols</span><span class="op">(</span><span class="va">scm</span><span class="op">)</span></code></pre></div>
 <ol start="3" style="list-style-type: decimal">
 <li>Sample metadata: Information about samples is stored as a <code>data.frame</code> in colData(). This can include alternate samples IDs, run IDs, tissue types, or anything associated with individual samples.</li>
 </ol>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">colData</span><span class="op">(</span><span class="va">scm</span><span class="op">)</span></code></pre></div>
 </div>
 </div>
