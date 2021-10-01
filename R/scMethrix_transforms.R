@@ -10,9 +10,11 @@
 #' @export
 transform_assay <- function(scm, assay = "score", new_assay = NULL, trans = NULL, h5_temp = NULL) {
   
-  check.scm(scm)
-  if (typeof(trans) != "closure") stop("A valid transform function must be specified.", call. = FALSE)
-  assay <- assay.match(scm,assay)
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
+  .validateType(input = new_assay, type = "string")
+  .validateType(input = trans, type = "function")
+  #.validateType(input = h5_temp, type = "directory")
   
   if (new_assay %in% SummarizedExperiment::assayNames(scm)) 
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
@@ -75,7 +77,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 
   yid <- NULL
 
-  check.scm(scm)
+  .validateExp(scm)
+  
   if (is.null(h5_dir) && is_h5(scm)) stop("Output directory must be specified")
   if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
   
@@ -85,7 +88,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
  # if (is_h5(scm) && is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
   
-  bin_by = arg.match(bin_scMethrix,bin_by)
+  bin_by = .validateArg(bin_by,bin_scMethrix)
   
   if (verbose) message("Binning experiment...")
   
@@ -507,7 +510,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   
   Group <- NULL
   
-  check.scm(scm)
+  .validateExp(scm)
   if (!(colname %in% colnames(colData(scm)))) 
     stop("Cannot find column `",colname,"` in colData (Avail: ",paste(names(colData(scm)),collapse=", "),")")
   
@@ -613,8 +616,8 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   
   . <- NULL
   
-  check.scm(scm)
-  assay <- assay.match(scm,assay)
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
   
   if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
     if (new_assay == "score") stop("Cannot overwrite the score assay")
@@ -712,24 +715,24 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   
   yid <- NULL
   
-  check.scm(scm)
-  assay <- assay.match(scm,assay)
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
   
   if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
     if (new_assay == "score") stop("Cannot overwrite the score assay")
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   }
   
-  type = arg.match(impute_regions,type)
+  type = .validateArg(type,impute_regions)
   
   if (is_h5(scm)) warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
 
   if (verbose) message("Starting imputation by ",type,start_time())
   
-  if (type == "kNN") {
+  if (type == "knn") {
     op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
                                            rowmax = 1.0, colmax = 1.0, maxp = 1500, ...)$data
-  } else if (type == "iPCA") {
+  } else if (type == "ipca") {
     if (length(n_pc) > 1) {
       warning("Caution: n_pc is given as range. This can be very time-intensive.")
       n_pc <- missMDA::estim_ncpPCA(as.matrix(get_matrix(scm,assay = assay)),ncp.min = n_pc[1], ncp.max = n_pc[2], 
@@ -738,7 +741,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     }
     
     op <- function(mtx) missMDA::imputePCA(mtx, ncp = n_pc, ...)$completeObs
-  } else if (type == "RF") {
+  } else if (type == "rf") {
     op <- function(mtx) missForest::missForest(mtx, ...)$ximp
   } else {
     op = type
@@ -793,7 +796,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
 #' generate_training_set(scMethrix_data, training_prop = 0.2)
 #' @export
 generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123") {
-  check.scm(scm)
+  .validateExp(scm)
   
   if (training_prop > 1 || training_prop < 0) stop("training_prop must in the range of [0,1]", call. = FALSE)
   
@@ -821,7 +824,7 @@ generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123")
 #' @export
 generate_random_subset <- function(scm = NULL, n_cpgs = 10000, seed = "123") {
   
-  check.scm(scm)
+  .validateExp(scm)
   
   if (n_cpgs > nrow(scm) || n_cpgs < 1) {
     n_cpgs = max(1,n_cpgs)

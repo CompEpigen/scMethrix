@@ -17,7 +17,7 @@ test_that("get_distance_matrix", {
       scm <- impute_regions(scm) 
     }
     
-    expect_error(get_distance_matrix(scm,assay="impute",type="not a metric"),"Invalid input")
+    expect_error(get_distance_matrix(scm,assay="impute",type="not a metric"),msg.arg.match)
     
     invisible(lapply(types, function(metric) {
       dist <- get_distance_matrix(scm, assay="impute",type=metric)
@@ -48,7 +48,7 @@ test_that("cluster_scMethrix", {
       scm <- impute_regions(scm) 
     }
     
-    expect_error(cluster_scMethrix(scm,assay="impute",type="not a type"), "Invalid input")
+    expect_error(cluster_scMethrix(scm,assay="impute",type="not a type"), msg.arg.match)
     
     #dist <- get_distance_matrix(scm, assay="impute")
 

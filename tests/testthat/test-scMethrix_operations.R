@@ -26,9 +26,8 @@ test_that("remove_assay", {
   expect_error(remove_assay("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(remove_assay(scm="not scMethrix"))
-    expect_error(remove_assay(scm, assay="not an assay"))
-    expect_error(remove_assay(scm, assay="score"))
+    expect_error(remove_assay(scm, assay="not an assay"),msg.assay.match)
+    expect_error(remove_assay(scm, assay="score"),"Score assay cannot be removed")
     
     plus1 <- transform_assay(scm,trans=function(x) x+1,assay="score",new_assay="plus1")
     expect_false(isTRUE(all.equal(assays(scm), assays(plus1))))

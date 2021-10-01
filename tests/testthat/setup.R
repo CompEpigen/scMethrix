@@ -21,9 +21,10 @@ n_cpg <- nrow(scm.mem)
 n_samples <- ncol(scm.mem)
 
 # These should match the error messages given in the respective functions in accessory_funcs.R
-msg.check.scm <- "A valid scMethrix object needs to be supplied"
-msg.assay.match <- "Invalid assay. No assay named"
-msg.arg.match <- "Invalid input for"
+msg.check.scm <- "Invalid scMethrix"
+msg.assay.match <- "Invalid assay"
+msg.arg.match <- "Invalid arg"
+msg.type.match <- "Invalid type"
 
 # scMethrix_data <- scm.mem
 # usethis::use_data(scMethrix_data,overwrite=TRUE)

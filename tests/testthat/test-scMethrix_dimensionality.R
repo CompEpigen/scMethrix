@@ -21,6 +21,7 @@ test_that("reduce_cpgs", {
 test_that("dim_red_scMethrix", {
 
   expect_error(dim_red_scMethrix("not scMethrix"),msg.check.scm)
+  expect_error(dim_red_scMethrix(scm.mem,type="not a type"),msg.arg.match)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
 

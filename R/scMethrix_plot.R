@@ -7,7 +7,7 @@
 #' @export
 prepare_plot_data <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL){
   
-  check.scm(scm)
+  .validateExp(scm)
   
   if (!is.null(n_cpgs)){
     if (!is.numeric(n_cpgs)){
@@ -97,7 +97,7 @@ plot_violin <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL
                         col_palette = "RdYlGn", show_legend = TRUE) {
   variable <- Meth <- NULL
   
-  check.scm(scm)
+  .validateExp(scm)
 
   if (is.null(regions)) regions = rowRanges(scm)
   
@@ -130,7 +130,7 @@ plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NUL
   
   variable <- Meth <- NULL
   
-  check.scm(scm)
+  .validateExp(scm)
   
   if (is.null(regions)) regions = rowRanges(scm)
   
@@ -169,7 +169,7 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
   
   value <- variable <- NULL
   
-  check.scm(scm)
+  .validateExp(scm)
   
   colors_palette <- get_palette(ncol(scm), col_palette)
   
@@ -263,7 +263,7 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
   
   Sparsity <- variable <- NULL
   
-  check.scm(scm)
+  .validateExp(scm)
   
   type <- match.arg(arg = type, choices = c("box", "scatter"), several.ok = FALSE)
   
@@ -310,7 +310,7 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
 plot_stats <- function(scm, assay = "score", stat = "mean", ignore_chr = NULL,
                        samples = NULL, n_col = NULL, n_row = NULL) {
   
-  check.scm(scm)
+  .validateExp(scm)
   
   plot_dat = get_stats(scm,assay=assay)
   
@@ -418,7 +418,7 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
   
   X <- Y <- color_me <- shape_me <- row_names <- ..col_anno <- ..shape_anno <- color <- shape <- NULL
   
-  check.scm(scm)
+  .validateExp(scm)
   
   dim_red <- reducedDim(scm,type=dim_red)
   

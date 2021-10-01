@@ -19,7 +19,7 @@ export_beds <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE, 
   
   meth <- cov <- NULL
   
-  check.scm(scm)
+  .validateExp(scm)
   
   if (is.null(path)){
     stop("A valid path needs to be supplied.", call. = FALSE)
@@ -123,7 +123,7 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
 #' @export
 export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) {
 
-  check.scm(scm)
+  .validateExp(scm)
   
   if (!has_cov(scm)) stop("BSSeq requires a coverage matrix.", call. = FALSE)
 
@@ -156,7 +156,7 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) 
 #' @export
 export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = NULL){
 
-  check.scm(scm)
+  .validateExp(scm)
   
   if (is.null(path)){
     stop("A valid path needs to be supplied.", call. = FALSE)
@@ -196,7 +196,7 @@ export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = N
 
 export_seurat <- function(scm,assay="score", path = NULL) {
   
-  check.scm(scm)
+  .validateExp(scm)
   if (!has_cov(scm)) stop("Seurat requires a coverage matrix.", call. = FALSE)
   
   cnt <- counts(scm)

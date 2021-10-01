@@ -86,7 +86,7 @@ test_that("transform_assay", {
   trans <- function(x) x+1
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(transform_assay(scm,trans="not closure"),"A valid transform function must be specified")
+    expect_error(transform_assay(scm,trans="not closure"),msg.type.match)
     expect_warning(transform_assay(scm, trans=trans, assay="score",new_assay="score"))
     
     # Create a new assay with value of x+1

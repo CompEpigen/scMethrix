@@ -12,7 +12,7 @@
 #' @export
 get_metadata_stats <- function(scm) {
   
-  check.scm(scm)
+  .validateExp(scm)
   
   stats <-
     data.table::data.table(
@@ -39,8 +39,8 @@ get_metadata_stats <- function(scm) {
 #' @export
 remove_assay <- function(scm=NULL, assay=NULL) {
   
-  check.scm(scm)
-  assay <- assay.match(scm,assay)
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
   if (assay == "score") stop("Score assay cannot be removed.", call. = FALSE)
   
   assays(scm) <- assays(scm)[-which(SummarizedExperiment::assayNames(scm) == assay)]
@@ -81,12 +81,12 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #' @export
 merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 
-  check.scm(scm1)
-  check.scm(scm2)
+  .validateExp(scm1)
+  .validateExp(scm2)
 
   if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.")
   
-  by = arg.match(merge_scMethrix,by)
+  by = .validateArg(by,merge_scMethrix)
   
   names1 = SummarizedExperiment::assayNames(scm1)
   names2 = SummarizedExperiment::assayNames(scm2)
@@ -199,7 +199,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads = 1, assay="score", by = c('mean', 'median', 'max', 'min', 'sum', 'sd'), 
                                overlap_type = "within", verbose = TRUE, group = NULL) {
   
-  check.scm(scm) 
+  .validateExp(scm) 
   
   if (!is.null(group) && !(group %in% colnames(scm@colData))){
     stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
@@ -212,8 +212,8 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
   
   if(verbose) message("Generating region summary...",start_time())
   
-  assay = match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm))
-  by = arg.match(get_region_summary,by)
+  assay = .validateAssay(scm,assay)
+  by = .validateArg(by,get_region_summary)
   
   yid  <- NULL
   
@@ -350,13 +350,13 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
 #--------------------------------------------------------------------------------------------------------------------------
 get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges=FALSE, order_by_sd=FALSE) {
   
-  check.scm(scm)
+  .validateExp(scm)
   
   if (add_loci == FALSE & in_granges == TRUE)
     warning("Without genomic locations (add_loci= FALSE), it is not possible to convert the results to GRanges, ", 
             "the output will be a data.frame object. ")
   
-  assay <- assay.match(scm,assay)
+  assay <- .validateAssay(scm,assay)
   mtx <- SummarizedExperiment::assay(x = scm, i = which(assay == SummarizedExperiment::assayNames(scm)))
   
   if (order_by_sd) {
@@ -484,7 +484,7 @@ load_HDF5_scMethrix <- function(dir = NULL, verbose = TRUE, ...) {
 #' @export
 convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
   
-  check.scm(scm) 
+  .validateExp(scm) 
   if (!is_h5(scm)) stop("Input scMethrix must be in HDF5 format.")
   
   if (verbose) message("Converting HDF5 scMethrix to in-memory", start_time())
@@ -510,7 +510,7 @@ convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
 #' @export
 convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
   
-  check.scm(scm)
+  .validateExp(scm)
   if (is_h5(scm)) stop("Input scMethrix is already in HDF5 format.")
   
   if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
@@ -557,14 +557,14 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 #' @export
 subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), overlap_type="within",verbose=TRUE) {
   
-  check.scm(scm)  
+  .validateExp(scm)  
   
   if (is.null(regions) & is.null(contigs) & is.null(samples)) {
     warning("At least 1 argument mandatory for subsetting. No subset generated")
     return(scm)
   }
   
-  by = arg.match(subset_scMethrix,by)
+  by = .validateArg(by,subset_scMethrix)
   
   if (by == "exclude") {
     
@@ -634,8 +634,8 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE) {
 
   x <- NULL
   
-  check.scm(scm)  
-  assay <- assay.match(scm,assay)
+  .validateExp(scm)  
+  assay <- .validateAssay(scm,assay)
   
   message("Getting descriptive statistics...",start_time())
 
@@ -683,7 +683,7 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE) {
 #' @export
 remove_uncovered <- function(scm = NULL, verbose = TRUE) {
 
-  check.scm(scm)
+  .validateExp(scm)
   
   if (verbose) message("Removing uncovered CpGs...", start_time())
   
@@ -721,8 +721,8 @@ remove_uncovered <- function(scm = NULL, verbose = TRUE) {
 #' @export
 mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, avg_threshold = NULL, n_threads=1 , verbose = TRUE) {
   
-  check.scm(scm)
-  assay <- assay.match(scm,assay)
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
   
   if (!is_h5(scm) && n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
@@ -783,8 +783,8 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, 
 #' @export
 mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, prop_threshold = NULL, n_threads=1 , verbose = TRUE) {
   
-  check.scm(scm)
-  assay <- assay.match(scm,assay)
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
   
   if (!is_h5(scm) & n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
@@ -832,8 +832,8 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
 #' @export
 mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, n_threads = 1, verbose = TRUE) {
 
-  check.scm(scm)
-  assay <- assay.match(scm,assay)
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
   
   if (!is_h5(scm) & n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")

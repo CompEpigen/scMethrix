@@ -20,15 +20,15 @@
 #' @export
 get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman", "kendall", "euclidean", "manhattan", "canberra", "binary", "minkowski"),verbose=TRUE) {
   
-  check.scm(scm)
-  assay <- assay.match(scm,assay)
-  if (typeof(type) != "closure") type = arg.match(get_distance_matrix,type)
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
+  if (!is.function(type)) type = .validateArg(type,get_distance_matrix)
     
   mtx <- as.matrix(t(get_matrix(scm,assay=assay)))
   
   if (any(is.na(mtx))) stop("There are NA values present in the matrix. Please fill/impute/bin to remove NAs.")
   
-  if (typeof(type) == "closure") { # For the arbitrary case
+  if (is.function(type)) { # For the arbitrary case
     dist <- type(mtx)
   } else if (type == "spearman") {
     dist <- spearman.dist(mtx)
@@ -83,9 +83,9 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay=
 
   Cluster <- Sample <- NULL
 
-  check.scm(scm)
-  assay <- assay.match(scm,assay)
-  if (typeof(type) != "closure") type = arg.match(cluster_scMethrix,type)
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
+  if (typeof(type) != "closure") type = .validateArg(type,cluster_scMethrix)
 
   if (is.null(dist)) dist <- get_distance_matrix(scm, assay=assay)
   
@@ -148,7 +148,7 @@ append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
 
   Row.names <- NULL
   
-  check.scm(scm)
+  .validateExp(scm)
 
   # Convert vector to data.frame
   if (is.vector(colData)) {

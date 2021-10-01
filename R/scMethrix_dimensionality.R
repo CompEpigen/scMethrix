@@ -15,10 +15,10 @@
 #' @export
 reduce_cpgs <- function(scm, assay = "score", var =  c("top", "rand"), top_var = 1000, na.rm = FALSE, verbose = FALSE) {
 
-  check.scm(scm)
-  assay <- assay.match(scm,assay)
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
   
-  var = arg.match(reduce_cpgs,var)
+  var = .validateArg(var,reduce_cpgs)
   
   if (verbose) message("Generating reduced dataset...")
   
@@ -86,17 +86,17 @@ reduce_cpgs <- function(scm, assay = "score", var =  c("top", "rand"), top_var =
 #' 
 #' @export
 dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), var = "top", top_var = 1000, perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
+
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
   
-  check.scm(scm)
-  assay <- assay.match(scm,assay)
-  
-  type = arg.match(dim_red_scMethrix,type)
+  type = .validateArg(type,dim_red_scMethrix)
   
   if (verbose) message("Starting imputation...",start_time())
   
   meth <- reduce_cpgs(scm,assay = assay, var = var, top_var = top_var, verbose = verbose, na.rm = TRUE)
   
-  if (type == "tSNE") {
+  if (type == "tsne") {
     
     meth_sub <- Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), k = n_components)#, ...)
     
@@ -104,13 +104,13 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), v
     
     if (verbose) message("tSNE generated in ",stop_time())
     
-  } else if (type == "UMAP") {
+  } else if (type == "umap") {
     
     umap <- umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)),n_components=n_components)#, ...)
     
     reducedDim(scm, "UMAP") <- umap$layout
     
-  } else if (type == "PCA") {
+  } else if (type == "pca") {
     
     meth <- prcomp(x = as.matrix(t(meth)), retx = TRUE)#, ...)
     

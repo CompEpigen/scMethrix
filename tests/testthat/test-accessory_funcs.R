@@ -94,8 +94,82 @@ test_that("subset_ref_cpgs",{
   
 })
 
-test_that("check.scm",{
-  expect_error(check.scm("not scMethrix"),msg.check.scm)
-  expect_true(check.scm(scm.mem))
-  expect_true(check.scm(scm.h5))
+test_that(".validateExp",{
+  expect_error(.validateExp("not scMethrix"),msg.check.scm)
+  expect_true(.validateExp(scm.mem))
+  expect_true(.validateExp(scm.h5))
+})
+
+test_that(".validateAssay",{
+  expect_error(.validateAssay("not scMethrix"),msg.check.scm)
+  expect_equivalent(.validateAssay(scm.mem,assay="score"),"score")
+  expect_equivalent(.validateAssay(scm.mem,assay="sco"),"score")
+  expect_error(.validateAssay(scm.mem,assay="not an assay"),msg.assay.match)
+})
+
+
+test_that(".validateArg",{
+  func <- function(var = c("banana","banjo")) {}
+    
+  var = "banana"
+  expect_equivalent(.validateArg(var,func),"banana")    
+  var = "banjo"
+  expect_equivalent(.validateArg(var,func),"banjo")  
+  var = "bAnA"
+  expect_equivalent(.validateArg(var,func),"banana")  
+  var = "ban"
+  expect_error(.validateArg(var,func), msg.arg.match)  
+  var = "bad input"
+  expect_error(.validateArg(var,func), msg.arg.match) 
+    
+  #TODO: test input for argument list
+})
+
+test_that(".validateType",{
+  
+  expect_error(.validateType(input = "an input"),           "No type specified")
+  expect_error(.validateType(input = "an input",            type = "not a type"),msg.arg.match)
+  
+  expect_true (.validateType(input = 10,                     type = "integer"))
+  expect_true (.validateType(input = 10,                     type = "INT"))
+  expect_error(.validateType(input = "not an int",           type = "integer"),msg.type.match)
+  
+  expect_true (.validateType(input = 10.5,                   type = "numeric"))
+  expect_error(.validateType(input = "not an numeric",       type = "numeric"),msg.type.match)
+  
+  expect_true (.validateType(input = "A",                    type = "character"))
+  expect_error(.validateType(input = "not a character",      type = "character"),msg.type.match)
+  
+  expect_true (.validateType(input = "this is a string",     type = "string"))
+  expect_error(.validateType(input = 0,                      type = "string"),msg.type.match)
+  
+  expect_true (.validateType(input = c(1,2,3),               type = "vector"))
+  #expect_error(.validateType(input = 1,                      type = "vector"),msg.type.match)
+  
+  expect_true (.validateType(input = list(1,2,3),            type = "list"))
+  expect_error(.validateType(input = "not a list",           type = "list"),msg.type.match)
+  
+  expect_true (.validateType(input = TRUE,                   type = "boolean"))
+  expect_error(.validateType(input = "not a boolean",        type = "boolean"),msg.type.match)  
+  expect_true (.validateType(input = TRUE,                   type = "logical"))
+  expect_error(.validateType(input = "not a boolean",        type = "logical"),msg.type.match)
+  
+  tmpfile <- tempfile()
+  file.create(tmpfile)
+  expect_true (.validateType(input = tmpfile,                type = "file"))
+  expect_error(.validateType(input = "not a file",           type = "file"),msg.type.match)
+  
+  expect_true (.validateType(input = tempdir(),              type = "directory"))
+  expect_error(.validateType(input = "not an directory",     type = "directory"),msg.type.match)
+  
+  expect_true (.validateType(input = GRanges(),              type = "GRanges"))
+  expect_error(.validateType(input = "not an Granges",       type = "GRanges"),msg.type.match)
+  
+  expect_true (.validateType(input = sum,                    type = "function"))
+  expect_true (.validateType(input = function(x) x+1,        type = "function"))
+  expect_error(.validateType(input = "not a function",       type = "function"),msg.type.match)
+  
+  expect_true (.validateType(input = NULL,                   type = "null"))
+  expect_error(.validateType(input = "not null",             type = "null"),msg.type.match)
+  
 })
