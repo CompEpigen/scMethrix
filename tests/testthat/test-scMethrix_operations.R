@@ -176,7 +176,7 @@ test_that("convert_scMethrix", {
   expect_false(is_h5(scm.mem))
   expect_equal(class(get_matrix(scm.mem))[1],"matrix") 
   
-  scm <- convert_scMethrix(scm.mem)
+  scm <- convert_scMethrix(scm.mem,h5_dir = paste0(tempdir(),"/h5"))
   
   expect_true(is_h5(scm))
   expect_equal(as.numeric(score(scm)),as.numeric(score(scm.mem)))
@@ -320,13 +320,13 @@ test_that("get_region_summary", {
 
 test_that("mask_by_coverage", {
   expect_error(mask_by_coverage("not scMethrix"),msg.check.scm)
-  expect_error(mask_by_coverage(scm.mem,assay="not an assay"),"Invalid assay")
+  expect_error(mask_by_coverage(scm.mem,assay="not an assay"),msg.assay.match)
   expect_error(mask_by_coverage(remove_assay(scm.mem,assay="counts")))
   expect_error(mask_by_coverage(scm.mem,n_threads=2))
   expect_error(mask_by_coverage(scm.mem,low_threshold=-1),"low_threshold")
-  expect_error(mask_by_coverage(scm.mem,low_threshold="not numeric"),"low_threshold")
+  expect_error(mask_by_coverage(scm.mem,low_threshold="not numeric"),msg.type.match)
   expect_error(mask_by_coverage(scm.mem,avg_threshold=-1,"avg_threshold"))
-  expect_error(mask_by_coverage(scm.mem,avg_threshold="not numeric"),"avg_threshold")
+  expect_error(mask_by_coverage(scm.mem,avg_threshold="not numeric"),msg.type.match)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
 
@@ -343,14 +343,14 @@ test_that("mask_by_coverage", {
 
 test_that("mask_by_sample", {
   expect_error(mask_by_sample("not scMethrix"),msg.check.scm)
-  expect_error(mask_by_sample(scm.mem,assay="not an assay"),"Invalid assay")
+  expect_error(mask_by_sample(scm.mem,assay="not an assay"),msg.assay.match)
   expect_error(mask_by_sample(scm.mem,n_threads=2))
   expect_error(mask_by_sample(scm.mem,low_threshold=2,prop_threshold=1))
   expect_error(mask_by_sample(scm.mem,low_threshold=-1),"low_threshold")
-  expect_error(mask_by_sample(scm.mem,low_threshold="not numeric"),"low_threshold")
+  expect_error(mask_by_sample(scm.mem,low_threshold="not numeric"),msg.type.match)
   expect_error(mask_by_sample(scm.mem,prop_threshold=-1,"prop_threshold"))
   expect_error(mask_by_sample(scm.mem,prop_threshold=2,"prop_threshold"))
-  expect_error(mask_by_sample(scm.mem,prop_threshold="not numeric"),"prop_threshold")
+  expect_error(mask_by_sample(scm.mem,prop_threshold="not numeric"),msg.type.match)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
@@ -367,11 +367,11 @@ test_that("mask_by_sample", {
 
 test_that("mask_by_variance", {
   expect_error(mask_by_variance("not scMethrix"),msg.check.scm)
-  expect_error(mask_by_variance(scm.mem,assay="not an assay"),"Invalid assay")
+  expect_error(mask_by_variance(scm.mem,assay="not an assay"),msg.assay.match)
   expect_error(mask_by_variance(scm.mem,n_threads=2))
   expect_error(mask_by_variance(scm.mem,low_threshold=2,"low_threshold must be between 0 and 1"))
   expect_error(mask_by_variance(scm.mem,low_threshold=-1,"low_threshold must be between 0 and 1"))
-  expect_error(mask_by_variance(scm.mem,low_threshold="not numeric"),"low_threshold must be between 0 and 1")
+  expect_error(mask_by_variance(scm.mem,low_threshold="not numeric"),msg.type.match)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     

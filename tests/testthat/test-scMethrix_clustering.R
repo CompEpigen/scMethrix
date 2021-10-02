@@ -11,16 +11,19 @@ test_that("get_distance_matrix", {
     expect_error(get_distance_matrix(scm),"There are NA values present")
     expect_error(get_distance_matrix(scm,assay="not an assay"),msg.assay.match)
     
-    if (is_h5(scm)) {
-      expect_warning(scm <- impute_regions(scm), "Imputation cannot be done on HDF5 data.")
-    } else {
-      scm <- impute_regions(scm) 
-    }
+    scm <- transform_assay(scm,new_assay="fill", trans = function(x) fill(x,fill=0))
     
-    expect_error(get_distance_matrix(scm,assay="impute",type="not a metric"),msg.arg.match)
+    expect_error(get_distance_matrix(scm,assay="fill",type="not a metric"),msg.arg.match)
     
     invisible(lapply(types, function(metric) {
-      dist <- get_distance_matrix(scm, assay="impute",type=metric)
+      
+      if (is_h5(scm)) {
+        expect_warning(dist <- get_distance_matrix(
+          scm, assay="fill",type=metric), "Distance matrix cannot be generated for HDF5 data")
+      } else {
+        dist <- get_distance_matrix(scm, assay="fill",type=metric)
+      }
+      
       expect_equal(dim(as.matrix(dist)),rep(ncol(scm),2))
       expect_equal(row.names(as.matrix(dist)),row.names(colData(scm)))
       expect_false(any(is.na(as.matrix(dist))))
@@ -42,26 +45,24 @@ test_that("cluster_scMethrix", {
     expect_error(cluster_scMethrix(scm="not scMethrix"),msg.check.scm)
     expect_error(cluster_scMethrix(scm,assay="not an assay"),msg.assay.match)
     
-    if (is_h5(scm)) {
-      expect_warning(scm <- impute_regions(scm), "Imputation cannot be done on HDF5 data.")
-    } else {
-      scm <- impute_regions(scm) 
-    }
-    
-    expect_error(cluster_scMethrix(scm,assay="impute",type="not a type"), msg.arg.match)
-    
-    #dist <- get_distance_matrix(scm, assay="impute")
+    scm <- transform_assay(scm,new_assay="fill", trans = function(x) fill(x,fill=0))
 
-    #expect_equivalent(ncol(colData(scm)),0) # Check there's no colData before clustering
+    expect_error(cluster_scMethrix(scm,assay="fill",type="not a type"), msg.arg.match)
+    
+    if (is_h5(scm)) {
+      expect_warning(dist <- get_distance_matrix(scm, assay="fill"),"Distance matrix cannot be generated for HDF5 data")
+    } else {
+      dist <- get_distance_matrix(scm, assay="fill")
+    }
     
     invisible(lapply(types, function(type) {
       scm.c <- scm
       if (type == "model") {
         expect_warning(
-          scm.c <- cluster_scMethrix(scm.c,n_clusters=n_clusters,assay="impute",type=type,colname=name)
+          scm.c <- cluster_scMethrix(scm.c, dist = dist, n_clusters=n_clusters,assay="fill",type=type,colname=name)
           ,"n_clusters is ignored")
       } else {
-        scm.c <- cluster_scMethrix(scm.c,n_clusters=n_clusters,assay="impute",type=type,colname=name)
+        scm.c <- cluster_scMethrix(scm.c, dist = dist, n_clusters=n_clusters,assay="fill",type=type,colname=name)
       }
       
       cd <- colData(scm.c)

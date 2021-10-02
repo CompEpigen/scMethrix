@@ -1,7 +1,7 @@
 test_that("bin_scMethrix", {
 
   expect_error(bin_scMethrix("not scMethrix"),msg.check.scm)
-  expect_error(bin_scMethrix(scm.h5),"Output directory must be specified")
+  expect_error(bin_scMethrix(scm.h5,regions=GRanges()),msg.type.match)
 
   path <- paste0(h5_dir,"bin")
   regions <- GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,1000000000)) 
@@ -110,7 +110,7 @@ test_that("impute_regions", {
     # Check all the usable imputation methods
     lapply(list("kNN","iPCA","RF"), function (method) {
     invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-        expect_error(impute_regions(scm,assay = "not an assay"))
+        expect_error(impute_regions(scm,assay = "not an assay"),msg.assay.match)
         expect_error(impute_regions(scm,new_assay = "score"))
         expect_warning(impute_regions(scm,new_assay = "counts",type=method))
         

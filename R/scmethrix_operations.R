@@ -83,6 +83,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 
   .validateExp(scm1)
   .validateExp(scm2)
+  by <- .validateArg(by,merge_scMethrix)
 
   if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.")
   
@@ -180,26 +181,35 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 #' Extracts and summarizes methylation or coverage info by regions of interest
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
 #' @inheritParams generic_scMethrix_function
-#' @param regions genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object
+#' @param regions GRanges;  genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object
 #' @param assay string; the assay to be summarized. Default 'score'
 #' @param by closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'
 #' @param overlap_type string; defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #' #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.
-#' @param n_chunks Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
-#' @param n_threads Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
+#' @param n_chunks integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
+#' @param n_threads integer; Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
 #' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be tested group-wise.
 #' @importFrom methods setClass
 #' @return table of summary statistic for the given region
 #' @examples
 #' data('scMethrix_data')
 #' get_region_summary(scMethrix_data,
-#'    regions = data.table(chr = c('chr1','chr2'), start = c(1), end =  c(10000000)),
+#'    regions = GenomicRanges::GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,100000000)),
 #'    assay = 'score', by = 'mean')
 #' @export
-get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads = 1, assay="score", by = c('mean', 'median', 'max', 'min', 'sum', 'sd'), 
-                               overlap_type = "within", verbose = TRUE, group = NULL) {
+get_region_summary = function (scm = NULL, assay="score", regions = NULL, group = NULL, n_chunks=1, 
+                               n_threads = 1, by = c('mean', 'median', 'max', 'min', 'sum', 'sd'), 
+                               overlap_type = "within", verbose = TRUE) {
   
   .validateExp(scm) 
+  assay <- .validateAssay(scm,assay)
+  .validateType(regions,c("Granges","null"))
+  .validateType(group,c("string","null"))
+  .validateType(n_chunks,"integer")
+  .validateType(n_threads,"integer")
+  by <- .validateArg(by,get_region_summary)
+  .validateType(overlap_type,"string")
+  .validateType(verbose,"boolean")
   
   if (!is.null(group) && !(group %in% colnames(scm@colData))){
     stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
@@ -351,6 +361,10 @@ get_region_summary = function (scm = NULL, regions = NULL, n_chunks=1, n_threads
 get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges=FALSE, order_by_sd=FALSE) {
   
   .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
+  .validateType(add_loci,"boolean")
+  .validateType(in_granges,"boolean")
+  .validateType(order_by_sd,"boolean")
   
   if (add_loci == FALSE & in_granges == TRUE)
     warning("Without genomic locations (add_loci= FALSE), it is not possible to convert the results to GRanges, ", 
@@ -408,10 +422,10 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verb
   } else if (!is(scm, "SingleCellExperiment")) {
     stop("A valid SingleCellExperiment-derived object needs to be supplied.", call. = FALSE)
   }
-
-  if (is.null(h5_dir)) {
-    stop("Please provide the target directory containing ")
-  }
+  
+  .validateType(h5_dir,"string")
+  .validateType(replace,"boolean")
+  .validateType(verbose,"boolean")
 
   #if (is.null(h5_dir)) h5_dir = paste0(tempdir(),"/h5")
   
@@ -455,10 +469,9 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verb
 #' @export
 load_HDF5_scMethrix <- function(dir = NULL, verbose = TRUE, ...) {
   
-  if (is.null(dir)) {
-    stop("Please provide the target directory containing ")
-  }
-  
+  .validateType(dir,"directory")
+  .validateType(verbose,"boolean")
+
   if (verbose) message("Loading HDF5 object", start_time())
   
   scm <- HDF5Array::loadHDF5SummarizedExperiment(dir = dir, ...)
@@ -485,6 +498,8 @@ load_HDF5_scMethrix <- function(dir = NULL, verbose = TRUE, ...) {
 convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
   
   .validateExp(scm) 
+  .validateType(verbose,"boolean")
+  
   if (!is_h5(scm)) stop("Input scMethrix must be in HDF5 format.")
   
   if (verbose) message("Converting HDF5 scMethrix to in-memory", start_time())
@@ -512,6 +527,8 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
   
   .validateExp(scm)
   if (is_h5(scm)) stop("Input scMethrix is already in HDF5 format.")
+  .validateType(h5_dir,"string")
+  .validateType(verbose,"boolean")
   
   if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
 
@@ -558,13 +575,17 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), overlap_type="within",verbose=TRUE) {
   
   .validateExp(scm)  
+  .validateType(regions,c("Granges","null"))
+  .validateType(contigs,c("string","null"))
+  .validateType(samples,c("string","null"))
+  by <- .validateArg(by,subset_scMethrix)
+  .validateType(overlap_type,"string")
+  .validateType(verbose,"boolean")
   
   if (is.null(regions) & is.null(contigs) & is.null(samples)) {
     warning("At least 1 argument mandatory for subsetting. No subset generated")
     return(scm)
   }
-  
-  by = .validateArg(by,subset_scMethrix)
   
   if (by == "exclude") {
     
@@ -630,14 +651,15 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' get_stats(scMethrix_data,per_chr = FALSE)
 #' @return data.table of summary stats
 #' @export
-get_stats <- function(scm = NULL, assay="score",per_chr = TRUE) {
+get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE) {
 
   x <- NULL
   
   .validateExp(scm)  
   assay <- .validateAssay(scm,assay)
+  .validateType(per_chr,"boolean")
   
-  message("Getting descriptive statistics...",start_time())
+  if (verbose) message("Getting descriptive statistics...",start_time())
 
   ends <- len <- seqnames(scm)@lengths
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
@@ -666,7 +688,7 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE) {
     }
 
   gc()
-  message("Finished in ", stop_time())
+  if (verbose) message("Finished in ", stop_time())
   
   return(stats)
 }
@@ -684,6 +706,7 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE) {
 remove_uncovered <- function(scm = NULL, verbose = TRUE) {
 
   .validateExp(scm)
+  .validateType(verbose,"boolean")
   
   if (verbose) message("Removing uncovered CpGs...", start_time())
   
@@ -723,6 +746,10 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, 
   
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
+  .validateType(low_threshold,c("numeric","null"))
+  .validateType(avg_threshold,c("numeric","null"))
+  .validateType(n_threads,"integer")
+  .validateType(verbose,"boolean")
   
   if (!is_h5(scm) && n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
@@ -785,6 +812,10 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
   
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
+  .validateType(low_threshold,c("numeric","null"))
+  .validateType(prop_threshold,c("numeric","null"))
+  .validateType(n_threads,"integer")
+  .validateType(verbose,"boolean")
   
   if (!is_h5(scm) & n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
@@ -833,7 +864,11 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
 mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, n_threads = 1, verbose = TRUE) {
 
   .validateExp(scm)
+  .validateType(low_threshold,c("numeric","null"))
+  .validateType(n_threads,"integer")
   assay <- .validateAssay(scm,assay)
+  
+  .validateType(verbose,"boolean")
   
   if (!is_h5(scm) & n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
@@ -866,6 +901,10 @@ mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, 
 #' @export
 mask_helper <- function (scm, row_idx, verbose = TRUE) {
 
+  .validateExp(scm)
+  #.validateType(row_idx,"integer")
+  .validateType(verbose,"boolean")
+  
   # if (length(row_idx) == 0) {
   #   if (verbose) message("   No CpGs were masked (",stop_time(),"elapsed)")
   # } else if (length(row_idx) == nrow(scm)) {

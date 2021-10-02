@@ -41,17 +41,38 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = 20, n_threads = 0, 
+read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = 20, n_threads = 0, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE,
-                      zero_based = FALSE, reads = NULL, replace = FALSE, pipeline = NULL, stranded = FALSE,
-                      chr_idx = NULL, start_idx = NULL, end_idx = NULL, beta_idx = NULL,
+                      zero_based = FALSE, reads = NULL, replace = FALSE, 
+                      pipeline = c("Custom","Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"),
+                      stranded = FALSE, chr_idx = NULL, start_idx = NULL, end_idx = NULL, beta_idx = NULL,
                       M_idx = NULL, U_idx = NULL, strand_idx = NULL, cov_idx = NULL) {
 
-  if (verbose) message("File import starting...")
+  .validateType(files,"string")
+  #.validateType(ref_cpgs)
+  #.validateType(colData,"dataframe")
+  .validateType(genome_name,"string")
+  .validateType(batch_size,"integer")
+  .validateType(n_threads,"integer")
+  .validateType(h5,"boolean")
+  if (h5) .validateType(h5_dir,"string")
+  .validateType(desc,c("string","null"))
+  .validateType(verbose,"boolean")
+  .validateType(zero_based,"boolean")
+  #.validateType(reads,"dataframe")
+  .validateType(replace,"boolean")
+  pipeline <- .validateArg(pipeline,read_beds)
+  .validateType(stranded,"boolean")
+  .validateType(chr_idx,c("integer","null"))
+  .validateType(start_idx,c("integer","null"))
+  .validateType(end_idx,c("integer","null"))
+  .validateType(beta_idx,c("integer","null"))
+  .validateType(M_idx,c("integer","null"))
+  .validateType(U_idx,c("integer","null"))
+  .validateType(strand_idx,c("integer","null"))
+  .validateType(cov_idx,c("integer","null"))
   
-  if (is.null(files)) {
-    stop("Missing input files [files]", call. = FALSE)
-  }
+  if (verbose) message("File import starting...")
   
   if (!all(grepl("\\.(bed|bedgraph)", files))) {
     stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
@@ -71,7 +92,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   }
   
   # Get the correct indexes of the input beds
-  if (is.null(pipeline)) {
+  if (pipeline == "Custom") {
     if (verbose) message(paste0("BED column format:  Custom"))
     col_list <- parse_source_idx(chr_idx = chr_idx, start_idx = start_idx, end_idx = end_idx,
                                  beta_idx = beta_idx, cov_idx = cov_idx, strand_idx = strand_idx, 
@@ -128,7 +149,7 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
   
   if (h5) {
     
-    if (is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
+    #if (is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
     
     if(dir.exists(h5_dir) && !replace) stop("h5_dir already exists! Use 'replace=TRUE' to replace it. All 
                                             existing data in that directory will be deleted.") 
@@ -191,6 +212,13 @@ read_beds <- function(files = NULL, ref_cpgs = NULL, colData = NULL, genome_name
 #' @export
 read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch_size = 200, verbose = TRUE) {
 
+  # .validateType(files,"string")
+  # .validateType(col_list)
+  # .validateType(n_threads,"integer")
+  # .validateType(zero_based,"boolean")
+  # .validateType(batch_size,"integer")
+  # .validateType(verbose,"boolean")
+  
   # Parallel functionality
   if (n_threads != 0) {
     
@@ -431,6 +459,13 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
 
   . <- meths <- covs <- M <- U <- chr <- NULL
 
+  # .validateType(files,"string")
+  # .validateType(ref_cpgs,)
+  # .validateType(col_list)
+  # .validateType(zero_based,"boolean")
+  # .validateType(strand_collapse,"boolean")
+  # .validateType(fill,"boolean")
+  
   for (i in 1:length(files)) {
 
     bed <- suppressWarnings(data.table::fread(files[[i]], select = unname(col_list$col_idx),
@@ -523,6 +558,15 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
 #' }
 read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, h5_temp = NULL, zero_based = FALSE, 
                            verbose = TRUE) {
+  
+  # .validateType(files,"string")
+  # .validateType(ref_cpgs,"boolean")
+  # .validateType(col_list,"boolean")
+  # .validateType(batch_size,"integer")
+  # .validateType(n_threads,"integer")
+  # .validateType(h5_temp,c("string","null"))
+  # .validateType(zero_based,"boolean")
+  # .validateType(verbose,"boolean")
   
   if (verbose) message("Starting HDF5 object",start_time()) 
   
@@ -760,6 +804,14 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
 read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, zero_based = FALSE, 
                           verbose = TRUE) {
 
+  # .validateType(files,"string")
+  # .validateType(ref_cpgs,"boolean")
+  # .validateType(col_list,"boolean")
+  # .validateType(batch_size,"integer")
+  # .validateType(n_threads,"integer")
+  # .validateType(zero_based,"boolean")
+  # .validateType(verbose,"boolean")
+  
   if (verbose) message("Reading BED data...",start_time()) 
 
   if (n_threads != 0) {

@@ -117,6 +117,7 @@ test_that(".validateArg",{
   expect_equivalent(.validateArg(var,func),"banjo")  
   var = "bAnA"
   expect_equivalent(.validateArg(var,func),"banana")  
+  expect_error(.validateArg(var,func,ignore.case = F), msg.arg.match)  
   var = "ban"
   expect_error(.validateArg(var,func), msg.arg.match)  
   var = "bad input"
@@ -127,46 +128,63 @@ test_that(".validateArg",{
 
 test_that(".validateType",{
   
-  expect_error(.validateType(input = "an input"),           "No type specified")
+  expect_error(.validateType(input = "an input"),           "No valid type specified")
   expect_error(.validateType(input = "an input",            type = "not a type"),msg.arg.match)
   
   expect_true (.validateType(input = 10,                     type = "integer"))
+ # expect_true (.validateType(input = c(10,20,30),            type = "integer"))
   expect_true (.validateType(input = 10,                     type = "INT"))
   expect_error(.validateType(input = "not an int",           type = "integer"),msg.type.match)
+  #expect_error(.validateType(input = list(10,"not an int"),  type = "integer"),msg.type.match)
   
   expect_true (.validateType(input = 10.5,                   type = "numeric"))
-  expect_error(.validateType(input = "not an numeric",       type = "numeric"),msg.type.match)
+  #expect_true (.validateType(input = c(10.5,20.5,30.5),      type = "numeric"))
+  expect_error(.validateType(input = "not an num",           type = "numeric"),msg.type.match)
+  #expect_error(.validateType(input = list(10.5,"not an num"),type = "numeric"),msg.type.match)
   
   expect_true (.validateType(input = "A",                    type = "character"))
-  expect_error(.validateType(input = "not a character",      type = "character"),msg.type.match)
+  #expect_true (.validateType(input = c("A","B"),             type = "character"))
+  expect_error(.validateType(input = "not a char",           type = "character"),msg.type.match)
+  #expect_error(.validateType(input = c("A","not a char"),    type = "character"),msg.type.match)
   
-  expect_true (.validateType(input = "this is a string",     type = "string"))
+  expect_true (.validateType(input = "str1",                 type = "string"))
+  #expect_true (.validateType(input = c("str1","str2"),       type = "string"))
   expect_error(.validateType(input = 0,                      type = "string"),msg.type.match)
+  #expect_error(.validateType(input = list("str1",0),         type = "string"),msg.type.match)
   
   expect_true (.validateType(input = c(1,2,3),               type = "vector"))
   #expect_error(.validateType(input = 1,                      type = "vector"),msg.type.match)
   
-  expect_true (.validateType(input = list(1,2,3),            type = "list"))
-  expect_error(.validateType(input = "not a list",           type = "list"),msg.type.match)
+  expect_true (.validateType(input = list(1,2),              type = "list"))
+ # expect_true (.validateType(input = c(list(1,2),list(1,2)), type = "list"))
+  expect_error(.validateType(input = "not lst",              type = "list"),msg.type.match)
+  #expect_true (.validateType(input = c(list(1,2),"not lst"), type = "list"),msg.type.match)
   
   expect_true (.validateType(input = TRUE,                   type = "boolean"))
-  expect_error(.validateType(input = "not a boolean",        type = "boolean"),msg.type.match)  
+  #expect_true (.validateType(input = c(TRUE,TRUE),           type = "boolean"))
+  expect_error(.validateType(input = "not a bool",           type = "boolean"),msg.type.match)  
+  #expect_error(.validateType(input = c(T,"not a bool"),      type = "boolean"),msg.type.match) 
   expect_true (.validateType(input = TRUE,                   type = "logical"))
-  expect_error(.validateType(input = "not a boolean",        type = "logical"),msg.type.match)
+  expect_error(.validateType(input = "not a bool",           type = "logical"),msg.type.match)
   
   tmpfile <- tempfile()
   file.create(tmpfile)
   expect_true (.validateType(input = tmpfile,                type = "file"))
+  #expect_true (.validateType(input = c(tmpfile,tmpfile),     type = "file"))
   expect_error(.validateType(input = "not a file",           type = "file"),msg.type.match)
   
   expect_true (.validateType(input = tempdir(),              type = "directory"))
   expect_error(.validateType(input = "not an directory",     type = "directory"),msg.type.match)
   
+  gr <- GRanges(Rle(c("chr2", "chr2", "chr1", "chr3"), c(1, 3, 2, 4)), IRanges(1:10, width=10:1))
   expect_true (.validateType(input = GRanges(),              type = "GRanges"))
+  expect_true (.validateType(input = gr,                     type = "GRanges"))
+  #expect_true (.validateType(input = c(gr,gr),               type = "GRanges"))
   expect_error(.validateType(input = "not an Granges",       type = "GRanges"),msg.type.match)
   
   expect_true (.validateType(input = sum,                    type = "function"))
-  expect_true (.validateType(input = function(x) x+1,        type = "function"))
+  #expect_true (.validateType(input = c(sum,sum),             type = "function"))
+  #expect_true (.validateType(input = function(x) x+1,        type = "function"))
   expect_error(.validateType(input = "not a function",       type = "function"),msg.type.match)
   
   expect_true (.validateType(input = NULL,                   type = "null"))

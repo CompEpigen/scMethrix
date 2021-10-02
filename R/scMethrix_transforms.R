@@ -8,13 +8,13 @@
 #' data('scMethrix_data')
 #' transform_assay(scMethrix_data,assay="score",new_assay="plus1",trans=function(x){x+1})
 #' @export
-transform_assay <- function(scm, assay = "score", new_assay = NULL, trans = NULL, h5_temp = NULL) {
+transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans = NULL, h5_temp = NULL) {
   
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
-  .validateType(input = new_assay, type = "string")
-  .validateType(input = trans, type = "function")
-  #.validateType(input = h5_temp, type = "directory")
+  .validateType(new_assay,"string")
+  .validateType(trans, "function")
+  .validateType(h5_temp, c("string","null"))
   
   if (new_assay %in% SummarizedExperiment::assayNames(scm)) 
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
@@ -78,18 +78,31 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   yid <- NULL
 
   .validateExp(scm)
+  .validateType(regions,c("Granges","null"))
+  .validateType(bin_size,"integer")
+  bin_by <- .validateArg(bin_by,bin_scMethrix)
+  #.validateType(trans, c("function","null"))
+  sapply(trans, function (t) .validateType(t, c("function","null")))
+  .validateType(overlap_type,"string")
+  .validateType(overlap_type,"string")
+  if (is_h5(scm)) .validateType(h5_dir,"string")
+  .validateType(verbose,"boolean")
+  .validateType(batch_size,"integer")
+  .validateType(n_threads,"integer")
+  .validateType(replace,"boolean")
   
-  if (is.null(h5_dir) && is_h5(scm)) stop("Output directory must be specified")
-  if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
+  
+  
+    
+  #if (is.null(h5_dir) && is_h5(scm)) stop("Output directory must be specified")
+  #if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
   
   if (is.null(trans[["counts"]])) {
     trans <- c(trans, c(counts = function(x) sum(x,na.rm=TRUE)))#DelayedMatrixStats::colSums2(x,na.rm=TRUE)))
   }
   
  # if (is_h5(scm) && is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
-  
-  bin_by = .validateArg(bin_by,bin_scMethrix)
-  
+
   if (verbose) message("Binning experiment...")
   
   if (!is.null(regions)) {
@@ -511,6 +524,14 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   Group <- NULL
   
   .validateExp(scm)
+  .validateType(colname,"string")
+  sapply(trans, function (t) .validateType(t, c("function","null")))
+  if (is_h5(scm)) .validateType(h5_dir,"string")
+  .validateType(batch_size,"integer")
+  .validateType(n_threads,"integer")
+  .validateType(verbose,"boolean")
+  .validateType(replace,"boolean")
+  
   if (!(colname %in% colnames(colData(scm)))) 
     stop("Cannot find column `",colname,"` in colData (Avail: ",paste(names(colData(scm)),collapse=", "),")")
   
@@ -519,7 +540,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   if (is.null(trans[["counts"]])) 
     trans <- c(trans, c(counts = function(x) rowSums(x,na.rm=TRUE)))#DelayedMatrixStats::rowSums2(x,na.rm=TRUE)))
   
-  if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
+ # if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
   
   if (verbose) message("Starting to collapse experiment...",start_time())
   
@@ -717,22 +738,28 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
+  .validateType(new_assay,"string")
+  .validateType(regions,c("granges","null"))
+  .validateType(n_chunks,"integer")
+  .validateType(overlap_type,"string")
+  type = .validateArg(type,impute_regions)
+  .validateType(verbose,"boolean")
+  .validateType(k,"integer")
+  .validateType(n_pc,"integer")
   
   if (new_assay %in% SummarizedExperiment::assayNames(scm)) {
     if (new_assay == "score") stop("Cannot overwrite the score assay")
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   }
   
-  type = .validateArg(type,impute_regions)
-  
   if (is_h5(scm)) warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
 
   if (verbose) message("Starting imputation by ",type,start_time())
   
-  if (type == "knn") {
+  if (type == "kNN") {
     op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
                                            rowmax = 1.0, colmax = 1.0, maxp = 1500, ...)$data
-  } else if (type == "ipca") {
+  } else if (type == "iPCA") {
     if (length(n_pc) > 1) {
       warning("Caution: n_pc is given as range. This can be very time-intensive.")
       n_pc <- missMDA::estim_ncpPCA(as.matrix(get_matrix(scm,assay = assay)),ncp.min = n_pc[1], ncp.max = n_pc[2], 
@@ -741,7 +768,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     }
     
     op <- function(mtx) missMDA::imputePCA(mtx, ncp = n_pc, ...)$completeObs
-  } else if (type == "rf") {
+  } else if (type == "RF") {
     op <- function(mtx) missForest::missForest(mtx, ...)$ximp
   } else {
     op = type
@@ -797,6 +824,8 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
 #' @export
 generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123") {
   .validateExp(scm)
+  .validateType(training_prop,"numeric")
+  .validateType(seed,"string")
   
   if (training_prop > 1 || training_prop < 0) stop("training_prop must in the range of [0,1]", call. = FALSE)
   
@@ -825,6 +854,8 @@ generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123")
 generate_random_subset <- function(scm = NULL, n_cpgs = 10000, seed = "123") {
   
   .validateExp(scm)
+  .validateType(n_cpgs,"integer")
+  .validateType(seed,"string")
   
   if (n_cpgs > nrow(scm) || n_cpgs < 1) {
     n_cpgs = max(1,n_cpgs)

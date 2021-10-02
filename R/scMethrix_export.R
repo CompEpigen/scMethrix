@@ -5,8 +5,8 @@
 #' 
 #' If additional assays are used, and headers enabled, it is up to the user to ensure that assay names are not protected in any downstream analysis of the bedgraph files
 #' @inheritParams generic_scMethrix_function
-#' @param path character; the \code{\link{file.path}} of the directory to save the files
-#' @param suffix character; optional suffix to add to the exported bed files 
+#' @param path string; the \code{\link{file.path}} of the directory to save the files
+#' @param suffix string; optional suffix to add to the exported bed files 
 #' @param include boolean; flag to include the values of non-standard assays in the bedgraph file
 #' @param header boolean; flag to add the header onto each column
 #' @param na.rm boolean; flag to remove the NA values from the output data
@@ -15,15 +15,17 @@
 #' data('scMethrix_data')
 #' export_beds(scMethrix_data,path=paste0(tempdir(),"/export"))
 #' @export
-export_beds <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE, include = FALSE, na.rm = TRUE, header = FALSE) {
+export_beds <- function(scm = NULL, path = NULL, suffix = NULL,  include = FALSE, na.rm = TRUE, header = FALSE, verbose = TRUE) {
   
   meth <- cov <- NULL
   
   .validateExp(scm)
-  
-  if (is.null(path)){
-    stop("A valid path needs to be supplied.", call. = FALSE)
-  }
+  .validateType(path,c("directory","string"))
+  .validateType(suffix,c("string","null"))
+  .validateType(include,"boolean")
+  .validateType(na.rm,"boolean")
+  .validateType(header,"boolean")
+  .validateType(verbose,"boolean")
   
   if (verbose) message("Exporting beds to ",path,start_time())
   
@@ -81,6 +83,9 @@ export_beds <- function(scm = NULL, path = NULL, suffix = NULL, verbose = TRUE, 
 export_methrix <- function(scm = NULL, h5_dir = NULL) {
   chr <- m_obj <- NULL
   
+  .validateExp(scm)
+  .validateType(h5_dir,"string")
+  
   rrng <- as.data.table(rowRanges(scm))
   rrng[,c("width","end") := NULL]
   names(rrng) <- c("chr","start","strand")
@@ -124,9 +129,11 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
 export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) {
 
   .validateExp(scm)
-  
   if (!has_cov(scm)) stop("BSSeq requires a coverage matrix.", call. = FALSE)
-
+  .validateAssay(scm,m_assay)
+  .validateAssay(scm,c_assay)
+  .validateType(path,"string")
+  
   # if (anyNA(get_matrix(scm,m_assay)) || anyNA(get_matrix(scm,c_assay)))
   #   warning("NAs present in assay. These will be filled with zero values.")
   
@@ -157,6 +164,9 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) 
 export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = NULL){
 
   .validateExp(scm)
+  .validateAssay(scm,assay)
+  .validateType(path,"string")
+  .validateType(samp_names,"string")
   
   if (is.null(path)){
     stop("A valid path needs to be supplied.", call. = FALSE)
@@ -198,6 +208,8 @@ export_seurat <- function(scm,assay="score", path = NULL) {
   
   .validateExp(scm)
   if (!has_cov(scm)) stop("Seurat requires a coverage matrix.", call. = FALSE)
+  .validateAssay(scm,assay)
+  .validateType(path,"string")
   
   cnt <- counts(scm)
   rownames(cnt) <- paste0("CpG",1:nrow(cnt))
@@ -209,6 +221,22 @@ export_seurat <- function(scm,assay="score", path = NULL) {
   
   seur <- Seurat::CreateSeuratObject(counts = cnt, meta.data = as.data.frame(colData(scm)))
   seur <- Seurat::SetAssayData(object = seur, slot = "data", new.data = scr)
+  
+  seur <- CreateSeuratObject(counts = cnt, meta.data = as.data.frame(colData(scm)))
+  seur <- SetAssayData(object = seur, slot = "data", new.data = scr)
+  
+  # seur <- NormalizeData(object = seur)
+  # seur <- FindVariableFeatures(object = seur)
+  # seur <- ScaleData(object = seur)
+  # seur <- RunPCA(object = seur)
+  # seur <- FindNeighbors(object = seur)
+  # seur <- FindClusters(object = seur)
+  # seur <- RunTSNE(object = seur)
+  # DimPlot(object = seur, reduction = "tsne")
+  # Set feature metadata, AKA rowData. Super intuitive, right?
+  # sce.to.seurat[["RNA"]][[]] <- as.data.frame(rowData(pbmc.sce))
+  
+  # rownames(rowData(scm)) <- paste0("CpG",1:nrow(scm))
   
   return(seur)
 }

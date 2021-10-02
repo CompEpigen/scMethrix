@@ -23,10 +23,15 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   if (!is.function(type)) type = .validateArg(type,get_distance_matrix)
-    
-  mtx <- as.matrix(t(get_matrix(scm,assay=assay)))
+  .validateType(verbose,"boolean")
   
-  if (any(is.na(mtx))) stop("There are NA values present in the matrix. Please fill/impute/bin to remove NAs.")
+  if (any(is.na(get_matrix(scm,assay=assay)))) stop("There are NA values present in the matrix. Please fill/impute/bin to remove NAs.")
+  
+  if (is_h5(scm)) {
+    warning("Distance matrix cannot be generated for HDF5 data. Data will be cast as matrix for imputation.")
+  }
+  
+  mtx <- as.matrix(t(get_matrix(scm,assay=assay)))
   
   if (is.function(type)) { # For the arbitrary case
     dist <- type(mtx)
@@ -79,13 +84,20 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
 #' fun(dist) # Example of arbitrary function output 
 #' cluster_scMethrix(scMethrix_data, dist = dist, type = fun)
 #' @export
-cluster_scMethrix <- function(scm = NULL, dist = NULL, n_clusters = NULL, assay="score", colname = "Cluster", verbose = TRUE, type=c("hierarchical", "partition", "model"), ...) {
+cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("hierarchical", "partition", "model"),
+                              colname = "Cluster", n_clusters = NULL, verbose = TRUE, ...) {
 
   Cluster <- Sample <- NULL
 
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
-  if (typeof(type) != "closure") type = .validateArg(type,cluster_scMethrix)
+  if (typeof(type) != "closure") {
+    .validateType(type,"String")
+    type = .validateArg(type,cluster_scMethrix)
+  }
+  .validateType(n_clusters,"integer")
+  .validateType(colname,"string")
+  .validateType(verbose,"boolean")
 
   if (is.null(dist)) dist <- get_distance_matrix(scm, assay=assay)
   
@@ -149,6 +161,8 @@ append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
   Row.names <- NULL
   
   .validateExp(scm)
+  .validateType(colData,c("vector","dataframe","S4"))
+  .validateType(name,"string")
 
   # Convert vector to data.frame
   if (is.vector(colData)) {

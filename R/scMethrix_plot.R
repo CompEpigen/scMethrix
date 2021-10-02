@@ -8,6 +8,9 @@
 prepare_plot_data <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL){
   
   .validateExp(scm)
+  .validateType(regions,c("granges","null"))
+  .validateType(n_cpgs,"integer")
+  .validateType(pheno,c("string","null"))
   
   if (!is.null(n_cpgs)){
     if (!is.numeric(n_cpgs)){
@@ -60,6 +63,9 @@ prepare_plot_data <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno 
 #' @return RColorBrewer palette
 get_palette <- function(n_row, col_palette){
   
+  .validateType(n_row,"integer")
+  .validateType(col_palette,"string")
+  
   if (n_row == 0) {
     stop("Zero colors present in the palette")
   }
@@ -77,6 +83,7 @@ get_palette <- function(n_row, col_palette){
 #' @param n_row Number of shapes. Max of 15.
 #' @return list of shapes (by integer)
 get_shape <- function(n_row) {
+  .validateType(n_row,"integer")
   shapes <- c(21:25,3,4,7:14)
   return(shapes[1:n_row])
 }
@@ -98,6 +105,11 @@ plot_violin <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL
   variable <- Meth <- NULL
   
   .validateExp(scm)
+  .validateType(regions,c("granges","null"))
+  .validateType(n_cpgs,"integer")
+  .validateType(pheno,c("string","null"))
+  .validateType(col_palette,"string")
+  .validateType(show_legend,"boolean")
 
   if (is.null(regions)) regions = rowRanges(scm)
   
@@ -131,6 +143,11 @@ plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NUL
   variable <- Meth <- NULL
   
   .validateExp(scm)
+  .validateType(regions,c("granges","null"))
+  .validateType(n_cpgs,"integer")
+  .validateType(pheno,c("string","null"))
+  .validateType(col_palette,"string")
+  .validateType(show_legend,"boolean")
   
   if (is.null(regions)) regions = rowRanges(scm)
   
@@ -156,7 +173,7 @@ plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NUL
 #' @inheritParams plot_violin
 #' @param perGroup boolean; Color the plots in a sample-wise manner?
 #' @param lim integer; Maximum coverage value to be plotted.
-#' @param type string; Choose between 'hist' (histogram) or 'dens' (density plot).
+#' @param type string; Choose between 'histogram' (histogram) or 'density' (density plot).
 #' @param size.lim integer; The maximum number of observarions (sites*samples) to use. If the dataset is larger that this,
 #' random sites will be selected from the genome.
 #' @return ggplot2 object
@@ -164,16 +181,21 @@ plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NUL
 #' data('scMethrix_data')
 #' plot_coverage(scm = scMethrix_data)
 #' @export
-plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, perGroup = FALSE,
+plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = NULL, perGroup = FALSE,
                           lim = 100, size.lim = 1e+06, col_palette = "RdYlGn", show_legend = TRUE) {
   
   value <- variable <- NULL
   
   .validateExp(scm)
+  type <- .validateArg(type, plot_coverage)
+  .validateType(pheno,c("string","null"))
+  .validateType(perGroup,c("boolean"))
+  .validateType(lim,"integer")
+  .validateType(size.lim,"integer")
+  .validateType(col_palette,"string")
+  .validateType(show_legend,"boolean")
   
   colors_palette <- get_palette(ncol(scm), col_palette)
-  
-  type <- match.arg(arg = type, choices = c("hist", "dens"), several.ok = FALSE)
   
   if (nrow(scm) > size.lim) {
     message("The dataset is bigger than the size limit. A random subset of the object will be used that contains ~",
@@ -207,13 +229,13 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
   
   # generate the plots
   if (!perGroup) {
-    if (type == "dens") {
+    if (type == "density") {
       p <- ggplot2::ggplot(plot.data, aes(value, color = variable)) +
         ggplot2::geom_density(alpha = 0.5, adjust = 1.5, lwd = 1, show.legend = show_legend,
                               position = "identity") + ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
         ggplot2::scale_fill_manual(values = colors_palette)
       
-    } else if (type == "hist") {
+    } else if (type == "histogram") {
       p <- ggplot2::ggplot(plot.data, ggplot2::aes(value, fill = variable)) + 
         ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black", show.legend = show_legend) + 
         ggplot2::theme_classic() +
@@ -222,14 +244,14 @@ plot_coverage <- function(scm = NULL, type = c("hist", "dens"), pheno = NULL, pe
       # print(p)
     }
   } else {
-    if (type == "dens") {
+    if (type == "density") {
       p <- ggplot2::ggplot(plot.data, ggplot2::aes(value, color = variable)) +
         ggplot2::geom_density(alpha = 0.6, adjust = 1.5, lwd = 1, show.legend = show_legend,
                               position = "identity") + ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
         ggplot2::labs(fill = "Groups") +
         ggplot2::scale_fill_manual(values = colors_palette)
       # print(p)
-    } else if (type == "hist") {
+    } else if (type == "histogram") {
       p <- ggplot2::ggplot(plot.data, ggplot2::aes(value, fill = variable)) +
         ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black", show.legend = show_legend) + 
         ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
@@ -264,8 +286,8 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
   Sparsity <- variable <- NULL
   
   .validateExp(scm)
-  
-  type <- match.arg(arg = type, choices = c("box", "scatter"), several.ok = FALSE)
+  type <- .validateArg(type,plot_sparsity)
+  .validateType(pheno,c("string","null"))
   
   sparsity <- DelayedMatrixStats::colCounts(score(scm),value=NA)
   
@@ -296,8 +318,8 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
 #' @param scm scMethrix; \code{\link{get_stats}} will be run for the specified assay
 #' @param assay string; Which assay to get the stats of. Default "score"
 #' @param stat string; Can be \code{mean} or \code{median}. Default \code{mean}
-#' @param ignore_chr boolean; Chromsomes to ignore. Default \code{NULL}
-#' @param samples list of strings; Use only these samples. Default \code{NULL}
+#' @param ignore_chr string; Chromsomes to ignore. If NULL, all chromosome will be used. Default \code{NULL}
+#' @param samples list of strings; Samples to ignore.  If NULL, all samples will be used. Default \code{NULL}
 #' @param n_col integer; number of columns. Passed to `facet_wrap`
 #' @param n_row integer; number of rows. Passed to `facet_wrap`
 #' @return ggplot2 object
@@ -307,17 +329,23 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
 #' plot_stats(scMethrix_data)
 #' @export
 #'
-plot_stats <- function(scm, assay = "score", stat = "mean", ignore_chr = NULL,
+plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), ignore_chr = NULL,
                        samples = NULL, n_col = NULL, n_row = NULL) {
   
   .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
+  stat <- .validateArg(stat,plot_stats)
+  .validateType(ignore_chr,c("string","null"))
+  .validateType(samples,c("string","null"))
+  .validateType(n_col,c("integer","null"))
+  .validateType(n_row,c("integer","null"))
   
   plot_dat = get_stats(scm,assay=assay)
   
   plot_dat <- plot_dat[,1:5]
   Chromosome <- . <- Sample_Name <- mean_meth <- sd_meth <- median_meth <- mean_cov <- sd_cov <- NULL
   median_cov <- measurement <- sd_low <- sd_high <- NULL
-  stat <- match.arg(arg = stat, choices = c("mean", "median"))
+  stat <- match.arg(arg = stat, choices = )
   
   if ("Chr" %in% colnames(plot_dat)) {
     if (stat == "mean") {
@@ -419,6 +447,12 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
   X <- Y <- color_me <- shape_me <- row_names <- ..col_anno <- ..shape_anno <- color <- shape <- NULL
   
   .validateExp(scm)
+  .validateType(dim_red,"string")
+  if (!(dim_red %in% reducedDimNames(scm))) stop("Invalid dim_red specified. '",dim_red,"' does not exist in the experiment.")
+  .validateType(col_anno,c("string","null"))
+  .validateType(shape_anno,c("string","null"))
+  .validateType(unlist(axis_labels),c("string","null"))
+  .validateType(show_dp_labels,"boolean")
   
   dim_red <- reducedDim(scm,type=dim_red)
   

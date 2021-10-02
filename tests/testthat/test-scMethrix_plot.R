@@ -2,8 +2,8 @@ test_that("prepare_plot_data", {
   expect_error(get_region_summary("not scMethrix"),msg.check.scm)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(prepare_plot_data(scm, n_cpgs = "not an int"),"n_cpgs must be numeric.")
-    expect_error(prepare_plot_data(scm, regions = "not a range"),"Invalid input class for regions. Must be a GRanges or data.frame-like")
+    expect_error(prepare_plot_data(scm, n_cpgs = "not an int"),msg.type.match)
+    expect_error(prepare_plot_data(scm, regions = "not a range"),msg.type.match)
     
     d <- prepare_plot_data(scm)
     expect_equal(dim(d),c(nrow(scm)*ncol(scm),2))

@@ -57,6 +57,12 @@ binarize = function(x,threshold = NULL, rep_na = NA, verbose = FALSE) {
   return(x)
 }
 
+fill = function(x, fill = NA, verbose = FALSE) {
+  x[is.na(x)] <- fill
+  return(x)
+}
+
+
 #' A faster version of cbind when trying to combine lists of data.tables
 #' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
 #'  If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}
@@ -388,24 +394,35 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' 
 #' @param parent closure; the parent function in which to check the input
 #' @param arg varibale; the variable in which to check
+#' @param ignore.case; boolean; ignores case of the choices
 #' @return arg, if the value is in the function definition.
-.validateArg <- function(arg, parent = NULL) {
+.validateArg <- function(arg, parent = NULL, ignore.case = T) {
 
-  if (is.null(parent)) {
+    if (is.null(parent)) {
     parent <- deparse(sys.calls()[[sys.nframe()-1]])
     parent <- unlist(strsplit(parent, "[(]"))[[1]]
   }
   
-  sub = substitute(arg)
+  name = substitute(arg)
+  choices <- eval(formals(parent)[[name]])
   
   arg <- tryCatch(
     {
-      match.arg(arg = tolower(arg), choices = tolower(eval(formals(parent)[[sub]])))
+      if (ignore.case) {
+        m <- match.arg(arg = tolower(arg), choices = tolower(choices))
+        i <- which(tolower(choices) %in% m)
+        choices[i]
+        
+      } else {
+        match.arg(arg = arg, choices = choices)
+      }
     },
     error=function(cond) {
-      stop(paste0("Invalid arg input for '",paste(sub),"'. Found: '",arg,"'; Must match: '",paste0(eval(formals(parent)[[sub]]), collapse="', '"),"'"), call. = FALSE)
+      stop(paste0("Invalid arg input for '",paste(name),"'. Found: '",arg,"'; Must match: '",
+                  paste0(eval(formals(parent)[[name]]), collapse="', '"),"'"), call. = FALSE)
     }
-  )    
+  )
+  
   return(arg)
 }
 
@@ -418,8 +435,8 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 .validateAssay <- function(scm = NULL,assay = NULL, throw = TRUE) {
   
   .validateExp(scm)
-  
-  if (is.null(assay)) stop("Invalid assay. Assay argument is NULL.", call. = FALSE)
+  .validateType(assay,"string")
+  .validateType(throw,"boolean")
   
   assay <- tryCatch(
     {
@@ -427,74 +444,171 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
     },
     error=function(cond) {
       if (throw) {
-      stop(paste0("Invalid assay. No assay named '",assay,"' found in the experiment '",substitute(scm),"'"), call. = FALSE)
+        stop(paste0("Invalid assay. No assay named '",assay,"' found in the experiment '",substitute(scm),"'"), call. = FALSE)
       } else {
-        return(FALSE)
+        FALSE
       }
     }
   )
-  return(assay)
+  return(invisible(assay))
 }
 
-.validateType <- function(input = NULL, type=c("integer","numeric","character","string","boolean","logical","vector",
-                                               "list","file","directory","granges","function","null")) {
+# .validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
+#                                                "List","File","Directory","GRanges","GenomicRanges","Function","Null",
+#                                                "Dataframe","DF","S4")) {
+# 
+#   if (b) browser()
+#   
+#   if (length(type) == length(eval(formals(.validateType)[["type"]]))) {
+#     stop("No valid type specified.")
+#   }
+#   
+#   types <- sapply(type,function(type) .validateArg(type,.validateType))
+#   inputs <- input#list(input,NULL) # necessary to avoid iterating through iterable objects (e.g. GRanges)
+# 
+#   for (type in types) {
+#     
+#     #For container formats that are iterable
+#     if (c("GRanges","GenomicRanges","S4")) {
+#       
+#       valid <- F
+#       
+#       for (type in types) {
+#         
+#         if(type == "Vector"){
+#           valid <- is.vector(input)
+#         } else if(type == "List"){
+#           valid <- is.list(input)
+#         } else if(type == "GRanges" | type == "GenomicRanges"){
+#           valid <- is(input, "GRanges")
+#         } else if (type == "Dataframe" | type == "DF") {
+#           valid <- is.data.frame(input) 
+#         } else if (type == "S4") {
+#           valid <- isS4(input) 
+#         } else {
+#           stop("Invalid type with '",type,"'. This type is not supported. Also, this should never be reached.")
+#         }
+#         
+#       }
+#       
+#       if (!valid) {
+#         stop("Invalid type input for '",substitute(input),"'. Must be of type: '",
+#              paste0(type, collapse="', '"),"'", call. = FALSE)
+#       }
+#     }
+#       
+#       
+#     } else {
+#       for (input in inputs) {#inputs[1:(length(inputs)-1)]) {
+#         
+#         valid <- F
+#         
+#         for (type in types) {
+#           
+#           if (type == "Integer") {
+#             if(is.numeric(input)) valid <- (input == round(input))
+#           } else if (type == "Numeric") {
+#             valid = is.numeric(input) 
+#           } else if (type == "Character") {
+#             valid = is.character(input) && nchar(input)==1
+#           } else if (type == "String") {
+#             valid = is.character(input) 
+#           } else if(type == "Boolean" | type == "Logical"){
+#             valid <- is.logical(input)
+#           } else if (type == "File") {
+#             valid <- all(file.exists(input))
+#           } else if (type == "Directory") {
+#             valid <- all(dir.exists(input))
+#           } else if (type == "Function") {
+#             valid <- is.function(i)
+#           } else if (type == "Null") {
+#             valid <- is.null(input) 
+#           } else {
+#             stop("Invalid type with '",type,"'. This type is not supported. Also, this should never be reached.")
+#           }
+#           
+#         }
+#         
+#         if (!valid) {
+#           stop("Invalid type input for '",substitute(input),"'. Must be of type: '",
+#                paste0(type, collapse="', '"),"'", call. = FALSE)
+#         }
+#       }
+#       
+#     }
+#     
+#     
+#     
+#     
+#     
+#   }
+#   
+#   
+#   
+#   
+#   
+#   
+#   return(invisible(TRUE))
+# }
+
+
+.validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
+                                               "List","File","Directory","GRanges","GenomicRanges","Function","Null",
+                                               "Dataframe","DF","S4")) {
   
   if (length(type) == length(eval(formals(.validateType)[["type"]]))) {
-    stop("No type specified.")
+    stop("No valid type specified.")
   }
-  
-  types = sapply(type,function(type) .validateArg(type,.validateType))
-  inputs <- list(input,NULL) # necessary to avoid iterating through iterable objects (e.g. GRanges)
-  valid = F
-    
-  for (input in inputs[1:(length(inputs)-1)]) {
-    for (type in types) {
 
-      if (type == "integer") {
-        if(all(is.numeric(input))) valid <- input == round(input)
-      } else if (type == "numeric") {
-        valid = is.numeric(input) 
-      } else if (type == "character") {
-        valid = is.character(input) && nchar(input)==1
-      } else if (type == "string") {
-        valid = is.character(input) 
-      } else if(type == "boolean" | type == "logical"){
-        valid <- is.logical(input)
-      } else if(type == "vector"){
-        valid <- is.vector(input)
-      } else if(type == "list"){
-        valid <- is.list(input)
-      } else if (type == "file") {
-        valid <- all(file.exists(input))
-      } else if (type == "directory") {
-        valid <- all(dir.exists(input))
-      } else if(type == "granges"){
-        valid <- is(input, "GRanges")
-      } else if (type == "function") {
-        valid <- is.function(input)
-      } else if (type == "null") {
-        valid <- is.null(input) 
-      } else if (type == "null") {
-        valid <- is.null(input) 
-      } else if (type == "null") {
-        valid <- is.null(input) 
-      } else if (type == "null") {
-        valid <- is.null(input) 
-      } else if (type == "null") {
-        valid <- is.null(input) 
-      } else {
-        stop("Invalid type with '",type,"'. This type is not supported. Also, this should never be reached.")
-      }
-      
-      if (valid) {
-        break
-      } else if (type == types[length(types)]) {
-        stop("Invalid type input for '",substitute(input),"'. Must be of type: '",paste0(type, collapse="', '"),"'", call. = FALSE)
-      }
+  types <- sapply(type,function(type) .validateArg(type,.validateType))
+  # inputs <- input#list(input,NULL) # necessary to avoid iterating through iterable objects (e.g. GRanges)
+  valid <- F
+
+  for (type in types) {
+
+    if (type == "Integer") {
+      if(is.numeric(input)) valid <- (input == round(input))
+    } else if (type == "Numeric") {
+      valid = is.numeric(input)
+    } else if (type == "Character") {
+      valid = is.character(input) && nchar(input)==1
+    } else if (type == "String") {
+      valid = is.character(input)
+    } else if(type == "Boolean" | type == "Logical"){
+      valid <- is.logical(input)
+    } else if(type == "Vector"){
+      valid <- is.vector(input)
+    } else if(type == "List"){
+      valid <- is.list(input)
+    } else if (type == "File") {
+      valid <- all(file.exists(input))
+    } else if (type == "Directory") {
+      valid <- all(dir.exists(input))
+    } else if(type == "GRanges" | type == "GenomicRanges"){
+      valid <- is(input, "GRanges")
+    } else if (type == "Function") {
+      valid <- is.function(input)
+    } else if (type == "Null") {
+      valid <- is.null(input)
+    } else if (type == "Dataframe" | type == "DF") {
+      valid <- is.data.frame(input)
+    } else if (type == "S4") {
+      valid <- isS4(input)
+    } else {
+      stop("Invalid type with '",type,"'. This type is not supported. Also, this should never be reached.")
+    }
+
+    if (valid) {
+      break
+    } else if (type == types[length(types)]) {
+      stop("Invalid type input for '",substitute(input),"'. Must be of type: '",
+           paste0(type, collapse="', '"),"'", call. = FALSE)
     }
   }
+
   return(invisible(TRUE))
 }
+
 
 #' Validates to see if object is a proper scMethrix object
 #' @param scm scMethrix; the experiment object to test
