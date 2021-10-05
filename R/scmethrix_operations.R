@@ -519,7 +519,11 @@ convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Converting HDF5 scMethrix to in-memory", start_time())
   
-  assays(scm)[[1]] <- as.matrix(assays(scm)[[1]])
+  for (name in SummarizedExperiment::assayNames(scm)) {
+    SummarizedExperiment::assay(scm,name) <- as.matrix(SummarizedExperiment::assay(scm,name))   
+  }
+  
+  #SummarizedExperiment::assays(scm)[[1]] <- as.matrix(SummarizedExperiment::assays(scm)[[1]])
   scm@metadata$is_h5 <- FALSE
   
   if (verbose) message("Converted in ", stop_time())

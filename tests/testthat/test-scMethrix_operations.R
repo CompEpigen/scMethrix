@@ -163,10 +163,11 @@ test_that("convert_HDF5_scMethrix", {
   scm <- convert_HDF5_scMethrix(scm.h5)
   
   expect_false(is_h5(scm))
-  expect_equal(as.numeric(score(scm)),as.numeric(score(scm.h5)))
-  expect_equal(class(get_matrix(scm))[1],"matrix") 
-  rm(scm)
   
+  for (name in assayNames(scm)) {
+    expect_equal(as.numeric(get_matrix(scm,name)),as.numeric(get_matrix(scm.h5,name)))
+    expect_true("matrix" %in% class(get_matrix(scm,name))) 
+  }
 })
 
 test_that("convert_scMethrix", {
@@ -179,9 +180,11 @@ test_that("convert_scMethrix", {
   scm <- convert_scMethrix(scm.mem,h5_dir = paste0(tempdir(),"/h5"))
   
   expect_true(is_h5(scm))
-  expect_equal(as.numeric(score(scm)),as.numeric(score(scm.mem)))
-  expect_equal(class(get_matrix(scm))[1],"HDF5Matrix")
-  rm(scm)
+  
+  for (name in assayNames(scm)) {
+    expect_equal(as.numeric(get_matrix(scm,name)),as.numeric(get_matrix(scm.h5,name)))
+    expect_true("HDF5Matrix" %in% class(get_matrix(scm,name))) 
+  }
   
 })
 
