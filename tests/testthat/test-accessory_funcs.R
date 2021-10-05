@@ -19,7 +19,7 @@ test_that("binarize", {
 })
 
 test_that("bin_granges",{
-  expect_error(bin_granges("not granges"),"Input must be a Granges object")
+  expect_error(bin_granges(gr="not granges"),msg.type.match)
   regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
   expect_equal(length(bin_granges(regions,bin_size=10)),10) 
   expect_equal(reduce(bin_granges(regions,bin_size=10)),regions)
@@ -52,18 +52,18 @@ test_that("start,split,stop_time",{
 
 test_that("split_vector",{
   vec <- c(1,2,3,4,5,6,7,8)
-  expect_error(split_vector(vec,size=1,chunks=1),"Invalid input. Must")
-  expect_error(split_vector(vec,size="not numeric"),"Invalid input. Size")
-  expect_error(split_vector(vec,percent="not numeric"),"Invalid input. Percent")
-  expect_error(split_vector(vec,chunks="not numeric"),"Invalid input. Chunks")
+  expect_error(split_vector(vec,size=1,chunks=1),"Invalid input. Must contain 1 of")
+  expect_error(split_vector(vec,size="not integer"),msg.type.match)
+  expect_error(split_vector(vec,percent="not numeric"),msg.type.match)
+  expect_error(split_vector(vec,chunks="not integer"),msg.type.match)
 
   expect_equal(split_vector(vec,size=2),split_vector(vec,chunks=4))
   expect_equal(split_vector(vec,percent=25),split_vector(vec,chunks=4))
   expect_equal(unlist(split_vector(vec,percent=25)),vec)
   
-  expect_equal(length(split_vector(vec,chunks=2.5)),3)
+  expect_equal(length(split_vector(vec,chunks=3)),3)
   expect_equal(length(split_vector(vec,percent=24)),5)
-  expect_equal(length(split_vector(vec,size=2.5)),3)
+  expect_equal(length(split_vector(vec,size=3)),3)
   
   expect_equal(length(split_vector(vec,chunks=-10)),1)
   expect_equal(length(split_vector(vec,size=-10)),1)
@@ -71,7 +71,7 @@ test_that("split_vector",{
 })
 
 test_that("cast_granges",{
-  expect_error(cast_granges("not a Granges"),"Invalid input class for regions. Must be a GRanges or data.frame-like")
+  expect_error(cast_granges("not a Granges"),"Invalid input class")
   
   gr <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
   expect_equal(gr,cast_granges(gr))
@@ -118,6 +118,8 @@ test_that(".validateArg",{
   var = "bAnA"
   expect_equivalent(.validateArg(var,func),"banana")  
   expect_error(.validateArg(var,func,ignore.case = F), msg.arg.match)  
+  var = c("banana","banjo")
+  expect_equivalent(.validateArg(var,func),"banana")    
   var = "ban"
   expect_error(.validateArg(var,func), msg.arg.match)  
   var = "bad input"

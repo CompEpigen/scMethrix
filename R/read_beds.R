@@ -48,6 +48,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
                       stranded = FALSE, chr_idx = NULL, start_idx = NULL, end_idx = NULL, beta_idx = NULL,
                       M_idx = NULL, U_idx = NULL, strand_idx = NULL, cov_idx = NULL) {
 
+  #- Input Validation --------------------------------------------------------------------------
   .validateType(files,"string")
   #.validateType(ref_cpgs)
   #.validateType(colData,"dataframe")
@@ -91,6 +92,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     warning("n_threads < 0. Defaulting to 0")
   }
   
+  #- Function code -----------------------------------------------------------------------------
   # Get the correct indexes of the input beds
   if (pipeline == "Custom") {
     if (verbose) message(paste0("BED column format:  Custom"))
@@ -212,6 +214,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
 #' @export
 read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch_size = 200, verbose = TRUE) {
 
+  #- Input Validation --------------------------------------------------------------------------
   # .validateType(files,"string")
   # .validateType(col_list)
   # .validateType(n_threads,"integer")
@@ -219,6 +222,7 @@ read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch
   # .validateType(batch_size,"integer")
   # .validateType(verbose,"boolean")
   
+  #- Function code -----------------------------------------------------------------------------
   # Parallel functionality
   if (n_threads != 0) {
     
@@ -457,15 +461,17 @@ read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch
 # 
 read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE, strand_collapse = FALSE, fill = TRUE) {
 
-  . <- meths <- covs <- M <- U <- chr <- NULL
 
+
+  #- Input Validation --------------------------------------------------------------------------
   # .validateType(files,"string")
   # .validateType(ref_cpgs,)
   # .validateType(col_list)
   # .validateType(zero_based,"boolean")
   # .validateType(strand_collapse,"boolean")
   # .validateType(fill,"boolean")
-  
+  . <- meths <- covs <- M <- U <- chr <- NULL
+  #- Function code -----------------------------------------------------------------------------
   for (i in 1:length(files)) {
 
     bed <- suppressWarnings(data.table::fread(files[[i]], select = unname(col_list$col_idx),
@@ -559,6 +565,7 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
 read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, h5_temp = NULL, zero_based = FALSE, 
                            verbose = TRUE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   # .validateType(files,"string")
   # .validateType(ref_cpgs,"boolean")
   # .validateType(col_list,"boolean")
@@ -568,6 +575,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
   # .validateType(zero_based,"boolean")
   # .validateType(verbose,"boolean")
   
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Starting HDF5 object",start_time()) 
   
   if (is.null(h5_temp)) {h5_temp <- tempdir()}
@@ -803,7 +811,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
 #' }
 read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, zero_based = FALSE, 
                           verbose = TRUE) {
-
+  #- Input Validation --------------------------------------------------------------------------
   # .validateType(files,"string")
   # .validateType(ref_cpgs,"boolean")
   # .validateType(col_list,"boolean")
@@ -812,6 +820,7 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads 
   # .validateType(zero_based,"boolean")
   # .validateType(verbose,"boolean")
   
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Reading BED data...",start_time()) 
 
   if (n_threads != 0) {

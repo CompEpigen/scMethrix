@@ -10,15 +10,18 @@
 #' @export
 transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans = NULL, h5_temp = NULL) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   .validateType(new_assay,"string")
   .validateType(trans, "function")
   .validateType(h5_temp, c("string","null"))
   
-  if (new_assay %in% SummarizedExperiment::assayNames(scm)) 
+  if (!.validateAssay(scm,new_assay,check.absent=T))
+    #new_assay %in% SummarizedExperiment::assayNames(scm)) 
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   
+  #- Function code -----------------------------------------------------------------------------
   if (is_h5(scm)) {
     
     if (is.null(h5_temp)) {h5_temp <- tempdir()}
@@ -75,6 +78,7 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
 bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by = c("bp","cpg"), trans = NULL, 
                           overlap_type = "within", h5_dir = NULL, verbose = TRUE, batch_size = 20, n_threads = 1, replace = FALSE) {
 
+  #- Input Validation --------------------------------------------------------------------------
   yid <- NULL
 
   .validateExp(scm)
@@ -90,10 +94,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   .validateType(batch_size,"integer")
   .validateType(n_threads,"integer")
   .validateType(replace,"boolean")
-  
-  
-  
-    
+
   #if (is.null(h5_dir) && is_h5(scm)) stop("Output directory must be specified")
   #if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
   
@@ -103,6 +104,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   
  # if (is_h5(scm) && is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
 
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Binning experiment...")
   
   if (!is.null(regions)) {
@@ -521,6 +523,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 #' @export
 collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = NULL, batch_size = 100000, n_threads = 1, replace = FALSE, verbose = TRUE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   Group <- NULL
   
   .validateExp(scm)
@@ -542,6 +545,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   
  # if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
   
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Starting to collapse experiment...",start_time())
   
   assays <- list()
@@ -635,6 +639,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
 #' @references Kapourani CA, Sanguinetti G (2019). “Melissa: Bayesian clustering and imputation of single cell methylomes.” Genome Biology, 20, 61. doi: 10.1186/s13059-019-1665-8.
 impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay = "impute") {
   
+  #- Input Validation --------------------------------------------------------------------------
   . <- NULL
   
   .validateExp(scm)
@@ -649,6 +654,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   
   scm <- transform_assay(scm, assay = assay, new_assay = "binary", trans = binarize)
 
+  #- Function code -----------------------------------------------------------------------------
   # Convert Granges to genomic interval [-1,1]
   chrom_size <- scm@metadata$chrom_size
   chrom_start <- sapply(coverage(scm), function(x) {x@lengths[1]}+1)
@@ -734,6 +740,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regions = NULL, n_chunks = 1, 
                                n_threads = 1, overlap_type="within", type=c("kNN","iPCA","RF"), verbose = TRUE, k=10, n_pc=2,...) {
   
+  #- Input Validation --------------------------------------------------------------------------
   yid <- NULL
   
   .validateExp(scm)
@@ -754,6 +761,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   
   if (is_h5(scm)) warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
 
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Starting imputation by ",type,start_time())
   
   if (type == "kNN") {
@@ -823,12 +831,15 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
 #' generate_training_set(scMethrix_data, training_prop = 0.2)
 #' @export
 generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123") {
-  .validateExp(scm)
+ 
+  #- Input Validation --------------------------------------------------------------------------
+   .validateExp(scm)
   .validateType(training_prop,"numeric")
   .validateType(seed,"string")
   
   if (training_prop > 1 || training_prop < 0) stop("training_prop must in the range of [0,1]", call. = FALSE)
   
+  #- Function code -----------------------------------------------------------------------------
   set.seed(seed)
   idx <- sort(sample(1:nrow(scm),floor(nrow(scm)*training_prop)))
   
@@ -853,6 +864,7 @@ generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123")
 #' @export
 generate_random_subset <- function(scm = NULL, n_cpgs = 10000, seed = "123") {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateType(n_cpgs,"integer")
   .validateType(seed,"string")
@@ -863,6 +875,7 @@ generate_random_subset <- function(scm = NULL, n_cpgs = 10000, seed = "123") {
     warning("Invalid n_cpgs. Must be between 1 and ",nrow(scm),". Defaulted to ",n_cpgs)
   }
   
+  #- Function code -----------------------------------------------------------------------------
   set.seed(seed)
   idx <- sort(sample(1:nrow(scm),n_cpgs))
   

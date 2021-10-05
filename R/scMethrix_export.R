@@ -17,6 +17,7 @@
 #' @export
 export_beds <- function(scm = NULL, path = NULL, suffix = NULL,  include = FALSE, na.rm = TRUE, header = FALSE, verbose = TRUE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   meth <- cov <- NULL
   
   .validateExp(scm)
@@ -27,6 +28,7 @@ export_beds <- function(scm = NULL, path = NULL, suffix = NULL,  include = FALSE
   .validateType(header,"boolean")
   .validateType(verbose,"boolean")
   
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Exporting beds to ",path,start_time())
   
   dir.create(path, showWarnings = FALSE)
@@ -81,11 +83,14 @@ export_beds <- function(scm = NULL, path = NULL, suffix = NULL,  include = FALSE
 #' # convert_to_methrix(scMethrix_data)
 #' @export
 export_methrix <- function(scm = NULL, h5_dir = NULL) {
+  
+  #- Input Validation --------------------------------------------------------------------------
   chr <- m_obj <- NULL
   
   .validateExp(scm)
   .validateType(h5_dir,"string")
   
+  #- Function code -----------------------------------------------------------------------------
   rrng <- as.data.table(rowRanges(scm))
   rrng[,c("width","end") := NULL]
   names(rrng) <- c("chr","start","strand")
@@ -128,6 +133,7 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
 #' @export
 export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) {
 
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   if (!has_cov(scm)) stop("BSSeq requires a coverage matrix.", call. = FALSE)
   .validateAssay(scm,m_assay)
@@ -137,6 +143,7 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) 
   # if (anyNA(get_matrix(scm,m_assay)) || anyNA(get_matrix(scm,c_assay)))
   #   warning("NAs present in assay. These will be filled with zero values.")
   
+  #- Function code -----------------------------------------------------------------------------
   M_clean <- get_matrix(scm,m_assay) * get_matrix(scm,c_assay)
   M_clean[is.na(M_clean)] <- 0
   C_clean <- get_matrix(scm,c_assay)
@@ -163,6 +170,7 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) 
 #' @export
 export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = NULL){
 
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateAssay(scm,assay)
   .validateType(path,"string")
@@ -172,6 +180,7 @@ export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = N
     stop("A valid path needs to be supplied.", call. = FALSE)
   }
 
+  #- Function code -----------------------------------------------------------------------------
   if (!dir.exists(path)) {
     dir.create(path = path, showWarnings = FALSE, recursive = TRUE)
   }
@@ -206,11 +215,13 @@ export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = N
 
 export_seurat <- function(scm,assay="score", path = NULL) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   if (!has_cov(scm)) stop("Seurat requires a coverage matrix.", call. = FALSE)
   .validateAssay(scm,assay)
   .validateType(path,"string")
   
+  #- Function code -----------------------------------------------------------------------------
   cnt <- counts(scm)
   rownames(cnt) <- paste0("CpG",1:nrow(cnt))
   cnt[is.na(cnt)] <- 0

@@ -7,6 +7,7 @@
 #' @export
 prepare_plot_data <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL){
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateType(regions,c("granges","null"))
   .validateType(n_cpgs,"integer")
@@ -18,6 +19,7 @@ prepare_plot_data <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno 
     }
   }
   
+  #- Function code -----------------------------------------------------------------------------
   if (!is.null(regions)) {
     meth_sub <- subset_scMethrix(scm = scm, regions = regions)
     if (!is.null(n_cpgs)) {
@@ -63,6 +65,7 @@ prepare_plot_data <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno 
 #' @return RColorBrewer palette
 get_palette <- function(n_row, col_palette){
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateType(n_row,"integer")
   .validateType(col_palette,"string")
   
@@ -73,6 +76,8 @@ get_palette <- function(n_row, col_palette){
   if (!col_palette %in% rownames(RColorBrewer::brewer.pal.info)){
     stop("Please provide a valid RColorBrewer palettte. Possible values are: ", paste0(rownames(RColorBrewer::brewer.pal.info)), sep=", ")
   }
+  
+  #- Function code -----------------------------------------------------------------------------
   color_pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(RColorBrewer::brewer.pal.info[col_palette,
                                                                                                   "maxcolors"], col_palette))(n_row)
   return(color_pal)
@@ -102,6 +107,8 @@ get_shape <- function(n_row) {
 #' plot_violin(scm = scMethrix_data)
 plot_violin <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL,
                         col_palette = "RdYlGn", show_legend = TRUE) {
+  
+  #- Input Validation --------------------------------------------------------------------------
   variable <- Meth <- NULL
   
   .validateExp(scm)
@@ -113,6 +120,7 @@ plot_violin <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL
 
   if (is.null(regions)) regions = rowRanges(scm)
   
+  #- Function code -----------------------------------------------------------------------------
   plot.data <- prepare_plot_data(scm=scm, regions = regions, n_cpgs = n_cpgs, pheno = pheno)
   
   col_palette <- get_palette(ncol(scm), col_palette)
@@ -140,6 +148,7 @@ plot_violin <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL
 plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL,
                          col_palette = "RdYlGn", show_legend = TRUE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   variable <- Meth <- NULL
   
   .validateExp(scm)
@@ -151,6 +160,7 @@ plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NUL
   
   if (is.null(regions)) regions = rowRanges(scm)
   
+  #- Function code -----------------------------------------------------------------------------
   plot.data <- prepare_plot_data(scm=scm, regions = regions, n_cpgs = n_cpgs, pheno = pheno)
   col_palette <- get_palette(ncol(scm), col_palette)
   
@@ -184,8 +194,7 @@ plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NUL
 plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = NULL, perGroup = FALSE,
                           lim = 100, size.lim = 1e+06, col_palette = "RdYlGn", show_legend = TRUE) {
   
-  value <- variable <- NULL
-  
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   type <- .validateArg(type, plot_coverage)
   .validateType(pheno,c("string","null"))
@@ -195,8 +204,11 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   .validateType(col_palette,"string")
   .validateType(show_legend,"boolean")
   
+  value <- variable <- NULL
+  
   colors_palette <- get_palette(ncol(scm), col_palette)
   
+  #- Function code -----------------------------------------------------------------------------
   if (nrow(scm) > size.lim) {
     message("The dataset is bigger than the size limit. A random subset of the object will be used that contains ~",
             size.lim, " observations.")
@@ -283,14 +295,16 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
 #' @export
 plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) {
   
-  Sparsity <- variable <- NULL
-  
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   type <- .validateArg(type,plot_sparsity)
   .validateType(pheno,c("string","null"))
   
+  Sparsity <- variable <- NULL
+  
   sparsity <- DelayedMatrixStats::colCounts(score(scm),value=NA)
   
+  #- Function code -----------------------------------------------------------------------------
   if (!is.null(pheno)) {
     if (pheno %in% rownames(colData(scm))) {
       pheno <- as.character(scm@colData[, pheno])
@@ -332,6 +346,7 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
 plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), ignore_chr = NULL,
                        samples = NULL, n_col = NULL, n_row = NULL) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   stat <- .validateArg(stat,plot_stats)
@@ -340,13 +355,14 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), ignore_
   .validateType(n_col,c("integer","null"))
   .validateType(n_row,c("integer","null"))
   
+  Chromosome <- . <- Sample_Name <- mean_meth <- sd_meth <- median_meth <- mean_cov <- sd_cov <- NULL
+  median_cov <- measurement <- sd_low <- sd_high <- NULL
+
   plot_dat = get_stats(scm,assay=assay)
   
   plot_dat <- plot_dat[,1:5]
-  Chromosome <- . <- Sample_Name <- mean_meth <- sd_meth <- median_meth <- mean_cov <- sd_cov <- NULL
-  median_cov <- measurement <- sd_low <- sd_high <- NULL
-  stat <- match.arg(arg = stat, choices = )
   
+  #- Function code -----------------------------------------------------------------------------
   if ("Chr" %in% colnames(plot_dat)) {
     if (stat == "mean") {
       plot_dat[, which(grepl("^median", colnames(plot_dat))):=NULL]
@@ -444,6 +460,7 @@ plot_imap <- function(scm) {
 #' @export
 plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   X <- Y <- color_me <- shape_me <- row_names <- ..col_anno <- ..shape_anno <- color <- shape <- NULL
   
   .validateExp(scm)
@@ -465,6 +482,7 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
   colnames(dim_red) <- c("X", "Y")
   dim_red$row_names = rownames(dim_red)
   
+  #- Function code -----------------------------------------------------------------------------
   if (!is.null(col_anno)) {
     if (col_anno  %in% colnames(colData(scm))) {
       dim_red$color_me <- as.factor(unlist(as.data.table(colData(scm))[,..col_anno])) #TODO: make colData a data.table
@@ -594,8 +612,10 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
                                                  kNN = function(...) impute_regions(type="kNN",...)),
                                  type = "RMSE") {
   
+  #- Input Validation --------------------------------------------------------------------------
   . <- results <- Sparsity <- NRMSE <- Imputation <- AUC <- NULL
   
+  #- Function code -----------------------------------------------------------------------------
   if (type == "AUC") {
     eq = Metrics::auc
   } else if (type == "RMSE") {

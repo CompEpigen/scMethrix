@@ -37,11 +37,11 @@ get_sample_name = function(s) {
 #' Binarize an input value based on a \code{threshold}
 #' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
 #'  If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}
-#' @param x numeric; A value to binarize
+#' @param x numeric; A vector to binarize
 #' @param threshold numeric; The threshold for binarizing. Will default to the center number between max and min.
 #' @param rep_na numeric; The value to replace missing values with. Default NA. 
 #' @param verbose boolean; flag for whether to display threshold or not
-#' @return 1 or 0, if above of below the threshold, or 'rep.na' if NA
+#' @return vector; contains {0,1}, if below or above the threshold, or 'rep.na' if NA
 #' @examples
 #' vals <- c(0,0.25,0.5,0.75,1,NA)
 #' binarize(vals, threshold=0.5)
@@ -57,15 +57,20 @@ binarize = function(x,threshold = NULL, rep_na = NA, verbose = FALSE) {
   return(x)
 }
 
-fill = function(x, fill = NA, verbose = FALSE) {
+#' Fills a vector with a specified \code{fill} value
+#' @param x vector; A vector in which to fill the NA values
+#' @param fill basic data type; Any value from one of R's basic data types (character, numeric, integer, logical, complex)
+#' @return vector; Same values as input vector, but NA values are replaced with \code{fill} if above of below the threshold, or 'rep.na' if NA
+#' @examples
+#' vals <- c(0,0.25,0.5,0.75,1,NA)
+#' fill(vals, fill=2)
+#' @export
+fill = function(x, fill = NA) {
   x[is.na(x)] <- fill
   return(x)
 }
 
-
 #' A faster version of cbind when trying to combine lists of data.tables
-#' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
-#'  If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}
 #' @param ... A list of data.tables with identical # of rows
 #' @return data.table; the cbinded output 
 #' @export
@@ -95,21 +100,22 @@ colbind = function(...) {
 #' @export
 split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
 
+  #- Input Validation --------------------------------------------------------------------------
+  .validateType(chunks,c("integer","na"))
+  .validateType(size,c("integer","na"))
+  .validateType(percent,c("numeric","na"))
+
   if (sum(is.na(c(chunks,percent,size))) != 2) stop("Invalid input. Must contain 1 of either chunks, percent, or size")
-  
+
+  #- Function code -----------------------------------------------------------------------------  
   if (!is.na(percent)) {
-    if (!is.numeric(percent)) stop("Invalid input. Percent must be numeric")
-    
     chunks = 100/percent
   }
  
   if (!is.na(size)) {
-    if (!is.numeric(size)) stop("Invalid input. Size must be numeric")
     chunks = length(vec)/ceiling(size)
   }
 
-  if (!is.numeric(chunks)) stop("Invalid input. Chunks must be numeric")
-  
   chunks = max(1,chunks)
   
   return(unname(split(vec, sort(rep_len(1:ceiling(chunks), length(vec))))))
@@ -128,8 +134,11 @@ split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
 #' @export
 bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
 
-  if (!is(gr, "GRanges")) stop("Input must be a Granges object")
+  #- Input Validation --------------------------------------------------------------------------
+  .validateType(gr,"Granges")
+  .validateType(bin_size, "integer")
   
+  #- Function code -----------------------------------------------------------------------------
   ends <- len <- seqnames(gr)@lengths
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
   starts <- head(c(1, ends + 1), -1)
@@ -228,8 +237,10 @@ stop_time <- function() {
 #' @export
 subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   
+  #- data.table initialization -----------------------------------------------------------------
   id <- NULL
   
+  #- Function code -----------------------------------------------------------------------------
   keys <- rbind(ref_cpgs[,c("chr","start")], gen_cpgs[,c("chr","start")])
   setDT(keys)[, id := .GRP, by = c("chr","start")]
   
@@ -254,14 +265,15 @@ subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
 #' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
 #' @param protocol string; the protocol used for bedgraph output. Options are: "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
 #' @return List of column names and indexes
+#' @examples
+#' get_source_idx("MethylDackel")
 #' @export
-get_source_idx = function(protocol = NULL) {
+get_source_idx = function(protocol = c("Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap")) {
   
-  protocol <- match.arg(
-    arg = protocol,
-    choices = c("Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap")
-  )
+  #- Input Validation --------------------------------------------------------------------------
+  .validateArg(protocol, get_source_idx)
   
+  #- Function code -----------------------------------------------------------------------------
   if (protocol == "MethylcTools") {
     return(list(col_idx = list(character = 1, numeric = 2, numeric = c(6, 7)),
                 col_names = c("chr", "start", "M", "U"),
@@ -301,19 +313,30 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
                             beta_idx = NULL, M_idx = NULL, U_idx = NULL,
                             cov_idx = NULL, verbose = TRUE) {
   
-  # mandatory chr and start field
+  #- Input Validation --------------------------------------------------------------------------
+  .validateType(chr_idx,c("integer","null"))
+  .validateType(start_idx,c("integer","null"))
+  .validateType(end_idx,c("integer","null"))
+  .validateType(strand_idx,c("integer","null"))
+  .validateType(beta_idx,c("integer","null"))
+  .validateType(M_idx,c("integer","null"))
+  .validateType(U_idx,c("integer","null"))
+  .validateType(cov_idx,c("integer","null"))
+  .validateType(verbose,"boolean")
+  
+  #- Function code -----------------------------------------------------------------------------
+  # Chr and start field are mandatory
   if (is.null(chr_idx) | is.null(start_idx)) {
-    stop("missing chromosome/start indices\nUse pipeline argument if the files are from Bismark, MethyDeckal, or MethylcTools",
+    stop("Missing chromosome/start indices\nUse pipeline argument if the files are from Bismark, MethyDeckal, or MethylcTools",
          call. = FALSE)
   }
   
   # See if any indices are duplicated
   if (length(which(duplicated(c(chr_idx, start_idx, end_idx, strand_idx, beta_idx, M_idx,
                                 U_idx, cov_idx)))) > 0) {
-    stop("Duplicated indices.", call. = FALSE)
+    stop("Duplicated indices specified for the source bedgraph file.", call. = FALSE)
   }
   
-  # Check maximum betavalues (Can be 1 or 100)
   fix_missing = vector()
   if (is.null(strand_idx)) {
     fix_missing = "strand := '*'"
@@ -390,15 +413,18 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' 
 #' If the argument for values is acceptable (e.g. "apple" or "ban"), it will return the matched string.
 #' 
-#' This is incompatible with pipes.
+#' This can be used with pipes, but will give erroneous names for the input variable
 #' 
 #' @param parent closure; the parent function in which to check the input
-#' @param arg varibale; the variable in which to check
+#' @param arg variable; the variable in which to check
 #' @param ignore.case; boolean; ignores case of the choices
 #' @return arg, if the value is in the function definition.
 .validateArg <- function(arg, parent = NULL, ignore.case = T) {
 
-    if (is.null(parent)) {
+  #.validateType(ignore.case,"boolean")
+  
+  #- Function code -----------------------------------------------------------------------------
+  if (is.null(parent)) {
     parent <- deparse(sys.calls()[[sys.nframe()-1]])
     parent <- unlist(strsplit(parent, "[(]"))[[1]]
   }
@@ -432,25 +458,24 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' @param assay string; the name of the assay
 #' @param throw boolean; throw an error if true, return false if not
 #' @return string; the name of the matched assay
-.validateAssay <- function(scm = NULL,assay = NULL, throw = TRUE) {
+.validateAssay <- function(scm = NULL,assay = NULL, check.absent = F) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateType(assay,"string")
-  .validateType(throw,"boolean")
-  
-  assay <- tryCatch(
-    {
-      match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm))
-    },
-    error=function(cond) {
-      if (throw) {
-        stop(paste0("Invalid assay. No assay named '",assay,"' found in the experiment '",substitute(scm),"'"), call. = FALSE)
-      } else {
-        FALSE
-      }
-    }
-  )
-  return(invisible(assay))
+  .validateType(check.absent, "boolean")
+
+  #- Function code -----------------------------------------------------------------------------  
+  if (!check.absent) {
+    assay <- tryCatch(
+      match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm)),
+      error=function(cond) 
+          stop(paste0("Invalid assay. No assay named '",assay,"' found in the experiment '",substitute(scm),"'"), call. = FALSE)
+    )
+    return(invisible(assay))
+  } else {
+    return(!(assay %in% SummarizedExperiment::assayNames(scm)))
+  }
 }
 
 # .validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
@@ -554,14 +579,17 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 
 .validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
                                                "List","File","Directory","GRanges","GenomicRanges","Function","Null",
-                                               "Dataframe","DF","S4")) {
+                                               "NA","Dataframe","DF","S4")) {
   
+  #- Input Validation --------------------------------------------------------------------------
   if (length(type) == length(eval(formals(.validateType)[["type"]]))) {
     stop("No valid type specified.")
   }
 
   types <- sapply(type,function(type) .validateArg(type,.validateType))
-  # inputs <- input#list(input,NULL) # necessary to avoid iterating through iterable objects (e.g. GRanges)
+  # inputs <- input#list(input,NULL) # necessary to avoid iterating through iterable objects (e.g. GRanges)s
+  
+  #- Function code -----------------------------------------------------------------------------
   valid <- F
 
   for (type in types) {
@@ -590,6 +618,8 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
       valid <- is.function(input)
     } else if (type == "Null") {
       valid <- is.null(input)
+    }  else if (type == "NA") {
+      valid <- is.na(input)
     } else if (type == "Dataframe" | type == "DF") {
       valid <- is.data.frame(input)
     } else if (type == "S4") {
@@ -614,6 +644,6 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' @param scm scMethrix; the experiment object to test
 #' @return invisible(TRUE), if the object is valid. Error if not.
 .validateExp <- function(scm) {
-  if (!is(scm, "scMethrix")) stop(paste0("Invalid scMethrix object supplied for '",substitute(scm),"'"), call. = FALSE)  
+  if (!is(scm, "scMethrix")) stop(paste0("Invalid scMethrix object supplied for '",substitute(scm),"'"), call. = FALSE)
   return(invisible(TRUE))
 }

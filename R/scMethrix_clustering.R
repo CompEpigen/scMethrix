@@ -20,6 +20,7 @@
 #' @export
 get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman", "kendall", "euclidean", "manhattan", "canberra", "binary", "minkowski"),verbose=TRUE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   if (!is.function(type)) type = .validateArg(type,get_distance_matrix)
@@ -31,6 +32,7 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
     warning("Distance matrix cannot be generated for HDF5 data. Data will be cast as matrix for imputation.")
   }
   
+  #- Function code -----------------------------------------------------------------------------
   mtx <- as.matrix(t(get_matrix(scm,assay=assay)))
   
   if (is.function(type)) { # For the arbitrary case
@@ -87,8 +89,7 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
 cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("hierarchical", "partition", "model"),
                               colname = "Cluster", n_clusters = NULL, verbose = TRUE, ...) {
 
-  Cluster <- Sample <- NULL
-
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   if (typeof(type) != "closure") {
@@ -98,7 +99,9 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
   .validateType(n_clusters,"integer")
   .validateType(colname,"string")
   .validateType(verbose,"boolean")
-
+  
+  Cluster <- Sample <- NULL
+  #- Function code -----------------------------------------------------------------------------
   if (is.null(dist)) dist <- get_distance_matrix(scm, assay=assay)
   
   if (is.null(n_clusters)) n_clusters = attr(dist,"Size")
@@ -158,12 +161,13 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
 #' @export
 append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
 
-  Row.names <- NULL
-  
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateType(colData,c("vector","dataframe","S4"))
   .validateType(name,"string")
-
+  
+  Row.names <- NULL
+  #- Function code -----------------------------------------------------------------------------
   # Convert vector to data.frame
   if (is.vector(colData)) {
     colData <- as.data.frame(colData)

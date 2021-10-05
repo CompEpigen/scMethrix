@@ -12,8 +12,10 @@
 #' @export
 get_metadata_stats <- function(scm) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   
+  #- Function code -----------------------------------------------------------------------------
   stats <-
     data.table::data.table(
       mean_meth = DelayedMatrixStats::rowMeans2(score(scm), na.rm = TRUE),
@@ -39,10 +41,12 @@ get_metadata_stats <- function(scm) {
 #' @export
 remove_assay <- function(scm=NULL, assay=NULL) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   if (assay == "score") stop("Score assay cannot be removed.", call. = FALSE)
   
+  #- Function code -----------------------------------------------------------------------------
   assays(scm) <- assays(scm)[-which(SummarizedExperiment::assayNames(scm) == assay)]
   
   return(scm)
@@ -81,14 +85,14 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #' @export
 merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm1)
   .validateExp(scm2)
   by <- .validateArg(by,merge_scMethrix)
 
   if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.")
   
-  by = .validateArg(by,merge_scMethrix)
-  
+  #- Function code -----------------------------------------------------------------------------
   names1 = SummarizedExperiment::assayNames(scm1)
   names2 = SummarizedExperiment::assayNames(scm2)
 
@@ -201,6 +205,7 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
                                n_threads = 1, by = c('mean', 'median', 'max', 'min', 'sum', 'sd'), 
                                overlap_type = "within", verbose = TRUE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm) 
   assay <- .validateAssay(scm,assay)
   .validateType(regions,c("Granges","null"))
@@ -220,6 +225,7 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
     warning("n_chunks exceeds number of files. Defaulting to n_chunks = ",n_chunks)
   }
   
+  #- Function code -----------------------------------------------------------------------------
   if(verbose) message("Generating region summary...",start_time())
   
   assay = .validateAssay(scm,assay)
@@ -360,6 +366,7 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
 #--------------------------------------------------------------------------------------------------------------------------
 get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges=FALSE, order_by_sd=FALSE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   .validateType(add_loci,"boolean")
@@ -371,6 +378,8 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
             "the output will be a data.frame object. ")
   
   assay <- .validateAssay(scm,assay)
+  
+  #- Function code -----------------------------------------------------------------------------
   mtx <- SummarizedExperiment::assay(x = scm, i = which(assay == SummarizedExperiment::assayNames(scm)))
   
   if (order_by_sd) {
@@ -417,6 +426,7 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 #' @export
 save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verbose = TRUE, ...) {
 
+  #- Input Validation --------------------------------------------------------------------------
   if (is(scm, "scMethrix")) {
     if (!is_h5(scm)) stop("A valid scMethrix HDF5 object needs to be supplied.", call. = FALSE)
   } else if (!is(scm, "SingleCellExperiment")) {
@@ -447,6 +457,7 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verb
     }
   }
   
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Saving HDF5 experiment to disk...",start_time())
 
   HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = h5_dir, replace = replace, chunkdim = c(length(rowRanges(scm)),1), ...)
@@ -469,9 +480,11 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verb
 #' @export
 load_HDF5_scMethrix <- function(dir = NULL, verbose = TRUE, ...) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateType(dir,"directory")
   .validateType(verbose,"boolean")
 
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Loading HDF5 object", start_time())
   
   scm <- HDF5Array::loadHDF5SummarizedExperiment(dir = dir, ...)
@@ -497,11 +510,13 @@ load_HDF5_scMethrix <- function(dir = NULL, verbose = TRUE, ...) {
 #' @export
 convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm) 
   .validateType(verbose,"boolean")
   
   if (!is_h5(scm)) stop("Input scMethrix must be in HDF5 format.")
   
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Converting HDF5 scMethrix to in-memory", start_time())
   
   assays(scm)[[1]] <- as.matrix(assays(scm)[[1]])
@@ -525,11 +540,13 @@ convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
 #' @export
 convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   if (is_h5(scm)) stop("Input scMethrix is already in HDF5 format.")
   .validateType(h5_dir,"string")
   .validateType(verbose,"boolean")
   
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
 
   scm <- create_scMethrix(assays = assays(scm), h5_dir = h5_dir,
@@ -574,6 +591,7 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 #' @export
 subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), overlap_type="within",verbose=TRUE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)  
   .validateType(regions,c("Granges","null"))
   .validateType(contigs,c("string","null"))
@@ -587,6 +605,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
     return(scm)
   }
   
+  #- Function code -----------------------------------------------------------------------------
   if (by == "exclude") {
     
     if (!is.null(regions)) {
@@ -653,12 +672,14 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' @export
 get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE) {
 
-  x <- NULL
-  
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)  
   assay <- .validateAssay(scm,assay)
   .validateType(per_chr,"boolean")
   
+  x <- NULL
+  
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Getting descriptive statistics...",start_time())
 
   ends <- len <- seqnames(scm)@lengths
@@ -705,9 +726,11 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE) 
 #' @export
 remove_uncovered <- function(scm = NULL, verbose = TRUE) {
 
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateType(verbose,"boolean")
   
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Removing uncovered CpGs...", start_time())
   
   row_idx <- DelayedMatrixStats::rowSums2(!is.na(get_matrix(scm)))==0
@@ -744,6 +767,7 @@ remove_uncovered <- function(scm = NULL, verbose = TRUE) {
 #' @export
 mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, avg_threshold = NULL, n_threads=1 , verbose = TRUE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   .validateType(low_threshold,c("numeric","null"))
@@ -763,6 +787,7 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, 
   #   stop("Thresholds must be a numeric value.")
   # }
  
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Masking by coverage...",start_time())
   
   avg_row_idx <- low_row_idx <- NULL
@@ -810,6 +835,7 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, 
 #' @export
 mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, prop_threshold = NULL, n_threads=1 , verbose = TRUE) {
   
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   .validateType(low_threshold,c("numeric","null"))
@@ -830,6 +856,7 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
   if (!is.null(low_threshold) && (!is.numeric(low_threshold) || low_threshold < 0)) stop("low_threshold must be >= 0")
   if (!is.null(prop_threshold) && (!is.numeric(prop_threshold) || prop_threshold > 1 || prop_threshold < 0)) stop("prop_threshold must be between 0 and 1")
   
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Masking by sample count...",start_time())
   row_idx <- NULL
   
@@ -863,6 +890,7 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
 #' @export
 mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, n_threads = 1, verbose = TRUE) {
 
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateType(low_threshold,c("numeric","null"))
   .validateType(n_threads,"integer")
@@ -875,6 +903,7 @@ mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, 
   
   if (!is.numeric(low_threshold) || low_threshold > 1 || low_threshold < 0) stop("low_threshold must be between 0 and 1")
   
+  #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Masking non-variable CpG sites...",start_time())
 
   n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
@@ -901,10 +930,12 @@ mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, 
 #' @export
 mask_helper <- function (scm, row_idx, verbose = TRUE) {
 
+  #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   #.validateType(row_idx,"integer")
   .validateType(verbose,"boolean")
   
+  #- Function code -----------------------------------------------------------------------------
   # if (length(row_idx) == 0) {
   #   if (verbose) message("   No CpGs were masked (",stop_time(),"elapsed)")
   # } else if (length(row_idx) == nrow(scm)) {
