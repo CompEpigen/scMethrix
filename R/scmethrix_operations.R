@@ -47,7 +47,7 @@ remove_assay <- function(scm=NULL, assay=NULL) {
   if (assay == "score") stop("Score assay cannot be removed.", call. = FALSE)
   
   #- Function code -----------------------------------------------------------------------------
-  assays(scm) <- assays(scm)[-which(SummarizedExperiment::assayNames(scm) == assay)]
+  assays(scm) <- SummarizedExperiment::assays(scm)[-which(SummarizedExperiment::assayNames(scm) == assay)]
   
   return(scm)
 }
@@ -100,8 +100,8 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
     warning("Assay list not identical. All non-identical assays will be dropped from merged object.")
     a1 <- intersect(names1, names2)
     a2 <- intersect(names2, names1)
-    assays(scm1) <- assays(scm1)[a1]
-    assays(scm2) <- assays(scm2)[a2]
+    SummarizedExperiment::assays(scm1) <- SummarizedExperiment::assays(scm1)[a1]
+    SummarizedExperiment::assays(scm2) <- SummarizedExperiment::assays(scm2)[a2]
   } 
   
   # Fix duplicate names in metadata, append if there are common elements that have different values
@@ -129,7 +129,8 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 
   # Merge by row
   if (by == "row") {
-    if (nrow(colData(scm1)) != nrow(colData(scm2)) || !all(rownames(scm1@colData) == rownames(scm2@colData))) 
+    if (nrow(SummarizedExperiment::colData(scm1)) != nrow(SummarizedExperiment::colData(scm2)) || 
+        !all(rownames(scm1@colData) == rownames(scm2@colData))) 
       stop("You have different samples in your dataset. You need the same samples in your datasets. ")
     
     if (length(intersect(rowRanges(scm1),rowRanges(scm2))) != 0)
@@ -146,30 +147,33 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
       stop("You have the same samples in your datasets. You need different samples for this merging.  ")
     
     
-    if (length(intersect(rowRanges(scm1),rowRanges(scm2))) != length(rowRanges(scm1))) 
+    if (length(intersect(SummarizedExperiment::rowRanges(scm1),SummarizedExperiment::rowRanges(scm2))) != 
+        length(SummarizedExperiment::rowRanges(scm1))) 
       stop("There are non-overlapping regions in your datasets. This function only takes identical regions. ")
 
     # Merge sample metadata. Ensure the column names match, fill with NAs if not
-    colData(scm1)[setdiff(names(colData(scm2)), names(colData(scm1)))] <- NA
-    colData(scm2)[setdiff(names(colData(scm1)), names(colData(scm2)))] <- NA
+    colData(scm1)[setdiff(names(SummarizedExperiment::colData(scm2)), names(SummarizedExperiment::colData(scm1)))] <- NA
+    colData(scm2)[setdiff(names(SummarizedExperiment::colData(scm1)), names(SummarizedExperiment::colData(scm2)))] <- NA
       
     scm <- cbind(scm1, scm2)
 
     # Ensure object is consistent regardless the order of scm1 and scm2
     ord <- order(colnames(scm))
-    colData(scm) <- colData(scm)[ord , order(names(colData(scm))), drop=FALSE]
+    SummarizedExperiment::colData(scm) <- SummarizedExperiment::colData(scm)[ord ,
+                                                           order(names(SummarizedExperiment::colData(scm))), drop=FALSE]
     
     dimnames(scm)[[2]] <- sort(colnames(scm))
     
     for (name in SummarizedExperiment::assayNames(scm)) {
-      assay(scm,name,withDimnames = F) <- assay(scm,name,withDimnames = F)[ , ord]
+      SummarizedExperiment::assay(scm,name,withDimnames = F) <- 
+        SummarizedExperiment::assay(scm,name,withDimnames = F)[ , ord]
     }
   }
   
   #Realize if HDF5
   if (is_h5(scm)) {
     for (name in SummarizedExperiment::assayNames(scm)) {
-       assay(scm,name) <- as(assay(scm,name), "HDF5Array")
+      SummarizedExperiment::assay(scm,name) <- as(SummarizedExperiment::assay(scm,name), "HDF5Array")
     }
   }
   
@@ -236,7 +240,7 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
   if (!is.null(regions)) {
     regions = cast_granges(regions)
   } else { # If no region is specifed, use entire chromosomes
-    regions = range(rowRanges(scm))
+    regions = range(SummarizedExperiment::rowRanges(scm))
   }
   
   regions$rid <- paste0("rid_", 1:length(regions))
@@ -383,11 +387,7 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
   mtx <- SummarizedExperiment::assay(x = scm, i = which(assay == SummarizedExperiment::assayNames(scm)))
   
   if (order_by_sd) {
-    if (is_h5(scm)) {
       sds = DelayedMatrixStats::rowSds(mtx, na.rm = TRUE)
-    } else {
-      sds = matrixStats::rowSds(mtx, na.rm = TRUE)
-    }
   }
   
   if (add_loci) {
@@ -610,17 +610,17 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
     
     if (!is.null(regions)) {
       regions <- cast_granges(regions)
-      reg <- subsetByOverlaps(rowRanges(scm), regions, invert = TRUE, type=overlap_type, maxgap=-1L, minoverlap=0L)
-      scm <- subset_scMethrix(scm,regions=reduce(reg),by="include")
+      reg <- IRanges::subsetByOverlaps(SummarizedExperiment::rowRanges(scm), regions, invert = TRUE, type=overlap_type, maxgap=-1L, minoverlap=0L)
+      scm <- subset_scMethrix(scm,regions=IRanges::reduce(reg),by="include")
     }
     
     if (!is.null(contigs)) {
-      c <- as.character(seqnames(scm)@values)
+      c <- as.character(GenomeInfoDb::seqnames(scm)@values)
       scm <- subset_scMethrix(scm,contigs = c[!c %in% contigs],by="include")
     }
     
     if (!is.null(samples)) {
-      s <- row.names(colData(scm))
+      s <- row.names(SummarizedExperiment::colData(scm))
       scm <- subset_scMethrix(scm,samples = s[!s %in% samples],by="include")
     }
     
@@ -638,13 +638,13 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
     
     if (!is.null(contigs)) {
       if (verbose) message("   Subsetting by contigs")
-      scm <- subset(scm, subset = as.vector(seqnames(scm)) %in% contigs)
+      scm <- subset(scm, subset = as.vector(GenomeInfoDb::seqnames(scm)) %in% contigs)
       if (nrow(scm) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
     }
     
     if (!is.null(samples)) {
       if (verbose) message("   Subsetting by samples")
-      scm <- subset(scm, select = row.names(colData(scm)) %in% samples)
+      scm <- subset(scm, select = row.names(SummarizedExperiment::colData(scm)) %in% samples)
       if (length(scm) == 0) stop("Samples not present in the object", call. = FALSE)
     }
     
@@ -682,7 +682,7 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE) 
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Getting descriptive statistics...",start_time())
 
-  ends <- len <- seqnames(scm)@lengths
+  ends <- len <- GenomeInfoDb::seqnames(scm)@lengths
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
   starts <- head(c(1, ends + 1), -1)
   

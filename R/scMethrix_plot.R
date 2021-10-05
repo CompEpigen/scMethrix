@@ -73,8 +73,8 @@ get_palette <- function(n_row, col_palette){
     stop("Zero colors present in the palette")
   }
   
-  if (!col_palette %in% rownames(RColorBrewer::brewer.pal.info)){
-    stop("Please provide a valid RColorBrewer palettte. Possible values are: ", paste0(rownames(RColorBrewer::brewer.pal.info)), sep=", ")
+  if (!col_palette %in% row.names(RColorBrewer::brewer.pal.info)){
+    stop("Please provide a valid RColorBrewer palettte. Possible values are: ", paste0(row.names(RColorBrewer::brewer.pal.info)), sep=", ")
   }
   
   #- Function code -----------------------------------------------------------------------------
@@ -275,7 +275,7 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   
   gc(verbose = FALSE)
   
-  p <- p + theme(axis.title.x = element_blank(), axis.text.x = element_text(size = 12,
+  p <- p + ggplot2::theme(axis.title.x = element_blank(), axis.text.x = element_text(size = 12,
                                                                        colour = "black"), axis.text.y = element_text(size = 12, colour = "black"),
             axis.title.y = element_blank(), legend.title = element_blank())
   
@@ -309,19 +309,19 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
     if (pheno %in% rownames(colData(scm))) {
       pheno <- as.character(scm@colData[, pheno])
       sparsity <- data.frame(Phenotype = pheno, Sparsity = sparsity/nrow(scm))
-      p <- ggplot(sparsity, aes(x=pheno, y=Sparsity, color = pheno))
+      p <- ggplot2::ggplot(sparsity, aes(x=pheno, y=Sparsity, color = pheno))
     } else {
       stop("Please provide a valid phenotype annotation column.")
     }
   } else {
     sparsity <- data.frame(Sparsity = sparsity/nrow(scm))
-    p <- ggplot(sparsity, aes(x="", y=Sparsity))
+    p <- ggplot2::ggplot(sparsity, aes(x="", y=Sparsity))
   }
 
-  if (type == "box") {p <- p + geom_boxplot()
-  } else if (type == "scatter") {p <- p + geom_point() }
+  if (type == "box") {p <- p + ggplot2::geom_boxplot()
+  } else if (type == "scatter") {p <- p + ggplot2::geom_point() }
 
-  p <- p + scMethrix_theme() + theme(axis.title.x = element_blank())
+  p <- p + scMethrix_theme() + ggplot2::theme(axis.title.x = element_blank())
 
   return(p)
 }
@@ -388,11 +388,11 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), ignore_
                               no = plot_dat$sd_low)
     
     plot_dat_gg <- ggplot(data = plot_dat, aes(x = Chromosome, y = measurement)) +
-      geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray70") +
-      geom_point(col = "maroon") + 
-      facet_wrap(~Sample_Name, nrow = n_row, ncol = n_col) + 
-      theme_minimal(base_size = 12) + 
-      theme(axis.title.x = element_blank(), 
+      ggplot2::geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray70") +
+      ggplot2::geom_point(col = "maroon") + 
+      ggplot2::facet_wrap(~Sample_Name, nrow = n_row, ncol = n_col) + 
+      ggplot2::theme_minimal(base_size = 12) + 
+      ggplot2::theme(axis.title.x = element_blank(), 
             axis.text.x = element_text(hjust = 1, size = 10, colour = "black"),
             axis.text.y = element_text(size = 10, colour = "black"), axis.title.y = element_blank())
   } else {
@@ -412,15 +412,15 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), ignore_
     plot_dat$sd_low <- ifelse(test = plot_dat$sd_low < 0, yes = 0,
                               no = plot_dat$sd_low)
     
-    plot_dat_gg <- ggplot(data = plot_dat, aes(x = Sample_Name, y = measurement)) +
-      geom_point(col = "maroon", size = 2) + 
-      geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray70") + 
-      geom_point(col = "maroon") + theme_minimal(base_size = 12) + 
-      theme(axis.title.x = element_blank(),
+    plot_dat_gg <- ggplot2::ggplot(data = plot_dat, aes(x = Sample_Name, y = measurement)) +
+      ggplot2::geom_point(col = "maroon", size = 2) + 
+      ggplot2::geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray70") + 
+      ggplot2::geom_point(col = "maroon") + theme_minimal(base_size = 12) + 
+      ggplot2::theme(axis.title.x = element_blank(),
             axis.text.x = element_text(angle = 45, hjust = 1, size = 12, colour = "black"), 
             axis.text.y = element_text(size = 12, colour = "black"), 
             axis.title.y = element_blank()) + 
-      ggtitle(label = plot_title)
+      ggplot2::ggtitle(label = plot_title)
   }
   
   return(plot_dat_gg  + scMethrix_theme())
@@ -506,29 +506,30 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
   }
   
   if (all(c("color_me", "shape_me") %in% colnames(dim_red))) {
-    dimred_gg <- ggplot(data = dim_red, aes(x = X, y = Y, color = color_me,
+    dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = color_me,
                                             shape = shape_me, label = row_names)) + geom_point(size = 3) +
       labs(color = col_anno, shape = shape_anno) + scale_color_brewer(palette = "Dark2")
   } else if ("color_me" %in% colnames(dim_red)) {
-    dimred_gg <- ggplot(data = dim_red, aes(x = X, y = Y, color = color_me,
+    dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = color_me,
                                             label = row_names)) + geom_point(size = 3) +
       labs(color = col_anno) + scale_color_brewer(palette = "Dark2")
   } else if ("shape_me" %in% colnames(dim_red)) {
-    dimred_gg <- ggplot(data = dim_red, aes(x = X, y = Y, shape = shape_me,
+    dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, shape = shape_me,
                                             label = row_names)) + geom_point(size = 3) +
       labs(shape = shape_anno)
   } else {
-    dimred_gg <- ggplot(data = as.data.frame(dim_red), aes(x = X, y = Y,
+    dimred_gg <- ggplot2::ggplot(data = as.data.frame(dim_red), aes(x = X, y = Y,
                                                            label = row_names)) + geom_point(size = 3, fill = "black",
                                                                                             color = "gray70")
   }
   
-  dimred_gg <- dimred_gg  + theme_classic(base_size = 12) + xlab(axis_labels$X) + ylab(axis_labels$Y) + 
-    theme(axis.text.x = element_text(colour = "black", size = 12),
+  dimred_gg <- dimred_gg  + ggplot2::theme_classic(base_size = 12) + 
+    ggplot2::xlab(axis_labels$X) + ggplot2::ylab(axis_labels$Y) + 
+    ggplot2::theme(axis.text.x = element_text(colour = "black", size = 12),
           axis.text.y = element_text(colour = "black", size = 12))
   
   if (show_dp_labels) {
-    dimred_gg <- dimred_gg + geom_label(size = 4) 
+    dimred_gg <- dimred_gg + ggplot2::geom_label(size = 4) 
   }
   
   dimred_gg <- dimred_gg + color + shape
@@ -641,11 +642,11 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
                      by = c("Imputation", "Sparsity")]
   
   
-  ggplot(results,aes(x=Sparsity, y=mean, color=Imputation)) +
-    geom_line() + geom_point() + 
-    geom_pointrange(aes(ymin=mean-sd, ymax=mean+sd)) +
-    xlab("Sparsity (proportion)") + ylab(type) + labs(fill = "Imputation") +
-    scale_x_continuous(breaks=seq(0,1,.05)) + 
+  ggplot2::ggplot(results,aes(x=Sparsity, y=mean, color=Imputation)) +
+    ggplot2::geom_line() + ggplot2::geom_point() + 
+    ggplot2::geom_pointrange(aes(ymin=mean-sd, ymax=mean+sd)) +
+    ggplot2::xlab("Sparsity (proportion)") + ggplot2::ylab(type) + ggplot2::labs(fill = "Imputation") +
+    ggplot2::scale_x_continuous(breaks=seq(0,1,.05)) + 
     scMethrix_theme() 
 }
 
@@ -661,7 +662,7 @@ scMethrix_theme <- function(base_size = 12, base_family = "") {
   update_geom_defaults("point", list(size = 3))
 
   theme_grey(base_size = base_size, base_family = base_family) %+replace%
-    theme(
+    ggplot2::theme(
       line =              element_line(colour = '#DADADA', size = 0.75, 
                                        linetype = 1, lineend = "butt"),
       rect =              element_rect(fill = "#F0F0F0", colour = "#F0F0F0", 

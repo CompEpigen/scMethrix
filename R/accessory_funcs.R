@@ -108,18 +108,10 @@ split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
   if (sum(is.na(c(chunks,percent,size))) != 2) stop("Invalid input. Must contain 1 of either chunks, percent, or size")
 
   #- Function code -----------------------------------------------------------------------------  
-  if (!is.na(percent)) {
-    chunks = 100/percent
-  }
- 
-  if (!is.na(size)) {
-    chunks = length(vec)/ceiling(size)
-  }
-
+  if (!is.na(percent)) chunks = 100/percent
+  if (!is.na(size)) chunks = length(vec)/ceiling(size)
   chunks = max(1,chunks)
-  
   return(unname(split(vec, sort(rep_len(1:ceiling(chunks), length(vec))))))
-
 }
 
 #' Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size} 
@@ -139,26 +131,8 @@ bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
   .validateType(bin_size, "integer")
   
   #- Function code -----------------------------------------------------------------------------
-  ends <- len <- seqnames(gr)@lengths
-  for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
-  starts <- head(c(1, ends + 1), -1)
-  
-  rngs <- lapply(1:length(starts), function (i) {
-    
-    #Get span of each chr     
-    rng <- c(gr[starts[i]],gr[ends[i]])
-    rng <- c(rng,gaps(rng,start=gr[starts[i]]@ranges@start))
-    rng <- reduce(rng)
-    
-    #Create bins
-    rng <- tile(rng, width = bin_size)
-    unlist(rng)
-  })
-  
-  rngs <- unlist(as(rngs, "GRangesList"))
-  return(rngs)
-  
-  #TODO: implement enforce_size to make the minimum IRange for each chr be the length(bin_size)
+  gr <- GenomicRanges::slidingWindows(gr,width=bin_size,step=bin_size)
+  return(unlist(as(gr, "GRangesList")))
 }
 
 #' Casts genomic regions into \code{\link{GRanges}} format
@@ -242,7 +216,7 @@ subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   
   #- Function code -----------------------------------------------------------------------------
   keys <- rbind(ref_cpgs[,c("chr","start")], gen_cpgs[,c("chr","start")])
-  setDT(keys)[, id := .GRP, by = c("chr","start")]
+  data.table::setDT(keys)[, id := .GRP, by = c("chr","start")]
   
   ref <- nrow(ref_cpgs)
   gen <- nrow(gen_cpgs)
@@ -324,19 +298,17 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
   .validateType(cov_idx,c("integer","null"))
   .validateType(verbose,"boolean")
   
-  #- Function code -----------------------------------------------------------------------------
-  # Chr and start field are mandatory
   if (is.null(chr_idx) | is.null(start_idx)) {
     stop("Missing chromosome/start indices\nUse pipeline argument if the files are from Bismark, MethyDeckal, or MethylcTools",
          call. = FALSE)
   }
   
-  # See if any indices are duplicated
   if (length(which(duplicated(c(chr_idx, start_idx, end_idx, strand_idx, beta_idx, M_idx,
                                 U_idx, cov_idx)))) > 0) {
     stop("Duplicated indices specified for the source bedgraph file.", call. = FALSE)
   }
   
+  #- Function code -----------------------------------------------------------------------------
   fix_missing = vector()
   if (is.null(strand_idx)) {
     fix_missing = "strand := '*'"

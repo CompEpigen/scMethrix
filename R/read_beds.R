@@ -100,7 +100,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
                                  beta_idx = beta_idx, cov_idx = cov_idx, strand_idx = strand_idx, 
                                  M_idx = M_idx, U_idx = U_idx, verbose = verbose)
   } else {
-    pipeline <- match.arg(arg = pipeline, choices = c("Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"))
+
     if (verbose) message(paste0("BED column format:  ", pipeline))
     
     col_list <- get_source_idx(protocol = pipeline)
@@ -132,6 +132,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     }
   }
   
+  # This makes an assumption that the first file will have the max value
   col_list$max_value = max(read_bed_by_index(files = files[1], ref_cpgs,col_list=col_list)$beta,na.rm = TRUE)
   
   gc()
@@ -168,7 +169,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     # row.names(colData) <- unlist(lapply(files,get_sample_name))
     
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
-    chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
+    chrom_size = sapply(GenomicRanges::coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
     
     m_obj <- create_scMethrix(assays = reads, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
@@ -226,8 +227,8 @@ read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch
   # Parallel functionality
   if (n_threads != 0) {
     
-    if (n_threads > detectCores(logical = TRUE)) {
-      n_threads <- detectCores(logical = TRUE)-1
+    if (n_threads > parallel::detectCores(logical = TRUE)) {
+      n_threads <- parallel::detectCores(logical = TRUE)-1
       warning("Too many threads. Defaulting to n_threads =",n_threads)
     }
     

@@ -34,7 +34,7 @@ export_beds <- function(scm = NULL, path = NULL, suffix = NULL,  include = FALSE
   dir.create(path, showWarnings = FALSE)
   
   files <- row.names(scm@colData)
-  rrng <- as.data.table(rowRanges(scm))
+  rrng <- data.table::as.data.table(rowRanges(scm))
   rrng[,c("width","strand"):=NULL]
   
   if (is.null(suffix)) suffix <- "" #TODO: Should switch to some kind of regex input
@@ -58,7 +58,7 @@ export_beds <- function(scm = NULL, path = NULL, suffix = NULL,  include = FALSE
     if (na.rm) {  out <- stats::na.omit(rrng, cols="meth", invert=FALSE)
     } else {      out <- rrng}
     
-    fwrite(out, paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t", row.names = FALSE, 
+    data.table::fwrite(out, paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t", row.names = FALSE, 
            col.names = FALSE, quote = FALSE)
     
     if (verbose) message("Exported ",i," of ",length(files)," (",split_time(), ")")
@@ -189,8 +189,8 @@ export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = N
   
   mat_gr <- get_matrix(scm = scm, assay = assay, add_loci = TRUE, in_granges = TRUE)
   
-  seql = width(range(rowRanges(scm)))
-  names(seql) = levels(seqnames(scm))
+  seql = GenomicRanges::width(range(SummarizedExperiment::rowRanges(scm)))
+  names(seql) = levels(GenomeInfoDb::seqnames(scm))
   
   if(is.null(samp_names)){
     samp_names = names(mcols(mat_gr))
@@ -232,9 +232,6 @@ export_seurat <- function(scm,assay="score", path = NULL) {
   
   seur <- Seurat::CreateSeuratObject(counts = cnt, meta.data = as.data.frame(colData(scm)))
   seur <- Seurat::SetAssayData(object = seur, slot = "data", new.data = scr)
-  
-  seur <- CreateSeuratObject(counts = cnt, meta.data = as.data.frame(colData(scm)))
-  seur <- SetAssayData(object = seur, slot = "data", new.data = scr)
   
   # seur <- NormalizeData(object = seur)
   # seur <- FindVariableFeatures(object = seur)

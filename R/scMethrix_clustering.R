@@ -38,13 +38,13 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
   if (is.function(type)) { # For the arbitrary case
     dist <- type(mtx)
   } else if (type == "spearman") {
-    dist <- spearman.dist(mtx)
+    dist <- bioDist::spearman.dist(mtx)
   } else if (type == "pearson") {
-    dist <- cor.dist(mtx)
+    dist <- bioDist::cor.dist(mtx)
   } else if (type == "kendall") {
-    dist <- tau.dist(mtx)
+    dist <- bioDist::tau.dist(mtx)
   } else if (type %in% c("euclidean", "manhattan", "canberra", "binary", "minkowski")) {
-    dist <- dist(mtx, method = type)
+    dist <- stats::dist(mtx, method = type)
   } else {
     stop("Invalid distance metric specified")
   }

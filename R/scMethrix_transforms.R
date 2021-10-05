@@ -112,7 +112,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
     scm <- subset_scMethrix(scm, regions = regions) 
   } else { # If no region is specifed, use entire chromosomes
     if (verbose) message ("No regions specified; using whole chromosomes")
-    regions = range(rowRanges(scm))
+    regions = range(SummarizedExperiment::rowRanges(scm))
   }
   
   if (verbose) message("Subsetting for ",length(regions)," input regions...",start_time())
@@ -134,7 +134,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
     
     if (bin_by == "cpg") {
       
-      rrng = GRanges()
+      rrng = GenomicRanges::GRanges()
       
       for(rid in 1:length(regions$rid)) {
         
@@ -144,7 +144,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
         idx <- split_vector(idx,size=bin_size)
         
         for(i in idx) {
-          gr <- range(rowRanges(scm[c(i[1],i[length(i)]),]))
+          gr <- GenomicRanges::range(rowRanges(scm[c(i[1],i[length(i)]),]))
           gr$n_cpgs <- length(i)
           rrng <- c(rrng,gr)
         }
@@ -152,7 +152,10 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       
     } else if (bin_by == "bp") {
 
-      rrng <- sort(unlist(tile(regions, width = bin_size))) #TODO: Should switch this to using RLE lookup
+      rrng <- GenomicRanges::slidingWindows(regions,width=bin_size,step=bin_size)
+      rrng <- unlist(as(rrng, "GRangesList"))
+      
+      rrng <- bin_granges(scm,bin_size = bin_size) #sort(unlist(tile(regions, width = bin_size))) #TODO: Should switch this to using RLE lookup
       
       idx <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type))
       idx <- idx[order(idx$subjectHits),]
@@ -188,10 +191,10 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
     
     if (is_h5(scm)) {
 
-      setAutoRealizationBackend("HDF5Array")
+      DelayedArray::setAutoRealizationBackend("HDF5Array")
       
       cols <- split_vector(1:ncol(scm),size=batch_size)
-      sink <- AutoRealizationSink(c(length(rrng),ncol(scm)))
+      sink <- DelayedArray::AutoRealizationSink(c(length(rrng),ncol(scm)))
       grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rrng),length(cols[[1]])))
 
       if (verbose) message("Generated ", length(cols), " chunks")
@@ -563,11 +566,11 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
     
     if (is_h5(scm)) {
       
-      setAutoRealizationBackend("HDF5Array")
+      DelayedArray::setAutoRealizationBackend("HDF5Array")
       
       grps <- split(1:nrow(overlaps_indicies), overlaps_indicies$Group)
       cpgs <- split_vector(1:nrow(scm),size = batch_size)
-      sink <- AutoRealizationSink(c(length(rowRanges(scm)),uniqueN(overlaps_indicies$Group)))
+      sink <- DelayedArray::AutoRealizationSink(c(length(rowRanges(scm)),uniqueN(overlaps_indicies$Group)))
       grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rowRanges(scm)),1))
 
       if (verbose) message("Generated ", length(grps)*length(cpgs), " chunks")
@@ -594,7 +597,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
     } else {
       
       mtx <- data.table(get_matrix(scm,assay=name)) #TODO: Somehow missing rows if not subset, not sure why
-      mtx <- setDT(lapply(split.default(mtx, overlaps_indicies$Group), op))[]
+      mtx <- data.table::setDT(lapply(split.default(mtx, overlaps_indicies$Group), op))[]
 
       assays[[name]] <- as(mtx,class(get_matrix(scm,assay=name)))
       

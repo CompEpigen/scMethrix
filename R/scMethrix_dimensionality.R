@@ -109,28 +109,28 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), v
   
   if (type == "tSNE") {
     
-    meth_sub <- Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), k = n_components)#, ...)
+    meth_sub <- Rtsne::Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), k = n_components)#, ...)
     
-    reducedDim(scm, "tSNE") <- meth_sub$Y
+    SingleCellExperiment::reducedDim(scm, "tSNE") <- meth_sub$Y
     
     if (verbose) message("tSNE generated in ",stop_time())
     
   } else if (type == "UMAP") {
     
-    umap <- umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)),n_components=n_components)#, ...)
+    umap <- umap::umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)),n_components=n_components)#, ...)
     
-    reducedDim(scm, "UMAP") <- umap$layout
+    SingleCellExperiment::reducedDim(scm, "UMAP") <- umap$layout
     
   } else if (type == "PCA") {
     
-    meth <- prcomp(x = as.matrix(t(meth)), retx = TRUE)#, ...)
+    meth <- stats::prcomp(x = as.matrix(t(meth)), retx = TRUE)#, ...)
     
     # Variance explained by PC's
     pc_vars <- meth$sdev^2/sum(meth$sdev^2)
     names(pc_vars) <- colnames(meth$x)
     pc_vars <- round(pc_vars, digits = 2)
     
-    reducedDim(scm, "PCA") <- meth$x[,1:n_components]
+    SingleCellExperiment::reducedDim(scm, "PCA") <- meth$x[,1:n_components]
     scm@metadata$PCA_vars <- pc_vars[1:n_components]
     
     if (verbose) {
