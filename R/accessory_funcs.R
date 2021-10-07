@@ -84,9 +84,9 @@ colbind = function(...) {
 #' Splits a vector into list of vectors by \code{chunk} or \code{size}
 #' @details Splits a vector into consistantly sized sub-lists. The sub-list size will always be decreasing based on list order.
 #' @param vec vector; The vector to split
-#' @param chunks integer; The number of desired sub-lists
-#' @param percent integer; The maximum percentage of elements each sub-list should hold
-#' @param size integer; The maximum size of each sub-list
+#' @param chunks integer; x > 0; The number of desired sub-lists
+#' @param percent numeric; 100 > x > 0; The maximum percentage of elements each sub-list should hold
+#' @param size integer; x > 0; The maximum size of each sub-list
 #' @return A list of sub-vectors
 #' @examples
 #' # Split vector into 4 sub vectors
@@ -105,6 +105,10 @@ split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
   .validateType(size,c("integer","na"))
   .validateType(percent,c("numeric","na"))
 
+  .validateValue(chunks,">0")
+  .validateValue(size,">0")
+  .validateValue(percent,">0","<100")
+  
   if (sum(is.na(c(chunks,percent,size))) != 2) stop("Invalid input. Must contain 1 of either chunks, percent, or size")
 
   #- Function code -----------------------------------------------------------------------------  
@@ -117,7 +121,7 @@ split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
 #' Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size} 
 #' @details Bins a single region in \code{\link{GRanges}} format into multiple regions with a specified \code{bin_size}. If \code{length(gr) %% bin_size != 0}, then the last GRange will have a length < \code{bin_size}. This is used instead of tile when you need consistently sized bins with the last bin being smaller
 #' @param gr GRanges; The \code{\link{GRanges}} object
-#' @param bin_size integer; The length of region in each bin
+#' @param bin_size integer; x > 0; The length of region in each bin
 #' @return \code{\link{GRangesList}} containing all the binned \code{\link{GRanges}}
 #' @import GenomicRanges
 #' @examples
@@ -129,6 +133,7 @@ bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
   #- Input Validation --------------------------------------------------------------------------
   .validateType(gr,"Granges")
   .validateType(bin_size, "integer")
+  .validateValue(bin_size,">0")
   
   #- Function code -----------------------------------------------------------------------------
   gr <- GenomicRanges::slidingWindows(gr,width=bin_size,step=bin_size)
@@ -288,16 +293,25 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
                             cov_idx = NULL, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
-  .validateType(chr_idx,c("integer","null"))
-  .validateType(start_idx,c("integer","null"))
-  .validateType(end_idx,c("integer","null"))
+  .validateType(chr_idx,   c("integer","null"))
+  .validateType(start_idx, c("integer","null"))
+  .validateType(end_idx,   c("integer","null"))
   .validateType(strand_idx,c("integer","null"))
-  .validateType(beta_idx,c("integer","null"))
-  .validateType(M_idx,c("integer","null"))
-  .validateType(U_idx,c("integer","null"))
-  .validateType(cov_idx,c("integer","null"))
-  .validateType(verbose,"boolean")
+  .validateType(beta_idx,  c("integer","null"))
+  .validateType(M_idx,     c("integer","null"))
+  .validateType(U_idx,     c("integer","null"))
+  .validateType(cov_idx,   c("integer","null"))
+  .validateType(verbose,   "boolean")
   
+  .validateValue(chr_idx,   ">0")
+  .validateValue(start_idx, ">0")
+  .validateValue(end_idx,   ">0")
+  .validateValue(strand_idx,">0")
+  .validateValue(beta_idx,  ">0")
+  .validateValue(M_idx,     ">0")
+  .validateValue(U_idx,     ">0")
+  .validateValue(cov_idx,   ">0")
+
   if (is.null(chr_idx) | is.null(start_idx)) {
     stop("Missing chromosome/start indices\nUse pipeline argument if the files are from Bismark, MethyDeckal, or MethylcTools",
          call. = FALSE)
@@ -551,7 +565,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 
 .validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
                                                "List","File","Directory","GRanges","GenomicRanges","Function","Null",
-                                               "NA","Dataframe","DF","S4")) {
+                                               "NA","Dataframe","DF","S4"), throws=T) {
   
   #- Input Validation --------------------------------------------------------------------------
   if (length(type) == length(eval(formals(.validateType)[["type"]]))) {
@@ -597,14 +611,18 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
     } else if (type == "S4") {
       valid <- isS4(input)
     } else {
-      stop("Invalid type with '",type,"'. This type is not supported. Also, this should never be reached.")
+      stop("Invalid type with '",type,"'. This type is not supported for validation.")
     }
 
     if (valid) {
       break
     } else if (type == types[length(types)]) {
+      if (throws) {
       stop("Invalid type input for '",substitute(input),"'. Must be of type: '",
            paste0(type, collapse="', '"),"'", call. = FALSE)
+      } else {
+        return(invisible(FALSE)) 
+      }
     }
   }
 
@@ -617,5 +635,21 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' @return invisible(TRUE), if the object is valid. Error if not.
 .validateExp <- function(scm) {
   if (!is(scm, "scMethrix")) stop(paste0("Invalid scMethrix object supplied for '",substitute(scm),"'"), call. = FALSE)
+  return(invisible(TRUE))
+}
+
+.validateValue <- function(value,...) {
+
+    if (!is.null(value) && !is.na(value)) {
+      
+      if (!.validateType(value,c("numeric","integer"),throws=F))
+        stop("Invalid value for '",substitute(value),"'. Must be of 'numeric' or 'integer' type.")
+      
+      for (condition in list(...)) {
+        if (!(eval(parse(text=paste0(value,condition))))) {
+          stop ("Invalid value for '",substitute(value),"'. Must fit condition: ",value,condition)
+        }
+      }
+    }
   return(invisible(TRUE))
 }
