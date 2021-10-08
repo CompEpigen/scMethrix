@@ -19,11 +19,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #-------------------------------------------------------------------------------
-
+timer.env <- NULL
 .onLoad <- function(libname, pkgname)
 {
-  assign("time.all", numeric(), envir=topenv())
-  assign("time.split", numeric(), envir=topenv())
+  timer.env <<- new.env(parent = emptyenv())
+  assign("time.all", numeric(), envir=timer.env)
+  assign("time.split", numeric(), envir=timer.env)
+  timer.env
 }
 
 #-------------------------------------------------------------------------------
