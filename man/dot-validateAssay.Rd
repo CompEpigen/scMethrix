@@ -4,17 +4,17 @@
 \alias{.validateAssay}
 \title{Validates an assay is in the object. Allows partial pattern.}
 \usage{
-.validateAssay(scm = NULL, assay = NULL, throw = TRUE)
+.validateAssay(scm = NULL, assay = NULL, check.absent = F)
 }
 \arguments{
 \item{scm}{scMethrix; the experiment object}
 
 \item{assay}{string; the name of the assay}
 
-\item{throw}{boolean; throw an error if true, return false if not}
+\item{check.absent}{boolean; Checks if the assay is present}
 }
 \value{
-string; the name of the matched assay
+string or boolean; if \code{check.absent == T}, the name of the matched assay or error if it doesn't exist. If \code{check_assay == F}, the boolean value for if the assay exists in the experiment
 }
 \description{
 Validates an assay is in the object. Allows partial pattern.

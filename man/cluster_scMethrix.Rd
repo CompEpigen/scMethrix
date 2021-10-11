@@ -7,11 +7,11 @@
 cluster_scMethrix(
   scm = NULL,
   dist = NULL,
-  n_clusters = NULL,
   assay = "score",
-  colname = "Cluster",
-  verbose = TRUE,
   type = c("hierarchical", "partition", "model"),
+  colname = "Cluster",
+  n_clusters = 1,
+  verbose = TRUE,
   ...
 )
 }
@@ -20,15 +20,15 @@ cluster_scMethrix(
 
 \item{dist}{dist; Optional. A distance matrix generated for an assay. Will use default paramaters for \code{\link{get_distance_matrix}}.}
 
-\item{n_clusters}{integer; the desired number of clusters. This is ignored for model-based clustering}
-
 \item{assay}{string; The assay to use. Default is 'score'}
+
+\item{type}{string; The type of distance metric to use. Available options are 'hierarchical', 'partition', "model". An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. \code{c(C1=1,C2=1,C3=1,C4=2)}).}
 
 \item{colname}{string; the name of the colData column that contains the cluster information}
 
-\item{verbose}{boolean; flag to output messages or not}
+\item{n_clusters}{integer; the desired number of clusters. This is ignored for model-based clustering}
 
-\item{type}{string; The type of distance metric to use. Available options are 'hierarchical', 'partition', "model". An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. \code{c(C1=1,C2=1,C3=1,C4=2)}).}
+\item{verbose}{boolean; flag to output messages or not}
 
 \item{...}{Additional parameters for the clustering functions}
 }
@@ -48,14 +48,7 @@ dist <- get_distance_matrix(scMethrix_data,assay = "impute")
 
 # For a generic clustering function
 # The function must return a named vector of integers
-fun <- function (dist) {
-    fit <- hclust(dist, method="ward.D")
-    fit <- cutree(fit, k=2)
-    return(fit)
-    }
 
-fun(dist) # Example of arbitrary function output 
-cluster_scMethrix(scMethrix_data, dist = dist, type = fun)
 }
 \seealso{
 \code{\link[=get_distance_matrix]{get_distance_matrix()}} for distance metrics, \code{\link[=hclust]{hclust()}} for heirarchical clustering, \code{\link[=kmeans]{kmeans()}} for partition clustering, \code{\link[=Mclust]{Mclust()}} for model clustering

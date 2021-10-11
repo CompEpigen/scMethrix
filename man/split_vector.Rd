@@ -9,11 +9,11 @@ split_vector(vec, chunks = NA, percent = NA, size = NA)
 \arguments{
 \item{vec}{vector; The vector to split}
 
-\item{chunks}{integer; The number of desired sub-lists}
+\item{chunks}{integer; x > 0; The number of desired sub-lists}
 
-\item{percent}{integer; The maximum percentage of elements each sub-list should hold}
+\item{percent}{numeric; 100 > x > 0; The maximum percentage of elements each sub-list should hold}
 
-\item{size}{integer; The maximum size of each sub-list}
+\item{size}{integer; x > 0; The maximum size of each sub-list}
 }
 \value{
 A list of sub-vectors

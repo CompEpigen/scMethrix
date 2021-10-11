@@ -83,11 +83,11 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
 #'     return(fit)
 #'     }
 #' 
-#' fun(dist) # Example of arbitrary function output 
-#' cluster_scMethrix(scMethrix_data, dist = dist, type = fun)
+#' fun(dist) # Example of arbitrary function output
+#' colData(cluster_scMethrix(scMethrix_data, dist = dist, type = fun))
 #' @export
 cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("hierarchical", "partition", "model"),
-                              colname = "Cluster", n_clusters = NULL, verbose = TRUE, ...) {
+                              colname = "Cluster", n_clusters = 1, verbose = TRUE, ...) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -104,7 +104,7 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
   #- Function code -----------------------------------------------------------------------------
   if (is.null(dist)) dist <- get_distance_matrix(scm, assay=assay)
   
-  if (is.null(n_clusters)) n_clusters = attr(dist,"Size")
+  #if (is.null(n_clusters)) n_clusters = attr(dist,"Size")
 
   if (typeof(type) == "closure") {
     fit <- type(dist)

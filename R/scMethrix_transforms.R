@@ -1,6 +1,10 @@
 #------------------------------------------------------------------------------------------------------------
 #' Transforms an assay in an \code{\link{scMethrix}} object.
-#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. It is typically used for The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be from \pkg{DelayedMatrixStats}.
+#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. The function is
+#' applied column-wise as to optimize how HDF5 files access sample data. 
+#' 
+#' If HDF5 objects are used, transform functions need to accept 'DelayedMatrix' (e.g., from \pkg{DelayedMatrixStats}).
+#' Otherwise, 
 #' @inheritParams generic_scMethrix_function
 #' @param h5_temp string; temporary directory to store the temporary HDF5 files
 #' @return An \code{\link{scMethrix}} object
@@ -77,12 +81,11 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
 #' @export
 bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by = c("bp","cpg"), trans = NULL, 
                           overlap_type = "within", h5_dir = NULL, verbose = TRUE, batch_size = 20, n_threads = 1, replace = FALSE) {
-
   #- Input Validation --------------------------------------------------------------------------
   yid <- NULL
 
   .validateExp(scm)
-  .validateType(regions,c("Granges","null"))
+  .validateType(regions,c("granges","null"))
   .validateType(bin_size,"integer")
   bin_by <- .validateArg(bin_by,bin_scMethrix)
   #.validateType(trans, c("function","null"))
@@ -142,9 +145,9 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
         
         idx <- which(overlap_indices[,yid == regions$rid[rid]])
         idx <- split_vector(idx,size=bin_size)
-        
+
         for(i in idx) {
-          gr <- GenomicRanges::range(rowRanges(scm[c(i[1],i[length(i)]),]))
+          gr <- range(rowRanges(scm[c(i[1],i[length(i)]),]))
           gr$n_cpgs <- length(i)
           rrng <- c(rrng,gr)
         }
@@ -155,7 +158,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       rrng <- GenomicRanges::slidingWindows(regions,width=bin_size,step=bin_size)
       rrng <- unlist(as(rrng, "GRangesList"))
       
-      rrng <- bin_granges(scm,bin_size = bin_size) #sort(unlist(tile(regions, width = bin_size))) #TODO: Should switch this to using RLE lookup
+      # rrng <- bin_granges(rrng,bin_size = bin_size) #sort(unlist(tile(regions, width = bin_size))) #TODO: Should switch this to using RLE lookup
       
       idx <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type))
       idx <- idx[order(idx$subjectHits),]

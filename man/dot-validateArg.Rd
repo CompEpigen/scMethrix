@@ -4,12 +4,14 @@
 \alias{.validateArg}
 \title{Validates arguments. Allows partial matching.}
 \usage{
-.validateArg(arg, parent = NULL)
+.validateArg(arg, parent = NULL, ignore.case = T)
 }
 \arguments{
-\item{arg}{varibale; the variable in which to check}
+\item{arg}{variable; the variable in which to check}
 
 \item{parent}{closure; the parent function in which to check the input}
+
+\item{ignore.case}{boolean; ignores case of the choices}
 }
 \value{
 arg, if the value is in the function definition.
@@ -30,5 +32,5 @@ values <- .validateArg(values)
 
 If the argument for values is acceptable (e.g. "apple" or "ban"), it will return the matched string.
 
-This is incompatible with pipes.
+This can be used with pipes, but will give erroneous names for the input variable
 }

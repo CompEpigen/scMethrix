@@ -6,7 +6,7 @@
 \usage{
 plot_coverage(
   scm = NULL,
-  type = c("hist", "dens"),
+  type = c("histogram", "density"),
   pheno = NULL,
   perGroup = FALSE,
   lim = 100,
@@ -18,7 +18,7 @@ plot_coverage(
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{type}{string; Choose between 'hist' (histogram) or 'dens' (density plot).}
+\item{type}{string; Choose between 'histogram' (histogram) or 'density' (density plot).}
 
 \item{pheno}{string; Col name of colData(m). Will be used as a factor to color different groups}
 

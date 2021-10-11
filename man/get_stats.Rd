@@ -4,7 +4,7 @@
 \alias{get_stats}
 \title{Estimate descriptive statistics for each sample}
 \usage{
-get_stats(scm = NULL, assay = "score", per_chr = TRUE)
+get_stats(scm = NULL, assay = "score", per_chr = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
@@ -12,6 +12,8 @@ get_stats(scm = NULL, assay = "score", per_chr = TRUE)
 \item{assay}{string; name of an existing assay. Default = "score"}
 
 \item{per_chr}{boolean; Estimate stats per chromosome. Default TRUE}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 data.table of summary stats

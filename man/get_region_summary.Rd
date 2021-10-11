@@ -6,26 +6,28 @@
 \usage{
 get_region_summary(
   scm = NULL,
+  assay = "score",
   regions = NULL,
+  group = NULL,
   n_chunks = 1,
   n_threads = 1,
-  assay = "score",
   by = c("mean", "median", "max", "min", "sum", "sd"),
   overlap_type = "within",
-  verbose = TRUE,
-  group = NULL
+  verbose = TRUE
 )
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{regions}{genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object}
-
-\item{n_chunks}{Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.}
-
-\item{n_threads}{Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.}
-
 \item{assay}{string; the assay to be summarized. Default 'score'}
+
+\item{regions}{GRanges;  genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object}
+
+\item{group}{a column name from sample annotation that defines groups. In this case, the number of min_samples will be tested group-wise.}
+
+\item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.}
+
+\item{n_threads}{integer; Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.}
 
 \item{by}{closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'}
 
@@ -33,8 +35,6 @@ get_region_summary(
 #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
-
-\item{group}{a column name from sample annotation that defines groups. In this case, the number of min_samples will be tested group-wise.}
 }
 \value{
 table of summary statistic for the given region
@@ -48,6 +48,6 @@ Takes \code{\link{scMethrix}} object and summarizes regions
 \examples{
 data('scMethrix_data')
 get_region_summary(scMethrix_data,
-   regions = data.table(chr = c('chr1','chr2'), start = c(1), end =  c(10000000)),
+   regions = GenomicRanges::GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,100000000)),
    assay = 'score', by = 'mean')
 }

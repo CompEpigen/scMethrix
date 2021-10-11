@@ -547,7 +547,7 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   if (is_h5(scm)) stop("Input scMethrix is already in HDF5 format.")
-  .validateType(h5_dir,"string")
+  .validateType(h5_dir,c("string","null"))
   .validateType(verbose,"boolean")
   
   #- Function code -----------------------------------------------------------------------------
@@ -604,56 +604,57 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
   .validateType(overlap_type,"string")
   .validateType(verbose,"boolean")
   
-  if (is.null(regions) & is.null(contigs) & is.null(samples)) {
-    warning("At least 1 argument mandatory for subsetting. No subset generated")
-    return(scm)
-  }
+  if (is.null(regions) & is.null(contigs) & is.null(samples)) 
+    stop("At least 1 argument mandatory for subsetting. No subset generated")
   
+    
   #- Function code -----------------------------------------------------------------------------
-  if (by == "exclude") {
+  if (verbose) message("Subsetting CpG sites...",start_time())
+  
+   if (by == "exclude") {
     
     if (!is.null(regions)) {
       regions <- cast_granges(regions)
+      if (verbose) message("   Subsetting by regions")
       reg <- IRanges::subsetByOverlaps(SummarizedExperiment::rowRanges(scm), regions, invert = TRUE, type=overlap_type, maxgap=-1L, minoverlap=0L)
       scm <- subset_scMethrix(scm,regions=IRanges::reduce(reg),by="include")
     }
     
     if (!is.null(contigs)) {
+      if (verbose) message("   Subsetting by contigs")
       c <- as.character(GenomeInfoDb::seqnames(scm)@values)
       scm <- subset_scMethrix(scm,contigs = c[!c %in% contigs],by="include")
     }
     
     if (!is.null(samples)) {
+      if (verbose) message("   Subsetting by samples")
       s <- row.names(SummarizedExperiment::colData(scm))
       scm <- subset_scMethrix(scm,samples = s[!s %in% samples],by="include")
     }
     
   } else {
     
-    if (verbose) message("Subsetting CpG sites...",start_time())
-    
     if (!is.null(regions)) {
       regions <- cast_granges(regions)
       if (verbose) message("   Subsetting by regions")
-      subset <- cast_granges(regions)
       scm <- scm[GenomicRanges::findOverlaps(rowRanges(scm), regions)@from]
-      if (nrow(scm) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
     }
     
     if (!is.null(contigs)) {
       if (verbose) message("   Subsetting by contigs")
       scm <- subset(scm, subset = as.vector(GenomeInfoDb::seqnames(scm)) %in% contigs)
-      if (nrow(scm) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
     }
     
     if (!is.null(samples)) {
       if (verbose) message("   Subsetting by samples")
       scm <- subset(scm, select = row.names(SummarizedExperiment::colData(scm)) %in% samples)
-      if (length(scm) == 0) stop("Samples not present in the object", call. = FALSE)
     }
     
-    if (verbose) message("Subset in ",stop_time())
   }
+  
+  if (nrow(scm) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
+  
+  if (verbose) message("Subset in ",stop_time())
   
   return(scm)
   

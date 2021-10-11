@@ -1,12 +1,12 @@
 test_that("reduce_cpgs", {
   
-  expect_error(reduce_cpgs("not scMethrix"),msg.check.scm)
+  expect_error(reduce_cpgs("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
-    expect_error(reduce_cpgs(scm="not scMethrix"),msg.check.scm)
-    expect_error(reduce_cpgs(scm,assay="not an assay"),msg.assay.match)
-    expect_error(reduce_cpgs(scm,var="not a var"),msg.arg.match)
+    expect_error(reduce_cpgs(scm="not scMethrix"),msg.validateExp)
+    expect_error(reduce_cpgs(scm,assay="not an assay"),msg.validateAssay)
+    expect_error(reduce_cpgs(scm,var="not a var"),msg.validateArg)
     expect_error(reduce_cpgs(scm,top_var = 0,var="top"),"Zero loci available post NA removal")
     
     expect_equal(reduce_cpgs(scm,top_var = NULL),score(scm))
@@ -20,8 +20,8 @@ test_that("reduce_cpgs", {
 
 test_that("dim_red_scMethrix", {
 
-  expect_error(dim_red_scMethrix("not scMethrix"),msg.check.scm)
-  expect_error(dim_red_scMethrix(scm.mem,type="not a type"),msg.arg.match)
+  expect_error(dim_red_scMethrix("not scMethrix"),msg.validateExp)
+  expect_error(dim_red_scMethrix(scm.mem,type="not a type"),msg.validateArg)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
 

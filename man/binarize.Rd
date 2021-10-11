@@ -7,7 +7,7 @@
 binarize(x, threshold = NULL, rep_na = NA, verbose = FALSE)
 }
 \arguments{
-\item{x}{numeric; A value to binarize}
+\item{x}{numeric; A vector to binarize}
 
 \item{threshold}{numeric; The threshold for binarizing. Will default to the center number between max and min.}
 
@@ -16,7 +16,7 @@ binarize(x, threshold = NULL, rep_na = NA, verbose = FALSE)
 \item{verbose}{boolean; flag for whether to display threshold or not}
 }
 \value{
-1 or 0, if above of below the threshold, or 'rep.na' if NA
+vector; contains {0,1}, if below or above the threshold, or 'rep.na' if NA
 }
 \description{
 Binarize an input value based on a \code{threshold}

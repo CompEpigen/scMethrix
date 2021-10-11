@@ -3,17 +3,17 @@ test_that("get_distance_matrix", {
   types = c("pearson", "spearman", "kendall", "euclidean", 
             "manhattan", "canberra", "binary", "minkowski")
   
-  expect_error(get_distance_matrix("not scMethrix"),msg.check.scm)
+  expect_error(get_distance_matrix("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
-    expect_error(get_distance_matrix(scm="not scMethrix"),msg.check.scm)
+    expect_error(get_distance_matrix(scm="not scMethrix"),msg.validateExp)
     expect_error(get_distance_matrix(scm),"There are NA values present")
-    expect_error(get_distance_matrix(scm,assay="not an assay"),msg.assay.match)
+    expect_error(get_distance_matrix(scm,assay="not an assay"),msg.validateAssay)
     
     scm <- transform_assay(scm,new_assay="fill", trans = function(x) fill(x,fill=0))
     
-    expect_error(get_distance_matrix(scm,assay="fill",type="not a metric"),msg.arg.match)
+    expect_error(get_distance_matrix(scm,assay="fill",type="not a metric"),msg.validateArg)
     
     invisible(lapply(types, function(metric) {
       
@@ -38,16 +38,16 @@ test_that("cluster_scMethrix", {
   name = "Cluster"
   n_clusters = 3
   
-  expect_error(cluster_scMethrix("not scMethrix"),msg.check.scm)
+  expect_error(cluster_scMethrix("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
-    expect_error(cluster_scMethrix(scm="not scMethrix"),msg.check.scm)
-    expect_error(cluster_scMethrix(scm,assay="not an assay"),msg.assay.match)
+    expect_error(cluster_scMethrix(scm="not scMethrix"),msg.validateExp)
+    expect_error(cluster_scMethrix(scm,assay="not an assay"),msg.validateAssay)
     
     scm <- transform_assay(scm,new_assay="fill", trans = function(x) fill(x,fill=0))
 
-    expect_error(cluster_scMethrix(scm,assay="fill",type="not a type"), msg.arg.match)
+    expect_error(cluster_scMethrix(scm,assay="fill",type="not a type"), msg.validateArg)
     
     if (is_h5(scm)) {
       expect_warning(dist <- get_distance_matrix(scm, assay="fill"),"Distance matrix cannot be generated for HDF5 data")
@@ -75,7 +75,7 @@ test_that("cluster_scMethrix", {
 
 test_that("append_colData", {
 
-  expect_error(append_colData("not scMethrix"),msg.check.scm)
+  expect_error(append_colData("not scMethrix"),msg.validateExp)
   #expect_error(append_colData(scm=scm.mem, colData=NULL),"A valid colData object must be supplied")
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {

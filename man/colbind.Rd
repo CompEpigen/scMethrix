@@ -15,7 +15,3 @@ data.table; the cbinded output
 \description{
 A faster version of cbind when trying to combine lists of data.tables
 }
-\details{
-Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
-If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}
-}

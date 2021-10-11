@@ -4,7 +4,10 @@
 \alias{get_source_idx}
 \title{Gets bedgraph column indexes from common pipeline output formats}
 \usage{
-get_source_idx(protocol = NULL)
+get_source_idx(
+  protocol = c("Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP",
+    "BSseeker2_CGmap")
+)
 }
 \arguments{
 \item{protocol}{string; the protocol used for bedgraph output. Options are: "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"}
@@ -17,4 +20,7 @@ Gets bedgraph column indexes from common pipeline output formats
 }
 \details{
 Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
+}
+\examples{
+get_source_idx("MethylDackel")
 }

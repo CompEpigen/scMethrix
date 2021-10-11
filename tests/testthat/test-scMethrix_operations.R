@@ -1,6 +1,6 @@
 test_that("get_metadata_stats", {
   
-  expect_error(get_metadata_stats("not scMethrix"),msg.check.scm)
+  expect_error(get_metadata_stats("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
     expect_error(get_metadata_stats(scm="not scMethrix"))
@@ -23,10 +23,10 @@ test_that("get_metadata_stats", {
 
 test_that("remove_assay", {
   
-  expect_error(remove_assay("not scMethrix"),msg.check.scm)
+  expect_error(remove_assay("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(remove_assay(scm, assay="not an assay"),msg.assay.match)
+    expect_error(remove_assay(scm, assay="not an assay"),msg.validateAssay)
     expect_error(remove_assay(scm, assay="score"),"Score assay cannot be removed")
     
     plus1 <- transform_assay(scm,trans=function(x) x+1,assay="score",new_assay="plus1")
@@ -38,7 +38,7 @@ test_that("remove_assay", {
 
 test_that("merge_scMethrix", {
   
-  expect_error(merge_scMethrix("not scMethrix"),msg.check.scm)
+  expect_error(merge_scMethrix("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
    
@@ -155,7 +155,7 @@ test_that("merge_scMethrix", {
 
 test_that("convert_HDF5_scMethrix", {
 
-  expect_error(convert_HDF5_scMethrix("not scMethrix"),msg.check.scm)
+  expect_error(convert_HDF5_scMethrix("not scMethrix"),msg.validateExp)
   
   expect_true(is_h5(scm.h5))
   expect_equal(class(get_matrix(scm.h5))[1],"HDF5Matrix")
@@ -172,7 +172,7 @@ test_that("convert_HDF5_scMethrix", {
 
 test_that("convert_scMethrix", {
   
-  expect_error(convert_scMethrix("not scMethrix"),msg.check.scm)
+  expect_error(convert_scMethrix("not scMethrix"),msg.validateExp)
   
   expect_false(is_h5(scm.mem))
   expect_equal(class(get_matrix(scm.mem))[1],"matrix") 
@@ -190,15 +190,15 @@ test_that("convert_scMethrix", {
 
 test_that("subset_scMethrix", {
   
-  expect_error(subset_scMethrix("not scMethrix"),msg.check.scm)
+  expect_error(subset_scMethrix("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
-    expect_warning(subset_scMethrix(scm))
+    expect_error(subset_scMethrix(scm),"At least 1 argument mandatory")
     
-    samples <- c("C1","C3")
-    contigs <- c("chr1")
-    regions <- GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,100000000)) 
+    samples <- colnames(scm)[c(1,3)] # Should be "C1" and "C3"
+    contigs <- levels(seqnames(scm))[1] # Should be "chr1"
+    regions <- GRanges(seqnames = levels(seqnames(scm))[1:2], ranges = IRanges(1,100000000)) 
     
     # Subset by include
     s <- subset_scMethrix(scm, samples = samples, by="include")
@@ -206,7 +206,7 @@ test_that("subset_scMethrix", {
     expect_equal(samples,colData(s)@rownames)
    
     s <- subset_scMethrix(scm, contigs = contigs, by="include")
-    expect_equal(dim(s),c(147,n_samples))
+    expect_equal(dim(s),c(length(which(as.vector(rowRanges(scm)@seqnames) %in% contigs)),n_samples))
     expect_equal(contigs,as.character(seqnames(s)@values))
     
     s <- subset_scMethrix(scm, regions = regions, by="include")
@@ -222,7 +222,7 @@ test_that("subset_scMethrix", {
     expect_equal(length(intersect(rownames(colData(s)),samples)),0)
     
     s <- subset_scMethrix(scm, contigs = contigs, by = "exclude")
-    expect_equal(dim(s),c(139,n_samples))
+    expect_equal(dim(s),c(n_cpg-length(which(as.vector(rowRanges(scm)@seqnames) %in% contigs)),n_samples))
     expect_equal(length(intersect(contigs,as.character(seqnames(s)@values))),0)
     
     s <- subset_scMethrix(scm, regions = regions, by = "exclude")
@@ -237,27 +237,27 @@ test_that("subset_scMethrix", {
 
 test_that("get_matrix", {
  
-  expect_error(get_matrix("not scMethrix"),msg.check.scm)
+  expect_error(get_matrix("not scMethrix"),msg.validateExp)
   
     s <- get_matrix(scm.h5)
-    expect_equal(dim(s),c(n_cpg,4))  
-    expect_equal(class(s)[1],"HDF5Matrix")
+    expect_equal(dim(s),c(n_cpg,n_samples))  
+    expect_is(s,"HDF5Matrix")
     
     s <- get_matrix(scm.mem)
-    expect_equal(dim(s),c(n_cpg,4))  
-    expect_equal(class(s)[1],"matrix")
+    expect_equal(dim(s),c(n_cpg,n_samples))  
+    expect_is(s,"matrix")
     
     invisible(lapply(list(scm.mem,scm.h5), function(scm) {
       expect_warning(get_matrix(scm,add_loci=FALSE, in_granges = TRUE))
       
       s <- get_matrix(scm=scm,add_loci=TRUE)
-      expect_equal(dim(s),c(n_cpg,7))  
-      expect_equal(class(s)[1],"data.table")
+      expect_equal(dim(s),c(n_cpg,n_samples+3))  
+      expect_is(s,"data.table")
       
       s <- get_matrix(scm,add_loci=TRUE, in_granges = TRUE)
      # expect_equal(seqnames(m)@lengths,c(10,8))
-      expect_equal(dim(mcols(s)),c(n_cpg,4))
-      expect_equal(class(s)[1],"GRanges")
+      expect_equal(dim(mcols(s)),c(n_cpg,n_samples))
+      expect_is(s,"GRanges")
       
       s <- get_matrix(scm,order_by_sd = TRUE)
       expect_false(is.unsorted(rev(rowSds(s,na.rm=TRUE)),na.rm=TRUE))
@@ -267,7 +267,7 @@ test_that("get_matrix", {
 
 test_that("remove_uncovered", {
   
-  expect_error(remove_uncovered("not scMethrix"),msg.check.scm)
+  expect_error(remove_uncovered("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
@@ -281,31 +281,33 @@ test_that("remove_uncovered", {
 
 test_that("get_stats", {
   
-  expect_error(get_stats("not scMethrix"),msg.check.scm)
+  expect_error(get_stats("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+    smp = colnames(scm)[1]
     chr <- length(seqlengths(rowRanges(scm)))
+    
     samples <- nrow(colData(scm))
     expect_equal(dim(get_stats(scm)),c(chr*samples,5))
     expect_equal(dim(get_stats(scm,per_chr = FALSE)),c(samples,4))
     
     stats <- get_stats(scm,per_chr=FALSE)
-    expect_equal(mean(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","mean_meth"]))
-    expect_equal(median(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","median_meth"]))
-    expect_equal(sd(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","sd_meth"]))
+    expect_equal(mean(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"mean_meth"]))
+    expect_equal(median(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"median_meth"]))
+    expect_equal(sd(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"sd_meth"]))
     
-    scm <- subset_scMethrix(scm,contigs="chr1")
+    scm <- subset_scMethrix(scm,contigs=levels(seqnames(rowRanges(scm)))[1])
     stats <- get_stats(scm,per_chr=TRUE)
-    expect_equal(mean(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","mean_meth"]))
-    expect_equal(median(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","median_meth"]))
-    expect_equal(sd(score(scm)[,"C1"],na.rm=TRUE), as.double(stats[Sample_Name == "C1","sd_meth"]))
+    expect_equal(mean(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"mean_meth"]))
+    expect_equal(median(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"median_meth"]))
+    expect_equal(sd(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"sd_meth"]))
     
   }))
 })
 
 test_that("get_region_summary", {
   
-  expect_error(get_region_summary("not scMethrix"),msg.check.scm)
+  expect_error(get_region_summary("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(get_region_summary(scm,group="not a group"))
@@ -322,14 +324,14 @@ test_that("get_region_summary", {
 })
 
 test_that("mask_by_coverage", {
-  expect_error(mask_by_coverage("not scMethrix"),msg.check.scm)
-  expect_error(mask_by_coverage(scm.mem,assay="not an assay"),msg.assay.match)
+  expect_error(mask_by_coverage("not scMethrix"),msg.validateExp)
+  expect_error(mask_by_coverage(scm.mem,assay="not an assay"),msg.validateAssay)
   expect_error(mask_by_coverage(remove_assay(scm.mem,assay="counts")))
   expect_error(mask_by_coverage(scm.mem,n_threads=2))
   expect_error(mask_by_coverage(scm.mem,low_threshold=-1),"low_threshold")
-  expect_error(mask_by_coverage(scm.mem,low_threshold="not numeric"),msg.type.match)
+  expect_error(mask_by_coverage(scm.mem,low_threshold="not numeric"),msg.validateType)
   expect_error(mask_by_coverage(scm.mem,avg_threshold=-1,"avg_threshold"))
-  expect_error(mask_by_coverage(scm.mem,avg_threshold="not numeric"),msg.type.match)
+  expect_error(mask_by_coverage(scm.mem,avg_threshold="not numeric"),msg.validateType)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
 
@@ -345,15 +347,15 @@ test_that("mask_by_coverage", {
 })
 
 test_that("mask_by_sample", {
-  expect_error(mask_by_sample("not scMethrix"),msg.check.scm)
-  expect_error(mask_by_sample(scm.mem,assay="not an assay"),msg.assay.match)
+  expect_error(mask_by_sample("not scMethrix"),msg.validateExp)
+  expect_error(mask_by_sample(scm.mem,assay="not an assay"),msg.validateAssay)
   expect_error(mask_by_sample(scm.mem,n_threads=2))
   expect_error(mask_by_sample(scm.mem,low_threshold=2,prop_threshold=1))
   expect_error(mask_by_sample(scm.mem,low_threshold=-1),"low_threshold")
-  expect_error(mask_by_sample(scm.mem,low_threshold="not numeric"),msg.type.match)
+  expect_error(mask_by_sample(scm.mem,low_threshold="not numeric"),msg.validateType)
   expect_error(mask_by_sample(scm.mem,prop_threshold=-1,"prop_threshold"))
   expect_error(mask_by_sample(scm.mem,prop_threshold=2,"prop_threshold"))
-  expect_error(mask_by_sample(scm.mem,prop_threshold="not numeric"),msg.type.match)
+  expect_error(mask_by_sample(scm.mem,prop_threshold="not numeric"),msg.validateType)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
@@ -369,12 +371,12 @@ test_that("mask_by_sample", {
 })
 
 test_that("mask_by_variance", {
-  expect_error(mask_by_variance("not scMethrix"),msg.check.scm)
-  expect_error(mask_by_variance(scm.mem,assay="not an assay"),msg.assay.match)
+  expect_error(mask_by_variance("not scMethrix"),msg.validateExp)
+  expect_error(mask_by_variance(scm.mem,assay="not an assay"),msg.validateAssay)
   expect_error(mask_by_variance(scm.mem,n_threads=2))
   expect_error(mask_by_variance(scm.mem,low_threshold=2,"low_threshold must be between 0 and 1"))
   expect_error(mask_by_variance(scm.mem,low_threshold=-1,"low_threshold must be between 0 and 1"))
-  expect_error(mask_by_variance(scm.mem,low_threshold="not numeric"),msg.type.match)
+  expect_error(mask_by_variance(scm.mem,low_threshold="not numeric"),msg.validateType)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     

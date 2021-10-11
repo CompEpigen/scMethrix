@@ -5,7 +5,7 @@
 \title{Versatile BedGraph reader.}
 \usage{
 read_beds(
-  files = NULL,
+  files,
   ref_cpgs = NULL,
   colData = NULL,
   genome_name = "hg19",
@@ -19,7 +19,8 @@ read_beds(
   zero_based = FALSE,
   reads = NULL,
   replace = FALSE,
-  pipeline = NULL,
+  pipeline = c("Custom", "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP",
+    "BSseeker2_CGmap"),
   stranded = FALSE,
   chr_idx = NULL,
   start_idx = NULL,

@@ -8,26 +8,26 @@ export_beds(
   scm = NULL,
   path = NULL,
   suffix = NULL,
-  verbose = TRUE,
   include = FALSE,
   na.rm = TRUE,
-  header = FALSE
+  header = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{path}{character; the \code{\link{file.path}} of the directory to save the files}
+\item{path}{string; the \code{\link{file.path}} of the directory to save the files}
 
-\item{suffix}{character; optional suffix to add to the exported bed files}
-
-\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
+\item{suffix}{string; optional suffix to add to the exported bed files}
 
 \item{include}{boolean; flag to include the values of non-standard assays in the bedgraph file}
 
 \item{na.rm}{boolean; flag to remove the NA values from the output data}
 
 \item{header}{boolean; flag to add the header onto each column}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 nothing

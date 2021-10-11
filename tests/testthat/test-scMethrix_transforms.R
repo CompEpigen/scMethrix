@@ -1,7 +1,7 @@
 test_that("bin_scMethrix", {
 
-  expect_error(bin_scMethrix("not scMethrix"),msg.check.scm)
-  expect_error(bin_scMethrix(scm.h5,regions=GRanges()),msg.type.match)
+  expect_error(bin_scMethrix("not scMethrix"),msg.validateExp)
+  expect_error(bin_scMethrix(scm.h5,regions=GRanges()),msg.validateType)
 
   path <- paste0(h5_dir,"bin")
   regions <- GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,1000000000)) 
@@ -10,7 +10,7 @@ test_that("bin_scMethrix", {
    
     # Check default conditions and threading
     bin <- bin_scMethrix(scm, h5_dir = paste0(h5_dir,"/bin1"), n_threads = 2, replace = T)
-    expect_equal(dim(bin),c(258,4))
+    expect_equal(dim(bin),c(256,4))
     
     #Check the score assay (should be mean)
     scm <- transform_assay(scm,assay="score",new_assay="bin",trans=binarize)
@@ -54,7 +54,7 @@ test_that("bin_scMethrix", {
 
 test_that("collapse_samples", {
   
-  expect_error(collapse_samples("not scMethrix"),msg.check.scm)
+  expect_error(collapse_samples("not scMethrix"),msg.validateExp)
   
   #invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   invisible(lapply(list(scm.mem), function(scm) {
@@ -82,11 +82,11 @@ test_that("collapse_samples", {
 
 test_that("transform_assay", {
   
-  expect_error(transform_assay("not scMethrix"),msg.check.scm)
+  expect_error(transform_assay("not scMethrix"),msg.validateExp)
   trans <- function(x) x+1
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(transform_assay(scm,trans="not closure"),msg.type.match)
+    expect_error(transform_assay(scm,trans="not closure"),msg.validateType)
     expect_warning(transform_assay(scm, trans=trans, assay="score",new_assay="score"))
     
     # Create a new assay with value of x+1
@@ -103,14 +103,14 @@ test_that("transform_assay", {
 })
 
 test_that("impute_regions", {
-  expect_error(impute_regions("not scMethrix"),msg.check.scm)
+  expect_error(impute_regions("not scMethrix"),msg.validateExp)
   expect_warning(impute_regions(scm.h5),"Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
   
   suppressWarnings(
     # Check all the usable imputation methods
     lapply(list("kNN","iPCA","RF"), function (method) {
     invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-        expect_error(impute_regions(scm,assay = "not an assay"),msg.assay.match)
+        expect_error(impute_regions(scm,assay = "not an assay"),msg.validateAssay)
         expect_error(impute_regions(scm,new_assay = "score"))
         expect_warning(impute_regions(scm,new_assay = "counts",type=method))
         
@@ -132,7 +132,7 @@ test_that("impute_regions", {
 
 test_that("generate_training_set", {
   
-  expect_error(generate_training_set("not scMethrix"),msg.check.scm)
+  expect_error(generate_training_set("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(generate_training_set(scm,training_prop = 2),"training_prop must in the range of")
@@ -149,7 +149,7 @@ test_that("generate_training_set", {
 
 test_that("generate_random_subset", {
   
-  expect_error(generate_random_subset("not scMethrix"),msg.check.scm)
+  expect_error(generate_random_subset("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_warning(generate_random_subset(scm,n_cpgs = nrow(scm)+1))

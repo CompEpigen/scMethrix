@@ -8,7 +8,7 @@ dim_red_scMethrix(
   scm,
   assay = "score",
   type = c("tSNE", "UMAP", "PCA"),
-  var = "top",
+  var = c("top", "rand"),
   top_var = 1000,
   perplexity = 30,
   verbose = FALSE,

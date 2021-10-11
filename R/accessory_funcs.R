@@ -403,7 +403,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' 
 #' @param parent closure; the parent function in which to check the input
 #' @param arg variable; the variable in which to check
-#' @param ignore.case; boolean; ignores case of the choices
+#' @param ignore.case boolean; ignores case of the choices
 #' @return arg, if the value is in the function definition.
 .validateArg <- function(arg, parent = NULL, ignore.case = T) {
 
@@ -442,8 +442,8 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' @details Check the assays in an scMethrix object and partial matches 
 #' @param scm scMethrix; the experiment object
 #' @param assay string; the name of the assay
-#' @param throw boolean; throw an error if true, return false if not
-#' @return string; the name of the matched assay
+#' @param check.absent boolean; Checks if the assay is present
+#' @return string or boolean; if \code{check.absent == T}, the name of the matched assay or error if it doesn't exist. If \code{check_assay == F}, the boolean value for if the assay exists in the experiment
 .validateAssay <- function(scm = NULL,assay = NULL, check.absent = F) {
   
   #- Input Validation --------------------------------------------------------------------------
@@ -579,8 +579,11 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
   valid <- F
 
   for (type in types) {
-
-    if (type == "Integer") {
+    if (type == "Null") {
+      valid <- is.null(input)
+    }  else if (type == "NA") {
+      valid <- is.na(input)
+    } else if (type == "Integer") {
       if(is.numeric(input)) valid <- (input == round(input))
     } else if (type == "Numeric") {
       valid = is.numeric(input)
@@ -602,10 +605,6 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
       valid <- is(input, "GRanges")
     } else if (type == "Function") {
       valid <- is.function(input)
-    } else if (type == "Null") {
-      valid <- is.null(input)
-    }  else if (type == "NA") {
-      valid <- is.na(input)
     } else if (type == "Dataframe" | type == "DF") {
       valid <- is.data.frame(input)
     } else if (type == "S4") {

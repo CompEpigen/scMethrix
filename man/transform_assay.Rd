@@ -7,7 +7,7 @@
 transform_assay(
   scm,
   assay = "score",
-  new_assay = NULL,
+  new_assay = "new_assay",
   trans = NULL,
   h5_temp = NULL
 )
@@ -30,7 +30,11 @@ An \code{\link{scMethrix}} object
 Transforms an assay in an \code{\link{scMethrix}} object.
 }
 \details{
-Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. It is typically used for The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be from \pkg{DelayedMatrixStats}.
+Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. The function is
+applied column-wise as to optimize how HDF5 files access sample data.
+
+If HDF5 objects are used, transform functions need to accept 'DelayedMatrix' (e.g., from \pkg{DelayedMatrixStats}).
+Otherwise,
 }
 \examples{
 data('scMethrix_data')

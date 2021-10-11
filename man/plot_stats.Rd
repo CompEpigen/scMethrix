@@ -7,7 +7,7 @@
 plot_stats(
   scm,
   assay = "score",
-  stat = "mean",
+  stat = c("mean", "median"),
   ignore_chr = NULL,
   samples = NULL,
   n_col = NULL,
@@ -21,9 +21,9 @@ plot_stats(
 
 \item{stat}{string; Can be \code{mean} or \code{median}. Default \code{mean}}
 
-\item{ignore_chr}{boolean; Chromsomes to ignore. Default \code{NULL}}
+\item{ignore_chr}{string; Chromsomes to ignore. If NULL, all chromosome will be used. Default \code{NULL}}
 
-\item{samples}{list of strings; Use only these samples. Default \code{NULL}}
+\item{samples}{list of strings; Samples to ignore.  If NULL, all samples will be used. Default \code{NULL}}
 
 \item{n_col}{integer; number of columns. Passed to \code{facet_wrap}}
 
