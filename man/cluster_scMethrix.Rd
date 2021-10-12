@@ -48,7 +48,14 @@ dist <- get_distance_matrix(scMethrix_data,assay = "impute")
 
 # For a generic clustering function
 # The function must return a named vector of integers
+fun <- function (dist) {
+    fit <- hclust(dist, method="ward.D")
+    fit <- cutree(fit, k=2)
+    return(fit)
+    }
 
+fun(dist) # Example of arbitrary function output
+colData(cluster_scMethrix(scMethrix_data, dist = dist, type = fun))
 }
 \seealso{
 \code{\link[=get_distance_matrix]{get_distance_matrix()}} for distance metrics, \code{\link[=hclust]{hclust()}} for heirarchical clustering, \code{\link[=kmeans]{kmeans()}} for partition clustering, \code{\link[=Mclust]{Mclust()}} for model clustering

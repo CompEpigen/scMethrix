@@ -40,13 +40,16 @@ Imports:
     bioDist,
     mclust,
     bsseq,
-    Seurat
+    Seurat,
+    S4Vectors
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Suggests: 
     rmarkdown,
     testthat,
-    knitr
+    knitr,
+    BSgenome.Mmusculus.UCSC.mm10,
+    BiocManager
 URL: https://github.com/CompEpigen/scMethrix
 BugReports: https://github.com/CompEpigen/scMethrix/issues
 biocViews: DNAMethylation, Sequencing, Coverage

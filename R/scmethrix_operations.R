@@ -105,8 +105,8 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
   } 
   
   # Fix duplicate names in metadata, append if there are common elements that have different values
-  if (by == "row") slots <- c(metadata,colData,int_colData)
-  if (by == "col") slots <- c(metadata,mcols,elementMetadata,int_elementMetadata)
+  if (by == "row") slots <- c(S4Vectors::metadata,colData,int_colData)
+  if (by == "col") slots <- c(S4Vectors::metadata,mcols,elementMetadata,int_elementMetadata)
 
   invisible(lapply(slots, function(op) {
 
@@ -178,7 +178,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
   }
   
   # Remove duplicate experiment metadata
-  invisible(lapply(c(metadata,int_metadata), function(op) {
+  invisible(lapply(c(S4Vectors::metadata,int_metadata), function(op) {
     eval(parse(text = eval(expression(paste0(op@generic,"(scm) <<- ",op@generic,"(scm)[unique(names(",op@generic,"(scm)))]")))))
   }))
 
