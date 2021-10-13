@@ -100,7 +100,7 @@
       <h1 data-toc-skip>01: Reading in the bedgraph data</h1>
                         <h4 class="author">Andrew Lindsay, Reka Toth</h4>
             
-            <h4 class="date">2021-10-02</h4>
+            <h4 class="date">2021-10-13</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/CompEpigen/scMethrix/blob/master/vignettes/x01_load_data.Rmd"><code>vignettes/x01_load_data.Rmd</code></a></small>
       <div class="hidden name"><code>x01_load_data.Rmd</code></div>
@@ -122,13 +122,13 @@
 <code class="sourceCode R"><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"GEOquery"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
   <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html">install</a></span><span class="op">(</span><span class="st">"GEOquery"</span><span class="op">)</span>
 <span class="op">}</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/seandavi/GEOquery">GEOquery</a></span><span class="op">)</span>  </code></pre></div>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">GEOquery</span><span class="op">)</span>  </code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">data_dir</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempdir</a></span><span class="op">(</span><span class="op">)</span>,<span class="st">"/GSE97179/"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">data_dir</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"GSM2553093"</span>, <span class="st">"GSM2553095"</span>, <span class="st">"GSM2553097"</span>, <span class="st">"GSM2553099"</span>, <span class="st">"GSM2553101"</span>, <span class="st">"GSM2553103"</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">gsm</span><span class="op">)</span><span class="op">{</span>
-  <span class="va">filePaths</span> <span class="op">&lt;-</span>  <span class="fu">GEOquery</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/GEOquery/man/getGEOSuppFiles.html">getGEOSuppFiles</a></span><span class="op">(</span>GEO <span class="op">=</span> <span class="va">gsm</span>, baseDir <span class="op">=</span> <span class="va">data_dir</span>, makeDirectory <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+  <span class="va">filePaths</span> <span class="op">&lt;-</span>  <span class="fu">GEOquery</span><span class="fu">::</span><span class="fu">getGEOSuppFiles</span><span class="op">(</span>GEO <span class="op">=</span> <span class="va">gsm</span>, baseDir <span class="op">=</span> <span class="va">data_dir</span>, makeDirectory <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
   
   <span class="va">tar_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">data_dir</span>,<span class="va">gsm</span>,<span class="st">"/"</span><span class="op">)</span>
   <span class="va">tar_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span><span class="va">tar_dir</span>,full.names<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
@@ -138,7 +138,7 @@
   <span class="va">bed_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">tar_dir</span>,<span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span><span class="va">tar_dir</span><span class="op">)</span><span class="op">)</span>
   
   <span class="fu"><a href="https://rdrr.io/r/base/invisible.html">invisible</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span><span class="va">bed_dir</span>,full.names<span class="op">=</span><span class="cn">T</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">file</span><span class="op">)</span> <span class="op">{</span>
-    <span class="fu"><a href="https://rdrr.io/pkg/GEOquery/man/gunzip.html">gunzip</a></span><span class="op">(</span><span class="va">file</span>,remove<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
+    <span class="fu">gunzip</span><span class="op">(</span><span class="va">file</span>,remove<span class="op">=</span><span class="cn">T</span><span class="op">)</span>
   <span class="op">}</span><span class="op">)</span><span class="op">)</span>
   
   <span class="va">bed_files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span><span class="op">(</span><span class="va">bed_dir</span>,full.names<span class="op">=</span><span class="cn">T</span><span class="op">)</span>

@@ -147,18 +147,22 @@
     <p>Validates arguments. Allows partial matching.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>.validateArg</span><span class='op'>(</span><span class='va'>arg</span>, parent <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>.validateArg</span><span class='op'>(</span><span class='va'>arg</span>, parent <span class='op'>=</span> <span class='cn'>NULL</span>, ignore.case <span class='op'>=</span> <span class='cn'>T</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>arg</th>
-      <td><p>varibale; the variable in which to check</p></td>
+      <td><p>variable; the variable in which to check</p></td>
     </tr>
     <tr>
       <th>parent</th>
       <td><p>closure; the parent function in which to check the input</p></td>
+    </tr>
+    <tr>
+      <th>ignore.case</th>
+      <td><p>boolean; ignores case of the choices</p></td>
     </tr>
     </table>
 
@@ -171,7 +175,7 @@
 <p>To use, it can be called as such:</p>
 <p>genericFunc &lt;- function(values = c("apple","orange","banana")) values &lt;- .validateArg(values)</p>
 <p>If the argument for values is acceptable (e.g. "apple" or "ban"), it will return the matched string.</p>
-<p>This is incompatible with pipes.</p>
+<p>This can be used with pipes, but will give erroneous names for the input variable</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

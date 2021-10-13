@@ -148,7 +148,7 @@
     </div>
 
     <pre class="usage"><span class='fu'>read_beds</span><span class='op'>(</span>
-  files <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>files</span>,
   ref_cpgs <span class='op'>=</span> <span class='cn'>NULL</span>,
   colData <span class='op'>=</span> <span class='cn'>NULL</span>,
   genome_name <span class='op'>=</span> <span class='st'>"hg19"</span>,
@@ -162,7 +162,8 @@
   zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>,
   reads <span class='op'>=</span> <span class='cn'>NULL</span>,
   replace <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  pipeline <span class='op'>=</span> <span class='cn'>NULL</span>,
+  pipeline <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Custom"</span>, <span class='st'>"Bismark_cov"</span>, <span class='st'>"MethylDackel"</span>, <span class='st'>"MethylcTools"</span>, <span class='st'>"BisSNP"</span>,
+    <span class='st'>"BSseeker2_CGmap"</span><span class='op'>)</span>,
   stranded <span class='op'>=</span> <span class='cn'>FALSE</span>,
   chr_idx <span class='op'>=</span> <span class='cn'>NULL</span>,
   start_idx <span class='op'>=</span> <span class='cn'>NULL</span>,
