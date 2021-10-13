@@ -49,6 +49,11 @@ test_that("cluster_scMethrix", {
 
     expect_error(cluster_scMethrix(scm,assay="fill",type="not a type"), msg.validateArg)
     
+    expect_error(cluster_scMethrix(scm,assay="fill",dist="not a dist"), msg.validateType)
+    
+    x <- matrix(rnorm(100), nrow = ncol(scm))
+    expect_error(cluster_scMethrix(scm,assay="fill",dist=dist(x)), "Invalid distance matrix")
+    
     if (is_h5(scm)) {
       expect_warning(dist <- get_distance_matrix(scm, assay="fill"),"Distance matrix cannot be generated for HDF5 data")
     } else {

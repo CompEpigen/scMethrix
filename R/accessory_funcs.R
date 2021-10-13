@@ -565,8 +565,8 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 
 .validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
                                                "List","File","Directory","GRanges","GenomicRanges","Function","Null",
-                                               "NA","Dataframe","DF","S4"), throws=T) {
-  
+                                               "NA","Dataframe","DF","S4","Distance"), throws=T) {
+    
   #- Input Validation --------------------------------------------------------------------------
   if (length(type) == length(eval(formals(.validateType)[["type"]]))) {
     stop("No valid type specified.")
@@ -609,6 +609,8 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
       valid <- is.data.frame(input)
     } else if (type == "S4") {
       valid <- isS4(input)
+    } else if (type == "Distance") {
+      valid <- is(input,"dist")
     } else {
       stop("Invalid type with '",type,"'. This type is not supported for validation.")
     }
@@ -618,7 +620,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
     } else if (type == types[length(types)]) {
       if (throws) {
       stop("Invalid type input for '",substitute(input),"'. Must be of type: '",
-           paste0(type, collapse="', '"),"'", call. = FALSE)
+           paste0(types, collapse="', '"),"'", call. = FALSE)
       } else {
         return(invisible(FALSE)) 
       }

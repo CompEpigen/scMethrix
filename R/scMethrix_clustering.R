@@ -99,15 +99,24 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
   .validateType(n_clusters,"integer")
   .validateType(colname,"string")
   .validateType(verbose,"boolean")
+  .validateType(dist,c("dist","null"))
+
+  if (is.null(dist)) {
+    dist <- get_distance_matrix(scm, assay=assay)
+  } else {
+    if (attr(dist,"Size") != ncol(scm) || !setequal(labels(dist),row.names(colData(scm)))) 
+      stop("Invalid distance matrix. Must contain all samples present in the experiment")
+  }
   
   Cluster <- Sample <- NULL
-  #- Function code -----------------------------------------------------------------------------
-  if (is.null(dist)) dist <- get_distance_matrix(scm, assay=assay)
   
-  #if (is.null(n_clusters)) n_clusters = attr(dist,"Size")
+  #- Function code -----------------------------------------------------------------------------
 
-  if (typeof(type) == "closure") {
+  if (.validateType(type,"function",throw=F)) {
+    
+    browser()
     fit <- type(dist)
+    if (!setequal(labels(fit),row.names(colData(scm)))) stop("Invalid cluster function. Must output a named vector containing all samples in the experiment.")
     colData <- data.frame(Sample = names(fit), Cluster = fit)
   } else if (type=="hierarchical") {
     fit <- stats::hclust(dist, method="ward.D", ...)
@@ -121,18 +130,18 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
     fit <- mclust::Mclust(as.matrix(t(get_matrix(scm,assay=assay))), ...)
     colData <- data.frame(Sample = names(fit$classification), Cluster = fit$classification)
   }
-  
-  row.names(colData) <- colData$Sample
-  colData <- subset(colData, select=-Sample)
-
-  names(colData)[names(colData) == "Cluster"] <- colname
-  
   # else if (type == "density") {
   #   if (!is.null(n_clusters)) warning("n_clusters is ignored for density clustering")
   #   fit <- dbscan(dist, eps, minPts = n_clusters, borderPoints = TRUE, ...)
   #   
   # }
   # 
+  
+  row.names(colData) <- colData$Sample
+  colData <- subset(colData, select=-Sample)
+
+  names(colData)[names(colData) == "Cluster"] <- colname
+  
   scm <- append_colData(scm,colData)
   return(scm)
 }
