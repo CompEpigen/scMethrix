@@ -105,10 +105,12 @@ test_that("transform_assay", {
 test_that("impute_regions", {
   expect_error(impute_regions("not scMethrix"),msg.validateExp)
   expect_warning(impute_regions(scm.h5),"Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
+
+  fun <- function(mtx) missForest::missForest(mtx)$ximp
   
   suppressWarnings(
     # Check all the usable imputation methods
-    lapply(list("kNN","iPCA","RF"), function (method) {
+    lapply(list("kNN","iPCA","RF",fun), function (method) {
     invisible(lapply(list(scm.mem,scm.h5), function(scm) {
         expect_error(impute_regions(scm,assay = "not an assay"),msg.validateAssay)
         expect_error(impute_regions(scm,new_assay = "score"))
@@ -128,6 +130,9 @@ test_that("impute_regions", {
       }))
     })
   )
+  
+  expect_error(impute_regions(scm.mem, type=function(x) sum(x)),"Error with imputation algorithm")
+  
 })
 
 test_that("generate_training_set", {

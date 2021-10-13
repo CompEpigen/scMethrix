@@ -737,7 +737,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @return list; two \code{\link{scMethrix}} objects names 'training' and 'test'
 #' @examples
 #' data('scMethrix_data')
-#' generate_training_set(scMethrix_data, training_prop = 0.2)
+#' impute_regions(scMethrix_data)
 #' @export
 #' @references Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
 #' @references Stekhoven, D. J., & Bühlmann, P. (2012). MissForest—non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.
@@ -745,17 +745,18 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
 impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regions = NULL, n_chunks = 1, 
                                n_threads = 1, overlap_type="within", type=c("kNN","iPCA","RF"), verbose = TRUE, k=10, n_pc=2,...) {
-  
+ 
   #- Input Validation --------------------------------------------------------------------------
-  yid <- NULL
-  
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   .validateType(new_assay,"string")
   .validateType(regions,c("granges","null"))
   .validateType(n_chunks,"integer")
   .validateType(overlap_type,"string")
-  type = .validateArg(type,impute_regions)
+  if (!.validateType(type,"function",throws=F)){ 
+    .validateType(type,"String")
+    type = .validateArg(type,impute_regions)
+  }
   .validateType(verbose,"boolean")
   .validateType(k,"integer")
   .validateType(n_pc,"integer")
@@ -767,10 +768,14 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   
   if (is_h5(scm)) warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
 
-  #- Function code -----------------------------------------------------------------------------
-  if (verbose) message("Starting imputation by ",type,start_time())
+  yid <- NULL
   
-  if (type == "kNN") {
+  #- Function code -----------------------------------------------------------------------------
+  if (verbose) message("Starting imputation...",start_time())
+  
+  if (.validateType(type,"function",throws=F)) {
+    op = type
+  } else if (type == "kNN") {
     op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
                                            rowmax = 1.0, colmax = 1.0, maxp = 1500, ...)$data
   } else if (type == "iPCA") {
@@ -785,7 +790,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   } else if (type == "RF") {
     op <- function(mtx) missForest::missForest(mtx, ...)$ximp
   } else {
-    op = type
+    stop("Error in imputation. No valid algorithm specified. This should never be reached.")
   }
   
   if (!is.null(regions)) {
@@ -807,13 +812,19 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
       if (verbose) message("Parsing chunk ", i, " of ",length(rid_list))
       
       idx <- lapply(rid_list[i],FUN = function(rid) overlap_indices[overlap_indices$yid %in% rid]$xid)
-      impute <- lapply(idx,function(i) op(get_matrix(scm[i,],assay))) # This is in parallel later
+      impute <- lapply(idx,function(i) {
+        imputed <- op(get_matrix(scm[i,],assay)) #TODO: make this parallel
+        if (!setequal(dim(imputed),c(length(idx),ncol(scm)))) stop("Error with imputation algorithm. Imputed matrix does not match the dimensions of the input matrix", call. = FALSE)
+        return(imputed)
+      })
       
       for (i in 1:length(idx)) assays(scm)[[new_assay]][idx[[i]],] <- impute[[i]]
     }
   } else {
-    
-    assays(scm)[[new_assay]] <- op(as.matrix(get_matrix(scm,assay)))
+
+    imputed <- op(as.matrix(get_matrix(scm,assay)))
+    if (!setequal(dim(imputed),c(nrow(scm),ncol(scm)))) stop("Error with imputation algorithm. Imputed matrix does not match the dimensions of the input matrix", call. = FALSE)
+    assays(scm)[[new_assay]] <- imputed
     
   }
   
