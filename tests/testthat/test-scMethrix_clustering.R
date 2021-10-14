@@ -25,7 +25,7 @@ test_that("get_distance_matrix", {
       }
       
       expect_equal(dim(as.matrix(dist)),rep(ncol(scm),2))
-      expect_equal(row.names(as.matrix(dist)),row.names(colData(scm)))
+      expect_equal(row.names(as.matrix(dist)),sampleNames(scm))
       expect_false(any(is.na(as.matrix(dist))))
       return(dist)
     }))

@@ -69,6 +69,14 @@ setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
           (x); SummarizedExperiment::assay(x, i="score")}
 )
 
+setMethod(f = "sampleNames", signature = "scMethrix", definition = function(object)   {
+          row.names(colData(object))}
+)
+
+# lociNames <- function(x) {
+#           row.names(rowData(x))
+# }
+
 # setMethod(f = "featureNames", signature = "scMethrix", definition = function(object)   {
 #   (object); row.names(colData(object))}
 # )

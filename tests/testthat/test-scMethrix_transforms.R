@@ -68,7 +68,7 @@ test_that("collapse_samples", {
     
     expect_is(scm.col <- collapse_samples(scm, colname = "Cluster"),"scMethrix")
     
-    expect_equal(sort(row.names(colData(scm.col))),sort(unique(colData(scm)$Cluster)))
+    expect_equal(sort(sampleNames(scm.col)),sort(unique(colData(scm)$Cluster)))
     
     grp = groups[1]
     grp_len = sum(groups == grp)

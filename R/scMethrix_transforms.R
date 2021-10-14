@@ -34,7 +34,7 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
                                            spacings = c(length(scm), 1L)) 
     
     trans_sink <- HDF5Array::HDF5RealizationSink(dim = dim(scm),
-                                                 dimnames = list(NULL,row.names(colData(scm))), type = "double",
+                                                 dimnames = list(NULL,sampleNames(scm)), type = "double",
                                                  filepath = tempfile(pattern="trans_sink_",tmpdir=h5_temp),
                                                  name = new_assay, level = 6)
     
@@ -555,7 +555,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   if (verbose) message("Starting to collapse experiment...",start_time())
   
   assays <- list()
-  overlaps_indicies <- data.table(Sample = row.names(colData(scm)), Group = factor(scm@colData[,colname]))
+  overlaps_indicies <- data.table(Sample = sampleNames(scm), Group = factor(scm@colData[,colname]))
 
   for (name in SummarizedExperiment::assayNames(scm)) {
     

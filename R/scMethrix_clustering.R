@@ -104,7 +104,7 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
   if (is.null(dist)) {
     dist <- get_distance_matrix(scm, assay=assay)
   } else {
-    if (attr(dist,"Size") != ncol(scm) || !setequal(labels(dist),row.names(colData(scm)))) 
+    if (attr(dist,"Size") != ncol(scm) || !setequal(labels(dist),sampleNames(scm))) 
       stop("Invalid distance matrix. Must contain all samples present in the experiment")
   }
   
@@ -112,11 +112,11 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
   
   #- Function code -----------------------------------------------------------------------------
 
-  if (.validateType(type,"function",throw=F)) {
+  if (.validateType(type,"function",throws=F)) {
     
     browser()
     fit <- type(dist)
-    if (!setequal(labels(fit),row.names(colData(scm)))) stop("Invalid cluster function. Must output a named vector containing all samples in the experiment.")
+    if (!setequal(labels(fit),sampleNames(scm))) stop("Invalid cluster function. Must output a named vector containing all samples in the experiment.")
     colData <- data.frame(Sample = names(fit), Cluster = fit)
   } else if (type=="hierarchical") {
     fit <- stats::hclust(dist, method="ward.D", ...)

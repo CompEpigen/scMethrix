@@ -56,7 +56,7 @@ Uses the specified imputation operation to evaluation an scMethrix object.
 }
 \examples{
 data('scMethrix_data')
-generate_training_set(scMethrix_data, training_prop = 0.2)
+impute_regions(scMethrix_data)
 }
 \references{
 Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
