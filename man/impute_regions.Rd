@@ -11,7 +11,7 @@ impute_regions(
   regions = NULL,
   n_chunks = 1,
   n_threads = 1,
-  overlap_type = "within",
+  overlap_type = c("within", "start", "end", "any", "equal"),
   type = c("kNN", "iPCA", "RF"),
   verbose = TRUE,
   k = 10,

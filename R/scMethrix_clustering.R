@@ -114,7 +114,6 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
 
   if (.validateType(type,"function",throws=F)) {
     
-    browser()
     fit <- type(dist)
     if (!setequal(labels(fit),sampleNames(scm))) stop("Invalid cluster function. Must output a named vector containing all samples in the experiment.")
     colData <- data.frame(Sample = names(fit), Cluster = fit)

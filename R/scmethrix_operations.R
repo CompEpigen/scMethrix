@@ -154,7 +154,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
     # Merge sample metadata. Ensure the column names match, fill with NAs if not
     colData(scm1)[setdiff(names(SummarizedExperiment::colData(scm2)), names(SummarizedExperiment::colData(scm1)))] <- NA
     colData(scm2)[setdiff(names(SummarizedExperiment::colData(scm1)), names(SummarizedExperiment::colData(scm2)))] <- NA
-      
+
     scm <- cbind(scm1, scm2)
 
     # Ensure object is consistent regardless the order of scm1 and scm2
@@ -190,12 +190,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
 #' @inheritParams generic_scMethrix_function
 #' @param regions GRanges;  genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object
-#' @param assay string; the assay to be summarized. Default 'score'
 #' @param by closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'
-#' @param overlap_type string; defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
-#' #param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.
-#' @param n_chunks integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.
-#' @param n_threads integer; Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.
 #' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be tested group-wise.
 #' @importFrom methods setClass
 #' @return table of summary statistic for the given region
@@ -207,7 +202,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
 #' @export
 get_region_summary = function (scm = NULL, assay="score", regions = NULL, group = NULL, n_chunks=1, 
                                n_threads = 1, by = c('mean', 'median', 'max', 'min', 'sum', 'sd'), 
-                               overlap_type = "within", verbose = TRUE) {
+                               overlap_type = c("within", "start", "end", "any", "equal"), verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm) 
@@ -217,7 +212,7 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
   .validateType(n_chunks,"integer")
   .validateType(n_threads,"integer")
   by <- .validateArg(by,get_region_summary)
-  .validateType(overlap_type,"string")
+  overlap_type <- .validateArg(overlap_type,get_region_summary)
   .validateType(verbose,"boolean")
   
   if (!is.null(group) && !(group %in% colnames(scm@colData))){
@@ -229,13 +224,11 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
     warning("n_chunks exceeds number of files. Defaulting to n_chunks = ",n_chunks)
   }
   
+  yid  <- NULL
+  
   #- Function code -----------------------------------------------------------------------------
   if(verbose) message("Generating region summary...",start_time())
-  
-  assay = .validateAssay(scm,assay)
-  by = .validateArg(by,get_region_summary)
-  
-  yid  <- NULL
+
   
   if (!is.null(regions)) {
     regions = cast_granges(regions)
@@ -380,8 +373,6 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
   if (add_loci == FALSE & in_granges == TRUE)
     warning("Without genomic locations (add_loci= FALSE), it is not possible to convert the results to GRanges, ", 
             "the output will be a data.frame object. ")
-  
-  assay <- .validateAssay(scm,assay)
   
   #- Function code -----------------------------------------------------------------------------
   mtx <- SummarizedExperiment::assay(x = scm, i = which(assay == SummarizedExperiment::assayNames(scm)))
@@ -593,7 +584,7 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
 #' subset_scMethrix(scMethrix_data, regions = regions, by = "exclude")
 #' @return An object of class \code{\link{scMethrix}}
 #' @export
-subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), overlap_type="within",verbose=TRUE) {
+subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), overlap_type=c("within", "start", "end", "any", "equal"),verbose=TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)  
@@ -601,7 +592,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
   .validateType(contigs,c("string","null"))
   .validateType(samples,c("string","null"))
   by <- .validateArg(by,subset_scMethrix)
-  .validateType(overlap_type,"string")
+  overlap_type <- .validateArg(overlap_type,subset_scMethrix)
   .validateType(verbose,"boolean")
   
   if (is.null(regions) & is.null(contigs) & is.null(samples)) 

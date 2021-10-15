@@ -80,7 +80,8 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
 #' bin_scMethrix(scMethrix_data, regions = regions)
 #' @export
 bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by = c("bp","cpg"), trans = NULL, 
-                          overlap_type = "within", h5_dir = NULL, verbose = TRUE, batch_size = 20, n_threads = 1, replace = FALSE) {
+                          overlap_type = c("within", "start", "end", "any", "equal"), h5_dir = NULL, verbose = TRUE, 
+                          batch_size = 20, n_threads = 1, replace = FALSE) {
   #- Input Validation --------------------------------------------------------------------------
   yid <- NULL
 
@@ -88,24 +89,17 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   .validateType(regions,c("granges","null"))
   .validateType(bin_size,"integer")
   bin_by <- .validateArg(bin_by,bin_scMethrix)
-  #.validateType(trans, c("function","null"))
   sapply(trans, function (t) .validateType(t, c("function","null")))
-  .validateType(overlap_type,"string")
-  .validateType(overlap_type,"string")
+  overlap_type <- .validateArg(overlap_type,subset_scMethrix)
   if (is_h5(scm)) .validateType(h5_dir,"string")
   .validateType(verbose,"boolean")
   .validateType(batch_size,"integer")
   .validateType(n_threads,"integer")
   .validateType(replace,"boolean")
 
-  #if (is.null(h5_dir) && is_h5(scm)) stop("Output directory must be specified")
-  #if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
-  
   if (is.null(trans[["counts"]])) {
     trans <- c(trans, c(counts = function(x) sum(x,na.rm=TRUE)))#DelayedMatrixStats::colSums2(x,na.rm=TRUE)))
   }
-  
- # if (is_h5(scm) && is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
 
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Binning experiment...")
@@ -744,7 +738,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' @references Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
 #' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
 impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regions = NULL, n_chunks = 1, 
-                               n_threads = 1, overlap_type="within", type=c("kNN","iPCA","RF"), verbose = TRUE, k=10, n_pc=2,...) {
+                               n_threads = 1, overlap_type=c("within", "start", "end", "any", "equal"), type=c("kNN","iPCA","RF"), verbose = TRUE, k=10, n_pc=2,...) {
  
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -752,7 +746,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   .validateType(new_assay,"string")
   .validateType(regions,c("granges","null"))
   .validateType(n_chunks,"integer")
-  .validateType(overlap_type,"string")
+  overlap_type <- .validateArg(overlap_type,impute_regions)
   if (!.validateType(type,"function",throws=F)){ 
     .validateType(type,"String")
     type = .validateArg(type,impute_regions)

@@ -334,23 +334,23 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 
   if (has(beta_idx)) {
     if (has(cov_idx)) {
-      if (verbose) message("Estimating M and U from beta and cov")
+      if (verbose) message("   Estimating M and U from beta and cov")
       fix_missing = c(fix_missing,"M := as.integer(cov * beta)",
                       "U := cov - M")
     } else {
       if(has(M_idx) && has(U_idx)) { 
-        if (verbose) message("Estimating cov from M and U")
+        if (verbose) message("   Estimating cov from M and U")
         fix_missing = c(fix_missing, "cov := M+U") # Has: beta,M,U   No: cov
       } else if (has(M_idx)) {
-        if (verbose) message("Estimating cov and U from M and beta")
+        if (verbose) message("   Estimating cov and U from M and beta")
         fix_missing = c(fix_missing, "cov := as.integer(M/beta)", # Has: beta,M,U   No: cov
                         "U := cov-M")
       } else if (has(U_idx)) {
-        if (verbose) message("Estimating cov and M from U and beta")
+        if (verbose) message("   Estimating cov and M from U and beta")
         fix_missing = c(fix_missing, "cov := as.integer(U*(1-beta))", # Has: beta,U   No: M,cov
                         "M := cov-U")
       } else {
-        if (verbose) message("Only beta info found")
+        if (verbose) message("   Only beta info found")
         fix_missing = c(fix_missing, "cov := 2",
                         "M := beta*cov","U := (1-beta)*cov") # Has: beta   No: cov,M,U
         has_cov = FALSE
@@ -359,10 +359,10 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
   } else { 
     if (has(cov_idx)) {
       if (has(M_idx)) {
-        if (verbose) message("Estimating beta and U from M and cov. Beta will be [0,1]")
+        if (verbose) message("   Estimating beta and U from M and cov. Beta will be [0,1]")
         fix_missing = c(fix_missing, "U := cov-M", "beta := M/cov")
       } else if (has(U_idx)) {
-        if (verbose) message("Estimating beta and M from U and cov. Beta will be [0,1]")
+        if (verbose) message("   Estimating beta and M from U and cov. Beta will be [0,1]")
         fix_missing = c(fix_missing, "M := cov-U", "beta := M/cov")
       } else {
         stop("Missing beta and cannot derive due to missing M and U.", call. = FALSE)
@@ -371,7 +371,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
       if (is.null(M_idx) || is.null(U_idx)) {
         stop("Missing beta and cannot derive due to missing cov and one of M or U.", call. = FALSE)
       } else {
-        if (verbose) message("Estimating beta and cov from M and U. Beta will be [0,1]")
+        if (verbose) message("   Estimating beta and cov from M and U. Beta will be [0,1]")
         fix_missing = c(fix_missing, "cov := M+U", "beta := M/cov")
       }
     }

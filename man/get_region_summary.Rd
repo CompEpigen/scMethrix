@@ -12,27 +12,26 @@ get_region_summary(
   n_chunks = 1,
   n_threads = 1,
   by = c("mean", "median", "max", "min", "sum", "sd"),
-  overlap_type = "within",
+  overlap_type = c("within", "start", "end", "any", "equal"),
   verbose = TRUE
 )
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{assay}{string; the assay to be summarized. Default 'score'}
+\item{assay}{string; name of an existing assay. Default = "score"}
 
 \item{regions}{GRanges;  genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object}
 
 \item{group}{a column name from sample annotation that defines groups. In this case, the number of min_samples will be tested group-wise.}
 
-\item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1.}
+\item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1}
 
-\item{n_threads}{integer; Number of parallel instances. \code{n_cores} should be less than or equal to \code{n_chunks}. If \code{n_chunks} is not specified, then \code{n_chunks} is initialized to be equal to \code{n_cores}. Default = 1.}
+\item{n_threads}{integer; Maximum number of parallel instances. Default = 1}
 
 \item{by}{closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'}
 
-\item{overlap_type}{string; defines the type of the overlap of the CpG sites with the target region. Default value is \code{within}. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
-#param elementMetadata.col columns in \code{\link{scMethrix}}@elementMetadata which needs to be summarised. Default = NULL.}
+\item{overlap_type}{defines the type of the overlap of the CpG sites with the target region. Default value is \code{within}. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }

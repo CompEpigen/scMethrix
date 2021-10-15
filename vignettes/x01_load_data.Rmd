@@ -37,42 +37,25 @@ library(GEOquery)
 ```
 
 ```{r message=FALSE, warning=FALSE, eval=F}
-data_dir = paste0(tempdir(),"/GSE97179/")
+data_dir = paste0(tempdir(),"/GSE131723/")
 dir.create(path = data_dir, showWarnings = FALSE, recursive = TRUE)
 ```
 
 ```{r eval=F}
-lapply(c("GSM2553093", "GSM2553095", "GSM2553097", "GSM2553099", "GSM2553101", "GSM2553103"), function(gsm){
-  filePaths <-  GEOquery::getGEOSuppFiles(GEO = gsm, baseDir = data_dir, makeDirectory = TRUE)
-  
-  tar_dir <- paste0(data_dir,gsm,"/")
-  tar_file <- list.files(tar_dir,full.names=T)
-  untar(tar_file,exdir = tar_dir)
-  file.remove(tar_file)
-  
-  bed_dir <- paste0(tar_dir,list.files(tar_dir))
-  
-  invisible(lapply(list.files(bed_dir,full.names=T), function(file) {
-    gunzip(file,remove=T)
-  }))
-  
-  bed_files <- list.files(bed_dir,full.names=T)
-
-  bed <- do.call("rbind", lapply(bed_files, FUN = function(file) {
-    b <- fread(file, header=TRUE, sep="\t",drop=c(4,5))
-  }))
-
-  fwrite(bed,paste0(data_dir,gsm,".bed"),sep = "\t")
-  
-  unlink(tar_dir,recursive=TRUE,force=TRUE)
-  if (dir.exists(tar_dir)) warning(sprintf("Failed to remove data folder for [%s]", tar_dir))
+lapply(c("GSM3814736","GSM3814737","GSM3814738","GSM4830506","GSM4830507","GSM4830508"), function(gsm){
+  GEOquery::getGEOSuppFiles(GEO = gsm, baseDir = data_dir, makeDirectory = FALSE)
+  # bed_dir <- paste0(data_dir,gsm)
+  # bed_file <- list.files(bed_dir,full.names=T)
+  # R.utils::gunzip(bed_file,destname=paste0(data_dir,gsm,".bed"))
+  # unlink(bed_dir,recursive=TRUE,force=TRUE)
 })
 ```
 
 ```{r message=FALSE, warning=FALSE, eval=F}
 bed_files <- list.files(
   path = data_dir,
-  pattern = "*.bed$",
+  pattern = "*bedgraph\\.gz$",
+  #pattern = "*.bed$",
   full.names = TRUE, 
   recursive = TRUE
 )
@@ -90,10 +73,10 @@ As a first step, we need a list of CpG sites in the respective genome. The CpG s
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 library(BiocManager)
-if(!requireNamespace("BSgenome.Mmusculus.UCSC.mm10")) {
-  BiocManager::install("BSgenome.Mmusculus.UCSC.mm10")
+if(!requireNamespace("BSgenome.Hsapiens.UCSC.hg19")) {
+  BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")
 }
-library(BSgenome.Mmusculus.UCSC.mm10) 
+library(BSgenome.Hsapiens.UCSC.hg19) 
 ```
 
 ```{r, ref_data, eval=F}
@@ -102,7 +85,7 @@ if(!requireNamespace("methrix")) {
 }
 library(methrix) 
 
-mm19_cpgs <- suppressWarnings(methrix::extract_CPGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10"))
+mm19_cpgs <- suppressWarnings(methrix::extract_CPGs(ref_genome = "BSgenome.Hsapiens.UCSC.hg19"))
 ```
 
 ## Sample annotation 
@@ -111,15 +94,15 @@ An annotation table is also necessary to perform some analyses. The data will be
 ```{r, sample_anno, eval=F}
 sample_anno <- data.frame(
   row.names = gsub(
-  pattern = ".bed$",
-  replacement = "",
-  x = basename(bed_files)
-  ),
-  Sample = gsub(
-  pattern = ".bed$", 
-  replacement = "",
-  x = basename(bed_files)
-  ),
+    pattern = paste0("(GSM[[:digit:]]*)_epi-gSCAR_(Kasumi-1|OCI-AML3)_SC[[:digit:]]_meth.bedgraph.gz"),
+    replacement = "\\1",
+    x = basename(bed_files)
+    ),
+  Group = gsub(
+    pattern = paste0("(GSM[[:digit:]]*)_epi-gSCAR_(Kasumi-1|OCI-AML3)_SC[[:digit:]]_meth.bedgraph.gz"),
+    replacement = "\\2",
+    x = basename(bed_files)
+    ),
   stringsAsFactors = FALSE
 )
 knitr::kable(sample_anno)
@@ -131,6 +114,7 @@ To know the exact parameters, it might worth to take a look at one of the files,
 
 ```{r, eval=F}
 res <- fread(bed_files[1])
+colnames(res) <- c("chr","start","end","beta")
 head(res)
 ```
 
@@ -152,7 +136,6 @@ meth <- read_beds(
   stranded = FALSE,
   zero_based = TRUE, 
   #collapse_strands = FALSE, 
-
   colData = sample_anno
 )
 ```

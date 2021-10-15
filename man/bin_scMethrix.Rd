@@ -10,7 +10,7 @@ bin_scMethrix(
   bin_size = 1e+05,
   bin_by = c("bp", "cpg"),
   trans = NULL,
-  overlap_type = "within",
+  overlap_type = c("within", "start", "end", "any", "equal"),
   h5_dir = NULL,
   verbose = TRUE,
   batch_size = 20,

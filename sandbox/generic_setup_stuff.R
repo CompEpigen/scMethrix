@@ -16,7 +16,7 @@ rm(list.of.packages,new.packages)
 # assign("time.all", numeric(), envir=topenv())
 # assign("time.split", numeric(), envir=topenv())
 
-if (!exists("ref_cpgs")) ref_cpgs <- readRDS("D:/Git/sampleData/ref_cpgs.rds")
+if (!exists("ref_cpgs")) ref_cpgs2 <- readRDS("D:/Git/sampleData/ref_cpgs.rds")
 
 source("D:/Git/scMethrix/R/zzz.R")
 source("D:/Git/scMethrix/R/accessory_funcs.R")

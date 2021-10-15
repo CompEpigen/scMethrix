@@ -10,7 +10,7 @@ subset_scMethrix(
   contigs = NULL,
   samples = NULL,
   by = c("include", "exclude"),
-  overlap_type = "within",
+  overlap_type = c("within", "start", "end", "any", "equal"),
   verbose = TRUE
 )
 }
