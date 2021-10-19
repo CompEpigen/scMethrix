@@ -155,6 +155,7 @@
   n_threads <span class='op'>=</span> <span class='fl'>0</span>,
   h5_temp <span class='op'>=</span> <span class='cn'>NULL</span>,
   zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  strand_collapse <span class='op'>=</span> <span class='cn'>FALSE</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
@@ -189,6 +190,10 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
     <tr>
       <th>zero_based</th>
       <td><p>boolean; flag for whether the input data is zero-based or not</p></td>
+    </tr>
+    <tr>
+      <th>strand_collapse</th>
+      <td><p>boolean; whether to collapse the crick strand into watson strand. Default FALSE</p></td>
     </tr>
     <tr>
       <th>verbose</th>
