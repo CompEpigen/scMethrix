@@ -4,10 +4,13 @@
 #' 
 #' colData should be input as a headered data.table with a column called "Sample" with names matching the input filenames. Any other columns may be added to include relevant data (e.g. cell type, collection date, etc). During input, this is done as a left join on the inputted files, so the input colData may contain rows for samples that are not actually included in the analysis. This data will be updated on any relevant subsets or merges, etc.
 #' 
+#' There is an assumption that the first input file will contain the maximum methylation score. It would be extremely unlikely that this assumption is invalid. 
+#' 
 #' @param files list of strings; file.paths of BED files
 #' @param ref_cpgs data.table; list of CpG sites in the tab-delimited format of chr-start-end. Must be zero-based genome.
 #' @param colData list of strings; Sample names. Will be derived from filenames if not provided
 #' @param stranded boolean; Whether in input data is stranded. Default FALSE
+#' @param strand_collapse boolean; whether to collapse the crick strand into watson strand. Default FALSE
 #' @param genome_name string; Name of genome. Default hg19
 #' @param batch_size integer; Max number of files to hold in memory at once. Default 20
 #' @param n_threads integer; number of threads to use. Default 1.
@@ -45,7 +48,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE,
                       zero_based = FALSE, reads = NULL, replace = FALSE, 
                       pipeline = c("Custom","Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"),
-                      stranded = FALSE, chr_idx = NULL, start_idx = NULL, end_idx = NULL, beta_idx = NULL,
+                      stranded = FALSE, strand_collapse = FALSE, chr_idx = NULL, start_idx = NULL, end_idx = NULL, beta_idx = NULL,
                       M_idx = NULL, U_idx = NULL, strand_idx = NULL, cov_idx = NULL) {
 
   #- Input Validation --------------------------------------------------------------------------
@@ -75,9 +78,9 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   
   if (verbose) message("File import starting...")
   
-  if (!all(grepl("\\.(bed|bedgraph)", files))) {
-    stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
-  }
+  # if (!all(grepl("\\.(bed|bedgraph)", files))) {
+  #   stop("Input files must be of type .bed or .bedgraph", call. = FALSE)
+  # }
   
   # if (is.null(ref_cpgs) && h5) {
   #   stop("Reference CpGs must be provided for HDF5 format", call. = FALSE)
@@ -120,20 +123,21 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   } else {
     # Check stranding of reference genome and add - strand if nec.
     if (stranded) {
+      if (verbose) message("Generating stranded ref_cpgs...")
       ref_plus <- data.table::copy(ref_cpgs)
       ref_plus[, `:=`(strand, "+")]
       ref_cpgs[, `:=`(start, start + 1)]
       ref_cpgs[, `:=`(strand, "-")]
       ref_cpgs <- data.table::rbindlist(list(ref_cpgs, ref_plus), use.names = TRUE)
-      data.table::setkeyv(ref_cpgs, cols = c("chr", "start"))
-      message(paste0("-CpGs stranded: ", format(nrow(ref_cpgs), big.mark = ",")), "(reference CpGs from both strands)")
+      if (verbose) message(paste0("   CpGs stranded: ", format(nrow(ref_cpgs), big.mark = ",")))
       rm(ref_plus) 
       gc()
     }
+    data.table::setkeyv(ref_cpgs, cols = c("chr", "start"))
   }
   
   # This makes an assumption that the first file will have the max value
-  col_list$max_value = max(read_bed_by_index(files = files[1], ref_cpgs,col_list=col_list)$beta,na.rm = TRUE)
+  col_list$max_value = max(read_bed_by_index(files = files[1], col_list = col_list,fill=F)$beta,na.rm = TRUE)
   
   gc()
   
@@ -160,14 +164,12 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     if (is.null(reads)) reads <- read_hdf5_data(files = files, ref_cpgs = ref_cpgs, col_list = col_list, 
                                                 n_threads = n_threads, h5_temp = h5_temp, batch_size = batch_size,
-                                                zero_based = zero_based, verbose = verbose)
+                                                zero_based = zero_based, verbose = verbose, strand_collapse = strand_collapse)
     message("Building scMethrix object")
-    
-
     
     # if (is.null(colData)) colData <- data.frame()[1:(length(files)), ]
     # row.names(colData) <- unlist(lapply(files,get_sample_name))
-    
+    if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(GenomicRanges::coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
     
@@ -182,12 +184,12 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     message("Reading in BED files") 
     
     reads <- read_mem_data(files, ref_cpgs, col_list = col_list, batch_size = batch_size, n_threads = n_threads,
-                           zero_based = zero_based,verbose = verbose)
+                           zero_based = zero_based,verbose = verbose, strand_collapse = strand_collapse)
     
     message("Building scMethrix object")
-
+    if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
-    chrom_size = sapply(coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
+    chrom_size = sapply(GenomicRanges::coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
     
     m_obj <- create_scMethrix(assays = reads, 
                               rowRanges=ref_cpgs, is_hdf5 = FALSE, genome_name = genome_name, 
@@ -460,9 +462,7 @@ read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch
 #   }
 # }
 # 
-read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE, strand_collapse = FALSE, fill = TRUE) {
-
-
+read_bed_by_index <- function(files, ref_cpgs = NULL, col_list = NULL, zero_based=FALSE, strand_collapse = FALSE, fill = TRUE) {
 
   #- Input Validation --------------------------------------------------------------------------
   # .validateType(files,"string")
@@ -507,46 +507,47 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
       bed[, `:=`(start, start + 1)]
     }
     
-    # Merge with the ref_cpgs
-    bed <- merge(ref_cpgs,bed)
-    
-    # If strand information needs to collapsed, bring start position of
-    # crick strand to previous base (on watson base) and estimate new M, U
-    # and beta values
-    if (strand_collapse) {
-      if (!all(c("M", "U") %in% names(bed))) stop("strand_collapse works only when M and U are available!")
-      bed[, `:=`(start, ifelse(strand == "-", yes = start - 1, no = start))]
-      bed = bed[, .(M = sum(M, na.rm = TRUE), U = sum(U, na.rm = TRUE)), .(chr, start)]
-      bed[, `:=`(cov, M + U)]
-      #bed[cov == 0, cov := NA]
-      bed[, `:=`(beta, M/cov)]
-      bed[, `:=`(strand, "+")]
+    if (!is.null(ref_cpgs)) {
+      bed <- merge(ref_cpgs,bed,by=c("chr","start"))
+      
+      # If strand information needs to collapsed, bring start position of
+      # crick strand to previous base (on watson base) and estimate new M, U
+      # and beta values
+      if (strand_collapse) {
+        if (!all(c("M", "U") %in% names(bed))) stop("strand_collapse works only when M and U are available!")
+        bed[, `:=`(start, ifelse(strand == "-", yes = start - 1, no = start))]
+        bed = bed[, .(M = sum(M, na.rm = TRUE), U = sum(U, na.rm = TRUE)), .(chr, start)]
+        bed[, `:=`(cov, M + U)]
+        #bed[cov == 0, cov := NA]
+        bed[, `:=`(beta, M/cov)]
+        bed[, `:=`(strand, "+")]
+      }
     }
-    
+
     meth <- bed[,c("chr","start","beta")]
-    cov <- bed[,c("chr","start","cov")]
-
     setnames(meth, "beta", get_sample_name(files[[i]]))
-    setnames(cov, "cov", get_sample_name(files[[i]]))
-
-    if (is.null(meths) && is.null(covs)) {
-      meths <- meth
-      covs <- cov
-    } else {
-      meths <- merge(meths,meth,all=TRUE)
-      covs <- merge(covs,cov,all=TRUE)
+    if (is.null(meths)) meths <- meth else meths <- merge(meths,meth,all=TRUE)
+    
+    if (col_list$has_cov) {
+      cov <- bed[,c("chr","start","cov")]
+      setnames(cov, "cov", get_sample_name(files[[i]]))
+      if (is.null(covs)) covs <- cov else covs <- merge(covs,cov,all=TRUE)
     }
+
+    suppressWarnings(rm(bed,meth,cov))
+    gc()
   }
-  
-  if (fill) {
-    suppressWarnings(meths <- merge(ref_cpgs,meths,all.x=TRUE)[,-c("end","strand")])
-    if (col_list$has_cov) suppressWarnings(covs <- merge(ref_cpgs,covs,all.x=TRUE)[,-c("end","strand")])
+
+  if (fill && !is.null(ref_cpgs)) {
+    if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",]
+    suppressWarnings(meths <- merge(ref_cpgs,meths,all.x=TRUE)[,c("end","strand"):=NULL])
+    if (col_list$has_cov) suppressWarnings(covs <- merge(ref_cpgs,covs,all.x=TRUE)[,c("end","strand") := NULL])
   }
   
   if (col_list$has_cov) {
-    return (list(beta = meths[,-c("chr","start")], cov = covs[,-c("chr","start")]))
+    return (list(beta = meths[,c("chr","start"):=NULL], cov = covs[,c("chr","start"):=NULL]))
   } else {
-    return (list(beta = meths[,-c("chr","start")]))
+    return (list(beta = meths[,c("chr","start"):=NULL]))
   }
 }
 
@@ -563,8 +564,8 @@ read_bed_by_index <- function(files, ref_cpgs, col_list = NULL, zero_based=FALSE
 #' \dontrun{
 #' #Do Nothing
 #' }
-read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, h5_temp = NULL, zero_based = FALSE, 
-                           verbose = TRUE) {
+read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, h5_temp = NULL, 
+                           zero_based = FALSE, strand_collapse = FALSE, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   # .validateType(files,"string")
@@ -583,6 +584,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
   
   # Generate the realization sinks
   dimension <- as.integer(nrow(ref_cpgs))
+  if (strand_collapse) dimension <- as.integer(dimension/2)
   colData <- as.vector(unlist(lapply(files,get_sample_name)))
   
   M_sink <- HDF5Array::HDF5RealizationSink(dim = c(dimension, length(files)),
@@ -619,7 +621,8 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
     
     if (n_threads == 0) {
       
-      bed <- read_bed_by_index(files = files[[i]], ref_cpgs = ref_cpgs, col_list = col_list, zero_based = zero_based)
+      bed <- read_bed_by_index(files = files[[i]], ref_cpgs = ref_cpgs, col_list = col_list, zero_based = zero_based, 
+                               strand_collapse=strand_collapse)
       
       DelayedArray::write_block(block = as.matrix(bed[["beta"]]), viewport = grid[[i]], sink = M_sink)
       
@@ -629,7 +632,8 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
 
       bed <- parallel::parLapply(cl,split_vector(files[[i]],chunks=n_threads),
                                  fun=read_bed_by_index, ref_cpgs = ref_cpgs,
-                                 col_list = col_list, zero_based = zero_based)
+                                 col_list = col_list, zero_based = zero_based,
+                                 strand_collapse = strand_collapse)
       
       DelayedArray::write_block(block = as.matrix(do.call(cbind, lapply(bed, `[[`, "beta"))), 
                                 viewport = grid[[i]], sink = M_sink)      
@@ -646,7 +650,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
   }
   
   if (n_threads != 0) parallel::stopCluster(cl)
-  if (verbose) message("Object created in ",stop_time()) 
+  if (verbose) message("Data parsed in ",stop_time()) 
   
   if (col_list$has_cov) {
     reads = list(score = M_sink, counts = cov_sink)
@@ -810,8 +814,8 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
 #' \dontrun{
 #' #Do Nothing
 #' }
-read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, zero_based = FALSE, 
-                          verbose = TRUE) {
+read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, zero_based = FALSE,
+                          strand_collapse = FALSE, verbose = TRUE) {
   #- Input Validation --------------------------------------------------------------------------
   # .validateType(files,"string")
   # .validateType(ref_cpgs,"boolean")
@@ -837,7 +841,7 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads 
     chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
     
     reads <- c(parallel::parLapply(cl,files,fun=read_bed_by_index, ref_cpgs = ref_cpgs, 
-                                   zero_based = zero_based, col_list = col_list))
+                                   zero_based = zero_based, strand_collapse=strand_collapse, col_list = col_list))
     
     parallel::stopCluster(cl)
   
@@ -846,7 +850,7 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads 
     # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
     
     files <- split_vector(files,size=batch_size)
-    reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based, col_list = col_list)
+    reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based, strand_collapse=strand_collapse, col_list = col_list)
   }
   
   if (col_list$has_cov) {
@@ -860,7 +864,7 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads 
     
     # if (verbose) message(" (",split_time(),")")
   
-  if (verbose) message("Data read in ",stop_time()) 
+  if (verbose) message("Data parsed in ",stop_time()) 
   
   return (reads)
 

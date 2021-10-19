@@ -11,6 +11,7 @@ read_mem_data(
   batch_size = 20,
   n_threads = 0,
   zero_based = FALSE,
+  strand_collapse = FALSE,
   verbose = TRUE
 )
 }
@@ -27,6 +28,8 @@ read_mem_data(
 Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.}
 
 \item{zero_based}{boolean; flag for whether the input data is zero-based or not}
+
+\item{strand_collapse}{boolean; whether to collapse the crick strand into watson strand. Default FALSE}
 
 \item{verbose}{boolean; flag to output messages or not.}
 }

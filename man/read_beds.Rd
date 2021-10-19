@@ -22,6 +22,7 @@ read_beds(
   pipeline = c("Custom", "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP",
     "BSseeker2_CGmap"),
   stranded = FALSE,
+  strand_collapse = FALSE,
   chr_idx = NULL,
   start_idx = NULL,
   end_idx = NULL,
@@ -67,6 +68,8 @@ If not known use idx arguments for manual column assignments.}
 
 \item{stranded}{boolean; Whether in input data is stranded. Default FALSE}
 
+\item{strand_collapse}{boolean; whether to collapse the crick strand into watson strand. Default FALSE}
+
 \item{chr_idx}{integer; column index for chromosome in bedgraph files}
 
 \item{start_idx}{integer; column index for start position in bedgraph files}
@@ -94,6 +97,8 @@ Reads BED files and generates methylation matrices.
 Optionally arrays can be serialized as on-disk HDFS5 arrays.
 
 colData should be input as a headered data.table with a column called "Sample" with names matching the input filenames. Any other columns may be added to include relevant data (e.g. cell type, collection date, etc). During input, this is done as a left join on the inputted files, so the input colData may contain rows for samples that are not actually included in the analysis. This data will be updated on any relevant subsets or merges, etc.
+
+There is an assumption that the first input file will contain the maximum methylation score. It would be extremely unlikely that this assumption is invalid.
 }
 \examples{
 \dontrun{

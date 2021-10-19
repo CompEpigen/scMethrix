@@ -12,6 +12,7 @@ read_hdf5_data(
   n_threads = 0,
   h5_temp = NULL,
   zero_based = FALSE,
+  strand_collapse = FALSE,
   verbose = TRUE
 )
 }
@@ -30,6 +31,8 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 \item{h5_temp}{string; temporary directory to store hdf5}
 
 \item{zero_based}{boolean; flag for whether the input data is zero-based or not}
+
+\item{strand_collapse}{boolean; whether to collapse the crick strand into watson strand. Default FALSE}
 
 \item{verbose}{boolean; flag to output messages or not.}
 }

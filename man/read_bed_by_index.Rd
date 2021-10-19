@@ -6,7 +6,7 @@
 \usage{
 read_bed_by_index(
   files,
-  ref_cpgs,
+  ref_cpgs = NULL,
   col_list = NULL,
   zero_based = FALSE,
   strand_collapse = FALSE,
