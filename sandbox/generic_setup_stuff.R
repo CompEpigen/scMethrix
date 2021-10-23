@@ -10,7 +10,9 @@ if(length(new.packages)) {
   install.packages(new.packages)
   BiocManager::install(new.packages)
 }
-lapply(list.of.packages, require, character.only = TRUE)
+status <- lapply(list.of.packages, require, character.only = TRUE)
+names(status) <- list.of.packages
+suppressWarnings(if (!all(status)) status[which(status==FALSE)])
 rm(list.of.packages,new.packages)
 
 # assign("time.all", numeric(), envir=topenv())
