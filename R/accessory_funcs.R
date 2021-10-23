@@ -648,7 +648,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
       
       for (condition in list(...)) {
         if (!(eval(parse(text=paste0(value,condition))))) {
-          stop ("Invalid value for '",substitute(value),"'. Must fit condition: ",value,condition)
+          stop ("Invalid value: '",substitute(value)," = ",value,"'. Must fit condition: ",substitute(value),condition)
         }
       }
     }

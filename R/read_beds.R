@@ -57,6 +57,9 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   #.validateType(colData,"dataframe")
   .validateType(genome_name,"string")
   .validateType(batch_size,"integer")
+  .validateValue(batch_size,"> 1"," < length(files)")
+  .validateType(n_threads,"integer")
+  .validateValue(n_threads,"> 1"," < parallel::detectCores()")
   .validateType(n_threads,"integer")
   .validateType(h5,"boolean")
   if (h5) .validateType(h5_dir,"string")
@@ -86,7 +89,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   #   stop("Reference CpGs must be provided for HDF5 format", call. = FALSE)
   # }
   
-  if (n_threads > length(files)/2){
+  if (n_threads > length(files)/2){ #TODO: Make single file input to thread possible
     n_threads <- min(n_threads,length(files)/2) # cannot have multiple threads with a single file being input
     warning("Too many threads specified. Each thread must have at least 2 files to process. 
             Defaulting to n_thread = ", n_threads)
