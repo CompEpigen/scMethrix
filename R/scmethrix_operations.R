@@ -343,6 +343,7 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
 #' @param add_loci Default FALSE. If TRUE adds CpG position info to the matrix and returns as a data.table
 #' @param in_granges Do you want the outcome in \code{\link{GRanges}}?
 #' @param order_by_sd Order output matrix by standard deviation
+#' @param by string; split the matrix by "row" or "col" if n_chunks != 1
 #' @return HDF5Matrix or matrix
 #' @import SummarizedExperiment
 #' @examples
@@ -359,9 +360,12 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
 #' 
 #' # Get methylation data sorted by SD
 #' get_matrix(scMethrix_data, order_by_sd = TRUE)
+#' 
+#' # Split the matrix into parts
+#' get_matrix(scMethrix_data, n_chunks = 4, by="row")
 #' @export
 #--------------------------------------------------------------------------------------------------------------------------
-get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges=FALSE, order_by_sd=FALSE) {
+get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges=FALSE, order_by_sd=FALSE, n_chunks = 1, by=c("row","col")) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -369,10 +373,20 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
   .validateType(add_loci,"boolean")
   .validateType(in_granges,"boolean")
   .validateType(order_by_sd,"boolean")
+  .validateType(n_chunks,"integer")
+  by <- .validateArg(by,get_matrix)
+  
+  if (by=="row") {
+    n_chunks <- min(max(n_chunks,1),nrow(scm))
+  } else {
+    n_chunks <- min(max(n_chunks,1),ncol(scm))
+  }
   
   if (add_loci == FALSE & in_granges == TRUE)
     warning("Without genomic locations (add_loci= FALSE), it is not possible to convert the results to GRanges, ", 
             "the output will be a data.frame object. ")
+  
+  if ((in_granges || add_loci) && n_chunks != 1) stop("Unable to split matrix if either in_granges = T or add_loci=T")
   
   #- Function code -----------------------------------------------------------------------------
   mtx <- SummarizedExperiment::assay(x = scm, i = which(assay == SummarizedExperiment::assayNames(scm)))
@@ -398,6 +412,16 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
   }
   
   if (order_by_sd) mtx <- mtx[order(sds, decreasing = TRUE), ]
+  
+  if (n_chunks != 1) {
+    if (by == "row") {
+      row_idx <- split_vector(1:nrow(mtx),chunks=n_chunks)
+      mtx <- lapply(row_idx,function(row_idx) mtx[row_idx,,drop=FALSE])
+    } else {
+      col_idx <- split_vector(1:ncol(mtx),chunks=n_chunks)
+      mtx <- lapply(col_idx,function(col_idx) mtx[,col_idx,drop=FALSE])
+    }
+  }
   
   return (mtx)
 }

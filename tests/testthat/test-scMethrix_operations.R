@@ -239,28 +239,35 @@ test_that("get_matrix", {
  
   expect_error(get_matrix("not scMethrix"),msg.validateExp)
   
-    s <- get_matrix(scm.h5)
-    expect_equal(dim(s),c(n_cpg,n_samples))  
-    expect_is(s,"HDF5Matrix")
+    scm <- get_matrix(scm.h5)
+    expect_equal(dim(scm),c(n_cpg,n_samples))  
+    expect_is(scm,"HDF5Matrix")
     
-    s <- get_matrix(scm.mem)
-    expect_equal(dim(s),c(n_cpg,n_samples))  
-    expect_is(s,"matrix")
+    scm <- get_matrix(scm.mem)
+    expect_equal(dim(scm),c(n_cpg,n_samples))  
+    expect_is(scm,"matrix")
     
     invisible(lapply(list(scm.mem,scm.h5), function(scm) {
       expect_warning(get_matrix(scm,add_loci=FALSE, in_granges = TRUE))
       
-      s <- get_matrix(scm=scm,add_loci=TRUE)
-      expect_equal(dim(s),c(n_cpg,n_samples+3))  
-      expect_is(s,"data.table")
+      mtx <- get_matrix(scm=scm,add_loci=TRUE)
+      expect_equal(dim(mtx),c(n_cpg,n_samples+3))  
+      expect_is(mtx,"data.table")
       
-      s <- get_matrix(scm,add_loci=TRUE, in_granges = TRUE)
+      mtx <- get_matrix(scm,add_loci=TRUE, in_granges = TRUE)
      # expect_equal(seqnames(m)@lengths,c(10,8))
-      expect_equal(dim(mcols(s)),c(n_cpg,n_samples))
-      expect_is(s,"GRanges")
+      expect_equal(dim(mcols(mtx)),c(n_cpg,n_samples))
+      expect_is(mtx,"GRanges")
       
-      s <- get_matrix(scm,order_by_sd = TRUE)
-      expect_false(is.unsorted(rev(rowSds(s,na.rm=TRUE)),na.rm=TRUE))
+      mtx <- get_matrix(scm,order_by_sd = TRUE)
+      expect_false(is.unsorted(rev(rowSds(mtx,na.rm=TRUE)),na.rm=TRUE))
+      
+      mtx <- get_matrix(scm,n_chunks = n_samples,by="col")
+      invisible(lapply(mtx,function(m) expect_equal(dim(m),c(n_cpg,1))))
+      
+      mtx <- get_matrix(scm,n_chunks = n_cpg,by="row")
+      invisible(lapply(mtx,function(m) expect_equal(dim(m),c(1,n_samples))))
+      
   }))
 })
 

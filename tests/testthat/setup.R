@@ -1,12 +1,12 @@
 message("Test setup starting...")
 
-files <- c(system.file("extdata", "C1.bedgraph", package="scMethrix"),
-           system.file("extdata", "C2.bedgraph", package="scMethrix"),
-           system.file("extdata", "C3.bedgraph", package="scMethrix"),
-           system.file("extdata", "C4.bedgraph", package="scMethrix"))
+# files <- c(system.file("extdata", "C1.bedgraph", package="scMethrix"),
+#            system.file("extdata", "C2.bedgraph", package="scMethrix"),
+#            system.file("extdata", "C3.bedgraph", package="scMethrix"),
+#            system.file("extdata", "C4.bedgraph", package="scMethrix"))
 
-files <- c("D:/Git/scMethrix/inst/extdata/C1.bedgraph","D:/Git/scMethrix/inst/extdata/C2.bedgraph",
-           "D:/Git/scMethrix/inst/extdata/C3.bedgraph","D:/Git/scMethrix/inst/extdata/C4.bedgraph")
+files <- c("F:/scMethrix/inst/extdata/C1.bedgraph","F:/scMethrix/inst/extdata/C2.bedgraph",
+           "F:/scMethrix/inst/extdata/C3.bedgraph","F:/scMethrix/inst/extdata/C4.bedgraph")
 
 h5_dir <- paste0(tempdir(),"/sse")
 
@@ -29,8 +29,6 @@ msg.validateValue <- "Invalid value"
 
 # scMethrix_data <- scm.mem
 # usethis::use_data(scMethrix_data,overwrite=TRUE)
-
-
 
 message("Test setup completed")
 
