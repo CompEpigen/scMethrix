@@ -639,6 +639,10 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
   return(invisible(TRUE))
 }
 
+#' Validates numeric values based on some experession
+#' @param value numeric; the value to test
+#' @param ... string; the expressions to test
+#' @return invisible(TRUE), if the object is valid. Error if not.
 .validateValue <- function(value,...) {
 
     if (!is.null(value) && !is.na(value)) {
@@ -653,4 +657,19 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
       }
     }
   return(invisible(TRUE))
+}
+
+#' Validates the number of threads for the session. Windows can only support one thread
+#' @param value numeric; the number of threads
+#' @return integer; 1 if windows, or some number of threads between 1 and parallel::detectCores
+.validateThreads <- function(n_threads) {
+  
+  .validateType(n_threads,"integer")
+  
+  # if (grepl("Windows", Sys.getenv("OS"))) {
+  #   if (n_threads > 1) warning("Invalid threads. Parallel processing is not enabled for non-POSIX system (e.g., Windows). ")
+  #   return(0)
+  # } 
+  
+  return(max(min(parallel::detectCores(),n_threads),1))
 }

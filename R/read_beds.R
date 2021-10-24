@@ -44,7 +44,7 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = 20, n_threads = 0, 
+read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = min(20,length(files)), n_threads = 1, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE,
                       zero_based = FALSE, reads = NULL, replace = FALSE, 
                       pipeline = c("Custom","Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"),
@@ -52,15 +52,15 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
                       M_idx = NULL, U_idx = NULL, strand_idx = NULL, cov_idx = NULL) {
 
   #- Input Validation --------------------------------------------------------------------------
+  #sapply(files,function(file) .validateType(file,"string")) #TODO: this doesn't work for some reason...
   .validateType(files,"string")
   #.validateType(ref_cpgs)
   #.validateType(colData,"dataframe")
   .validateType(genome_name,"string")
   .validateType(batch_size,"integer")
-  .validateValue(batch_size,"> 1"," < length(files)")
-  .validateType(n_threads,"integer")
-  .validateValue(n_threads,"> 1"," < parallel::detectCores()")
-  .validateType(n_threads,"integer")
+  #.validateValue(batch_size,">= 1"," <= length(files)")
+  batch_size <- max(min(batch_size,length(files)),1)
+  n_threads <- .validateThreads(n_threads)
   .validateType(h5,"boolean")
   if (h5) .validateType(h5_dir,"string")
   .validateType(desc,c("string","null"))
@@ -88,14 +88,11 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   # if (is.null(ref_cpgs) && h5) {
   #   stop("Reference CpGs must be provided for HDF5 format", call. = FALSE)
   # }
-  
+
   if (n_threads > length(files)/2){ #TODO: Make single file input to thread possible
     n_threads <- min(n_threads,length(files)/2) # cannot have multiple threads with a single file being input
     warning("Too many threads specified. Each thread must have at least 2 files to process. 
             Defaulting to n_thread = ", n_threads)
-  } else if (n_threads < 0) {
-    n_threads <- 0
-    warning("n_threads < 0. Defaulting to 0")
   }
   
   #- Function code -----------------------------------------------------------------------------
@@ -218,30 +215,30 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
 #' #Do Nothing
 #' }
 #' @export
-read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch_size = 200, verbose = TRUE) {
+read_index <- function(files, col_list, n_threads = 1, zero_based = FALSE, batch_size = 200, verbose = TRUE) {
 
   #- Input Validation --------------------------------------------------------------------------
   # .validateType(files,"string")
   # .validateType(col_list)
-  # .validateType(n_threads,"integer")
+  # n_threads <- .validateThreads(n_threads)
   # .validateType(zero_based,"boolean")
   # .validateType(batch_size,"integer")
   # .validateType(verbose,"boolean")
-  
+
   #- Function code -----------------------------------------------------------------------------
   # Parallel functionality
-  if (n_threads != 0) {
+  if (n_threads != 1) {
     
-    if (n_threads > parallel::detectCores(logical = TRUE)) {
-      n_threads <- parallel::detectCores(logical = TRUE)-1
-      warning("Too many threads. Defaulting to n_threads =",n_threads)
-    }
-    
+    # if (n_threads > parallel::detectCores(logical = TRUE)) {
+    #   n_threads <- parallel::detectCores(logical = TRUE)-1
+    #   warning("Too many threads. Defaulting to n_threads =",n_threads)
+    # }
+    # 
     cl <- parallel::makeCluster(n_threads)  
     doParallel::registerDoParallel(cl)  
     
-    parallel::clusterEvalQ(cl, c(library(data.table)))
-    parallel::clusterExport(cl,list('read_index','start_time','split_time','stop_time','get_sample_name'))
+    parallel::clusterEvalQ(cl, c(library(data.table),library(scMethrix)))
+    #parallel::clusterExport(cl,list('read_index','start_time','split_time','stop_time','get_sample_name'))
     
     if (verbose) message("Generating CpG index")
     
@@ -249,7 +246,7 @@ read_index <- function(files, col_list, n_threads = 0, zero_based = FALSE, batch
     
     rrng <- c(parallel::parLapply(cl,chunk_files,fun=read_index, 
                                   batch_size=round(batch_size/n_threads), col_list = col_list,
-                                  n_threads = 0, zero_based = zero_based, verbose = FALSE))
+                                  n_threads = 1, zero_based = zero_based, verbose = FALSE))
     
     parallel::stopCluster(cl)
     
@@ -567,7 +564,7 @@ read_bed_by_index <- function(files, ref_cpgs = NULL, col_list = NULL, zero_base
 #' \dontrun{
 #' #Do Nothing
 #' }
-read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, h5_temp = NULL, 
+read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 1, h5_temp = NULL, 
                            zero_based = FALSE, strand_collapse = FALSE, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
@@ -575,7 +572,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
   # .validateType(ref_cpgs,"boolean")
   # .validateType(col_list,"boolean")
   # .validateType(batch_size,"integer")
-  # .validateType(n_threads,"integer")
+  # n_threads <- .validateThreads(n_threads)
   # .validateType(h5_temp,c("string","null"))
   # .validateType(zero_based,"boolean")
   # .validateType(verbose,"boolean")
@@ -602,7 +599,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
                                    name = "C", level = 6)
  
   # Determine the grids for the sinks
-  if (n_threads == 0) {
+  if (n_threads == 1) {
     files <- split_vector(files, size = batch_size)
     grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(unlist(files))),
                                            spacings = c(dimension, length(files[[1]]))) 
@@ -612,9 +609,10 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
                                            spacings = c(dimension, length(files[[1]]))) 
     cl <- parallel::makeCluster(n_threads)  
     doParallel::registerDoParallel(cl)  
+    on.exit(parallel::stopCluster(cl))
     
-    parallel::clusterEvalQ(cl, c(library(data.table)))
-    parallel::clusterExport(cl,list('read_bed_by_index','get_sample_name'))
+    parallel::clusterEvalQ(cl, c(library(data.table),library(scMethrix)))
+    #parallel::clusterExport(cl,list('read_bed_by_index','get_sample_name'))
   }
   
   # Read data to the sinks
@@ -622,7 +620,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
     
     if (verbose) message("   Parsing: Chunk ", i,appendLF=FALSE)
     
-    if (n_threads == 0) {
+    if (n_threads == 1) {
       
       bed <- read_bed_by_index(files = files[[i]], ref_cpgs = ref_cpgs, col_list = col_list, zero_based = zero_based, 
                                strand_collapse=strand_collapse)
@@ -652,7 +650,6 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
     if (verbose) message(" (",split_time(),")")
   }
   
-  if (n_threads != 0) parallel::stopCluster(cl)
   if (verbose) message("Data parsed in ",stop_time()) 
   
   if (col_list$has_cov) {
@@ -817,29 +814,29 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
 #' \dontrun{
 #' #Do Nothing
 #' }
-read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 0, zero_based = FALSE,
+read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 1, zero_based = FALSE,
                           strand_collapse = FALSE, verbose = TRUE) {
   #- Input Validation --------------------------------------------------------------------------
   # .validateType(files,"string")
   # .validateType(ref_cpgs,"boolean")
   # .validateType(col_list,"boolean")
   # .validateType(batch_size,"integer")
-  # .validateType(n_threads,"integer")
+  # n_threads <- .validateThreads(n_threads)
   # .validateType(zero_based,"boolean")
   # .validateType(verbose,"boolean")
   
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Reading BED data...",start_time()) 
 
-  if (n_threads != 0) {
+  if (n_threads != 1) {
     # Parallel functionality
     if (verbose) message("Starting cluster with ",n_threads," threads.")
     
     cl <- parallel::makeCluster(n_threads)  
     doParallel::registerDoParallel(cl)  
     
-    parallel::clusterEvalQ(cl, c(library(data.table)))
-    parallel::clusterExport(cl,list('read_bed_by_index','start_time','split_time','stop_time','get_sample_name'))
+    parallel::clusterEvalQ(cl, c(library(data.table),library(scMethrix)))
+    #parallel::clusterExport(cl,list('read_bed_by_index','start_time','split_time','stop_time','get_sample_name'))
     
     chunk_files <- split(files, ceiling(seq_along(files)/(length(files)/n_threads)))
     

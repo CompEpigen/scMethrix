@@ -64,6 +64,8 @@ files <- files[1:590]
 
 col_list <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
+scm <- load_HDF5_scMethrix("D:/Git/sampleData/Gaiti")
+
 #With Coverage
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(tempdir(),"/sse"),ref_cpgs = ref_cpgs, replace=TRUE,
                         chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6, colData = colData, n_threads=0, batch_size = 10)
@@ -71,7 +73,7 @@ saveHDF5SummarizedExperiment(scm.big.h5,dir="D:/Git/sampleData/3samp.h5",replace
 scm.big.h5 <- load_HDF5_scMethrix(dir="D:/Git/sampleData/500.h5")
 scm.big.h5 <- load_HDF5_scMethrix(dir="D:/Git/sampleData/3samp.h5")
 
-scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 0, colData = colData,
+scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 1, colData = colData,
                          chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
 #Without coverage

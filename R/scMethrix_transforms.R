@@ -94,7 +94,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   if (is_h5(scm)) .validateType(h5_dir,"string")
   .validateType(verbose,"boolean")
   .validateType(batch_size,"integer")
-  .validateType(n_threads,"integer")
+  n_threads <- .validateThreads(n_threads)
   .validateType(replace,"boolean")
 
   if (is.null(trans[["counts"]])) {
@@ -531,7 +531,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   sapply(trans, function (t) .validateType(t, c("function","null")))
   if (is_h5(scm)) .validateType(h5_dir,"string")
   .validateType(batch_size,"integer")
-  .validateType(n_threads,"integer")
+  n_threads <- .validateThreads(n_threads)
   .validateType(verbose,"boolean")
   .validateType(replace,"boolean")
   

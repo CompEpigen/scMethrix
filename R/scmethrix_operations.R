@@ -210,7 +210,7 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
   .validateType(regions,c("Granges","null"))
   .validateType(group,c("string","null"))
   .validateType(n_chunks,"integer")
-  .validateType(n_threads,"integer")
+  n_threads <- .validateThreads(n_threads)
   by <- .validateArg(by,get_region_summary)
   overlap_type <- .validateArg(overlap_type,get_region_summary)
   .validateType(verbose,"boolean")
@@ -264,19 +264,19 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
       warning("Fewer overlaps indicies than n_chunks. Defaulting to n_chunks = ",n_chunks)
     }
 
-    if (n_chunks < n_threads) {
-      n_threads <- n_chunks
-      warning("n_threads < n_chunks. Defaulting to n_threads = ",n_threads)
-    }
+    # if (n_chunks < n_threads) {
+    #   n_threads <- n_chunks
+    #   warning("n_threads < n_chunks. Defaulting to n_threads = ",n_threads)
+    # }
 
     cl <- parallel::makeCluster(n_threads)
     doParallel::registerDoParallel(cl)
-
-    parallel::clusterEvalQ(cl, c(library(data.table), library(SingleCellExperiment), sink(paste0("D:/Git/scMethrix/", Sys.getpid(), ".txt"))))
+    
+    parallel::clusterEvalQ(cl, c(library(data.table), library(scMethrix), sink(paste0("D:/Git/scMethrix/", Sys.getpid(), ".txt"))))
     parallel::clusterEvalQ(cl, expr={
       scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")
     })
-    parallel::clusterExport(cl,list('scm','scMethrix','type','is_h5','get_matrix','start_time','split_time','stop_time'))
+    #parallel::clusterExport(cl,list('scm','scMethrix','type','is_h5','get_matrix','start_time','split_time','stop_time'))
 
     chunk_overlaps <- split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid) /
                                                         ceiling(length(overlap_indices$xid)/n_chunks)))
@@ -749,6 +749,7 @@ remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateType(verbose,"boolean")
+  n_threads <- .validateThreads(n_threads)
   
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Removing uncovered CpGs...", start_time())
@@ -784,8 +785,6 @@ remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
   return(scm)
 }
 
-
-
 #--------------------------------------------------------------------------------------------------------------------------
 #' Masks CpGs by coverage
 #' @details Takes \code{\link{scMethrix}} object and masks sites with low overall or high average coverage by putting NA for assay values. The sites will remain in the object and all assays will be affected.
@@ -810,7 +809,7 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, 
   assay <- .validateAssay(scm,assay)
   .validateType(low_threshold,c("numeric","null"))
   .validateType(avg_threshold,c("numeric","null"))
-  .validateType(n_threads,"integer")
+  n_threads <- .validateThreads(n_threads)
   .validateType(verbose,"boolean")
   
   if (!is_h5(scm) && n_threads != 1) 
@@ -878,7 +877,7 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
   assay <- .validateAssay(scm,assay)
   .validateType(low_threshold,c("numeric","null"))
   .validateType(prop_threshold,c("numeric","null"))
-  .validateType(n_threads,"integer")
+  n_threads <- .validateThreads(n_threads)
   .validateType(verbose,"boolean")
   
   if (!is_h5(scm) & n_threads != 1) 
@@ -931,7 +930,7 @@ mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateType(low_threshold,c("numeric","null"))
-  .validateType(n_threads,"integer")
+  n_threads <- .validateThreads(n_threads)
   assay <- .validateAssay(scm,assay)
   
   .validateType(verbose,"boolean")
