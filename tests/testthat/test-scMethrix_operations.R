@@ -283,6 +283,9 @@ test_that("remove_uncovered", {
     expect_equal(dim(s),c(n_cpg,length(samples)))
     non_na_rows = nrow(score(s)[rowSums(is.na(score(s))) != ncol(s), ])
     expect_equal(dim(remove_uncovered(s)),c(non_na_rows,length(samples)))
+    
+    expect_equal(remove_uncovered(s),remove_uncovered(s,n_threads=2))
+    
   }))
 })
 

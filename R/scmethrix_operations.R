@@ -744,7 +744,7 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE) 
 #' # Remove uncovered CpGs after subsetting to a single sample
 #' remove_uncovered(subset_scMethrix(scMethrix_data, samples = "C1", by="include"))
 #' @export
-remove_uncovered <- function(scm = NULL, verbose = TRUE) {
+remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -753,7 +753,25 @@ remove_uncovered <- function(scm = NULL, verbose = TRUE) {
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Removing uncovered CpGs...", start_time())
   
-  row_idx <- DelayedMatrixStats::rowSums2(!is.na(get_matrix(scm)))==0
+  if (n_threads != 1) {
+  
+    cl <- parallel::makeCluster(n_threads)
+    doParallel::registerDoParallel(cl)
+  
+    parallel::clusterEvalQ(cl, c(library(data.table),library(scMethrix),library(DelayedMatrixStats)))
+    #parallel::clusterExport(cl,list('read_bed_by_index','start_time','split_time','stop_time','get_sample_name'))
+  
+    check_uncovered <- function(mtx) DelayedMatrixStats::rowSums2(!is.na(unlist(mtx)))==0 
+    
+    mtx <- get_matrix(scm, n_chunks = n_threads, by="row")
+    
+    row_idx <- unlist(parallel::parLapply(cl,mtx,fun=check_uncovered))
+  
+    parallel::stopCluster(cl)
+
+  } else {
+    row_idx <- DelayedMatrixStats::rowSums2(!is.na(get_matrix(scm)))==0
+  }
   
   if (sum(row_idx) == nrow(scm)) stop("All CpGs were masked. No methylation data must be present.")
   
