@@ -90,7 +90,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 
   .validateExp(scm)
   .validateType(regions,c("granges","null"))
-  .validateType(bin_size,"integer")
+  .validateType(bin_size,c("integer","null"))
   bin_by <- .validateArg(bin_by,bin_scMethrix)
   sapply(trans, function (t) .validateType(t, c("function","null")))
   overlap_type <- .validateArg(overlap_type,subset_scMethrix)
@@ -101,7 +101,11 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   .validateType(replace,"boolean")
 
   if (is.null(trans[["counts"]])) {
-    trans <- c(trans, c(counts = function(x) sum(x,na.rm=TRUE)))#DelayedMatrixStats::colSums2(x,na.rm=TRUE)))
+    trans <- c(trans, c(counts <- function(x) {
+      x <- na.omit(x)
+      if(length(x)) return(sum(x))
+      NA
+    }))#DelayedMatrixStats::colSums2(x,na.rm=TRUE)))
   }
 
   #- Function code -----------------------------------------------------------------------------
@@ -115,14 +119,14 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
     regions = range(SummarizedExperiment::rowRanges(scm))
   }
   
-  if (verbose) message("Subsetting for ",length(regions)," input regions...",start_time())
-  
+  if (verbose) message("Checking ",length(regions)," input regions...",start_time())
+
   regions$rid <- paste0("rid_", 1:length(regions))
   
   overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type)) 
   
   if(nrow(overlap_indices) == 0){
-    stop("No overlaps detected")
+    stop("No overlaps detected for input regions. No binning can be done.")
   }
   
   colnames(overlap_indices) <- c("xid", "yid")
@@ -130,7 +134,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 
   if (!is.null(bin_size)) {
     
-    if (verbose) message("Binning by ",bin_by," with size of ",bin_size,"...")
+    #if (verbose) message("Binning by ",bin_by," with size of ",bin_size,"...")
     
     if (bin_by == "cpg") {
       
@@ -168,7 +172,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
     rrng <- regions
   }
   
-  if (verbose) message("Generated ",length(rrng)," bins in ",split_time())
+  n_regions <- length(regions)
+  rm(regions)
   
   assays <- list()
   
@@ -177,11 +182,15 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   colnames(overlap_indices) <- c("xid", "yid")
   overlap_indices[,yid := paste0("rid_", yid)]
   
+  if (verbose) message("Generated ",length(rrng)," bins in ",split_time())
+  
+  gc()
+
   # Function to process each bin
   
   for (name in SummarizedExperiment::assayNames(scm)) {
 
-    if (verbose) message("   Filling bins for the ",name," assay...")
+    if (verbose) message("Filling bins for the ",name," assay...")
     
     if (is.null(trans[[name]])) { # If no named vector is specified, default to mean
       op <- function(x) mean(x,na.rm=TRUE)#DelayedMatrixStats::colMeans2(x,na.rm=TRUE)
@@ -194,20 +203,22 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       DelayedArray::setAutoRealizationBackend("HDF5Array")
       
       cols <- split_vector(1:ncol(scm),size=batch_size)
-      sink <- DelayedArray::AutoRealizationSink(c(length(rrng),ncol(scm)))
-      grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(length(rrng),length(cols[[1]])))
+      sink <- DelayedArray::AutoRealizationSink(c(length(unique(overlap_indices$yid)),ncol(scm)))
+      grid <- DelayedArray::ArbitraryArrayGrid(list(length(unique(overlap_indices$yid)),cumsum(lengths(cols))))
 
-      if (verbose) message("Generated ", length(cols), " chunks")
+      if (verbose) message("Generated ", length(cols), " chunks...")
       
       for (i in 1:length(cols)) {
         
-        if (verbose) message("Processing chunk ",i)
+        split_time()
         col <- cols[[i]]
         mtx <- as.data.table(get_matrix(scm,assay=name)[overlap_indices$xid,col])
         mtx <- mtx[,lapply(.SD,op),by=overlap_indices$yid]
         mtx <- mtx[,overlap_indices:=NULL]
         
         DelayedArray::write_block(block = as.matrix(mtx), viewport = grid[[as.integer(i)]], sink = sink)
+        
+        if (verbose) message("   Processed chunk ",i," (",split_time(),")")
       }
       
       assays[[name]] <- sink
@@ -324,7 +335,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
                               genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),)
   }
   
-  if (verbose) message("Experiment binned for ",length(regions)," regions containing ",length(m_obj)," total bins in ",stop_time())
+  if (verbose) message("Experiment binned for ", n_regions," regions containing ", length(m_obj)," total bins in ", stop_time())
   
   # parallel::stopCluster(cl)
   # rm(cl)
