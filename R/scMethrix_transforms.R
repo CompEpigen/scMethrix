@@ -24,7 +24,7 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
   if (!.validateAssay(scm,new_assay,check.absent=T))
     #new_assay %in% SummarizedExperiment::assayNames(scm)) 
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
-  
+
   #- Function code -----------------------------------------------------------------------------
   if (is_h5(scm)) {
     
@@ -45,15 +45,18 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
     }
     
     rm(blocs)
-    s <- as(trans_sink, "HDF5Matrix")
+    mtx <- as(trans_sink, "HDF5Matrix")
     
   } else {
-    s <- as.data.table(get_matrix(scm,assay=assay))
-    s[, names(s) := lapply(.SD, trans)]
-    s <- as(s, "matrix")
+    mtx <- get_matrix(scm,assay=assay)
+    dims <- dimnames(mtx)
+    mtx <- as.data.table(mtx)
+    mtx[, names(mtx) := lapply(.SD, trans)]
+    mtx <- as(mtx, "matrix")
+    dimnames(mtx) <- dims
   }
   
-  assays(scm)[[new_assay]] <- s
+  assays(scm)[[new_assay]] <- mtx
   
   return(scm)
 }
