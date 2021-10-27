@@ -763,15 +763,15 @@ remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Removing uncovered CpGs...", start_time())
   
+  check_uncovered <- function(mtx) DelayedMatrixStats::rowAlls(mtx,value=NA)
+  
   if (n_threads != 1) {
   
     cl <- parallel::makeCluster(n_threads)
     doParallel::registerDoParallel(cl)
   
-    parallel::clusterEvalQ(cl, c(library(data.table),library(scMethrix),library(DelayedMatrixStats)))
+    parallel::clusterEvalQ(cl, c(library(DelayedMatrixStats)))
     #parallel::clusterExport(cl,list('read_bed_by_index','start_time','split_time','stop_time','get_sample_name'))
-  
-    check_uncovered <- function(mtx) DelayedMatrixStats::rowSums2(!is.na(unlist(mtx)))==0 
     
     mtx <- get_matrix(scm, n_chunks = n_threads, by="row")
     
@@ -780,10 +780,10 @@ remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
     parallel::stopCluster(cl)
 
   } else {
-    row_idx <- DelayedMatrixStats::rowSums2(!is.na(get_matrix(scm)))==0
+    row_idx <- check_uncovered(get_matrix(scm))
   }
   
-  if (sum(row_idx) == nrow(scm)) stop("All CpGs were masked. No methylation data must be present.")
+  if (sum(row_idx) == 0) stop("All CpGs were masked. No methylation data must be present.")
   
   if (verbose) message(paste0("Removed ", format(sum(row_idx), big.mark = ","),
                  " [", round(sum(row_idx)/nrow(scm) * 100, digits = 2), "%] uncovered loci of ",
