@@ -16,7 +16,7 @@
 #' @param n_threads integer; number of threads to use. Default 1.
 #' Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.
 #' @param h5 boolean; Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}
-#' @param h5_dir string; directory to store H5 based object
+#' @param h5_dir string; directory to store H5 based object. This can be NULL and the experiment can be manually saved later
 #' @param h5_temp string; temporary directory to store hdf5
 #' @param desc string; Description of the experiment
 #' @param verbose boolean; flag to output messages or not.
@@ -62,7 +62,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   batch_size <- max(min(batch_size,length(files)),1)
   n_threads <- .validateThreads(n_threads)
   .validateType(h5,"boolean")
-  if (h5) .validateType(h5_dir,"string")
+  if (h5) .validateType(h5_dir,c("string","null"))
   .validateType(desc,c("string","null"))
   .validateType(verbose,"boolean")
   .validateType(zero_based,"boolean")
@@ -158,20 +158,26 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     
     #if (is.null(h5_dir)) stop("Output directory must be specified", call. = FALSE)
     
-    if(dir.exists(h5_dir) && !replace) stop("h5_dir already exists! Use 'replace=TRUE' to replace it. All 
-                                            existing data in that directory will be deleted.") 
+    if(!is.null(h5_dir) && !replace) {
+      if (dir.exists(h5_dir)) {
+      stop("h5_dir already exists! Use 'replace=TRUE' to replace it. All 
+                                              existing data in that directory will be deleted.") 
+      }
+    }
     
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
     if (is.null(reads)) reads <- read_hdf5_data(files = files, ref_cpgs = ref_cpgs, col_list = col_list, 
                                                 n_threads = n_threads, h5_temp = h5_temp, batch_size = batch_size,
                                                 zero_based = zero_based, verbose = verbose, strand_collapse = strand_collapse)
-    message("Building scMethrix object")
+    if (verbose) message("Building scMethrix object")
     
     # if (is.null(colData)) colData <- data.frame()[1:(length(files)), ]
     # row.names(colData) <- unlist(lapply(files,get_sample_name))
     if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(GenomicRanges::coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
+    
+    gc()
     
     m_obj <- create_scMethrix(assays = reads, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
@@ -190,6 +196,8 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(GenomicRanges::coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
+    
+    gc()
     
     m_obj <- create_scMethrix(assays = reads, 
                               rowRanges=ref_cpgs, is_hdf5 = FALSE, genome_name = genome_name, 
@@ -535,7 +543,6 @@ read_bed_by_index <- function(files, ref_cpgs = NULL, col_list = NULL, zero_base
     }
 
     suppressWarnings(rm(bed,meth,cov))
-    gc()
   }
 
   if (fill && !is.null(ref_cpgs)) {
