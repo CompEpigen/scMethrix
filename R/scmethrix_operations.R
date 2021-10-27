@@ -96,6 +96,8 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
   names1 = SummarizedExperiment::assayNames(scm1)
   names2 = SummarizedExperiment::assayNames(scm2)
 
+  if (verbose) message("Merging experiment metadata")
+  
   if (!all((sort(names1)==sort(names2)))) {
     warning("Assay list not identical. All non-identical assays will be dropped from merged object.")
     a1 <- intersect(names1, names2)
@@ -127,13 +129,15 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
     } 
   }))
 
+  if (verbose) message("Merging assays...")
+  
   # Merge by row
   if (by == "row") {
     if (nrow(SummarizedExperiment::colData(scm1)) != nrow(SummarizedExperiment::colData(scm2)) || 
         !all(rownames(scm1@colData) == rownames(scm2@colData))) 
       stop("You have different samples in your dataset. You need the same samples in your datasets. ")
     
-    if (length(intersect(rowRanges(scm1),rowRanges(scm2))) != 0)
+    if (length(intersect(granges(scm1, use.names=FALSE, use.mcols=FALSE),granges(scm2, use.names=FALSE, use.mcols=FALSE))) != 0)
       stop("There are overlapping regions in your datasets. Each object must contain unique regions. ")
     
     scm <- rbind(scm1, scm2)
@@ -147,10 +151,13 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
       stop("You have the same samples in your datasets. You need different samples for this merging.  ")
     
     
-    if (length(intersect(SummarizedExperiment::rowRanges(scm1),SummarizedExperiment::rowRanges(scm2))) != 
-        length(SummarizedExperiment::rowRanges(scm1))) 
+    #if (length(intersect(SummarizedExperiment::rowRanges(scm1),SummarizedExperiment::rowRanges(scm2))) != 
+    #    length(SummarizedExperiment::rowRanges(scm1))) 
+      
+    if (!identical(granges(scm1, use.names=FALSE, use.mcols=FALSE),granges(scm2, use.names=FALSE, use.mcols=FALSE)))  {
       stop("There are non-overlapping regions in your datasets. This function only takes identical regions. ")
-
+    }
+    
     # Merge sample metadata. Ensure the column names match, fill with NAs if not
     colData(scm1)[setdiff(names(SummarizedExperiment::colData(scm2)), names(SummarizedExperiment::colData(scm1)))] <- NA
     colData(scm2)[setdiff(names(SummarizedExperiment::colData(scm1)), names(SummarizedExperiment::colData(scm2)))] <- NA
@@ -172,6 +179,8 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
   
   #Realize if HDF5
   if (is_h5(scm)) {
+    if (verbose) message("Realizing assays to HDF5...")
+    
     for (name in SummarizedExperiment::assayNames(scm)) {
       SummarizedExperiment::assay(scm,name) <- as(SummarizedExperiment::assay(scm,name), "HDF5Array")
     }
@@ -475,7 +484,7 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verb
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Saving HDF5 experiment to disk...",start_time())
 
-  HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = h5_dir, replace = replace, chunkdim = c(length(rowRanges(scm)),1), ...)
+  HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = h5_dir, replace = replace, chunkdim = c(length(rowRanges(scm)),1), level = 6, verbose = verbose,...)
 
   if (verbose) message("Experiment saved in ",stop_time())
 }
