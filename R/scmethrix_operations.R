@@ -699,15 +699,17 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' get_stats(scMethrix_data,per_chr = FALSE)
 #' @return data.table of summary stats
 #' @export
-get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE) {
+get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE, ignore_chr = NULL, ignore_samples = NULL) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)  
   assay <- .validateAssay(scm,assay)
   .validateType(per_chr,"boolean")
-  
+  .validateType(ignore_chr,c("string","null"))
+  .validateType(ignore_samples,c("string","null"))
+    
   x <- NULL
-  
+
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Getting descriptive statistics...",start_time())
 
@@ -737,6 +739,10 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE) 
       )
     }
 
+  if (per_chr) stats <- stats[!(Chr %in% ignore_chr)]
+  
+  stats <- stats[!(Sample_Name %in% ignore_samples)]
+  
   gc()
   if (verbose) message("Finished in ", stop_time())
   

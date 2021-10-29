@@ -16,60 +16,42 @@ test_that("prepare_plot_data", {
   }))
 })
 
-test_that("get_palette", {
-  expect_error(get_palette(0,"RdYlGn"),"Zero colors present in the palette")
-  expect_error(get_palette(1,"not a palette"),"Please provide a valid RColorBrewer palettte.")
+
+invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   
-  colors = 5
-  expect_length(get_palette(colors,"RdYlGn"),colors)
-})
+  test_that("plot_violin", {graph_test_helper(scm,plot_violin)})
 
-test_that("plot_violin", {
-  graph_test_helper(plot_violin)
-})
+  test_that("plot_density", {graph_test_helper(scm,plot_density)})
 
-test_that("plot_density", {
-  graph_test_helper(plot_density)
-})
-
-test_that("plot_coverage", {
-  graph_test_helper(plot_coverage)
-})
-
-test_that("plot_sparsity", {
-  graph_test_helper(plot_sparsity,indiv_samples = FALSE)
-})
-
-test_that("plot_stats", {
-  expect_error(plot_stats("not scMethrix"),msg.validateExp)
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    plot = plot_stats(scm)
-    expect_true("ggplot" %in% class(plot))
-    expect_equal(sort(unique(plot$data$Sample_Name)),sort(colnames(scm)))
-    expect_equal(sort(unique(plot$data$Chromosome)),sort(levels(seqnames(scm))))
-  }))
-})
-
-test_that("plot_dim_red", {
-  expect_error(plot_dim_red("not scMethrix"),msg.validateExp)
-  #PCA
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    plot <- plot_dim_red(dim_red_scMethrix(scm,type = "PCA"),dim_red="PCA")
-    expect_true("ggplot" %in% class(plot))
-    expect_equal(plot$data$row_names,colnames(scm))
-  }))
+  test_that("plot_coverage", {
+    graph_test_helper(scm, plot_coverage, type="histogram")
+    graph_test_helper(scm, plot_coverage, type="density")
+    graph_test_helper(scm, plot_coverage, type="histogram", pheno="Group")
+    graph_test_helper(scm, plot_coverage, type="density",   pheno="Group")
+  })
   
-  #tSNE
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    plot <- plot_dim_red(dim_red_scMethrix(scm,type = "tSNE"),dim_red="tSNE")
-    expect_true("ggplot" %in% class(plot))
-    expect_equal(plot$data$row_names,colnames(scm))
-  }))
+  test_that("plot_sparsity", {
+    graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="box")
+    graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="scatter")
+    graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="box",     pheno="Group")
+    graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="scatter", pheno="Group", )
+  })
   
-  #UMAP
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    plot <- plot_dim_red(dim_red_scMethrix(scm,type = "UMAP"),dim_red="UMAP")
-    expect_true("ggplot" %in% class(plot))
-    expect_equal(plot$data$row_names,colnames(scm))
-  }))
-})
+  test_that("plot_stats", {
+    graph_test_helper(scm, plot_stats, per_chr = F, indiv_chr = F)
+    graph_test_helper(scm, plot_stats, per_chr = T, indiv_chr = T)
+  })
+  
+  test_that("plot_dim_red", {
+
+    expect_error(plot_dim_red("not scMethrix"),msg.validateExp)
+    
+    invisible(lapply(list("PCA","tSNE","UMAP"), function(type) {
+    
+      scm.dimred <- dim_red_scMethrix(scm,type = type, verbose = FALSE) 
+      
+      dim_red_graph_test_helper(scm.dimred, plot_dim_red, dim_red=type)
+      dim_red_graph_test_helper(scm.dimred, plot_dim_red, dim_red=type, color_anno="Group", shape_anno="Group")
+    }))
+  })
+}))

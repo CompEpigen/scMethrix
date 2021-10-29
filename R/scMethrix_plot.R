@@ -5,54 +5,62 @@
 #' @param pheno string; Col name of colData(m). Will be used as a factor to color different groups
 #' @return 'Long' matrix for methylation
 #' @export
-prepare_plot_data <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL){
+prepare_plot_data <- function(scm = NULL, assay="score", regions = NULL, n_cpgs = 25000, pheno = NULL, verbose = TRUE, na.rm = T){
   
   #- Input Validation --------------------------------------------------------------------------
-  .validateExp(scm)
-  .validateType(regions,c("granges","null"))
-  .validateType(n_cpgs,"integer")
-  .validateType(pheno,c("string","null"))
-  
-  if (!is.null(n_cpgs)){
-    if (!is.numeric(n_cpgs)){
-      stop("n_cpgs must be numeric.")
-    }
-  }
-  
+  # .validateExp(scm)
+  # .validateAssay(scm,assay)
+  # .validateType(regions,c("granges","null"))
+  # .validateType(n_cpgs,"integer")
+  # .validateType(pheno,c("string","null"))
+  # 
+  # if (!is.null(n_cpgs)){
+  #   if (!is.numeric(n_cpgs)){
+  #     stop("n_cpgs must be numeric.")
+  #   }
+  # }
+
   #- Function code -----------------------------------------------------------------------------
   if (!is.null(regions)) {
     meth_sub <- subset_scMethrix(scm = scm, regions = regions)
     if (!is.null(n_cpgs)) {
-      message("Randomly selecting ", n_cpgs, " sites")
+      if(verbose) message("Randomly selecting ", n_cpgs, " sites")
       ids <- sample(x = seq_along(meth_sub), replace = FALSE, size = min(n_cpgs,
                                                                          nrow(meth_sub)))
-      meth_sub <- get_matrix(scm = meth_sub[ids, ], add_loci = FALSE)
+      meth_sub <- get_matrix(scm = meth_sub[ids, ], assay = assay, add_loci = FALSE)
     } else {
-      meth_sub <- get_matrix(scm = meth_sub, add_loci = FALSE)
+      meth_sub <- get_matrix(scm = meth_sub, assay = assay, add_loci = FALSE)
     }
   } else if (!is.null(n_cpgs)) {
-    message("Randomly selecting ", n_cpgs, " sites")
+    if(verbose) message("Randomly selecting ", n_cpgs, " sites")
     
     ids <- sample(x = seq_along(scm), replace = FALSE, size = min(n_cpgs,
                                                                 nrow(scm)))
-    meth_sub <- get_matrix(scm = scm[ids, ], add_loci = FALSE)
+    meth_sub <- get_matrix(scm = scm[ids, ], assay = assay, add_loci = FALSE)
   } else {
-    meth_sub <- get_matrix(scm = scm, add_loci = FALSE)
-  }
-  
-  
-  if (!is.null(pheno)) {
-    if (pheno %in% rownames(colData(scm))) {
-      colnames(meth_sub) <- as.character(scm@colData[, pheno])
-    } else {
-      stop("Please provide a valid phenotype annotation column.")
-    }
+    meth_sub <- get_matrix(scm = scm, assay = assay, add_loci = FALSE)
   }
   
   meth_sub <- as.data.frame(meth_sub)
   data.table::setDT(x = meth_sub)
   plot.data <- suppressWarnings(data.table::melt(meth_sub))
-  colnames(plot.data) <- c("variable", "Meth")
+  
+  if (!is.null(pheno)) {
+    if (pheno %in% colnames(colData(scm))) {
+      #colnames(meth_sub) <- as.character(scm@colData[, pheno])
+      #TODO: make sure the order is correct
+      plot.data[, `:=`(Pheno, rep(colData(scm)[,pheno],each=nrow(meth_sub)))]
+      plot.data[, `:=`(Pheno, as.factor(Pheno))]
+    } else {
+      stop("Please provide a valid phenotype annotation column.")
+    }
+  } else {
+    plot.data[, `:=`(Pheno, variable)]
+  }
+  
+  colnames(plot.data) <- c("Sample", "Value", "Pheno")
+  
+  if(na.rm) plot.data <- plot.data[!is.na(Value)]
   
   gc(verbose = FALSE)
   return(plot.data)
@@ -105,13 +113,14 @@ get_shape <- function(n_row) {
 #' @examples
 #' data('scMethrix_data')
 #' plot_violin(scm = scMethrix_data)
-plot_violin <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL,
-                        col_palette = "RdYlGn", show_legend = TRUE) {
+plot_violin <- function(scm = NULL, assay="score", regions = NULL, n_cpgs = 25000, pheno = NULL,
+                        col_palette = "RdYlGn", show_legend = TRUE, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
-  variable <- Meth <- NULL
+  Sample <- Value <- NULL
   
   .validateExp(scm)
+  .validateAssay(scm,assay)
   .validateType(regions,c("granges","null"))
   .validateType(n_cpgs,"integer")
   .validateType(pheno,c("string","null"))
@@ -121,11 +130,12 @@ plot_violin <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL
   if (is.null(regions)) regions = rowRanges(scm)
   
   #- Function code -----------------------------------------------------------------------------
-  plot.data <- prepare_plot_data(scm=scm, regions = regions, n_cpgs = n_cpgs, pheno = pheno)
+  plot.data <- prepare_plot_data(scm=scm, assay = assay, regions = regions, n_cpgs = n_cpgs, pheno = pheno)
   
   col_palette <- get_palette(ncol(scm), col_palette)
   # generate the violin plot
-  p <- ggplot2::ggplot(plot.data, ggplot2::aes(x = variable, y = Meth, fill = variable)) + 
+  
+  p <- ggplot2::ggplot(plot.data, ggplot2::aes(x = Sample, y = Value, fill = Pheno)) + 
     ggplot2::geom_violin(alpha = 0.8, show.legend = show_legend) + ggplot2::theme_classic(base_size = 14) +
     ggplot2::scale_fill_manual(values = col_palette) +
     ggplot2::xlab(pheno) + ggplot2::ylab(expression(beta * "-Value")) +
@@ -145,13 +155,14 @@ plot_violin <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL
 #' @examples
 #' data('scMethrix_data')
 #' plot_density(scm = scMethrix_data)
-plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL,
-                         col_palette = "RdYlGn", show_legend = TRUE) {
+plot_density <- function(scm = NULL, assay = "score", regions = NULL, n_cpgs = 25000, pheno = NULL,
+                         col_palette = "RdYlGn", show_legend = TRUE, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   variable <- Meth <- NULL
   
   .validateExp(scm)
+  .validateAssay(scm,assay)
   .validateType(regions,c("granges","null"))
   .validateType(n_cpgs,"integer")
   .validateType(pheno,c("string","null"))
@@ -165,8 +176,8 @@ plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NUL
   col_palette <- get_palette(ncol(scm), col_palette)
   
   # generate the density plot
-  p <- ggplot2::ggplot(plot.data, ggplot2::aes(Meth, color = variable)) +
-    geom_density(lwd = 1, position = "identity", show.legend = show_legend) + ggplot2::theme_classic() +
+
+  p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, color = Pheno)) + geom_density(lwd = 1, position = "identity", show.legend = show_legend) + ggplot2::theme_classic() +
     ggplot2::xlab("Methylation") + ggplot2::theme_classic(base_size = 14) +
     ggplot2::scale_fill_manual(values = col_palette) +
     ggplot2::xlab(expression(beta * "-Value")) + theme(axis.title.x = element_blank(),
@@ -182,25 +193,24 @@ plot_density <- function(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NUL
 #' Coverage QC Plots
 #' @inheritParams plot_violin
 #' @param perGroup boolean; Color the plots in a sample-wise manner?
-#' @param lim integer; Maximum coverage value to be plotted.
+#' @param max_cov integer; Maximum coverage value to be plotted.
 #' @param type string; Choose between 'histogram' (histogram) or 'density' (density plot).
-#' @param size.lim integer; The maximum number of observarions (sites*samples) to use. If the dataset is larger that this,
+#' @param obs_lim integer; The maximum number of observations (sites*samples) to use. If the dataset is larger that this,
 #' random sites will be selected from the genome.
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
 #' plot_coverage(scm = scMethrix_data)
 #' @export
-plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = NULL, perGroup = FALSE,
-                          lim = 100, size.lim = 1e+06, col_palette = "RdYlGn", show_legend = TRUE) {
+plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = NULL,
+                          max_cov = 100, obs_lim = 1e+06, col_palette = "RdYlGn", show_legend = TRUE, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   type <- .validateArg(type, plot_coverage)
   .validateType(pheno,c("string","null"))
-  .validateType(perGroup,c("boolean"))
-  .validateType(lim,"integer")
-  .validateType(size.lim,"integer")
+  .validateType(max_cov,"integer")
+  .validateType(obs_lim,"integer")
   .validateType(col_palette,"string")
   .validateType(show_legend,"boolean")
   
@@ -209,46 +219,31 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   colors_palette <- get_palette(ncol(scm), col_palette)
   
   #- Function code -----------------------------------------------------------------------------
-  if (nrow(scm) > size.lim) {
+  if (product(dim(scm)) > obs_lim) {
     message("The dataset is bigger than the size limit. A random subset of the object will be used that contains ~",
-            size.lim, " observations.")
-    n_rows <- trunc(size.lim/nrow(scm@colData))
-    sel_rows <- sample(seq_len(nrow(scm@elementMetadata)), size = n_rows,
+            obs_lim, " observations.")
+    n_rows <- trunc(obs_lim/ncol(scm))
+    sel_rows <- sample(seq_len(nrow(scm)), size = n_rows,
                        replace = FALSE)
-    
-    meth_sub <- get_matrix(scm = scm[sel_rows, ], assay = "counts",
-                                    add_loci = FALSE)
-    
   } else {
-    meth_sub <- get_matrix(scm = scm, assay = "counts", add_loci = FALSE)
+    sel_rows <- seq_len(nrow(scm))
   }
+
+  plot.data <- prepare_plot_data(scm = scm[sel_rows, ], assay = "counts", pheno = pheno, na.rm = F)
+  setnafill(plot.data,fill=0,cols="Value")
   
-  if (perGroup) {
-    if (is.null(pheno)) {
-      stop("For group based plotting, provide group information using the pheno argument.")
-    }
-    if (pheno %in% rownames(colData(scm)) == 0) {
-      stop("Phenotype annotation cannot be found in colData(m).")
-    }
-    colnames(meth_sub) <- scm@colData[, pheno]
-  }
-  
-  meth_sub <- as.data.frame(meth_sub)
-  data.table::setDT(x = meth_sub)
-  plot.data <- suppressWarnings(expr = data.table::melt(meth_sub))
-  
-  plot.data <- plot.data[value <= lim, ]
-  
+  plot.data <- plot.data[Value <= max_cov, ]
+
   # generate the plots
-  if (!perGroup) {
+  if (is.null(pheno)) {
     if (type == "density") {
-      p <- ggplot2::ggplot(plot.data, aes(value, color = variable)) +
+      p <- ggplot2::ggplot(plot.data, aes(Value, color = Sample)) +
         ggplot2::geom_density(alpha = 0.5, adjust = 1.5, lwd = 1, show.legend = show_legend,
                               position = "identity") + ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
         ggplot2::scale_fill_manual(values = colors_palette)
       
     } else if (type == "histogram") {
-      p <- ggplot2::ggplot(plot.data, ggplot2::aes(value, fill = variable)) + 
+      p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, fill = Sample)) + 
         ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black", show.legend = show_legend) + 
         ggplot2::theme_classic() +
         ggplot2::xlab("Coverage")+
@@ -257,17 +252,15 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
     }
   } else {
     if (type == "density") {
-      p <- ggplot2::ggplot(plot.data, ggplot2::aes(value, color = variable)) +
+      p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, color = Pheno)) +
         ggplot2::geom_density(alpha = 0.6, adjust = 1.5, lwd = 1, show.legend = show_legend,
                               position = "identity") + ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
-        ggplot2::labs(fill = "Groups") +
         ggplot2::scale_fill_manual(values = colors_palette)
       # print(p)
     } else if (type == "histogram") {
-      p <- ggplot2::ggplot(plot.data, ggplot2::aes(value, fill = variable)) +
+      p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, fill = Pheno)) +
         ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black", show.legend = show_legend) + 
         ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
-        ggplot2::labs(fill = "Groups") +
         ggplot2::scale_fill_manual(values = colors_palette)
       # print(p)
     }
@@ -293,20 +286,21 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
 #' data('scMethrix_data')
 #' plot_sparsity(scm = scMethrix_data)
 #' @export
-plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) {
+plot_sparsity <- function(scm = NULL, assay = "score", type = c("box", "scatter"), pheno = NULL, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   type <- .validateArg(type,plot_sparsity)
+  .validateAssay(scm,assay)
   .validateType(pheno,c("string","null"))
   
   Sparsity <- variable <- NULL
   
-  sparsity <- DelayedMatrixStats::colCounts(score(scm),value=NA)
+  sparsity <- DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay),value=NA)
   
   #- Function code -----------------------------------------------------------------------------
   if (!is.null(pheno)) {
-    if (pheno %in% rownames(colData(scm))) {
+    if (pheno %in% colnames(colData(scm))) {
       pheno <- as.character(scm@colData[, pheno])
       sparsity <- data.frame(Phenotype = pheno, Sparsity = sparsity/nrow(scm))
       p <- ggplot2::ggplot(sparsity, aes(x=pheno, y=Sparsity, color = pheno))
@@ -333,7 +327,7 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
 #' @param assay string; Which assay to get the stats of. Default "score"
 #' @param stat string; Can be \code{mean} or \code{median}. Default \code{mean}
 #' @param ignore_chr string; Chromsomes to ignore. If NULL, all chromosome will be used. Default \code{NULL}
-#' @param samples list of strings; Samples to ignore.  If NULL, all samples will be used. Default \code{NULL}
+#' @param ignore_samples list of strings; Samples to ignore.  If NULL, all samples will be used. Default \code{NULL}
 #' @param n_col integer; number of columns. Passed to `facet_wrap`
 #' @param n_row integer; number of rows. Passed to `facet_wrap`
 #' @return ggplot2 object
@@ -343,42 +337,33 @@ plot_sparsity <- function(scm = NULL, type = c("box", "scatter"), pheno = NULL) 
 #' plot_stats(scMethrix_data)
 #' @export
 #'
-plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), ignore_chr = NULL,
-                       samples = NULL, n_col = NULL, n_row = NULL) {
+plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), per_chr = FALSE, ignore_chr = NULL,
+                       ignore_samples = NULL, n_col = NULL, n_row = NULL, pheno = NULL, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   stat <- .validateArg(stat,plot_stats)
+  .validateType(per_chr,"boolean")
   .validateType(ignore_chr,c("string","null"))
-  .validateType(samples,c("string","null"))
+  .validateType(ignore_samples,c("string","null"))
   .validateType(n_col,c("integer","null"))
   .validateType(n_row,c("integer","null"))
   
-  Chromosome <- . <- Sample_Name <- mean_meth <- sd_meth <- median_meth <- mean_cov <- sd_cov <- NULL
+  Chromosome <- . <- Sample <- mean_meth <- sd_meth <- median_meth <- mean_cov <- sd_cov <- NULL
   median_cov <- measurement <- sd_low <- sd_high <- NULL
 
-  plot_dat = get_stats(scm,assay=assay)
-  
-  plot_dat <- plot_dat[,1:5]
-  
+  plot_dat = get_stats(scm, assay = assay, per_chr = per_chr, ignore_chr = ignore_chr, ignore_samples = ignore_samples)
+
   #- Function code -----------------------------------------------------------------------------
-  if ("Chr" %in% colnames(plot_dat)) {
+  if (per_chr) {
     if (stat == "mean") {
       plot_dat[, which(grepl("^median", colnames(plot_dat))):=NULL]
     } else {
       plot_dat[, which(grepl("^mean", colnames(plot_dat))):=NULL]
     }
-    
-    if (!is.null(ignore_chr)) {
-      plot_dat <- plot_dat[!Chromosome %in% ignore_chr]
-    }
-    
-    if (!is.null(samples)) {
-      plot_dat <- plot_dat[Sample_Name %in% samples]
-    }
-    
-    colnames(plot_dat) <- c("Chromosome", "Sample_Name", "measurement",
+
+    colnames(plot_dat) <- c("Chromosome", "Sample", "measurement",
                             "sd")
     plot_dat[, `:=`(measurement, as.numeric(as.character(measurement)))]
     plot_dat[, `:=`(sd, as.numeric(as.character(sd)))]
@@ -390,7 +375,7 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), ignore_
     plot_dat_gg <- ggplot(data = plot_dat, aes(x = Chromosome, y = measurement)) +
       ggplot2::geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray70") +
       ggplot2::geom_point(col = "maroon") + 
-      ggplot2::facet_wrap(~Sample_Name, nrow = n_row, ncol = n_col) + 
+      ggplot2::facet_wrap(~Sample, nrow = n_row, ncol = n_col) + 
       ggplot2::theme_minimal(base_size = 12) + 
       ggplot2::theme(axis.title.x = element_blank(), 
             axis.text.x = element_text(hjust = 1, size = 10, colour = "black"),
@@ -404,7 +389,7 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), ignore_
       plot_title <- paste("Median",assay)
     }
     
-    colnames(plot_dat) <- c("Sample_Name", "measurement", "sd")
+    colnames(plot_dat) <- c("Sample", "measurement", "sd")
     plot_dat[, `:=`(measurement, as.numeric(as.character(measurement)))]
     plot_dat[, `:=`(sd, as.numeric(as.character(sd)))]
     plot_dat[, `:=`(sd_low, measurement - sd)]
@@ -412,7 +397,7 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), ignore_
     plot_dat$sd_low <- ifelse(test = plot_dat$sd_low < 0, yes = 0,
                               no = plot_dat$sd_low)
     
-    plot_dat_gg <- ggplot2::ggplot(data = plot_dat, aes(x = Sample_Name, y = measurement)) +
+    plot_dat_gg <- ggplot2::ggplot(data = plot_dat, aes(x = Sample, y = measurement)) +
       ggplot2::geom_point(col = "maroon", size = 2) + 
       ggplot2::geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray70") + 
       ggplot2::geom_point(col = "maroon") + theme_minimal(base_size = 12) + 
@@ -452,21 +437,21 @@ plot_imap <- function(scm) {
 #' @param dim_red string; name of adimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
 #' the X and Y coordinates of the dim. red., with each row being a seperate sample
 #' @param axis_labels list of strings; A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired
-#' @param col_anno string; Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object
+#' @param color_anno string; Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object
 #' @param shape_anno string; Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object
 #' @param show_dp_labels boolean; Flag to show the labels for dots. Default FALSE
 #' @return ggplot2 object
 #' @importFrom graphics par mtext lines axis legend title
 #' @export
-plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE) {
+plot_dim_red <- function(scm, dim_red, color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
-  X <- Y <- color_me <- shape_me <- row_names <- ..col_anno <- ..shape_anno <- color <- shape <- NULL
+  X <- Y <- Color <- Shape <- row_names <- color <- shape <- NULL
   
   .validateExp(scm)
   .validateType(dim_red,"string")
   if (!(dim_red %in% reducedDimNames(scm))) stop("Invalid dim_red specified. '",dim_red,"' does not exist in the experiment.")
-  .validateType(col_anno,c("string","null"))
+  .validateType(color_anno,c("string","null"))
   .validateType(shape_anno,c("string","null"))
   .validateType(unlist(axis_labels),c("string","null"))
   .validateType(show_dp_labels,"boolean")
@@ -480,22 +465,22 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
   
   dim_red = as.data.frame(dim_red)
   colnames(dim_red) <- c("X", "Y")
-  dim_red$row_names = rownames(dim_red)
+  dim_red$Sample = rownames(dim_red)
   
   #- Function code -----------------------------------------------------------------------------
-  if (!is.null(col_anno)) {
-    if (col_anno  %in% colnames(colData(scm))) {
-      dim_red$color_me <- as.factor(unlist(as.data.table(colData(scm))[,..col_anno])) #TODO: make colData a data.table
-      colors <- scale_color_manual(values= get_palette(length(unique(dim_red$color_me)),col_palette = "Dark2"))
+  if (!is.null(color_anno)) {
+    if (color_anno  %in% colnames(colData(scm))) {
+      dim_red$Color <- as.factor(unlist(as.data.table(colData(scm))[,..color_anno])) #TODO: make colData a data.table
+      colors <- scale_color_manual(values= get_palette(length(unique(dim_red$Color)),col_palette = "Dark2"))
     } else {
-      stop(paste0(col_anno, " not found in provided scMethrix object"))
+      stop(paste0(color_anno, " not found in provided scMethrix object"))
     }
   }
     
   if (!is.null(shape_anno)) {
     if (shape_anno %in% colnames(colData(scm))) {
-      dim_red$shape_me <- unlist(as.data.table(colData(scm))[,..shape_anno]) #TODO: make colData a data.table
-      shapes <- scale_shape_manual(values = get_shape(length(unique(dim_red$shape_me))))
+      dim_red$Shape <- as.factor(unlist(as.data.table(colData(scm))[,..shape_anno])) #TODO: make colData a data.table
+      shapes <- scale_shape_manual(values = get_shape(length(unique(dim_red$Shape))))
     } else {
       stop(paste0(shape_anno, " not found in provided scMethrix object"))
     }
@@ -505,21 +490,21 @@ plot_dim_red <- function(scm, dim_red, col_anno = NULL, shape_anno = NULL, axis_
     axis_labels = list(X="",Y="")
   }
   
-  if (all(c("color_me", "shape_me") %in% colnames(dim_red))) {
-    dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = color_me,
-                                            shape = shape_me, label = row_names)) + geom_point(size = 3) +
-      labs(color = col_anno, shape = shape_anno) + scale_color_brewer(palette = "Dark2")
-  } else if ("color_me" %in% colnames(dim_red)) {
-    dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = color_me,
-                                            label = row_names)) + geom_point(size = 3) +
-      labs(color = col_anno) + scale_color_brewer(palette = "Dark2")
-  } else if ("shape_me" %in% colnames(dim_red)) {
-    dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, shape = shape_me,
-                                            label = row_names)) + geom_point(size = 3) +
+  if (all(c("Color", "Shape") %in% colnames(dim_red))) {
+    dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = Color,
+                                            shape = Shape, label = Sample)) + geom_point(size = 3) +
+      labs(color = color_anno, shape = shape_anno) + scale_color_brewer(palette = "Dark2")
+  } else if ("Color" %in% colnames(dim_red)) {
+    dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = Color,
+                                            label = Sample)) + geom_point(size = 3) +
+      labs(color = color_anno) + scale_color_brewer(palette = "Dark2")
+  } else if ("Shape" %in% colnames(dim_red)) {
+    dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, shape = Shape,
+                                            label = Sample)) + geom_point(size = 3) +
       labs(shape = shape_anno)
   } else {
     dimred_gg <- ggplot2::ggplot(data = as.data.frame(dim_red), aes(x = X, y = Y,
-                                                           label = row_names)) + geom_point(size = 3, fill = "black",
+                                                           label = Sample)) + geom_point(size = 3, fill = "black",
                                                                                             color = "gray70")
   }
   
