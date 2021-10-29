@@ -99,18 +99,18 @@ colbind = function(...) {
 #' split_vector(c(1,2,3,4,5,6,7,8),percent=25)
 #' @export
 split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
-
+  
   #- Input Validation --------------------------------------------------------------------------
   .validateType(chunks,c("integer","na"))
   .validateType(size,c("integer","na"))
   .validateType(percent,c("numeric","na"))
-
+  
   .validateValue(chunks,">0")
   .validateValue(size,">0")
   .validateValue(percent,">0","<100")
   
   if (sum(is.na(c(chunks,percent,size))) != 2) stop("Invalid input. Must contain 1 of either chunks, percent, or size")
-
+  
   #- Function code -----------------------------------------------------------------------------  
   if (!is.na(percent)) chunks = 100/percent
   if (!is.na(size)) chunks = length(vec)/ceiling(size)
@@ -129,7 +129,7 @@ split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
 #' bin_granges(regions,bin_size=1000) 
 #' @export
 bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
-
+  
   #- Input Validation --------------------------------------------------------------------------
   .validateType(gr,"Granges")
   .validateType(bin_size, "integer")
@@ -225,7 +225,7 @@ subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   
   ref <- nrow(ref_cpgs)
   gen <- nrow(gen_cpgs)
-
+  
   keys <- list(
     ref = keys[seq_len(ref),id],
     sub = keys[ref + seq_len(gen),id]
@@ -311,7 +311,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
   .validateValue(M_idx,     ">0")
   .validateValue(U_idx,     ">0")
   .validateValue(cov_idx,   ">0")
-
+  
   if (is.null(chr_idx) | is.null(start_idx)) {
     stop("Missing chromosome/start indices\nUse pipeline argument if the files are from Bismark, MethyDeckal, or MethylcTools",
          call. = FALSE)
@@ -331,7 +331,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
   has_cov <- TRUE
   
   has <- function(x) {!is.null(x)}
-
+  
   if (has(beta_idx)) {
     if (has(cov_idx)) {
       if (verbose) message("   Estimating M and U from beta and cov")
@@ -376,14 +376,14 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
       }
     }
   }
-   
+  
   return(list(col_idx = c(chr = chr_idx, start = start_idx, end = end_idx, 
-                            strand = strand_idx, beta = beta_idx, M = M_idx, 
-                            U = U_idx,                                       
-                            cov = cov_idx),
-                fix_missing = fix_missing,
-                has_cov = has_cov,
-                select = FALSE))
+                          strand = strand_idx, beta = beta_idx, M = M_idx, 
+                          U = U_idx,                                       
+                          cov = cov_idx),
+              fix_missing = fix_missing,
+              has_cov = has_cov,
+              select = FALSE))
 }
 
 #' Validates arguments. Allows partial matching.
@@ -406,7 +406,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' @param ignore.case boolean; ignores case of the choices
 #' @return arg, if the value is in the function definition.
 .validateArg <- function(arg, parent = NULL, ignore.case = T) {
-
+  
   #.validateType(ignore.case,"boolean")
   
   #- Function code -----------------------------------------------------------------------------
@@ -450,13 +450,13 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
   .validateExp(scm)
   .validateType(assay,"string")
   .validateType(check.absent, "boolean")
-
+  
   #- Function code -----------------------------------------------------------------------------  
   if (!check.absent) {
     assay <- tryCatch(
       match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm)),
       error=function(cond) 
-          stop(paste0("Invalid assay. No assay named '",assay,"' found in the experiment '",substitute(scm),"'"), call. = FALSE)
+        stop(paste0("Invalid assay. No assay named '",assay,"' found in the experiment '",substitute(scm),"'"), call. = FALSE)
     )
     return(invisible(assay))
   } else {
@@ -566,18 +566,18 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 .validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
                                                "List","File","Directory","GRanges","GenomicRanges","Function","Null",
                                                "NA","Dataframe","DF","S4","Distance"), throws=T) {
-    
+  
   #- Input Validation --------------------------------------------------------------------------
   if (length(type) == length(eval(formals(.validateType)[["type"]]))) {
     stop("No valid type specified.")
   }
-
+  
   types <- sapply(type,function(type) .validateArg(type,.validateType))
   # inputs <- input#list(input,NULL) # necessary to avoid iterating through iterable objects (e.g. GRanges)s
   
   #- Function code -----------------------------------------------------------------------------
   valid <- F
-
+  
   for (type in types) {
     if (type == "Null") {
       valid <- is.null(input)
@@ -614,19 +614,19 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
     } else {
       stop("Invalid type with '",type,"'. This type is not supported for validation.")
     }
-
+    
     if (valid) {
       break
     } else if (type == types[length(types)]) {
       if (throws) {
-      stop("Invalid type input for '",substitute(input),"'. Must be of type: '",
-           paste0(types, collapse="', '"),"'", call. = FALSE)
+        stop("Invalid type input for '",substitute(input),"'. Must be of type: '",
+             paste0(types, collapse="', '"),"'", call. = FALSE)
       } else {
         return(invisible(FALSE)) 
       }
     }
   }
-
+  
   return(invisible(TRUE))
 }
 
@@ -644,18 +644,18 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' @param ... string; the expressions to test
 #' @return invisible(TRUE), if the object is valid. Error if not.
 .validateValue <- function(value,...) {
-
-    if (!is.null(value) && !is.na(value)) {
-      
-      if (!.validateType(value,c("numeric","integer"),throws=F))
-        stop("Invalid value for '",substitute(value),"'. Must be of 'numeric' or 'integer' type.")
-      
-      for (condition in list(...)) {
-        if (!(eval(parse(text=paste0(value,condition))))) {
-          stop ("Invalid value: '",substitute(value)," = ",value,"'. Must fit condition: ",substitute(value),condition)
-        }
+  
+  if (!is.null(value) && !is.na(value)) {
+    
+    if (!.validateType(value,c("numeric","integer"),throws=F))
+      stop("Invalid value for '",substitute(value),"'. Must be of 'numeric' or 'integer' type.")
+    
+    for (condition in list(...)) {
+      if (!(eval(parse(text=paste0(value,condition))))) {
+        stop ("Invalid value: '",substitute(value)," = ",value,"'. Must fit condition: ",substitute(value),condition)
       }
     }
+  }
   return(invisible(TRUE))
 }
 
@@ -672,4 +672,70 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
   # } 
   
   return(max(min(parallel::detectCores(),n_threads),1))
+}
+
+#' Extracts all CpGs from a genome
+#' @param ref_genome BSgenome object or name of the installed BSgenome package. Example: BSgenome.Hsapiens.UCSC.hg19
+#' @importFrom BSgenome installed.genomes getBSgenome seqnames
+#' @export
+#' @return a list of data.table containing number of CpG's and contig lengths
+#' @examples
+#'\dontrun{
+#' hg19_cpgs = methrix::extract_CPGs(ref_genome = 'BSgenome.Hsapiens.UCSC.hg19')
+#' }
+extract_CpGs = function(ref_genome = NULL) {
+  
+  #- Input Validation --------------------------------------------------------------------------
+  
+  .validateType(ref_genome,"string")
+  pkgname <- seqlengths <- chr <- NULL
+  
+  gnoms_installed = BSgenome::installed.genomes(splitNameParts = TRUE)
+  data.table::setDT(x = gnoms_installed)
+  
+  if (is.null(ref_genome)) {
+    if (nrow(gnoms_installed) == 0) {
+      stop("Could not find any installed BSgenomes.\nUse BSgenome::available.genomes() for options.")
+    } else {
+      message("Found following BSgenome installations. Use the required 'pkgname'.")
+      print(gnoms_installed)
+      stop()
+      # ref_genome = gnoms_installed[,pkgname][1]
+    }
+  } else {
+    if (nrow(gnoms_installed[pkgname %in% ref_genome]) == 0) {
+      message("Could not find BSgenome ", ref_genome)
+      if (nrow(gnoms_installed) == 0) {
+        stop("Could not find any installed BSgenomes either.\nUse BSgenome::available.genomes() for options.")
+      } else {
+        message("Found following BSgenome installations. Provide the correct 'pkgname'")
+        print(gnoms_installed)
+        stop()
+      }
+    }
+  }
+  requireNamespace(ref_genome, quietly = TRUE)
+  
+  #- Function code -----------------------------------------------------------------------------
+  
+  message("Extracting CpGs from ",ref_genome,"...",start_time())
+  
+  ref_genome = BSgenome::getBSgenome(genome = ref_genome)
+  
+  chrs = standardChromosomes(ref_genome)
+  
+  # Code borrowed from from: https://support.bioconductor.org/p/95239/
+  cgs = lapply(chrs, function(x) start(Biostrings::matchPattern("CG", ref_genome[[x]])))
+  cpgs = do.call(c, lapply(seq_along(chrs), function(x) GenomicRanges::GRanges(names(ref_genome)[x],
+                                                                               IRanges::IRanges(cgs[[x]], width = 2))))
+  cpgs = data.table::as.data.table(as.data.frame(cpgs, stringsAsFactors = FALSE))
+  cpgs[,width:=NULL][,strand:=NULL]
+  colnames(cpgs) = c("chr", "start", "end")
+  cpgs[, `:=`(chr, as.character(chr))][, `:=`(start, as.numeric(start))][, `:=`(end,
+                                                                                as.numeric(end))]
+  data.table::setkey(x = cpgs, "chr", "start")
+  message(paste0("Extracted ", format(nrow(cpgs), big.mark = ","), " CpGs from ",
+                 length(chrs), " contigs (",stop_time(),")"))
+  
+  return(cpgs)
 }
