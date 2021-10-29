@@ -1,6 +1,7 @@
 #' Format \code{\link{scMethrix}} matrix to long form data for plotting
+#' 
 #' @inheritParams generic_scMethrix_function
-#' @param n_cpgs integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.
+#' @param n_cpgs integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive. The seed will be set to \code{n_cpgs} for consistency.
 #' @param regions Granges; genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param pheno string; Col name of colData(m). Will be used as a factor to color different groups
 #' @return 'Long' matrix for methylation
@@ -8,17 +9,11 @@
 prepare_plot_data <- function(scm = NULL, assay="score", regions = NULL, n_cpgs = 25000, pheno = NULL, verbose = TRUE, na.rm = T){
   
   #- Input Validation --------------------------------------------------------------------------
-  # .validateExp(scm)
-  # .validateAssay(scm,assay)
-  # .validateType(regions,c("granges","null"))
-  # .validateType(n_cpgs,"integer")
-  # .validateType(pheno,c("string","null"))
-  # 
-  # if (!is.null(n_cpgs)){
-  #   if (!is.numeric(n_cpgs)){
-  #     stop("n_cpgs must be numeric.")
-  #   }
-  # }
+  .validateExp(scm)
+  .validateAssay(scm,assay)
+  .validateType(regions,c("granges","null"))
+  .validateType(n_cpgs,"integer")
+  .validateType(pheno,c("string","null"))
 
   #- Function code -----------------------------------------------------------------------------
   if (!is.null(regions)) {
@@ -34,6 +29,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", regions = NULL, n_cpgs 
   } else if (!is.null(n_cpgs)) {
     if(verbose) message("Randomly selecting ", n_cpgs, " sites")
     
+    set.seed(n_cpgs)
     ids <- sample(x = seq_along(scm), replace = FALSE, size = min(n_cpgs,
                                                                 nrow(scm)))
     meth_sub <- get_matrix(scm = scm[ids, ], assay = assay, add_loci = FALSE)

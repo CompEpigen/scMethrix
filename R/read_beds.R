@@ -21,7 +21,6 @@
 #' @param desc string; Description of the experiment
 #' @param verbose boolean; flag to output messages or not.
 #' @param zero_based boolean; flag for whether the input data is zero-based or not
-#' @param reads data.table; Manual input of reads. Typically used for testing.
 #' @param replace boolean; flag for whether to delete the contents of h5_dir before saving
 #' @param pipeline string; Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
 #' If not known use idx arguments for manual column assignments.
@@ -66,7 +65,6 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   .validateType(desc,c("string","null"))
   .validateType(verbose,"boolean")
   .validateType(zero_based,"boolean")
-  #.validateType(reads,"dataframe")
   .validateType(replace,"boolean")
   pipeline <- .validateArg(pipeline,read_beds)
   .validateType(stranded,"boolean")
@@ -140,18 +138,22 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   col_list$max_value = max(read_bed_by_index(files = files[1], col_list = col_list,fill=F)$beta,na.rm = TRUE)
   
   gc()
-  
+
   # Get colData
-  if(is.null(colData)) {
-    colData <- data.frame()[1:(length(files)), ]
-    row.names(colData) <- colnames(reads$score)
-  } else {
-    cd <- data.frame()[1:(length(files)), ]
-    cd$Sample <- colnames(reads$score)
-    cd <- merge(cd,colData,by="Sample")
-    row.names(cd) <- cd$Sample
-    cd$Sample <- NULL
-    colData <- cd
+  parse_colData <- function(colData,reads) {
+
+    if(is.null(colData)) {
+      colData <- data.frame()[1:(length(files)), ]
+      row.names(colData) <- colnames(reads$score)
+    } else {
+      cd <- data.frame()[1:(length(files)), ]
+      cd$Sample <- colnames(reads$score)
+      cd <- merge(cd,colData,by="Sample")
+      row.names(cd) <- cd$Sample
+      cd$Sample <- NULL
+      colData <- cd
+    }
+    return(colData)
   }
   
   if (h5) {
@@ -166,7 +168,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     }
     
     #if (zero_based) {ref_cpgs[,2:3] <- ref_cpgs[,2:3]+1}
-    if (is.null(reads)) reads <- read_hdf5_data(files = files, ref_cpgs = ref_cpgs, col_list = col_list, 
+    reads <- read_hdf5_data(files = files, ref_cpgs = ref_cpgs, col_list = col_list, 
                                                 n_threads = n_threads, h5_temp = h5_temp, batch_size = batch_size,
                                                 zero_based = zero_based, verbose = verbose, strand_collapse = strand_collapse)
     if (verbose) message("Building scMethrix object")
@@ -176,9 +178,10 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(GenomicRanges::coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
+    colData <- parse_colData(colData,reads)
     
     gc()
-    
+
     m_obj <- create_scMethrix(assays = reads, rowRanges=ref_cpgs, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = genome_name,desc = desc,colData = colData,
                               replace = replace,chrom_size = chrom_size)
@@ -196,9 +199,10 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(GenomicRanges::coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
+    colData <- parse_colData(colData,reads)
     
     gc()
-    
+
     m_obj <- create_scMethrix(assays = reads, 
                               rowRanges=ref_cpgs, is_hdf5 = FALSE, genome_name = genome_name, 
                               desc = desc, colData = colData, chrom_size = chrom_size )
