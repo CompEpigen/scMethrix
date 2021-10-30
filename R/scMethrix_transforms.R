@@ -101,13 +101,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   .validateType(replace,"boolean")
 
   if (is.null(trans[["counts"]])) {
-    trans <- c(trans, c(counts <- function(x) {
-      x <- na.omit(x)
-      if(length(x)) return(sum(x))
-      NA
-    }))#DelayedMatrixStats::colSums2(x,na.rm=TRUE)))
-  }
-
+    trans <- c(trans, counts = function(x) sum(x,na.rm=T))}
+ 
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Binning experiment...")
   
@@ -310,6 +305,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       # colnames(mtx) <- cols
 
       ### Basic algorithm
+
       mtx <- data.table(get_matrix(scm,assay=name))[overlap_indices$xid,] #TODO: Somehow missing rows if not subset, not sure why
       mtx <- mtx[,lapply(.SD,op),by=overlap_indices$yid]
       mtx <- mtx[,overlap_indices:=NULL]
@@ -323,7 +319,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   rrng <- rrng[which(rrng$rid %in% overlap_indices$yid)]
   
   rrng$rid <- NULL
-  
+
   if (verbose) message("Rebuilding experiment...")
   
   if (is_h5(scm)) {
