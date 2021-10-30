@@ -9,7 +9,7 @@ read_mem_data(
   ref_cpgs,
   col_list,
   batch_size = 20,
-  n_threads = 0,
+  n_threads = 1,
   zero_based = FALSE,
   strand_collapse = FALSE,
   verbose = TRUE

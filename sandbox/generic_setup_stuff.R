@@ -1,8 +1,8 @@
 list.of.packages <- c("SingleCellExperiment","data.table","plyr","HDF5Array","tictoc","beepr",
                       "GenomicRanges","parallel","roxygen2","dplyr","rbenchmark","testthat","rtracklayer",
                       "tools","microbenchmark","measurements","magrittr","doParallel","parallel",
-                      "Cairo","ggplot2","methrix","BSgenome","BSgenome.Hsapiens.UCSC.hg19","usethis",
-                      "BSgenome.Mmusculus.UCSC.mm10","pkgdown","umap","stringi","missMDA","Rtsne","missForest",
+                      "Cairo","ggplot2","methrix","BSgenome","usethis",
+                      "pkgdown","umap","stringi","missMDA","Rtsne","missForest",
                       "impute","profvis",'Melissa','Metrics','SimDesign','bioDist','dbscan','AnnotationHub','mclust',
                       'bsseq','Seurat')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -38,9 +38,9 @@ BiocManager::install("BSgenome.Mmusculus.UCSC.mm10")
 #setwd("D:/Documents/School/Thesis/scMethrix/sample.data/small/")
 
 ## Reference CpG sets
-Hg19_cpgs <- methrix::extract_CPGs(ref_genome = "BSgenome.Hsapiens.UCSC.hg19")
-mm10_cpgs <- methrix::extract_CPGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10")
-mm10_cpgs <- mm10_cpgs$cpgs[,1:3]
+Hg19_cpgs <- extract_CpGs(ref_genome = "BSgenome.Hsapiens.UCSC.hg19")
+Hg38_cpgs <- extract_CpGs(ref_genome = "BSgenome.Hsapiens.UCSC.hg38")
+mm10_cpgs <- extract_CpGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10")
 ref_cpgs <- mm10_cpgs
 rm(mm10_cpgs)
 saveRDS(ref_cpgs, file = "D:/Git/sampleData/ref_cpgs.rds")
@@ -64,6 +64,19 @@ files <- files[1:590]
 
 col_list <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
+scm1 <- load_HDF5_scMethrix("F:/sampleData/Gaiti/1")
+scm2 <- load_HDF5_scMethrix("F:/sampleData/Gaiti/2")
+scm3 <- load_HDF5_scMethrix("F:/sampleData/Gaiti/3")
+
+scm1 <- load_HDF5_scMethrix("D:/Git/sampleData/Gaiti/1")
+scm2 <- load_HDF5_scMethrix("D:/Git/sampleData/Gaiti/2")
+scm3 <- load_HDF5_scMethrix("D:/Git/sampleData/Gaiti/3")
+
+scm <- cbind(scm1,scm2)
+scm <- cbind(scm,scm3)
+
+
+
 #With Coverage
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(tempdir(),"/sse"),ref_cpgs = ref_cpgs, replace=TRUE,
                         chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6, colData = colData, n_threads=0, batch_size = 10)
@@ -71,7 +84,7 @@ saveHDF5SummarizedExperiment(scm.big.h5,dir="D:/Git/sampleData/3samp.h5",replace
 scm.big.h5 <- load_HDF5_scMethrix(dir="D:/Git/sampleData/500.h5")
 scm.big.h5 <- load_HDF5_scMethrix(dir="D:/Git/sampleData/3samp.h5")
 
-scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 0, colData = colData,
+scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 1, colData = colData,
                          chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
 #Without coverage
@@ -98,10 +111,33 @@ pkgdown::build_site()
 saveRDS(colData, file = "colData.rds")
 
 #Psuedo Analysis
+library(AnnotationHub)
 ah = AnnotationHub()
-qhs = query(ah, c("RefSeq", "Mus musculus", "mm10"))
+#qhs = query(ah, c("RefSeq", "Mus musculus", "mm10"))
+qhs = query(ah, c("RefSeq", "Homo sapiens", "hg38"))
 genes = qhs[[1]]
 proms = promoters(genes)
+
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+hg38 <- TxDb.Hsapiens.UCSC.hg38.knownGene
+genes(hg38)
+promoters(hg38)
+
+reg <- reduce(c(genes(hg38),promoters(hg38)))
+
+scm <- cbind(scm1,scm2)
+scm <- cbind(scm,scm3)
+
+
+
+
+
+scm.genic <- subset_scMethrix(scm,region = reg)
+saveHDF5SummarizedExperiment(scm.genic,dir="D:/Git/sampleData/Gaiti/bin.genic")
+
+
+scm.prom <- bin_scMethrix(scm,regions = promoters(hg38),bin_size=10000000,h5_dir = "D:/Git/sampleData/Gaiti/bin.prom")
+scm.gene <- bin_scMethrix(scm,regions = genes(hg38),bin_size=10000000,h5_dir = "D:/Git/sampleData/Gaiti/bin.gene")
 
 scm <- load_HDF5_scMethrix(dir="D:/Git/sampleData/3samp.h5")
 scm <- mask_by_coverage(scm,avg_threshold=2)

@@ -11,7 +11,7 @@ get_region_summary(
   group = NULL,
   n_chunks = 1,
   n_threads = 1,
-  by = c("mean", "median", "max", "min", "sum", "sd"),
+  by = c("mean", "median", "maximum", "minimum", "sum", "sd"),
   overlap_type = c("within", "start", "end", "any", "equal"),
   verbose = TRUE
 )

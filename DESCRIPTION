@@ -41,7 +41,9 @@ Imports:
     mclust,
     bsseq,
     Seurat,
-    S4Vectors
+    S4Vectors,
+    BSgenome,
+    Biostrings
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Suggests: 

@@ -84,10 +84,11 @@ test_that("merge_scMethrix", {
         "Same metadata columns are present"
       ),"There are non-overlapping regions in your datasets.") 
     # Merging colData 
-    scm1 <- scm[,1:2]; scm2 <- scm[,3:4]
-    colData(scm1)$Sample <- colData(scm1)$ID <- 1; colData(scm2)$Sample <- 2
+    scm1 <- scm[,1:2]
+    scm2 <- scm[,3:4]
+    colData(scm1)$Group <- colData(scm1)$ID <- 1; colData(scm2)$Group <- 2
     scm12 = merge_scMethrix(scm1,scm2,by="col")
-    expect_equal(colData(scm12)$Sample,c(rep(1,ncol(scm1)),rep(2,ncol(scm2))))
+    expect_equal(colData(scm12)$Group,c(rep(1,ncol(scm1)),rep(2,ncol(scm2))))
     expect_equal(colData(scm12)$ID,c(rep(1,ncol(scm1)),rep(NA,ncol(scm2))))
     # Merging mcols 
     mcols(scm1)$CpG <- mcols(scm1)$ID <- 1; mcols(scm2)$CpG <- 2
@@ -104,15 +105,16 @@ test_that("merge_scMethrix", {
         "Same metadata columns are present"
       ),"You have different samples in your dataset.") 
     # Merging mcols
-    scm1 <- scm[1:5]; scm2 <- scm[6:10]
+    scm1 <- scm[1:5]
+    scm2 <- scm[6:10]
     mcols(scm1)$CpG <- mcols(scm1)$ID <- 1; mcols(scm2)$CpG <- 2
     scm12 = merge_scMethrix(scm1,scm2,by="row")
     expect_equal(mcols(scm12)$CpG,c(rep(1,nrow(scm1)),rep(2,nrow(scm2))))
     expect_equal(mcols(scm12)$ID,c(rep(1,nrow(scm1)),rep(NA,nrow(scm2))))
-    # Merging colData
-    colData(scm1)$Sample <- colData(scm1)$ID <- 1; colData(scm2)$Sample <- 2
+    # Merging colData 
+    colData(scm1)$Group <- colData(scm1)$ID <- 1; colData(scm2)$Group <- 2
     expect_warning(scm12 <- merge_scMethrix(scm1,scm2,by="row"),"Same metadata columns are present")
-    expect_true(setequal(names(colData(scm12)),c("Sample.1","ID","Sample.2")))
+    expect_true(setequal(names(colData(scm12)),c("Group.1","ID","Group.2")))
     
     # Check overall equality of merged object
     if (is_h5(scm)) {
@@ -239,28 +241,35 @@ test_that("get_matrix", {
  
   expect_error(get_matrix("not scMethrix"),msg.validateExp)
   
-    s <- get_matrix(scm.h5)
-    expect_equal(dim(s),c(n_cpg,n_samples))  
-    expect_is(s,"HDF5Matrix")
+    scm <- get_matrix(scm.h5)
+    expect_equal(dim(scm),c(n_cpg,n_samples))  
+    expect_is(scm,"HDF5Matrix")
     
-    s <- get_matrix(scm.mem)
-    expect_equal(dim(s),c(n_cpg,n_samples))  
-    expect_is(s,"matrix")
+    scm <- get_matrix(scm.mem)
+    expect_equal(dim(scm),c(n_cpg,n_samples))  
+    expect_is(scm,"matrix")
     
     invisible(lapply(list(scm.mem,scm.h5), function(scm) {
       expect_warning(get_matrix(scm,add_loci=FALSE, in_granges = TRUE))
       
-      s <- get_matrix(scm=scm,add_loci=TRUE)
-      expect_equal(dim(s),c(n_cpg,n_samples+3))  
-      expect_is(s,"data.table")
+      mtx <- get_matrix(scm=scm,add_loci=TRUE)
+      expect_equal(dim(mtx),c(n_cpg,n_samples+3))  
+      expect_is(mtx,"data.table")
       
-      s <- get_matrix(scm,add_loci=TRUE, in_granges = TRUE)
+      mtx <- get_matrix(scm,add_loci=TRUE, in_granges = TRUE)
      # expect_equal(seqnames(m)@lengths,c(10,8))
-      expect_equal(dim(mcols(s)),c(n_cpg,n_samples))
-      expect_is(s,"GRanges")
+      expect_equal(dim(mcols(mtx)),c(n_cpg,n_samples))
+      expect_is(mtx,"GRanges")
       
-      s <- get_matrix(scm,order_by_sd = TRUE)
-      expect_false(is.unsorted(rev(rowSds(s,na.rm=TRUE)),na.rm=TRUE))
+      mtx <- get_matrix(scm,order_by_sd = TRUE)
+      expect_false(is.unsorted(rev(rowSds(mtx,na.rm=TRUE)),na.rm=TRUE))
+      
+      mtx <- get_matrix(scm,n_chunks = n_samples,by="col")
+      invisible(lapply(mtx,function(m) expect_equal(dim(m),c(n_cpg,1))))
+      
+      mtx <- get_matrix(scm,n_chunks = n_cpg,by="row")
+      invisible(lapply(mtx,function(m) expect_equal(dim(m),c(1,n_samples))))
+      
   }))
 })
 
@@ -276,6 +285,9 @@ test_that("remove_uncovered", {
     expect_equal(dim(s),c(n_cpg,length(samples)))
     non_na_rows = nrow(score(s)[rowSums(is.na(score(s))) != ncol(s), ])
     expect_equal(dim(remove_uncovered(s)),c(non_na_rows,length(samples)))
+    
+    expect_equal(remove_uncovered(s),remove_uncovered(s,n_threads=2))
+    
   }))
 })
 

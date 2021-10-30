@@ -4,14 +4,21 @@
 \alias{merge_scMethrix}
 \title{Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}}
 \usage{
-merge_scMethrix(scm1 = NULL, scm2 = NULL, by = c("row", "col"))
+merge_scMethrix(
+  scm1 = NULL,
+  scm2 = NULL,
+  by = c("row", "column"),
+  verbose = TRUE
+)
 }
 \arguments{
-\item{scm1}{A \code{\link{scMethrix}} object}
+\item{scm1}{\code{\link{scMethrix}}; A single cell methylation experiment}
 
-\item{scm2}{A \code{\link{scMethrix}} object}
+\item{scm2}{\code{\link{scMethrix}}; A single cell methylation experiment}
 
-\item{by}{Merge by columns or rows}
+\item{by}{string; Merge by 'columns' or 'rows'}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 A merged \code{\link{scMethrix}} object

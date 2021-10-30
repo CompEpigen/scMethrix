@@ -5,14 +5,24 @@
 \title{Sparsity of sample
 inheritParams generic_plot_function}
 \usage{
-plot_sparsity(scm = NULL, type = c("box", "scatter"), pheno = NULL)
+plot_sparsity(
+  scm = NULL,
+  assay = "score",
+  type = c("box", "scatter"),
+  pheno = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
+\item{assay}{string; name of an existing assay. Default = "score"}
+
 \item{type}{string; Choose between 'box' (boxplot) or 'scatter' (scatterplot).}
 
-\item{pheno}{string; phenotype columns}
+\item{pheno}{string; Col name of colData(m). Will be used as a factor to color different groups}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 ggplot2 object

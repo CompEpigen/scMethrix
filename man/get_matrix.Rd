@@ -9,7 +9,9 @@ get_matrix(
   assay = "score",
   add_loci = FALSE,
   in_granges = FALSE,
-  order_by_sd = FALSE
+  order_by_sd = FALSE,
+  n_chunks = 1,
+  by = c("row", "column")
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ get_matrix(
 \item{in_granges}{Do you want the outcome in \code{\link{GRanges}}?}
 
 \item{order_by_sd}{Order output matrix by standard deviation}
+
+\item{n_chunks}{integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1}
+
+\item{by}{string; split the matrix by "row" or "col" if n_chunks != 1}
 }
 \value{
 HDF5Matrix or matrix
@@ -46,4 +52,7 @@ get_matrix(scMethrix_data, add_loci=TRUE, in_granges=TRUE)
 
 # Get methylation data sorted by SD
 get_matrix(scMethrix_data, order_by_sd = TRUE)
+
+# Split the matrix into parts
+get_matrix(scMethrix_data, n_chunks = 4, by="row")
 }

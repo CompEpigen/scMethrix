@@ -4,10 +4,12 @@
 \alias{remove_uncovered}
 \title{Remove loci that are uncovered across all samples}
 \usage{
-remove_uncovered(scm = NULL, verbose = TRUE)
+remove_uncovered(scm = NULL, n_threads = 1, verbose = TRUE)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
+
+\item{n_threads}{integer; Maximum number of parallel instances. Default = 1}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
