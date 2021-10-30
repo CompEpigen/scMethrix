@@ -84,10 +84,11 @@ test_that("merge_scMethrix", {
         "Same metadata columns are present"
       ),"There are non-overlapping regions in your datasets.") 
     # Merging colData 
-    scm1 <- scm[,1:2]; scm2 <- scm[,3:4]
-    colData(scm1)$Sample <- colData(scm1)$ID <- 1; colData(scm2)$Sample <- 2
+    scm1 <- scm[,1:2]
+    scm2 <- scm[,3:4]
+    colData(scm1)$Group <- colData(scm1)$ID <- 1; colData(scm2)$Group <- 2
     scm12 = merge_scMethrix(scm1,scm2,by="col")
-    expect_equal(colData(scm12)$Sample,c(rep(1,ncol(scm1)),rep(2,ncol(scm2))))
+    expect_equal(colData(scm12)$Group,c(rep(1,ncol(scm1)),rep(2,ncol(scm2))))
     expect_equal(colData(scm12)$ID,c(rep(1,ncol(scm1)),rep(NA,ncol(scm2))))
     # Merging mcols 
     mcols(scm1)$CpG <- mcols(scm1)$ID <- 1; mcols(scm2)$CpG <- 2
@@ -104,15 +105,16 @@ test_that("merge_scMethrix", {
         "Same metadata columns are present"
       ),"You have different samples in your dataset.") 
     # Merging mcols
-    scm1 <- scm[1:5]; scm2 <- scm[6:10]
+    scm1 <- scm[1:5]
+    scm2 <- scm[6:10]
     mcols(scm1)$CpG <- mcols(scm1)$ID <- 1; mcols(scm2)$CpG <- 2
     scm12 = merge_scMethrix(scm1,scm2,by="row")
     expect_equal(mcols(scm12)$CpG,c(rep(1,nrow(scm1)),rep(2,nrow(scm2))))
     expect_equal(mcols(scm12)$ID,c(rep(1,nrow(scm1)),rep(NA,nrow(scm2))))
-    # Merging colData
-    colData(scm1)$Sample <- colData(scm1)$ID <- 1; colData(scm2)$Sample <- 2
+    # Merging colData 
+    colData(scm1)$Group <- colData(scm1)$ID <- 1; colData(scm2)$Group <- 2
     expect_warning(scm12 <- merge_scMethrix(scm1,scm2,by="row"),"Same metadata columns are present")
-    expect_true(setequal(names(colData(scm12)),c("Sample.1","ID","Sample.2")))
+    expect_true(setequal(names(colData(scm12)),c("Group.1","ID","Group.2")))
     
     # Check overall equality of merged object
     if (is_h5(scm)) {

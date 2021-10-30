@@ -83,14 +83,14 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #' merge_scMethrix(scMethrix_data[1:5],scMethrix_data[6:10],by="row")
 #' merge_scMethrix(scMethrix_data[,1:2],scMethrix_data[,3:4],by="col")
 #' @export
-merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
+merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col"), verbose = TRUE) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm1)
   .validateExp(scm2)
   by <- .validateArg(by,merge_scMethrix)
 
-  if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.")
+  if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.", call. = FALSE)
   
   #- Function code -----------------------------------------------------------------------------
   names1 = SummarizedExperiment::assayNames(scm1)
@@ -135,10 +135,10 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
   if (by == "row") {
     if (nrow(SummarizedExperiment::colData(scm1)) != nrow(SummarizedExperiment::colData(scm2)) || 
         !all(rownames(scm1@colData) == rownames(scm2@colData))) 
-      stop("You have different samples in your dataset. You need the same samples in your datasets. ")
-    
-    if (length(intersect(granges(scm1, use.names=FALSE, use.mcols=FALSE),granges(scm2, use.names=FALSE, use.mcols=FALSE))) != 0)
-      stop("There are overlapping regions in your datasets. Each object must contain unique regions. ")
+      stop("You have different samples in your dataset. You need the same samples in your datasets.", call. = FALSE)
+
+    if (length(intersect(ranges(scm1),ranges(scm2))) != 0)
+      stop("There are overlapping regions in your datasets. Each object must contain unique regions.", call. = FALSE)
     
     scm <- rbind(scm1, scm2)
     scm <- sort(scm)
@@ -148,14 +148,14 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col")) {
   if (by == "col") {
     
     if (any(rownames(scm1@colData) %in% rownames(scm2@colData))) 
-      stop("You have the same samples in your datasets. You need different samples for this merging.  ")
+      stop("You have the same samples in your datasets. You need different samples for this merging.", call. = FALSE)
     
     
     #if (length(intersect(SummarizedExperiment::rowRanges(scm1),SummarizedExperiment::rowRanges(scm2))) != 
     #    length(SummarizedExperiment::rowRanges(scm1))) 
       
-    if (!identical(granges(scm1, use.names=FALSE, use.mcols=FALSE),granges(scm2, use.names=FALSE, use.mcols=FALSE)))  {
-      stop("There are non-overlapping regions in your datasets. This function only takes identical regions. ")
+    if (!identical(ranges(scm1),ranges(scm2)))  {
+      stop("There are non-overlapping regions in your datasets. This function only takes identical regions.", call. = FALSE)
     }
     
     # Merge sample metadata. Ensure the column names match, fill with NAs if not
@@ -225,7 +225,7 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
   .validateType(verbose,"boolean")
   
   if (!is.null(group) && !(group %in% colnames(scm@colData))){
-    stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."))
+    stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."), call. = FALSE)
   }
   
   if (n_chunks > nrow(scm)) {
