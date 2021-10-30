@@ -150,10 +150,11 @@
     <pre class="usage"><span class='fu'>plot_dim_red</span><span class='op'>(</span>
   <span class='va'>scm</span>,
   <span class='va'>dim_red</span>,
-  col_anno <span class='op'>=</span> <span class='cn'>NULL</span>,
+  color_anno <span class='op'>=</span> <span class='cn'>NULL</span>,
   shape_anno <span class='op'>=</span> <span class='cn'>NULL</span>,
   axis_labels <span class='op'>=</span> <span class='cn'>NULL</span>,
-  show_dp_labels <span class='op'>=</span> <span class='cn'>FALSE</span>
+  show_dp_labels <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -169,7 +170,7 @@
 the X and Y coordinates of the dim. red., with each row being a seperate sample</p></td>
     </tr>
     <tr>
-      <th>col_anno</th>
+      <th>color_anno</th>
       <td><p>string; Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required <code>methrix</code> object</p></td>
     </tr>
     <tr>
@@ -183,6 +184,10 @@ the X and Y coordinates of the dim. red., with each row being a seperate sample<
     <tr>
       <th>show_dp_labels</th>
       <td><p>boolean; Flag to show the labels for dots. Default FALSE</p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>boolean; Flag for outputting function status messages. Default = TRUE</p></td>
     </tr>
     </table>
 

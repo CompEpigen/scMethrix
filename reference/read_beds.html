@@ -152,15 +152,14 @@
   ref_cpgs <span class='op'>=</span> <span class='cn'>NULL</span>,
   colData <span class='op'>=</span> <span class='cn'>NULL</span>,
   genome_name <span class='op'>=</span> <span class='st'>"hg19"</span>,
-  batch_size <span class='op'>=</span> <span class='fl'>20</span>,
-  n_threads <span class='op'>=</span> <span class='fl'>0</span>,
+  batch_size <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Extremes.html'>min</a></span><span class='op'>(</span><span class='fl'>20</span>, <span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>files</span><span class='op'>)</span><span class='op'>)</span>,
+  n_threads <span class='op'>=</span> <span class='fl'>1</span>,
   h5 <span class='op'>=</span> <span class='cn'>FALSE</span>,
   h5_dir <span class='op'>=</span> <span class='cn'>NULL</span>,
   h5_temp <span class='op'>=</span> <span class='cn'>NULL</span>,
   desc <span class='op'>=</span> <span class='cn'>NULL</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>,
   zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  reads <span class='op'>=</span> <span class='cn'>NULL</span>,
   replace <span class='op'>=</span> <span class='cn'>FALSE</span>,
   pipeline <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Custom"</span>, <span class='st'>"Bismark_cov"</span>, <span class='st'>"MethylDackel"</span>, <span class='st'>"MethylcTools"</span>, <span class='st'>"BisSNP"</span>,
     <span class='st'>"BSseeker2_CGmap"</span><span class='op'>)</span>,
@@ -210,7 +209,7 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
     </tr>
     <tr>
       <th>h5_dir</th>
-      <td><p>string; directory to store H5 based object</p></td>
+      <td><p>string; directory to store H5 based object. This can be NULL and the experiment can be manually saved later</p></td>
     </tr>
     <tr>
       <th>h5_temp</th>
@@ -227,10 +226,6 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
     <tr>
       <th>zero_based</th>
       <td><p>boolean; flag for whether the input data is zero-based or not</p></td>
-    </tr>
-    <tr>
-      <th>reads</th>
-      <td><p>data.table; Manual input of reads. Typically used for testing.</p></td>
     </tr>
     <tr>
       <th>replace</th>

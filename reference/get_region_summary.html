@@ -154,7 +154,7 @@
   group <span class='op'>=</span> <span class='cn'>NULL</span>,
   n_chunks <span class='op'>=</span> <span class='fl'>1</span>,
   n_threads <span class='op'>=</span> <span class='fl'>1</span>,
-  by <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"mean"</span>, <span class='st'>"median"</span>, <span class='st'>"max"</span>, <span class='st'>"min"</span>, <span class='st'>"sum"</span>, <span class='st'>"sd"</span><span class='op'>)</span>,
+  by <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"mean"</span>, <span class='st'>"median"</span>, <span class='st'>"maximum"</span>, <span class='st'>"minimum"</span>, <span class='st'>"sum"</span>, <span class='st'>"sd"</span><span class='op'>)</span>,
   overlap_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"within"</span>, <span class='st'>"start"</span>, <span class='st'>"end"</span>, <span class='st'>"any"</span>, <span class='st'>"equal"</span><span class='op'>)</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
@@ -212,7 +212,7 @@
 <span class='fu'>get_region_summary</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,
    regions <span class='op'>=</span> <span class='fu'>GenomicRanges</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html'>GRanges</a></span><span class='op'>(</span>seqnames <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"chr1"</span>,<span class='st'>"chr2"</span><span class='op'>)</span>, ranges <span class='op'>=</span> <span class='fu'>IRanges</span><span class='op'>(</span><span class='fl'>1</span>,<span class='fl'>100000000</span><span class='op'>)</span><span class='op'>)</span>,
    assay <span class='op'>=</span> <span class='st'>'score'</span>, by <span class='op'>=</span> <span class='st'>'mean'</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Generating region summary...</span></div><div class='output co'>#&gt; <span class='message'>Summarizing by average</span></div><div class='output co'>#&gt; <span class='message'>Region summary generating in 0.13s</span></div><div class='output co'>#&gt;     chr start       end n_overlap_CpGs rid        C1        C2     C3        C4
+</div><div class='output co'>#&gt; <span class='message'>Generating region summary...</span></div><div class='output co'>#&gt; <span class='message'>Summarizing by average</span></div><div class='output co'>#&gt; <span class='message'>Region summary generating in 0.15s</span></div><div class='output co'>#&gt;     chr start       end n_overlap_CpGs rid        C1        C2     C3        C4
 #&gt; 1: chr1     1 100000000             67   1 0.7333333 0.7428571 0.7300 0.6710526
 #&gt; 2: chr2     1 100000000             67   2 0.7027027 0.6527778 0.6125 0.5526316</div></pre>
   </div>

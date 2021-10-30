@@ -147,7 +147,7 @@
     <p>Remove loci that are uncovered across all samples</p>
     </div>
 
-    <pre class="usage"><span class='fu'>remove_uncovered</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, verbose <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>remove_uncovered</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, n_threads <span class='op'>=</span> <span class='fl'>1</span>, verbose <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -155,6 +155,10 @@
     <tr>
       <th>scm</th>
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
+    </tr>
+    <tr>
+      <th>n_threads</th>
+      <td><p>integer; Maximum number of parallel instances. Default = 1</p></td>
     </tr>
     <tr>
       <th>verbose</th>

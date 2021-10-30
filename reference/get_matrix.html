@@ -152,7 +152,9 @@
   assay <span class='op'>=</span> <span class='st'>"score"</span>,
   add_loci <span class='op'>=</span> <span class='cn'>FALSE</span>,
   in_granges <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  order_by_sd <span class='op'>=</span> <span class='cn'>FALSE</span>
+  order_by_sd <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  n_chunks <span class='op'>=</span> <span class='fl'>1</span>,
+  by <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"row"</span>, <span class='st'>"column"</span><span class='op'>)</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -177,6 +179,14 @@
     <tr>
       <th>order_by_sd</th>
       <td><p>Order output matrix by standard deviation</p></td>
+    </tr>
+    <tr>
+      <th>n_chunks</th>
+      <td><p>integer; Number of chunks to split the <code><a href='scMethrix-class.html'>scMethrix</a></code> object in case it is very large. Default = 1</p></td>
+    </tr>
+    <tr>
+      <th>by</th>
+      <td><p>string; split the matrix by "row" or "col" if n_chunks != 1</p></td>
     </tr>
     </table>
 
@@ -812,7 +822,307 @@
 #&gt; [283,]  NA  NA 0.0  NA
 #&gt; [284,]  NA  NA 1.0  NA
 #&gt; [285,]  NA  NA  NA 0.0
-#&gt; [286,]  NA  NA  NA 0.0</div></pre>
+#&gt; [286,]  NA  NA  NA 0.0</div><div class='input'>
+<span class='co'># Split the matrix into parts</span>
+<span class='fu'>get_matrix</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, n_chunks <span class='op'>=</span> <span class='fl'>4</span>, by<span class='op'>=</span><span class='st'>"row"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [[1]]
+#&gt;       C1 C2  C3  C4
+#&gt;  [1,]  1  1 1.0  NA
+#&gt;  [2,] NA  1  NA 1.0
+#&gt;  [3,] NA NA 1.0  NA
+#&gt;  [4,] NA  1 1.0 1.0
+#&gt;  [5,]  0 NA 0.0 0.0
+#&gt;  [6,]  1 NA  NA  NA
+#&gt;  [7,] NA  1 1.0  NA
+#&gt;  [8,]  1 NA 1.0 0.0
+#&gt;  [9,] NA  1  NA  NA
+#&gt; [10,]  1  1  NA  NA
+#&gt; [11,] NA  1  NA  NA
+#&gt; [12,] NA  1  NA  NA
+#&gt; [13,]  0  1 0.0  NA
+#&gt; [14,]  1 NA  NA  NA
+#&gt; [15,] NA  1 1.0 0.0
+#&gt; [16,]  1  0 1.0 1.0
+#&gt; [17,]  1  1 1.0  NA
+#&gt; [18,] NA  0 1.0 1.0
+#&gt; [19,]  1  1 1.0  NA
+#&gt; [20,]  1  1 1.0 1.0
+#&gt; [21,]  1  1  NA 1.0
+#&gt; [22,] NA NA 1.0 1.0
+#&gt; [23,] NA NA  NA 1.0
+#&gt; [24,]  1  1 1.0 0.0
+#&gt; [25,]  1 NA 1.0 1.0
+#&gt; [26,]  1 NA 1.0 1.0
+#&gt; [27,]  1 NA 1.0 1.0
+#&gt; [28,]  1  1 1.0  NA
+#&gt; [29,]  0 NA 0.0 0.0
+#&gt; [30,]  1  1 1.0  NA
+#&gt; [31,] NA  0 1.0  NA
+#&gt; [32,] NA NA 1.0  NA
+#&gt; [33,]  1  1 1.0  NA
+#&gt; [34,]  0  0 0.0 0.0
+#&gt; [35,]  1 NA 1.0  NA
+#&gt; [36,]  1  1  NA 0.0
+#&gt; [37,] NA NA 0.0  NA
+#&gt; [38,]  1 NA 0.0 1.0
+#&gt; [39,]  1  1 1.0 1.0
+#&gt; [40,]  0 NA 0.0 0.0
+#&gt; [41,]  1  1 1.0 1.0
+#&gt; [42,] NA NA 1.0 1.0
+#&gt; [43,]  1  1 0.0 0.0
+#&gt; [44,]  1 NA 1.0  NA
+#&gt; [45,]  0 NA  NA  NA
+#&gt; [46,] NA NA 1.0  NA
+#&gt; [47,]  0 NA  NA  NA
+#&gt; [48,]  1 NA 1.0 1.0
+#&gt; [49,]  0  0 0.5 0.0
+#&gt; [50,]  1 NA  NA 1.0
+#&gt; [51,] NA  1  NA 1.0
+#&gt; [52,] NA  1 0.0 0.5
+#&gt; [53,]  0  0 0.0 1.0
+#&gt; [54,]  1  0 1.0 1.0
+#&gt; [55,] NA NA 1.0  NA
+#&gt; [56,]  1  1 0.0 1.0
+#&gt; [57,]  1  0 1.0 1.0
+#&gt; [58,] NA NA 1.0 0.0
+#&gt; [59,]  0  0 0.0 0.0
+#&gt; [60,]  1 NA 1.0 1.0
+#&gt; [61,] NA NA 1.0  NA
+#&gt; [62,]  1 NA  NA  NA
+#&gt; [63,]  0 NA  NA 1.0
+#&gt; [64,]  0 NA 0.0  NA
+#&gt; [65,]  1 NA  NA  NA
+#&gt; [66,]  1 NA 1.0 1.0
+#&gt; [67,] NA  1 1.0  NA
+#&gt; [68,]  1  1 1.0 1.0
+#&gt; [69,] NA NA 1.0 1.0
+#&gt; [70,] NA  1  NA 1.0
+#&gt; [71,] NA NA 1.0 1.0
+#&gt; [72,]  1 NA  NA  NA
+#&gt; 
+#&gt; [[2]]
+#&gt;       C1 C2 C3  C4
+#&gt;  [1,]  0 NA NA 1.0
+#&gt;  [2,]  1  1 NA 1.0
+#&gt;  [3,]  1  1  1 1.0
+#&gt;  [4,] NA NA  1  NA
+#&gt;  [5,]  0 NA NA  NA
+#&gt;  [6,] NA NA  0  NA
+#&gt;  [7,]  1  1 NA  NA
+#&gt;  [8,] NA  0  0 0.0
+#&gt;  [9,] NA NA NA 1.0
+#&gt; [10,] NA NA  1  NA
+#&gt; [11,] NA  1 NA  NA
+#&gt; [12,]  0  0  0 0.0
+#&gt; [13,] NA  0  0 0.0
+#&gt; [14,]  1 NA  1 1.0
+#&gt; [15,]  1  1 NA 1.0
+#&gt; [16,]  0  1  1 0.0
+#&gt; [17,]  1 NA NA 1.0
+#&gt; [18,]  1  0  1 1.0
+#&gt; [19,] NA  1 NA 1.0
+#&gt; [20,]  1 NA  1  NA
+#&gt; [21,]  1  1 NA 1.0
+#&gt; [22,]  0 NA  0  NA
+#&gt; [23,] NA NA NA 0.0
+#&gt; [24,] NA  1  1 1.0
+#&gt; [25,]  1 NA  1 1.0
+#&gt; [26,] NA NA  1 1.0
+#&gt; [27,]  1 NA  1 1.0
+#&gt; [28,] NA  1  1  NA
+#&gt; [29,]  1 NA  1 0.5
+#&gt; [30,]  1 NA  1 1.0
+#&gt; [31,]  1 NA NA 1.0
+#&gt; [32,]  0  0  0 0.0
+#&gt; [33,]  0  0  0  NA
+#&gt; [34,]  1 NA  1 1.0
+#&gt; [35,] NA NA  1 0.0
+#&gt; [36,]  0 NA  0 0.0
+#&gt; [37,]  1  0  1 1.0
+#&gt; [38,] NA NA NA 1.0
+#&gt; [39,] NA NA NA 0.0
+#&gt; [40,]  1  1  1 1.0
+#&gt; [41,]  1  1  1 1.0
+#&gt; [42,]  1  1 NA 0.0
+#&gt; [43,]  1 NA NA  NA
+#&gt; [44,]  1  1  1 1.0
+#&gt; [45,] NA  1  1 1.0
+#&gt; [46,]  0  1  1 1.0
+#&gt; [47,]  0  0 NA  NA
+#&gt; [48,]  0  0  0  NA
+#&gt; [49,] NA NA  1  NA
+#&gt; [50,]  0  1  1 1.0
+#&gt; [51,] NA  1  1 1.0
+#&gt; [52,]  1 NA NA 1.0
+#&gt; [53,] NA NA  1 1.0
+#&gt; [54,]  0  1  0 1.0
+#&gt; [55,]  0  0 NA  NA
+#&gt; [56,]  0  0  0 1.0
+#&gt; [57,]  1  1  1 1.0
+#&gt; [58,]  1  1 NA 1.0
+#&gt; [59,] NA  1  0 1.0
+#&gt; [60,] NA  1  1 1.0
+#&gt; [61,]  1  1 NA 1.0
+#&gt; [62,] NA NA  1 1.0
+#&gt; [63,]  0  0 NA  NA
+#&gt; [64,]  1 NA  1 1.0
+#&gt; [65,]  1 NA  1  NA
+#&gt; [66,] NA  1  0  NA
+#&gt; [67,]  1  1  1 1.0
+#&gt; [68,] NA  1  1  NA
+#&gt; [69,] NA NA NA 1.0
+#&gt; [70,] NA  1 NA 1.0
+#&gt; [71,]  1 NA  1 1.0
+#&gt; [72,] NA NA  0  NA
+#&gt; 
+#&gt; [[3]]
+#&gt;        C1  C2  C3 C4
+#&gt;  [1,]  NA 1.0  NA NA
+#&gt;  [2,]  NA 0.0  NA  0
+#&gt;  [3,] 0.0 1.0  NA NA
+#&gt;  [4,] 1.0  NA  NA NA
+#&gt;  [5,] 1.0  NA  NA NA
+#&gt;  [6,] 0.5 0.0  NA  0
+#&gt;  [7,] 1.0 0.0  NA  0
+#&gt;  [8,] 0.5  NA 1.0 NA
+#&gt;  [9,] 1.0  NA  NA NA
+#&gt; [10,] 1.0  NA 1.0  1
+#&gt; [11,] 1.0  NA  NA NA
+#&gt; [12,]  NA 1.0  NA NA
+#&gt; [13,] 0.0  NA  NA NA
+#&gt; [14,]  NA  NA 1.0  1
+#&gt; [15,] 1.0 1.0  NA  1
+#&gt; [16,]  NA 1.0 0.5  0
+#&gt; [17,] 1.0 1.0  NA  1
+#&gt; [18,] 1.0  NA 1.0 NA
+#&gt; [19,] 1.0 1.0 1.0 NA
+#&gt; [20,]  NA  NA 1.0 NA
+#&gt; [21,] 1.0 1.0 1.0  1
+#&gt; [22,] 1.0 1.0 1.0  1
+#&gt; [23,]  NA 0.0  NA  0
+#&gt; [24,]  NA  NA 0.0 NA
+#&gt; [25,]  NA  NA 0.0 NA
+#&gt; [26,]  NA  NA 1.0 NA
+#&gt; [27,] 0.0 0.0 0.0 NA
+#&gt; [28,] 1.0 1.0 1.0  1
+#&gt; [29,] 1.0  NA 1.0  1
+#&gt; [30,] 1.0  NA  NA NA
+#&gt; [31,] 1.0  NA 1.0 NA
+#&gt; [32,]  NA  NA 0.0 NA
+#&gt; [33,]  NA 0.0  NA  0
+#&gt; [34,] 1.0 0.0 0.0  0
+#&gt; [35,]  NA 1.0  NA NA
+#&gt; [36,] 1.0 1.0 1.0  1
+#&gt; [37,] 0.0  NA  NA NA
+#&gt; [38,]  NA 0.0  NA NA
+#&gt; [39,] 0.0  NA 0.0  0
+#&gt; [40,]  NA 1.0 1.0  1
+#&gt; [41,]  NA 1.0 1.0 NA
+#&gt; [42,]  NA 1.0  NA  1
+#&gt; [43,] 1.0  NA  NA NA
+#&gt; [44,]  NA 1.0  NA  0
+#&gt; [45,]  NA  NA  NA  1
+#&gt; [46,] 1.0 0.5 0.0  0
+#&gt; [47,]  NA 1.0  NA  1
+#&gt; [48,]  NA 1.0  NA  1
+#&gt; [49,]  NA  NA 1.0 NA
+#&gt; [50,]  NA  NA  NA  1
+#&gt; [51,]  NA  NA  NA  1
+#&gt; [52,] 0.0 0.0 0.0  0
+#&gt; [53,]  NA  NA 0.0 NA
+#&gt; [54,] 1.0  NA 0.0  0
+#&gt; [55,]  NA  NA  NA  1
+#&gt; [56,]  NA  NA 0.0  0
+#&gt; [57,] 0.0 0.0 0.0  0
+#&gt; [58,] 0.0 0.0 0.0  0
+#&gt; [59,] 0.0 0.0 0.0  0
+#&gt; [60,] 0.0 0.0 0.0  0
+#&gt; [61,]  NA  NA 1.0 NA
+#&gt; [62,]  NA 1.0  NA NA
+#&gt; [63,]  NA 1.0 1.0 NA
+#&gt; [64,] 1.0  NA  NA  1
+#&gt; [65,] 1.0  NA 1.0 NA
+#&gt; [66,] 1.0 1.0 1.0 NA
+#&gt; [67,]  NA 1.0 1.0  1
+#&gt; [68,] 0.0 1.0 1.0  0
+#&gt; [69,]  NA 1.0 1.0  1
+#&gt; [70,] 1.0 1.0 1.0  1
+#&gt; [71,]  NA 1.0  NA NA
+#&gt; 
+#&gt; [[4]]
+#&gt;        C1  C2 C3  C4
+#&gt;  [1,] 0.0 0.0 NA 0.0
+#&gt;  [2,] 1.0 1.0 NA  NA
+#&gt;  [3,] 1.0  NA NA 0.0
+#&gt;  [4,]  NA 1.0 NA  NA
+#&gt;  [5,]  NA  NA  1 0.5
+#&gt;  [6,] 1.0  NA NA 1.0
+#&gt;  [7,]  NA  NA  1  NA
+#&gt;  [8,]  NA 1.0 NA  NA
+#&gt;  [9,]  NA 1.0  0 1.0
+#&gt; [10,] 1.0 1.0  1 1.0
+#&gt; [11,] 1.0 1.0 NA 1.0
+#&gt; [12,] 0.0  NA  0  NA
+#&gt; [13,] 1.0 1.0  1  NA
+#&gt; [14,] 0.0  NA NA  NA
+#&gt; [15,] 1.0 1.0 NA 0.0
+#&gt; [16,] 1.0 1.0  1  NA
+#&gt; [17,]  NA 1.0 NA 1.0
+#&gt; [18,] 1.0 0.0  1 1.0
+#&gt; [19,] 1.0 1.0  1  NA
+#&gt; [20,] 1.0 1.0  1 1.0
+#&gt; [21,]  NA  NA  1 1.0
+#&gt; [22,] 1.0  NA NA  NA
+#&gt; [23,] 1.0 1.0 NA 1.0
+#&gt; [24,] 1.0 1.0  0 0.0
+#&gt; [25,] 1.0 1.0  0 0.0
+#&gt; [26,] 1.0 1.0  1 1.0
+#&gt; [27,] 0.0 1.0 NA 0.0
+#&gt; [28,]  NA 1.0  1 0.0
+#&gt; [29,] 1.0  NA  1 1.0
+#&gt; [30,] 1.0 0.0  0 0.0
+#&gt; [31,]  NA  NA  1 1.0
+#&gt; [32,] 1.0 0.0  1 0.0
+#&gt; [33,]  NA  NA  1 1.0
+#&gt; [34,]  NA  NA NA 1.0
+#&gt; [35,] 0.0  NA  1  NA
+#&gt; [36,]  NA 1.0  1  NA
+#&gt; [37,] 1.0 1.0  1  NA
+#&gt; [38,] 1.0 1.0 NA  NA
+#&gt; [39,] 1.0  NA NA  NA
+#&gt; [40,] 1.0  NA  1  NA
+#&gt; [41,] 0.0 1.0  1  NA
+#&gt; [42,] 1.0 1.0  1  NA
+#&gt; [43,]  NA  NA  0  NA
+#&gt; [44,] 1.0 1.0  1  NA
+#&gt; [45,]  NA 1.0  1  NA
+#&gt; [46,] 0.0 0.0  1 0.0
+#&gt; [47,]  NA 1.0  1 1.0
+#&gt; [48,] 1.0 1.0  1 1.0
+#&gt; [49,] 1.0  NA  1 1.0
+#&gt; [50,] 1.0  NA  1 1.0
+#&gt; [51,] 0.0  NA NA 1.0
+#&gt; [52,] 1.0 1.0 NA  NA
+#&gt; [53,]  NA  NA  1  NA
+#&gt; [54,]  NA  NA NA 0.0
+#&gt; [55,] 0.0  NA NA 1.0
+#&gt; [56,] 0.0 1.0 NA 1.0
+#&gt; [57,] 1.0 1.0 NA 1.0
+#&gt; [58,] 1.0 1.0  0  NA
+#&gt; [59,] 0.5 0.5  1  NA
+#&gt; [60,]  NA  NA  0 0.0
+#&gt; [61,]  NA 1.0 NA 0.0
+#&gt; [62,] 1.0 1.0 NA 1.0
+#&gt; [63,] 0.0  NA  0 0.0
+#&gt; [64,] 1.0 1.0  1 1.0
+#&gt; [65,]  NA  NA NA 0.0
+#&gt; [66,] 0.0 0.0  0 0.0
+#&gt; [67,] 0.0 0.0  0 0.0
+#&gt; [68,] 0.0 0.0  0 0.0
+#&gt; [69,] 0.0 0.0  0 0.0
+#&gt; [70,] 0.0 0.0  0 0.0
+#&gt; [71,] 0.0 0.0  0 0.0
+#&gt; </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
