@@ -7,10 +7,11 @@
 plot_dim_red(
   scm,
   dim_red,
-  col_anno = NULL,
+  color_anno = NULL,
   shape_anno = NULL,
   axis_labels = NULL,
-  show_dp_labels = FALSE
+  show_dp_labels = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -19,13 +20,15 @@ plot_dim_red(
 \item{dim_red}{string; name of adimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
 the X and Y coordinates of the dim. red., with each row being a seperate sample}
 
-\item{col_anno}{string; Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object}
+\item{color_anno}{string; Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object}
 
 \item{shape_anno}{string; Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object}
 
 \item{axis_labels}{list of strings; A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired}
 
 \item{show_dp_labels}{boolean; Flag to show the labels for dots. Default FALSE}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 ggplot2 object

@@ -73,21 +73,22 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #'       - Experiment metadata (\code{metadata()}) will attempt to be merged. Overlapping, non-identical elements will be appended with `.1` and `.2`.
 #'  
 #'    Custom experiment metadata can manually be added via \code{metadata() <-}, or to rowRanges via \code{mcols() <-}.
-#' 
-#' @param scm1 A \code{\link{scMethrix}} object
-#' @param scm2 A \code{\link{scMethrix}} object
-#' @param by Merge by columns or rows
+#' @inheritParams generic_scMethrix_function
+#' @param scm1 \code{\link{scMethrix}}; A single cell methylation experiment
+#' @param scm2 \code{\link{scMethrix}}; A single cell methylation experiment
+#' @param by string; Merge by 'columns' or 'rows'
 #' @return A merged \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
 #' merge_scMethrix(scMethrix_data[1:5],scMethrix_data[6:10],by="row")
 #' merge_scMethrix(scMethrix_data[,1:2],scMethrix_data[,3:4],by="col")
 #' @export
-merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col"), verbose = TRUE) {
+merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "column"), verbose = TRUE) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm1)
   .validateExp(scm2)
+  .validateType(verbose,"boolean")
   by <- .validateArg(by,merge_scMethrix)
 
   if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.", call. = FALSE)
@@ -107,8 +108,12 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col"), verb
   } 
   
   # Fix duplicate names in metadata, append if there are common elements that have different values
-  if (by == "row") slots <- c(S4Vectors::metadata,colData,int_colData)
-  if (by == "col") slots <- c(S4Vectors::metadata,mcols,elementMetadata,int_elementMetadata)
+  if (by == "row") {
+    slots <- c(S4Vectors::metadata,colData,int_colData)
+  }
+  else { 
+    slots <- c(S4Vectors::metadata,mcols,elementMetadata,int_elementMetadata)
+  }
 
   invisible(lapply(slots, function(op) {
 
@@ -142,11 +147,9 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col"), verb
     
     scm <- rbind(scm1, scm2)
     scm <- sort(scm)
-  }
+  } else {
   
   # Merge by col
-  if (by == "col") {
-    
     if (any(rownames(scm1@colData) %in% rownames(scm2@colData))) 
       stop("You have the same samples in your datasets. You need different samples for this merging.", call. = FALSE)
     
@@ -210,7 +213,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "col"), verb
 #'    assay = 'score', by = 'mean')
 #' @export
 get_region_summary = function (scm = NULL, assay="score", regions = NULL, group = NULL, n_chunks=1, 
-                               n_threads = 1, by = c('mean', 'median', 'max', 'min', 'sum', 'sd'), 
+                               n_threads = 1, by = c('mean', 'median', 'maximum', 'minimum', 'sum', 'sd'), 
                                overlap_type = c("within", "start", "end", "any", "equal"), verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
@@ -313,12 +316,12 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
   } else if (by == "median") {
     message("Summarizing by median")
     output = dat[, lapply(.SD, median, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))]
-  } else if (by == "max") {
+  } else if (by == "maximum") {
     message("Summarizing by maximum")
     output = suppressWarnings(
       dat[, lapply(.SD, max, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))])
     for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
-  } else if (by == "min") {
+  } else if (by == "mininum") {
     message("Summarizing by minimum")
     output = suppressWarnings(
       dat[, lapply(.SD, min, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))])
@@ -374,7 +377,7 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
 #' get_matrix(scMethrix_data, n_chunks = 4, by="row")
 #' @export
 #--------------------------------------------------------------------------------------------------------------------------
-get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges=FALSE, order_by_sd=FALSE, n_chunks = 1, by=c("row","col")) {
+get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges=FALSE, order_by_sd=FALSE, n_chunks = 1, by=c("row","column")) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -689,6 +692,8 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' @details Calculate descriptive statistics (mean, median, SD) either by sample or \code{per_chr}
 #' @inheritParams generic_scMethrix_function
 #' @param per_chr boolean; Estimate stats per chromosome. Default TRUE
+#' @param ignore_chr string; list of chromosomes to ignore
+#' @param ignore_samples string; list of samples to ignore
 #' @examples
 #' data('scMethrix_data')
 #' 
@@ -705,10 +710,11 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE, 
   .validateExp(scm)  
   assay <- .validateAssay(scm,assay)
   .validateType(per_chr,"boolean")
+  .validateType(verbose,"boolean")
   .validateType(ignore_chr,c("string","null"))
   .validateType(ignore_samples,c("string","null"))
     
-  x <- NULL
+  Chr <- Sample_Name <- x <- NULL
 
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Getting descriptive statistics...",start_time())

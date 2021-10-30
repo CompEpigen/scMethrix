@@ -7,7 +7,7 @@
 read_index(
   files,
   col_list,
-  n_threads = 0,
+  n_threads = 1,
   zero_based = FALSE,
   batch_size = 200,
   verbose = TRUE

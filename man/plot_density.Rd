@@ -6,25 +6,31 @@
 \usage{
 plot_density(
   scm = NULL,
+  assay = "score",
   regions = NULL,
   n_cpgs = 25000,
   pheno = NULL,
   col_palette = "RdYlGn",
-  show_legend = TRUE
+  show_legend = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
+\item{assay}{string; name of an existing assay. Default = "score"}
+
 \item{regions}{Granges; genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
 
-\item{n_cpgs}{integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.}
+\item{n_cpgs}{integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive. The seed will be set to \code{n_cpgs} for consistency.}
 
 \item{pheno}{string; Col name of colData(m). Will be used as a factor to color different groups}
 
 \item{col_palette}{string; Name of the RColorBrewer palette to use for plotting.}
 
 \item{show_legend}{boolean; Display the legend on the plot}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 ggplot2 object

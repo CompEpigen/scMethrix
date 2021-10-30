@@ -54,9 +54,6 @@ invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   })
   
   test_that("plot_dim_red", {
-
-    expect_error(plot_dim_red("not scMethrix"),msg.validateExp)
-    
     invisible(lapply(list("PCA","tSNE","UMAP"), function(type) {
     
       scm.dimred <- dim_red_scMethrix(scm,type = type, verbose = FALSE) 

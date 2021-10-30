@@ -45,7 +45,7 @@
 
 read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = min(20,length(files)), n_threads = 1, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE,
-                      zero_based = FALSE, reads = NULL, replace = FALSE, 
+                      zero_based = FALSE, replace = FALSE, 
                       pipeline = c("Custom","Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"),
                       stranded = FALSE, strand_collapse = FALSE, chr_idx = NULL, start_idx = NULL, end_idx = NULL, beta_idx = NULL,
                       M_idx = NULL, U_idx = NULL, strand_idx = NULL, cov_idx = NULL) {

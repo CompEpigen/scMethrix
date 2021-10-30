@@ -4,16 +4,30 @@
 \alias{prepare_plot_data}
 \title{Format \code{\link{scMethrix}} matrix to long form data for plotting}
 \usage{
-prepare_plot_data(scm = NULL, regions = NULL, n_cpgs = 25000, pheno = NULL)
+prepare_plot_data(
+  scm = NULL,
+  assay = "score",
+  regions = NULL,
+  n_cpgs = 25000,
+  pheno = NULL,
+  verbose = TRUE,
+  na.rm = T
+)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
+\item{assay}{string; name of an existing assay. Default = "score"}
+
 \item{regions}{Granges; genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
 
-\item{n_cpgs}{integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive.}
+\item{n_cpgs}{integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive. The seed will be set to \code{n_cpgs} for consistency.}
 
 \item{pheno}{string; Col name of colData(m). Will be used as a factor to color different groups}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
+
+\item{na.rm}{boolean; remove NA values from the output}
 }
 \value{
 'Long' matrix for methylation

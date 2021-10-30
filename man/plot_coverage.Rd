@@ -8,11 +8,11 @@ plot_coverage(
   scm = NULL,
   type = c("histogram", "density"),
   pheno = NULL,
-  perGroup = FALSE,
-  lim = 100,
-  size.lim = 1e+06,
+  max_cov = 100,
+  obs_lim = 1e+06,
   col_palette = "RdYlGn",
-  show_legend = TRUE
+  show_legend = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -22,16 +22,16 @@ plot_coverage(
 
 \item{pheno}{string; Col name of colData(m). Will be used as a factor to color different groups}
 
-\item{perGroup}{boolean; Color the plots in a sample-wise manner?}
+\item{max_cov}{integer; Maximum coverage value to be plotted.}
 
-\item{lim}{integer; Maximum coverage value to be plotted.}
-
-\item{size.lim}{integer; The maximum number of observarions (sites*samples) to use. If the dataset is larger that this,
+\item{obs_lim}{integer; The maximum number of observations (sites*samples) to use. If the dataset is larger that this,
 random sites will be selected from the genome.}
 
 \item{col_palette}{string; Name of the RColorBrewer palette to use for plotting.}
 
 \item{show_legend}{boolean; Display the legend on the plot}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 ggplot2 object

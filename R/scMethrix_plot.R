@@ -4,6 +4,7 @@
 #' @param n_cpgs integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive. The seed will be set to \code{n_cpgs} for consistency.
 #' @param regions Granges; genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param pheno string; Col name of colData(m). Will be used as a factor to color different groups
+#' @param na.rm boolean; remove NA values from the output
 #' @return 'Long' matrix for methylation
 #' @export
 prepare_plot_data <- function(scm = NULL, assay="score", regions = NULL, n_cpgs = 25000, pheno = NULL, verbose = TRUE, na.rm = T){
@@ -14,7 +15,10 @@ prepare_plot_data <- function(scm = NULL, assay="score", regions = NULL, n_cpgs 
   .validateType(regions,c("granges","null"))
   .validateType(n_cpgs,"integer")
   .validateType(pheno,c("string","null"))
+  .validateType(na.rm,"boolean")
 
+  Pheno <- Sample <- Value <- NULL
+  
   #- Function code -----------------------------------------------------------------------------
   if (!is.null(regions)) {
     meth_sub <- subset_scMethrix(scm = scm, regions = regions)
@@ -41,6 +45,8 @@ prepare_plot_data <- function(scm = NULL, assay="score", regions = NULL, n_cpgs 
   data.table::setDT(x = meth_sub)
   plot.data <- suppressWarnings(data.table::melt(meth_sub))
   
+  colnames(plot.data) <- c("Sample", "Value")
+  
   if (!is.null(pheno)) {
     if (pheno %in% colnames(colData(scm))) {
       #colnames(meth_sub) <- as.character(scm@colData[, pheno])
@@ -51,11 +57,9 @@ prepare_plot_data <- function(scm = NULL, assay="score", regions = NULL, n_cpgs 
       stop("Please provide a valid phenotype annotation column.")
     }
   } else {
-    plot.data[, `:=`(Pheno, variable)]
+    plot.data[, `:=`(Pheno, Sample)]
   }
-  
-  colnames(plot.data) <- c("Sample", "Value", "Pheno")
-  
+
   if(na.rm) plot.data <- plot.data[!is.na(Value)]
   
   gc(verbose = FALSE)
@@ -113,7 +117,7 @@ plot_violin <- function(scm = NULL, assay="score", regions = NULL, n_cpgs = 2500
                         col_palette = "RdYlGn", show_legend = TRUE, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
-  Sample <- Value <- NULL
+  Sample <- Value <- Pheno <- NULL
   
   .validateExp(scm)
   .validateAssay(scm,assay)
@@ -155,7 +159,7 @@ plot_density <- function(scm = NULL, assay = "score", regions = NULL, n_cpgs = 2
                          col_palette = "RdYlGn", show_legend = TRUE, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
-  variable <- Meth <- NULL
+  Value <- Pheno <- NULL
   
   .validateExp(scm)
   .validateAssay(scm,assay)
@@ -188,7 +192,6 @@ plot_density <- function(scm = NULL, assay = "score", regions = NULL, n_cpgs = 2
 #--------------------------------------------------------------------------------------------------------------------------
 #' Coverage QC Plots
 #' @inheritParams plot_violin
-#' @param perGroup boolean; Color the plots in a sample-wise manner?
 #' @param max_cov integer; Maximum coverage value to be plotted.
 #' @param type string; Choose between 'histogram' (histogram) or 'density' (density plot).
 #' @param obs_lim integer; The maximum number of observations (sites*samples) to use. If the dataset is larger that this,
@@ -210,12 +213,12 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   .validateType(col_palette,"string")
   .validateType(show_legend,"boolean")
   
-  value <- variable <- NULL
+  Value <- Sample <- Pheno <- NULL
   
   colors_palette <- get_palette(ncol(scm), col_palette)
   
   #- Function code -----------------------------------------------------------------------------
-  if (product(dim(scm)) > obs_lim) {
+  if (matrixStats::product(dim(scm)) > obs_lim) {
     message("The dataset is bigger than the size limit. A random subset of the object will be used that contains ~",
             obs_lim, " observations.")
     n_rows <- trunc(obs_lim/ncol(scm))
@@ -274,9 +277,8 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
 #--------------------------------------------------------------------------------------------------------------------------
 #' Sparsity of sample
 #' inheritParams generic_plot_function
-#' @inheritParams generic_scMethrix_function
+#' @inheritParams plot_violin
 #' @param type string; Choose between 'box' (boxplot) or 'scatter' (scatterplot).
-#' @param pheno string; phenotype columns
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
@@ -319,13 +321,14 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("box", "scatter"
 #--------------------------------------------------------------------------------------------------------------------------
 #' Plot descriptive statistics
 #' @details plot descriptive statistics results from \code{\link{get_stats}}
+#' @inheritParams plot_violin
 #' @param scm scMethrix; \code{\link{get_stats}} will be run for the specified assay
-#' @param assay string; Which assay to get the stats of. Default "score"
 #' @param stat string; Can be \code{mean} or \code{median}. Default \code{mean}
 #' @param ignore_chr string; Chromsomes to ignore. If NULL, all chromosome will be used. Default \code{NULL}
 #' @param ignore_samples list of strings; Samples to ignore.  If NULL, all samples will be used. Default \code{NULL}
 #' @param n_col integer; number of columns. Passed to `facet_wrap`
 #' @param n_row integer; number of rows. Passed to `facet_wrap`
+#' @param per_chr boolean; plot per chromosome
 #' @return ggplot2 object
 #' @seealso \code{\link{get_stats}}
 #' @examples
@@ -440,9 +443,9 @@ plot_imap <- function(scm) {
 #' @importFrom graphics par mtext lines axis legend title
 #' @export
 plot_dim_red <- function(scm, dim_red, color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
-  
+
   #- Input Validation --------------------------------------------------------------------------
-  X <- Y <- Color <- Shape <- row_names <- color <- shape <- NULL
+  X <- Y <- Color <- Shape <- color <- shape <- Sample <- row_names <- NULL
   
   .validateExp(scm)
   .validateType(dim_red,"string")
@@ -466,7 +469,7 @@ plot_dim_red <- function(scm, dim_red, color_anno = NULL, shape_anno = NULL, axi
   #- Function code -----------------------------------------------------------------------------
   if (!is.null(color_anno)) {
     if (color_anno  %in% colnames(colData(scm))) {
-      dim_red$Color <- as.factor(unlist(as.data.table(colData(scm))[,..color_anno])) #TODO: make colData a data.table
+      dim_red$Color <- as.factor(unlist(as.data.table(colData(scm))[,color_anno, with=FALSE])) #TODO: make colData a data.table
       colors <- scale_color_manual(values= get_palette(length(unique(dim_red$Color)),col_palette = "Dark2"))
     } else {
       stop(paste0(color_anno, " not found in provided scMethrix object"))
@@ -475,7 +478,7 @@ plot_dim_red <- function(scm, dim_red, color_anno = NULL, shape_anno = NULL, axi
     
   if (!is.null(shape_anno)) {
     if (shape_anno %in% colnames(colData(scm))) {
-      dim_red$Shape <- as.factor(unlist(as.data.table(colData(scm))[,..shape_anno])) #TODO: make colData a data.table
+      dim_red$Shape <- as.factor(unlist(as.data.table(colData(scm))[,shape_anno, with=FALSE])) #TODO: make colData a data.table
       shapes <- scale_shape_manual(values = get_shape(length(unique(dim_red$Shape))))
     } else {
       stop(paste0(shape_anno, " not found in provided scMethrix object"))
