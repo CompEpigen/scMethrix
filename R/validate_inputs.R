@@ -265,7 +265,7 @@
     
     for (condition in list(...)) {
       if (!(eval(parse(text=paste0(value,condition))))) {
-        stop ("Invalid value: '",substitute(value)," = ",value,"'. Must fit condition: ",substitute(value),condition)
+        stop ("Invalid value: '",substitute(value)," = ",value,"'. Must fit condition: ",substitute(value)," ",condition, call. = FALSE)
       }
     }
   }

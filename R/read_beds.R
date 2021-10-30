@@ -57,8 +57,8 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   #.validateType(colData,"dataframe")
   .validateType(genome_name,"string")
   .validateType(batch_size,"integer")
-  #.validateValue(batch_size,">= 1"," <= length(files)")
-  batch_size <- max(min(batch_size,length(files)),1)
+  .validateValue(batch_size,"> 1",paste("<=", length(files)))
+  #batch_size <- max(min(batch_size,length(files)),1)
   n_threads <- .validateThreads(n_threads)
   .validateType(h5,"boolean")
   if (h5) .validateType(h5_dir,c("string","null"))
@@ -616,8 +616,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
                                            spacings = c(dimension, length(files[[1]]))) 
   } else {
     files <- split_vector(files,size = ceiling(batch_size/n_threads))
-    grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(unlist(files))),
-                                           spacings = c(dimension, length(files[[1]]))) 
+    grid <- DelayedArray::ArbitraryArrayGrid(list(dimension, cumsum(lengths(files)))) 
     cl <- parallel::makeCluster(n_threads)  
     doParallel::registerDoParallel(cl)  
     on.exit(parallel::stopCluster(cl))
