@@ -73,6 +73,8 @@ setMethod(f = "sampleNames", signature = "scMethrix", definition = function(obje
           row.names(colData(object))}
 )
 
+utils::globalVariables(c("sampleNames")) #TODO: find out why this is necessary
+
 # lociNames <- function(x) {
 #           row.names(rowData(x))
 # }

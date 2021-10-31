@@ -9,15 +9,14 @@ read_beds(
   ref_cpgs = NULL,
   colData = NULL,
   genome_name = "hg19",
-  batch_size = 20,
-  n_threads = 0,
+  batch_size = min(20, length(files)),
+  n_threads = 1,
   h5 = FALSE,
   h5_dir = NULL,
   h5_temp = NULL,
   desc = NULL,
   verbose = TRUE,
   zero_based = FALSE,
-  reads = NULL,
   replace = FALSE,
   pipeline = c("Custom", "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP",
     "BSseeker2_CGmap"),
@@ -49,7 +48,7 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 
 \item{h5}{boolean; Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}}
 
-\item{h5_dir}{string; directory to store H5 based object}
+\item{h5_dir}{string; directory to store H5 based object. This can be NULL and the experiment can be manually saved later}
 
 \item{h5_temp}{string; temporary directory to store hdf5}
 
@@ -58,8 +57,6 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 \item{verbose}{boolean; flag to output messages or not.}
 
 \item{zero_based}{boolean; flag for whether the input data is zero-based or not}
-
-\item{reads}{data.table; Manual input of reads. Typically used for testing.}
 
 \item{replace}{boolean; flag for whether to delete the contents of h5_dir before saving}
 

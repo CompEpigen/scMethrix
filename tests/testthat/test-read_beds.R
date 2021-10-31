@@ -27,7 +27,7 @@ test_that("read_bed - Input errors", {
 
 test_that("read_bed - HDF5, no coverage", {
   
-  expect_error(read_beds(files,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, h5=TRUE,h5_dir=NULL))
+  #expect_error(read_beds(files,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, h5=TRUE,h5_dir=NULL))
   
   path <- paste0(h5_dir,"/HDF5mem")
   unlink(path, recursive = TRUE)
@@ -49,9 +49,9 @@ test_that("read_bed - HDF5, no coverage", {
 
 test_that("read_bed - HDF5, with coverage", {
   
-  expect_error(read_beds(files,h5=TRUE,h5_dir=NULL,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5),
-               msg.validateType)
-  
+  # expect_error(read_beds(files,h5=TRUE,h5_dir=NULL,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5),
+  #              msg.validateType)
+  # 
   path <- paste0(h5_dir,"/HDF5mem")
   unlink(path, recursive = TRUE)
   suppressWarnings(dir.create(path,recursive=TRUE))
@@ -120,21 +120,18 @@ test_that("read_bed - HDF5 and in-memory equivalence, with coverage", {
 })
 
 test_that("read_bed - threaded", {
-  
-  scm <- lapply(c(0,2), function(x) read_beds(files,h5=FALSE,n_threads = x, chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5))
-  expect_equal(dim(scm[[1]]),c(n_cpg,4))
-  expect_equal(scm[[1]],scm[[2]])
-  
-  scm <- lapply(c(0,2), function(x) read_beds(files,h5=FALSE,n_threads = x,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5))
-  expect_equal(dim(scm[[1]]),c(n_cpg,4))
-  expect_equal(scm[[1]],scm[[2]])
-  
-  # scm <- lapply(c(0,2), function(x) read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE,n_threads = x))
-  # expect_equal(dim(scm[[1]]),c(100,4))
-  # expect_equal(scm[[1]],scm[[2]])
-  # 
-  # scm <- lapply(c(0,2), function(x) read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE,cov_idx=5,n_threads = x))
-  # expect_equal(dim(scm[[1]]),c(100,4))
-  # expect_equal(scm[[1]],scm[[2]])
 
+  path <- paste0(h5_dir,"threaded")
+  
+    scm <- lapply(c(0,2), function(x) read_beds(files,h5=FALSE,n_threads = x, chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5))
+    expect_equal(dim(scm[[1]]),c(n_cpg,4))
+    expect_equal(scm[[1]],scm[[2]])
+    
+    scm1 <- read_beds(files,h5=TRUE,h5_dir=paste0(h5_dir,"1"),replace=TRUE,n_threads = 1,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
+    scm2 <- read_beds(files,h5=TRUE,h5_dir=paste0(h5_dir,"2"),replace=TRUE,n_threads = 2,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
+    expect_equal(dim(scm[[1]]),c(n_cpg,4))
+    expect_equal(as.matrix(score(scm[[1]])),as.matrix(score(scm[[2]])))
+    expect_equal(as.matrix(counts(scm[[1]])),as.matrix(counts(scm[[2]])))
+    expect_equal(metadata(scm[[1]]),metadata(scm[[2]]))
+  
 })

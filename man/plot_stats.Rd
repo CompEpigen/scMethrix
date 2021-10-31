@@ -8,26 +8,35 @@ plot_stats(
   scm,
   assay = "score",
   stat = c("mean", "median"),
+  per_chr = FALSE,
   ignore_chr = NULL,
-  samples = NULL,
+  ignore_samples = NULL,
   n_col = NULL,
-  n_row = NULL
+  n_row = NULL,
+  pheno = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
 \item{scm}{scMethrix; \code{\link{get_stats}} will be run for the specified assay}
 
-\item{assay}{string; Which assay to get the stats of. Default "score"}
+\item{assay}{string; name of an existing assay. Default = "score"}
 
 \item{stat}{string; Can be \code{mean} or \code{median}. Default \code{mean}}
 
+\item{per_chr}{boolean; plot per chromosome}
+
 \item{ignore_chr}{string; Chromsomes to ignore. If NULL, all chromosome will be used. Default \code{NULL}}
 
-\item{samples}{list of strings; Samples to ignore.  If NULL, all samples will be used. Default \code{NULL}}
+\item{ignore_samples}{list of strings; Samples to ignore.  If NULL, all samples will be used. Default \code{NULL}}
 
 \item{n_col}{integer; number of columns. Passed to \code{facet_wrap}}
 
 \item{n_row}{integer; number of rows. Passed to \code{facet_wrap}}
+
+\item{pheno}{string; Col name of colData(m). Will be used as a factor to color different groups}
+
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
 \value{
 ggplot2 object

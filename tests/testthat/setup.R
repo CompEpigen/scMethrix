@@ -1,20 +1,23 @@
 message("Test setup starting...")
 
-files <- c(system.file("extdata", "C1.bedgraph", package="scMethrix"),
-           system.file("extdata", "C2.bedgraph", package="scMethrix"),
-           system.file("extdata", "C3.bedgraph", package="scMethrix"),
-           system.file("extdata", "C4.bedgraph", package="scMethrix"))
+# files <- c(system.file("extdata", "C1.bedgraph", package="scMethrix"),
+#            system.file("extdata", "C2.bedgraph", package="scMethrix"),
+#            system.file("extdata", "C3.bedgraph", package="scMethrix"),
+#            system.file("extdata", "C4.bedgraph", package="scMethrix"))
 
-files <- c("D:/Git/scMethrix/inst/extdata/C1.bedgraph","D:/Git/scMethrix/inst/extdata/C2.bedgraph",
-           "D:/Git/scMethrix/inst/extdata/C3.bedgraph","D:/Git/scMethrix/inst/extdata/C4.bedgraph")
+files <- c("F:/scMethrix/inst/extdata/C1.bedgraph","F:/scMethrix/inst/extdata/C2.bedgraph",
+           "F:/scMethrix/inst/extdata/C3.bedgraph","F:/scMethrix/inst/extdata/C4.bedgraph")
 
 h5_dir <- paste0(tempdir(),"/sse")
 
-col_list <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
-scm.h5 <- read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
-scm.mem <- read_beds(files,h5=FALSE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
+colData <- data.table(Sample=get_sample_name(files),Group = rep(1:2,2))
 
-colData(scm.h5)$Sample <- colData(scm.mem)$Sample <- 1:ncol(scm.mem)
+col_list <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
+scm.h5 <- read_beds(files,h5=TRUE,h5_dir=h5_dir,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5, colData = colData)
+scm.mem <- read_beds(files,h5=FALSE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5, colData = colData)
+
+#scm.mem <- read_beds(files,h5=FALSE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
+
 mcols(scm.h5)$CpG <- mcols(scm.mem)$CpG <- 1:nrow(scm.mem)
 
 n_cpg <- nrow(scm.mem)
@@ -29,8 +32,6 @@ msg.validateValue <- "Invalid value"
 
 # scMethrix_data <- scm.mem
 # usethis::use_data(scMethrix_data,overwrite=TRUE)
-
-
 
 message("Test setup completed")
 
@@ -57,11 +58,61 @@ imputation_test_helper <- function(func) {
   }))
 }
 
-graph_test_helper <- function(func, indiv_samples = TRUE) {
+graph_test_helper <- function(scm, func, indiv_samples = TRUE, indiv_chr = FALSE, pheno = NULL, ...) {
+
+  frmat <- function(x) sort(as.character(unique(x)))
+  
   expect_error(func("not scMethrix"),msg.validateExp)
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    plot <- func(scm)
-    expect_true("ggplot" %in% class(plot))
-    if (indiv_samples) expect_equivalent(levels(plot$data$variable),colnames(scm))
-  }))
+  
+  if (is.null(pheno)) {
+    plot <- func(scm = scm, verbose = FALSE, ...)
+  } else {
+    plot <- func(scm = scm, pheno = pheno, verbose = FALSE, ...)
+  }
+
+  expect_true("ggplot" %in% class(plot))
+    
+  if (indiv_samples) {
+    expect_equivalent(frmat(plot$data$Sample),frmat(colnames(scm)))
+  } else {
+    expect_false("Sample" %in% colnames(plot$data))
+  }
+  
+  if (indiv_chr) {
+    expect_equal(frmat(plot$data$Chromosome), frmat(seqnames(rowRanges(scm))))
+  } else {
+    expect_false("Chromosome" %in% colnames(plot$data))
+  }
+
+  if (!is.null(pheno)) {
+    expect_equal(frmat(plot$data$Pheno), frmat(colData(scm)[,pheno]))
+  } else {
+    if ("Pheno" %in% colnames(plot$data)) expect_equal(frmat(plot$data$Pheno),frmat(plot$data$Sample))
+  }
+  
+  expect_error(print(plot),NA) # Checks if the plot is printable
+  
+  return(invisible(plot))
+}
+
+dim_red_graph_test_helper <- function(scm, func, color_anno = NULL, shape_anno=NULL, ...) {
+
+  frmat <- function(x) sort(as.character(unique(x)))
+
+  plot <- graph_test_helper(scm = scm, func = func, color_anno = color_anno, shape_anno = shape_anno, ...)
+
+  if (!is.null(color_anno)) {
+    expect_equal(frmat(plot$data$Color), frmat(colData(scm)[,color_anno]))
+  } else {
+    expect_false("Color" %in% colnames(plot$data))
+  }
+  
+  if (!is.null(shape_anno)) {
+    expect_equal(frmat(plot$data$Shape), frmat(colData(scm)[,shape_anno]))
+    
+  } else {
+    expect_false("Shape" %in% colnames(plot$data))
+  }
+  
+  return(invisible(plot))
 }

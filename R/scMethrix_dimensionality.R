@@ -109,7 +109,7 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), v
   
   if (type == "tSNE") {
     
-    meth_sub <- Rtsne::Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), k = n_components)#, ...)
+    meth_sub <- Rtsne::Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), k = n_components, check_duplicates=F)#, ...)
     
     SingleCellExperiment::reducedDim(scm, "tSNE") <- meth_sub$Y
     
