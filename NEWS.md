@@ -1,3 +1,3 @@
-# scMethrix 0.0.0.9000
+# scMethrix 0.1.0.0001
 
-* Added a `NEWS.md` file to track changes to the package.
+* Fixed bugs reported by maurerv (#11): colData in read_beds, extract_CPGs, and .validateValues
