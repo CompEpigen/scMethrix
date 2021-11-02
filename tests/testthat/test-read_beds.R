@@ -135,3 +135,12 @@ test_that("read_bed - threaded", {
     expect_equal(metadata(scm[[1]]),metadata(scm[[2]]))
   
 })
+
+test_that("read_bed - batched", {
+  
+  path <- paste0(h5_dir,"batched")
+  
+  scm <- read_beds(files,h5=TRUE, h5_dir=path,replace=TRUE, chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5, batch_size = n_samples-1)
+  scm <- read_beds(files,h5=FALSE, chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5, batch_size = n_samples-1)
+  
+})

@@ -22,6 +22,7 @@
 #' @param verbose boolean; flag to output messages or not.
 #' @param zero_based boolean; flag for whether the input data is zero-based or not
 #' @param replace boolean; flag for whether to delete the contents of h5_dir before saving
+#' @param fill boolean; flag whether to fill the output matrixes with all CpGs in ref_cpgs. This must be TRUE for HDF5-based experiments.
 #' @param pipeline string; Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
 #' If not known use idx arguments for manual column assignments.
 #' @param chr_idx integer; column index for chromosome in bedgraph files
@@ -45,7 +46,7 @@
 
 read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = min(20,length(files)), n_threads = 1, 
                       h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE,
-                      zero_based = FALSE, replace = FALSE, 
+                      zero_based = FALSE, replace = FALSE, fill = TRUE,
                       pipeline = c("Custom","Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"),
                       stranded = FALSE, strand_collapse = FALSE, chr_idx = NULL, start_idx = NULL, end_idx = NULL, beta_idx = NULL,
                       M_idx = NULL, U_idx = NULL, strand_idx = NULL, cov_idx = NULL) {
@@ -57,7 +58,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   #.validateType(colData,"dataframe")
   .validateType(genome_name,"string")
   .validateType(batch_size,"integer")
-  .validateValue(batch_size,"> 1",paste("<=", length(files)))
+  .validateValue(batch_size,">= 1",paste("<=", length(files)))
   #batch_size <- max(min(batch_size,length(files)),1)
   n_threads <- .validateThreads(n_threads)
   .validateType(h5,"boolean")
@@ -66,6 +67,11 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   .validateType(verbose,"boolean")
   .validateType(zero_based,"boolean")
   .validateType(replace,"boolean")
+  .validateType(fill,"boolean")
+  if (h5 && fill == FALSE) {
+    warning("For HDF5 storage, fill must be TRUE in order to index the HDF5 file.") 
+    fill = TRUE
+  }
   pipeline <- .validateArg(pipeline,read_beds)
   .validateType(stranded,"boolean")
   .validateType(chr_idx,c("integer","null"))
@@ -193,7 +199,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     message("Reading in BED files") 
     
     reads <- read_mem_data(files, ref_cpgs, col_list = col_list, batch_size = batch_size, n_threads = n_threads,
-                           zero_based = zero_based,verbose = verbose, strand_collapse = strand_collapse)
+                           zero_based = zero_based,verbose = verbose, strand_collapse = strand_collapse, fill = fill)
     
     message("Building scMethrix object")
     if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
@@ -484,7 +490,9 @@ read_bed_by_index <- function(files, ref_cpgs = NULL, col_list = NULL, zero_base
   # .validateType(strand_collapse,"boolean")
   # .validateType(fill,"boolean")
   . <- meths <- covs <- M <- U <- chr <- NULL
+  
   #- Function code -----------------------------------------------------------------------------
+
   for (i in 1:length(files)) {
 
     bed <- suppressWarnings(data.table::fread(files[[i]], select = unname(col_list$col_idx),
@@ -519,23 +527,25 @@ read_bed_by_index <- function(files, ref_cpgs = NULL, col_list = NULL, zero_base
       bed[, `:=`(start, start + 1)]
     }
     
-    if (!is.null(ref_cpgs)) {
-      bed <- merge(ref_cpgs,bed,by=c("chr","start"))
-      
-      # If strand information needs to collapsed, bring start position of
-      # crick strand to previous base (on watson base) and estimate new M, U
-      # and beta values
-      if (strand_collapse) {
-        if (!all(c("M", "U") %in% names(bed))) stop("strand_collapse works only when M and U are available!")
-        bed[, `:=`(start, ifelse(strand == "-", yes = start - 1, no = start))]
-        bed = bed[, .(M = sum(M, na.rm = TRUE), U = sum(U, na.rm = TRUE)), .(chr, start)]
-        bed[, `:=`(cov, M + U)]
-        #bed[cov == 0, cov := NA]
-        bed[, `:=`(beta, M/cov)]
-        bed[, `:=`(strand, "+")]
-      }
-    }
+    # if (!is.null(ref_cpgs)) {
+    #   #bed <- merge(ref_cpgs,bed,by=c("chr","start"))
+    # }
 
+    # If strand information needs to collapsed, bring start position of
+    # crick strand to previous base (on watson base) and estimate new M, U
+    # and beta values
+    if (strand_collapse) {
+      if (!all(c("M", "U") %in% names(bed))) stop("strand_collapse works only when M and U are available!")
+      bed[, `:=`(start, ifelse(strand == "-", yes = start - 1, no = start))]
+      bed = bed[, .(M = sum(M, na.rm = TRUE), U = sum(U, na.rm = TRUE)), .(chr, start)]
+      bed[, `:=`(cov, M + U)]
+      #bed[cov == 0, cov := NA]
+      bed[, `:=`(beta, M/cov)]
+      bed[, `:=`(strand, "+")]
+    }
+    
+    bed <- bed[!duplicated(bed,by=key(bed))] #TODO: Is this the best way to handle it?
+    
     meth <- bed[,c("chr","start","beta")]
     setnames(meth, "beta", get_sample_name(files[[i]]))
     if (is.null(meths)) meths <- meth else meths <- merge(meths,meth,all=TRUE)
@@ -612,8 +622,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
   # Determine the grids for the sinks
   if (n_threads == 1) {
     files <- split_vector(files, size = batch_size)
-    grid <- DelayedArray::RegularArrayGrid(refdim = c(dimension, length(unlist(files))),
-                                           spacings = c(dimension, length(files[[1]]))) 
+    grid <- DelayedArray::ArbitraryArrayGrid(list(dimension, cumsum(lengths(files)))) 
   } else {
     files <- split_vector(files,size = ceiling(batch_size/n_threads))
     grid <- DelayedArray::ArbitraryArrayGrid(list(dimension, cumsum(lengths(files)))) 
@@ -633,25 +642,27 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
     if (n_threads == 1) {
       
       bed <- read_bed_by_index(files = files[[i]], ref_cpgs = ref_cpgs, col_list = col_list, zero_based = zero_based, 
-                               strand_collapse=strand_collapse)
+                               strand_collapse=strand_collapse, fill=TRUE)
+
+      if (!identical(dim(bed$beta),dim( grid[[as.integer(i)]]))) stop("Error in input. dim(read_bed_by_index) = (", toString(dim(bed$beta)), ") and dim(grid) = (",toString(dim(grid[[as.integer(i)]])),"). This should never happen.")
       
-      DelayedArray::write_block(block = as.matrix(bed[["beta"]]), viewport = grid[[i]], sink = M_sink)
+      DelayedArray::write_block(block = as.matrix(bed[["beta"]]), viewport = grid[[as.integer(i)]], sink = M_sink)
       
       if (col_list$has_cov) DelayedArray::write_block(block = as.matrix(bed[["cov"]]),
-                                                      viewport = grid[[i]], sink = cov_sink)
+                                                      viewport = grid[[as.integer(i)]], sink = cov_sink)
     } else {
 
       bed <- parallel::parLapply(cl,split_vector(files[[i]],chunks=n_threads),
                                  fun=read_bed_by_index, ref_cpgs = ref_cpgs,
                                  col_list = col_list, zero_based = zero_based,
-                                 strand_collapse = strand_collapse)
+                                 strand_collapse = strand_collapse, fill = TRUE)
       
       DelayedArray::write_block(block = as.matrix(do.call(cbind, lapply(bed, `[[`, "beta"))), 
-                                viewport = grid[[i]], sink = M_sink)      
+                                viewport = grid[[as.integer(i)]], sink = M_sink)      
       
       if (!is.null(col_list$cov)) {
         DelayedArray::write_block(block = as.matrix(do.call(cbind, lapply(bed, `[[`, "cov"))), 
-                                  viewport = grid[[i]], sink = cov_sink)
+                                  viewport = grid[[as.integer(i)]], sink = cov_sink)
       }
     }
     
@@ -825,7 +836,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
 #' #Do Nothing
 #' }
 read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 1, zero_based = FALSE,
-                          strand_collapse = FALSE, verbose = TRUE) {
+                          strand_collapse = FALSE, verbose = TRUE, fill = TRUE) {
   #- Input Validation --------------------------------------------------------------------------
   # .validateType(files,"string")
   # .validateType(ref_cpgs,"boolean")
@@ -860,7 +871,7 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads 
     # if (verbose) message("   Parsing: Chunk ",i,appendLF=FALSE) #TODO: Get this workings
     
     files <- split_vector(files,size=batch_size)
-    reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based, strand_collapse=strand_collapse, col_list = col_list)
+    reads <- lapply(files,read_bed_by_index,ref_cpgs = ref_cpgs,zero_based = zero_based, strand_collapse=strand_collapse, col_list = col_list, fill = fill)
   }
   
   if (col_list$has_cov) {

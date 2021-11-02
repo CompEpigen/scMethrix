@@ -80,12 +80,7 @@ library(BSgenome.Hsapiens.UCSC.hg19)
 ```
 
 ```{r, ref_data, eval=F}
-if(!requireNamespace("methrix")) {
-  BiocManager::install("methrix")
-}
-library(methrix) 
-
-mm19_cpgs <- suppressWarnings(methrix::extract_CPGs(ref_genome = "BSgenome.Hsapiens.UCSC.hg19"))
+mm19_cpgs <- suppressWarnings(extract_CPGs(ref_genome = "BSgenome.Hsapiens.UCSC.hg19"))
 ```
 
 ## Sample annotation 

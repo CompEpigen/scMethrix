@@ -41,7 +41,7 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
     blocs <- DelayedArray::blockApply(get_matrix(scm,assay=assay), grid = grid, FUN = trans)
     
     for(i in 1:length(blocs)) {
-      DelayedArray::write_block(block = as.matrix(blocs[[i]]), viewport = grid[[i]], sink = trans_sink)
+      DelayedArray::write_block(block = as.matrix(blocs[[i]]), viewport = grid[[as.integer(i)]], sink = trans_sink)
     }
     
     rm(blocs)
