@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">scMethrix</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0.0001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0.0002</span>
       </span>
     </div>
 
@@ -198,7 +198,7 @@ by putting NA for assay values. The sites will remain in the object and all assa
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
 <span class='fu'>mask_by_sample</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,low_threshold<span class='op'>=</span><span class='fl'>2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Masking by sample count...</span></div><div class='output co'>#&gt; <span class='message'>Finding low coverage CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Found 67 CpGs with count &lt; 2</span></div><div class='output co'>#&gt; <span class='message'>Masked 67 [23.43%] CpG sites in 0.07s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Masking by sample count...</span></div><div class='output co'>#&gt; <span class='message'>Finding low coverage CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Found 67 CpGs with count &lt; 2</span></div><div class='output co'>#&gt; <span class='message'>Masked 67 [23.43%] CpG sites in 0.06s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 286
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts
@@ -206,7 +206,7 @@ by putting NA for assay values. The sites will remain in the object and all assa
 #&gt;    is_h5: FALSE
 #&gt;    Reference: hg19
 #&gt;    Physical size: 47 Kb</div><div class='input'><span class='fu'>mask_by_sample</span><span class='op'>(</span><span class='va'>scMethrix_data</span>,prop_threshold<span class='op'>=</span><span class='fl'>0.5</span><span class='op'>)</span> 
-</div><div class='output co'>#&gt; <span class='message'>Masking by sample count...</span></div><div class='output co'>#&gt; <span class='message'>Finding high average count CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Found 67 CpGs with missing cell proportion &lt; 0.5</span></div><div class='output co'>#&gt; <span class='message'>Masked 67 [23.43%] CpG sites in 0.07s</span></div><div class='output co'>#&gt; An object of class scMethrix
+</div><div class='output co'>#&gt; <span class='message'>Masking by sample count...</span></div><div class='output co'>#&gt; <span class='message'>Finding high average count CpG sites...</span></div><div class='output co'>#&gt; <span class='message'>   Found 67 CpGs with missing cell proportion &lt; 0.5</span></div><div class='output co'>#&gt; <span class='message'>Masked 67 [23.43%] CpG sites in 0.08s</span></div><div class='output co'>#&gt; An object of class scMethrix
 #&gt;    n_CpGs: 286
 #&gt;    n_samples: 4
 #&gt;    assays: score, counts

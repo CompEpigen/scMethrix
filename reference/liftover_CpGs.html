@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Splits an scMethrix object into two for use as a training and test set — generate_training_set • scMethrix</title>
+<title>Converts from one reference to another via rtracklayer::liftOver — liftover_CpGs • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Splits an scMethrix object into two for use as a training and test set — generate_training_set" />
-<meta property="og:description" content="Splits an scMethrix object into two for use as a training and test set" />
+<meta property="og:title" content="Converts from one reference to another via rtracklayer::liftOver — liftover_CpGs" />
+<meta property="og:description" content="Converts from one reference to another via rtracklayer::liftOver" />
 
 
 
@@ -138,16 +138,16 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Splits an scMethrix object into two for use as a training and test set</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_transforms.R'><code>R/scMethrix_transforms.R</code></a></small>
-    <div class="hidden name"><code>generate_training_set.Rd</code></div>
+    <h1>Converts from one reference to another via rtracklayer::liftOver</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/coord_ops.R'><code>R/coord_ops.R</code></a></small>
+    <div class="hidden name"><code>liftover_CpGs.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Splits an scMethrix object into two for use as a training and test set</p>
+    <p>Converts from one reference to another via rtracklayer::liftOver</p>
     </div>
 
-    <pre class="usage"><span class='fu'>generate_training_set</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, training_prop <span class='op'>=</span> <span class='fl'>0.2</span>, seed <span class='op'>=</span> <span class='st'>"123"</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>liftover_CpGs</span><span class='op'>(</span><span class='va'>scm</span>, chain <span class='op'>=</span> <span class='cn'>NULL</span>, target_genome <span class='op'>=</span> <span class='cn'>NULL</span>, verbose <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -157,46 +157,35 @@
       <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
     </tr>
     <tr>
-      <th>training_prop</th>
-      <td><p>numeric; The size of the training set as a proportion of the experiment (0 to 1)
-For a range, the optimal value will be estimated; this is time-intensive.</p></td>
+      <th>chain</th>
+      <td><p>string; the file location for the desired chain to use in liftOver</p></td>
     </tr>
     <tr>
-      <th>seed</th>
-      <td><p>string; value to use for sampling</p></td>
+      <th>target_genome</th>
+      <td><p>string; the target genome. This will be update the genome field in the output scMethrix object</p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>boolean; Flag for outputting function status messages. Default = TRUE</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>list; two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects names 'training' and 'test'</p>
+    <p>a list of data.table containing number of CpG's and contig lengths</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Typically used for teaching classification algorithms. The seed can be set for consistency.</p>
+    <p>This conversion is one-to-many, so for consistency, only the first element in the target assembly is used.</p>
+<p>LiftOver chains can be found here: <a href='https://hgdownload.soe.ucsc.edu/downloads.html'>UCSC</a></p>
+<p>Here's links to common chains:
+http://hgdownload.cse.ucsc.edu/goldenpath/hg38/liftOver/hg38ToHg19.over.chain.gzhg38 to hg19
+https://hgdownload.soe.ucsc.edu/gbdb/hg19/liftOver/hg19ToHg38.over.chain.gzhg19 to hg38</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>generate_training_set</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, training_prop <span class='op'>=</span> <span class='fl'>0.2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; $training
-#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 57
-#&gt;    n_samples: 4
-#&gt;    assays: score, counts
-#&gt;    reduced dims: 
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 33.6 Kb
-#&gt; 
-#&gt; $test
-#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 229
-#&gt;    n_samples: 4
-#&gt;    assays: score, counts
-#&gt;    reduced dims: 
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 43.7 Kb
-#&gt; </div></pre>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='va'>hg19_cpgs</span> <span class='op'>=</span> <span class='fu'>methrix</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/methrix/man/extract_CPGs.html'>extract_CPGs</a></span><span class='op'>(</span>ref_genome <span class='op'>=</span> <span class='st'>'BSgenome.Hsapiens.UCSC.hg19'</span><span class='op'>)</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

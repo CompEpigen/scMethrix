@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">scMethrix</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0.0001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0.0002</span>
       </span>
     </div>
 
@@ -100,7 +100,7 @@
       <h1 data-toc-skip>02: QC and reports</h1>
                         <h4 class="author">Andrew Lindsay, Reka Toth</h4>
             
-            <h4 class="date">2021-11-01</h4>
+            <h4 class="date">2021-11-02</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/CompEpigen/scMethrix/blob/master/vignettes/x02_qc.Rmd"><code>vignettes/x02_qc.Rmd</code></a></small>
       <div class="hidden name"><code>x02_qc.Rmd</code></div>
@@ -166,7 +166,7 @@
 <span class="op">}</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">GenomicScores</span><span class="op">)</span> </code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/remove_snps.html">remove_snps</a></span><span class="op">(</span><span class="va">meth</span>, keep <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu">remove_snps</span><span class="op">(</span><span class="va">meth</span>, keep <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <ul>
 <li>There is a possibility to keep the sites possibly overlapping with SNPs. We can use this data for detecting possible sample mismatches. For this, we need to plot the most variable sites (probably the ones that are variable in our study population) and plot them on a heatmap.</li>
 </ul>
@@ -175,7 +175,7 @@
     <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"pheatmap"</span><span class="op">)</span>
 <span class="va">snps</span> <span class="op">&lt;-</span> <span class="va">meth</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>
 <span class="va">meth</span> <span class="op">&lt;-</span> <span class="va">meth</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>
-<span class="fu">pheatmap</span><span class="fu">::</span><span class="fu">pheatmap</span><span class="op">(</span><span class="fu"><a href="../reference/get_matrix.html">get_matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/order_by_sd.html">order_by_sd</a></span><span class="op">(</span><span class="va">snps</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">snps</span><span class="op">)</span><span class="op">)</span>,<span class="op">]</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<span class="fu">pheatmap</span><span class="fu">::</span><span class="fu">pheatmap</span><span class="op">(</span><span class="fu"><a href="../reference/get_matrix.html">get_matrix</a></span><span class="op">(</span><span class="fu">order_by_sd</span><span class="op">(</span><span class="va">snps</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">snps</span><span class="op">)</span><span class="op">)</span>,<span class="op">]</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="filtering-masked-sites" class="section level2">
 <h2 class="hasAnchor">
@@ -191,21 +191,21 @@
 <p>Often, whole genome analysis using all samples is not necessary. This package includes multiple convenient options for querying - <code>regions</code>, <code>contigs</code>, or <code>samples</code> - and can processed as either inclusive or exclusive. Multiple query types can be given in each command. Subset operations in <code>scMethrix</code> make use of the fast binary search <code>data.table</code> that is several orders faster than bsseq or other similar packages.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Subsetting to include only two samples</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/subset_methrix.html">subset_methrix</a></span><span class="op">(</span><span class="va">meth</span>, contigs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"GSM2553093"</span>, <span class="st">"GSM2553095"</span><span class="op">)</span>, by<span class="op">=</span><span class="st">"include"</span><span class="op">)</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu">subset_methrix</span><span class="op">(</span><span class="va">meth</span>, contigs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"GSM2553093"</span>, <span class="st">"GSM2553095"</span><span class="op">)</span>, by<span class="op">=</span><span class="st">"include"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">inc</span><span class="op">)</span></code></pre></div>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Subsetting to exclude two samples</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/subset_methrix.html">subset_methrix</a></span><span class="op">(</span><span class="va">meth</span>, contigs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"GSM2553093"</span>, <span class="st">"GSM2553095"</span><span class="op">)</span>, by<span class="op">=</span><span class="st">"exclude"</span><span class="op">)</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu">subset_methrix</span><span class="op">(</span><span class="va">meth</span>, contigs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"GSM2553093"</span>, <span class="st">"GSM2553095"</span><span class="op">)</span>, by<span class="op">=</span><span class="st">"exclude"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">meth</span><span class="op">)</span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Subsetting to include only chr1 and chr2</span>
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/subset_methrix.html">subset_methrix</a></span><span class="op">(</span><span class="va">meth</span>, contigs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"chr1"</span>, <span class="st">"chr2"</span><span class="op">)</span><span class="op">)</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu">subset_methrix</span><span class="op">(</span><span class="va">meth</span>, contigs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"chr1"</span>, <span class="st">"chr2"</span><span class="op">)</span><span class="op">)</span>
 <span class="va">meth</span>
 <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu">seqinfo</span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html">rowRanges</a></span><span class="op">(</span><span class="va">meth</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Subsetting to include only bases 1:10M in chr1</span>
 <span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html">GRanges</a></span><span class="op">(</span>seqnames <span class="op">=</span> <span class="st">"chr1"</span>, ranges <span class="op">=</span> <span class="fu">IRanges</span><span class="op">(</span><span class="fl">1</span>,<span class="fl">10000000</span><span class="op">)</span><span class="op">)</span> 
-<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/subset_methrix.html">subset_methrix</a></span><span class="op">(</span><span class="va">meth</span>, regions <span class="op">=</span> <span class="va">regions</span><span class="op">)</span>
+<span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu">subset_methrix</span><span class="op">(</span><span class="va">meth</span>, regions <span class="op">=</span> <span class="va">regions</span><span class="op">)</span>
 <span class="va">meth</span>
 <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu">seqlengths</span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html">rowRanges</a></span><span class="op">(</span><span class="va">meth</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 </div>
@@ -248,7 +248,7 @@
 <span class="fu"><a href="../reference/plot_dim_red.html">plot_dim_red</a></span><span class="op">(</span><span class="va">meth</span>,type<span class="op">=</span><span class="st">"tSNE"</span><span class="op">)</span></code></pre></div>
 <p>At visualization, we can provide the <code>methrix</code> object to allow color or shape annotation of groups or samples.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/methrix/man/plot_pca.html">plot_pca</a></span><span class="op">(</span><span class="va">meth</span>, col_anno <span class="op">=</span> <span class="st">"Day"</span>, shape_anno <span class="op">=</span> <span class="st">"Replicate"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="fu">scMethrix</span><span class="fu">::</span><span class="fu">plot_pca</span><span class="op">(</span><span class="va">meth</span>, col_anno <span class="op">=</span> <span class="st">"Day"</span>, shape_anno <span class="op">=</span> <span class="st">"Replicate"</span><span class="op">)</span></code></pre></div>
 <p><code>scMethrix</code> offers the possibility of region based filtering. With this option, selected regions (e.g. promoters) can be visualized. We will use the <code>AnnotationHub</code> package to assess basic annotation categories.</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"AnnotationHub"</span><span class="op">)</span><span class="op">)</span> 
@@ -260,7 +260,7 @@
 <span class="va">genes</span> <span class="op">=</span> <span class="va">qhs</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>
 <span class="va">promotors</span> <span class="op">=</span> <span class="fu">promoters</span><span class="op">(</span><span class="va">genes</span><span class="op">)</span></code></pre></div>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">meth.subset</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/methrix/man/subset_methrix.html">subset_methrix</a></span><span class="op">(</span><span class="va">meth</span>,regions <span class="op">=</span> <span class="va">promotors</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">meth.subset</span> <span class="op">&lt;-</span> <span class="fu">subset_methrix</span><span class="op">(</span><span class="va">meth</span>,regions <span class="op">=</span> <span class="va">promotors</span><span class="op">)</span>
 <span class="va">meth</span> <span class="op">&lt;-</span> <span class="fu">scMethrix</span><span class="fu">::</span><span class="fu"><a href="../reference/dim_red_scMethrix.html">dim_red_scMethrix</a></span><span class="op">(</span><span class="va">meth.subset</span>,type<span class="op">=</span><span class="st">"PCA"</span>,top_var <span class="op">=</span> <span class="fl">10000</span>, n_components <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>
 <span class="fu"><a href="../reference/plot_dim_red.html">plot_dim_red</a></span><span class="op">(</span><span class="va">meth</span>,type<span class="op">=</span><span class="st">"PCA"</span><span class="op">)</span></code></pre></div>
 </div>

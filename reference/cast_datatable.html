@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Splits an scMethrix object into two for use as a training and test set — generate_training_set • scMethrix</title>
+<title>Casts genomic regions into data.table format — cast_datatable • scMethrix</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Splits an scMethrix object into two for use as a training and test set — generate_training_set" />
-<meta property="og:description" content="Splits an scMethrix object into two for use as a training and test set" />
+<meta property="og:title" content="Casts genomic regions into data.table format — cast_datatable" />
+<meta property="og:description" content="Casts genomic regions into data.table format" />
 
 
 
@@ -138,65 +138,44 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Splits an scMethrix object into two for use as a training and test set</h1>
-    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/scMethrix_transforms.R'><code>R/scMethrix_transforms.R</code></a></small>
-    <div class="hidden name"><code>generate_training_set.Rd</code></div>
+    <h1>Casts genomic regions into <code>data.table</code> format</h1>
+    <small class="dont-index">Source: <a href='https://github.com/CompEpigen/scMethrix/blob/master/R/coord_ops.R'><code>R/coord_ops.R</code></a></small>
+    <div class="hidden name"><code>cast_datatable.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Splits an scMethrix object into two for use as a training and test set</p>
+    <p>Casts genomic regions into <code>data.table</code> format</p>
     </div>
 
-    <pre class="usage"><span class='fu'>generate_training_set</span><span class='op'>(</span>scm <span class='op'>=</span> <span class='cn'>NULL</span>, training_prop <span class='op'>=</span> <span class='fl'>0.2</span>, seed <span class='op'>=</span> <span class='st'>"123"</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>cast_datatable</span><span class='op'>(</span><span class='va'>regions</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>scm</th>
-      <td><p><code><a href='scMethrix-class.html'>scMethrix</a></code>; the single cell methylation experiment</p></td>
-    </tr>
-    <tr>
-      <th>training_prop</th>
-      <td><p>numeric; The size of the training set as a proportion of the experiment (0 to 1)
-For a range, the optimal value will be estimated; this is time-intensive.</p></td>
-    </tr>
-    <tr>
-      <th>seed</th>
-      <td><p>string; value to use for sampling</p></td>
+      <th>regions</th>
+      <td><p>GRanges or data.frame; The input regions to cast to <code>GRanges</code></p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>list; two <code><a href='scMethrix-class.html'>scMethrix</a></code> objects names 'training' and 'test'</p>
+    <p><code>data.table</code> object with the input regions</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Typically used for teaching classification algorithms. The seed can be set for consistency.</p>
+    <p>Casts the input as a <code>data.table</code> object. Input can be <code>GRanges</code> or a
+<code><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></code>-compatible class that can be cast through <code><a href='https://rdrr.io/r/base/as.data.frame.html'>as.data.frame()</a></code>. Input BED format
+must be <code>chr-start-end</code> for <code><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></code> objects.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>'scMethrix_data'</span><span class='op'>)</span>
-<span class='fu'>generate_training_set</span><span class='op'>(</span><span class='va'>scMethrix_data</span>, training_prop <span class='op'>=</span> <span class='fl'>0.2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; $training
-#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 57
-#&gt;    n_samples: 4
-#&gt;    assays: score, counts
-#&gt;    reduced dims: 
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 33.6 Kb
-#&gt; 
-#&gt; $test
-#&gt; An object of class scMethrix
-#&gt;    n_CpGs: 229
-#&gt;    n_samples: 4
-#&gt;    assays: score, counts
-#&gt;    reduced dims: 
-#&gt;    is_h5: FALSE
-#&gt;    Reference: hg19
-#&gt;    Physical size: 43.7 Kb
-#&gt; </div></pre>
+    <pre class="examples"><div class='input'><span class='va'>regions</span> <span class='op'>=</span> <span class='fu'>data.table</span><span class='op'>(</span>chr <span class='op'>=</span> <span class='st'>'chr1'</span>, start <span class='op'>=</span> <span class='fl'>1</span>, end <span class='op'>=</span> <span class='fl'>100</span><span class='op'>)</span>
+<span class='fu'><a href='cast_granges.html'>cast_granges</a></span><span class='op'>(</span><span class='va'>regions</span><span class='op'>)</span> 
+</div><div class='output co'>#&gt; GRanges object with 1 range and 0 metadata columns:
+#&gt;       seqnames    ranges strand
+#&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+#&gt;   [1]     chr1     1-100      *
+#&gt;   -------
+#&gt;   seqinfo: 1 sequence from an unspecified genome; no seqlengths</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

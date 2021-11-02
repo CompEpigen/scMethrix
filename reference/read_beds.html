@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">scMethrix</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0.0001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0.0002</span>
       </span>
     </div>
 
@@ -161,6 +161,7 @@
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>,
   zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>,
   replace <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  fill <span class='op'>=</span> <span class='cn'>TRUE</span>,
   pipeline <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Custom"</span>, <span class='st'>"Bismark_cov"</span>, <span class='st'>"MethylDackel"</span>, <span class='st'>"MethylcTools"</span>, <span class='st'>"BisSNP"</span>,
     <span class='st'>"BSseeker2_CGmap"</span><span class='op'>)</span>,
   stranded <span class='op'>=</span> <span class='cn'>FALSE</span>,
@@ -230,6 +231,10 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
     <tr>
       <th>replace</th>
       <td><p>boolean; flag for whether to delete the contents of h5_dir before saving</p></td>
+    </tr>
+    <tr>
+      <th>fill</th>
+      <td><p>boolean; flag whether to fill the output matrixes with all CpGs in ref_cpgs. This must be TRUE for HDF5-based experiments.</p></td>
     </tr>
     <tr>
       <th>pipeline</th>

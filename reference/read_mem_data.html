@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">scMethrix</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0.0001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0.0002</span>
       </span>
     </div>
 
@@ -155,7 +155,8 @@
   n_threads <span class='op'>=</span> <span class='fl'>1</span>,
   zero_based <span class='op'>=</span> <span class='cn'>FALSE</span>,
   strand_collapse <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
+  verbose <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  fill <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -193,6 +194,10 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
     <tr>
       <th>verbose</th>
       <td><p>boolean; flag to output messages or not.</p></td>
+    </tr>
+    <tr>
+      <th>fill</th>
+      <td><p>boolean; flag whether to fill the output matrixes with all CpGs in ref_cpgs. This must be TRUE for HDF5-based experiments.</p></td>
     </tr>
     </table>
 
