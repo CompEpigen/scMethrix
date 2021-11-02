@@ -18,6 +18,7 @@ read_beds(
   verbose = TRUE,
   zero_based = FALSE,
   replace = FALSE,
+  fill = TRUE,
   pipeline = c("Custom", "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP",
     "BSseeker2_CGmap"),
   stranded = FALSE,
@@ -59,6 +60,8 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 \item{zero_based}{boolean; flag for whether the input data is zero-based or not}
 
 \item{replace}{boolean; flag for whether to delete the contents of h5_dir before saving}
+
+\item{fill}{boolean; flag whether to fill the output matrixes with all CpGs in ref_cpgs. This must be TRUE for HDF5-based experiments.}
 
 \item{pipeline}{string; Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
 If not known use idx arguments for manual column assignments.}

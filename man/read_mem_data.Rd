@@ -12,7 +12,8 @@ read_mem_data(
   n_threads = 1,
   zero_based = FALSE,
   strand_collapse = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  fill = TRUE
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 \item{strand_collapse}{boolean; whether to collapse the crick strand into watson strand. Default FALSE}
 
 \item{verbose}{boolean; flag to output messages or not.}
+
+\item{fill}{boolean; flag whether to fill the output matrixes with all CpGs in ref_cpgs. This must be TRUE for HDF5-based experiments.}
 }
 \value{
 matrix of the methylation values for input BED files
