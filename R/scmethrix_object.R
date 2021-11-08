@@ -83,6 +83,7 @@ utils::globalVariables(c("sampleNames")) #TODO: find out why this is necessary
 #   (object); row.names(colData(object))}
 # )
 
+#--- generic_scMethrix_function -----------------------------------------------------------------------------
 #' Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package
 #' @param scm \code{\link{scMethrix}}; the single cell methylation experiment
 #' @param assay string; name of an existing assay. Default = "score"

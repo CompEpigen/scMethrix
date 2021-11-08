@@ -121,7 +121,7 @@ proms = promoters(genes)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 hg38 <- TxDb.Hsapiens.UCSC.hg38.knownGene
 genes(hg38)
-promoters(hg38)
+proms <- promoters(hg38)
 
 reg <- reduce(c(genes(hg38),promoters(hg38)))
 

@@ -1,4 +1,4 @@
-#------------------------------------------------------------------------------------------------------------
+#--- transform_assay ----------------------------------------------------------------------------------------
 #' Transforms an assay in an \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. The function is
 #' applied column-wise as to optimize how HDF5 files access sample data. 
@@ -61,7 +61,7 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
   return(scm)
 }
 
-#------------------------------------------------------------------------------------------------------------
+#--- bin_scMethrix ------------------------------------------------------------------------------------------
 #' Bins the ranges of an \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. Typically, most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be  from \pkg{DelayedMatrixStats}.
 #' 
@@ -94,7 +94,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   bin_by <- .validateArg(bin_by,bin_scMethrix)
   sapply(trans, function (t) .validateType(t, c("function","null")))
   overlap_type <- .validateArg(overlap_type,subset_scMethrix)
-  if (is_h5(scm)) .validateType(h5_dir,"string")
+  if (is_h5(scm)) .validateType(h5_dir,c("string","null"))
   .validateType(verbose,"boolean")
   .validateType(batch_size,"integer")
   n_threads <- .validateThreads(n_threads)
@@ -212,6 +212,9 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
         mtx <- mtx[,overlap_indices:=NULL]
         
         DelayedArray::write_block(block = as.matrix(mtx), viewport = grid[[as.integer(i)]], sink = sink)
+        
+        rm(mtx)
+        gc()
         
         if (verbose) message("   Processed chunk ",i," (",split_time(),")")
       }
@@ -539,7 +542,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   .validateExp(scm)
   .validateType(colname,"string")
   sapply(trans, function (t) .validateType(t, c("function","null")))
-  if (is_h5(scm)) .validateType(h5_dir,"string")
+  if (is_h5(scm)) .validateType(h5_dir,c("string","null"))
   .validateType(batch_size,"integer")
   n_threads <- .validateThreads(n_threads)
   .validateType(verbose,"boolean")
@@ -588,7 +591,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
         col <- NULL
 
         for (cpg in cpgs) {
-          if (verbose) message("Processing chunk ", chunk <- chunk+1)
+          if (verbose) message("Processing chunk ", chunk <- chunk+1 , " (", split_time() ,")")
           mtx <- get_matrix(scm,assay=name)[cpg,grps[[i]]]
           mtx <- as.matrix(op(mtx))
           col <- rbind(col,mtx)
@@ -635,7 +638,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   
 }
 
-#------------------------------------------------------------------------------------------------------------
+#--- impute_by_melissa --------------------------------------------------------------------------------------
 #' Imputes the NA values of a \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
 #' @param threshold The value for cutoff in the "score" assay to determine methylated or unmethylated status. 
@@ -728,7 +731,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   return(scm)
 }
 
-#------------------------------------------------------------------------------------------------------------
+#--- impute_regions -----------------------------------------------------------------------------------------
 #' Generic imputation return function
 #' @details Uses the specified imputation operation to evaluation an scMethrix object.
 #' @param regions Granges; the regions to impute. Default is by chromosome.
@@ -839,7 +842,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   return(scm)
 }
 
-#------------------------------------------------------------------------------------------------------------
+#--- generate_training_set ----------------------------------------------------------------------------------
 #' Splits an scMethrix object into two for use as a training and test set
 #' @details Typically used for teaching classification algorithms. The seed can be set for consistency.
 #' @param training_prop numeric; The size of the training set as a proportion of the experiment (0 to 1)
@@ -870,7 +873,7 @@ generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123")
   return(list(training = training,test = test))
 }
 
-#------------------------------------------------------------------------------------------------------------
+#--- generate_random_subset ---------------------------------------------------------------------------------
 #' Generates a random subset of CpG sites
 #' @details From an \code{\link{scMethrix}} object, this will randomly select \code{n_cpgs} and create a new
 #' object containing only those CpGs. This is typically used for approximation or visualization. The seed

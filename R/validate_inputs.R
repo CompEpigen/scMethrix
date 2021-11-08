@@ -1,4 +1,4 @@
-
+#--- .validateArg -------------------------------------------------------------------------------------------
 #' Validates arguments. Allows partial matching.
 #' @details Check the parent function input arguments to see whether the inputted value is part of the set. Will return a formatted error message with the incorrect variable name and all the acceptable inputs.
 #' 
@@ -51,6 +51,7 @@
   return(arg)
 }
 
+#--- .validateAssay -----------------------------------------------------------------------------------------
 #' Validates an assay is in the object. Allows partial pattern.
 #' @details Check the assays in an scMethrix object and partial matches 
 #' @param scm scMethrix; the experiment object
@@ -175,7 +176,7 @@
 #   return(invisible(TRUE))
 # }
 
-
+#--- .validateType ------------------------------------------------------------------------------------------
 .validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
                                                "List","File","Directory","GRanges","GenomicRanges","Function","Null",
                                                "NA","Dataframe","DF","S4","Distance"), throws=T) {
@@ -243,7 +244,7 @@
   return(invisible(TRUE))
 }
 
-
+#--- .validateExp -------------------------------------------------------------------------------------------
 #' Validates to see if object is a proper scMethrix object
 #' @param scm scMethrix; the experiment object to test
 #' @return invisible(TRUE), if the object is valid. Error if not.
@@ -252,6 +253,7 @@
   return(invisible(TRUE))
 }
 
+#--- .validateValue -----------------------------------------------------------------------------------------
 #' Validates numeric values based on some experession
 #' @param value numeric; the value to test
 #' @param ... string; the expressions to test
@@ -272,6 +274,7 @@
   return(invisible(TRUE))
 }
 
+#--- .validateThreads ---------------------------------------------------------------------------------------
 #' Validates the number of threads for the session. Windows can only support one thread
 #' @param n_threads numeric; the number of threads
 #' @return integer; 1 if windows, or some number of threads between 1 and parallel::detectCores

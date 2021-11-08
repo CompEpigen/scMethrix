@@ -1,3 +1,4 @@
+#--- prepare_plot_data --------------------------------------------------------------------------------------
 #' Format \code{\link{scMethrix}} matrix to long form data for plotting
 #' 
 #' @inheritParams generic_scMethrix_function
@@ -146,7 +147,7 @@ plot_violin <- function(scm = NULL, assay="score", regions = NULL, n_cpgs = 2500
   return(p + scMethrix_theme())
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--- plot_density -------------------------------------------------------------------------------------------
 #' Density Plot of \eqn{\beta}-Values
 #'
 #' @inheritParams plot_violin
@@ -189,7 +190,7 @@ plot_density <- function(scm = NULL, assay = "score", regions = NULL, n_cpgs = 2
   return(p + scMethrix_theme())
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--- plot_coverage ------------------------------------------------------------------------------------------
 #' Coverage QC Plots
 #' @inheritParams plot_violin
 #' @param max_cov integer; Maximum coverage value to be plotted.
@@ -274,7 +275,7 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   return(p + scMethrix_theme())
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--- plot_sparsity ------------------------------------------------------------------------------------------
 #' Sparsity of sample
 #' inheritParams generic_plot_function
 #' @inheritParams plot_violin
@@ -318,7 +319,7 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("box", "scatter"
   return(p)
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--- plot_stats ---------------------------------------------------------------------------------------------
 #' Plot descriptive statistics
 #' @details plot descriptive statistics results from \code{\link{get_stats}}
 #' @inheritParams plot_violin
@@ -430,7 +431,7 @@ plot_imap <- function(scm) {
   # 
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--- plot_dim_red -------------------------------------------------------------------------------------------
 #' Plot dimensionality reduction
 #' @inheritParams generic_scMethrix_function
 #' @param dim_red string; name of adimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
@@ -522,7 +523,7 @@ plot_dim_red <- function(scm, dim_red, color_anno = NULL, shape_anno = NULL, axi
   
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------
 # Plot PCA results
 # @inheritParams generic_scMethrix_function
 # @inheritParams plot_dim_red 
@@ -574,7 +575,7 @@ plot_dim_red <- function(scm, dim_red, color_anno = NULL, shape_anno = NULL, axi
 #   return(pca_gg)
 # }
 
-#------------------------------------------------------------------------------------------------------------
+#--- benchmark_imputation -----------------------------------------------------------------------------------
 #' Evaluates imputations methods by NRMSE or AUC
 #' @details Does stuff
 #' @param sparse_prop numeric; A sparsity proportion between 0 and 1. E.g. 0.1 replaces 10% of the matrix with NA
@@ -634,7 +635,7 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
     scMethrix_theme() 
 }
 
-#------------------------------------------------------------------------------------------------------------
+#--- scMethrix_theme ----------------------------------------------------------------------------------------
 #' Theme for ggplot
 #' @param base_size integer; Size of text
 #' @param base_family string; Family of text

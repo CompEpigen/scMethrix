@@ -1,3 +1,4 @@
+#--- is_h5 --------------------------------------------------------------------------------------------------
 #' Checks if \code{\link{scMethrix}} object is an HDF5 object
 #' @param scm scMethrix; The \code{\link{scMethrix}} object
 #' @return boolean Whether the object is HDF5
@@ -10,6 +11,7 @@ is_h5 = function(scm) {
   return(scm@metadata$is_h5)
 }
 
+#--- has_cov ------------------------------------------------------------------------------------------------
 #' Checks if \code{\link{scMethrix}} object has a coverage matrix
 #' @param scm scMethrix; The \code{\link{scMethrix}} object
 #' @return boolean Whether the object has a coverage matrix
@@ -22,6 +24,7 @@ has_cov = function(scm) {
   return("counts" %in% SummarizedExperiment::assayNames(scm))
 }
 
+#--- get_sample_name ----------------------------------------------------------------------------------------
 #' Returns sample name derived from the input file name
 #' @param s string; A file.path
 #' @return string containing the sample name
@@ -34,6 +37,7 @@ get_sample_name = function(s) {
   return(tools::file_path_sans_ext(basename(s)))
 }
 
+#--- binarize -----------------------------------------------------------------------------------------------
 #' Binarize an input value based on a \code{threshold}
 #' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
 #'  If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}
@@ -57,6 +61,7 @@ binarize = function(x,threshold = NULL, rep_na = NA, verbose = FALSE) {
   return(x)
 }
 
+#--- fill ---------------------------------------------------------------------------------------------------
 #' Fills a vector with a specified \code{fill} value
 #' @param x vector; A vector in which to fill the NA values
 #' @param fill basic data type; Any value from one of R's basic data types (character, numeric, integer, logical, complex)
@@ -70,6 +75,7 @@ fill = function(x, fill = NA) {
   return(x)
 }
 
+#--- colbind ------------------------------------------------------------------------------------------------
 #' A faster version of cbind when trying to combine lists of data.tables
 #' @param ... A list of data.tables with identical # of rows
 #' @return data.table; the cbinded output 
@@ -81,6 +87,7 @@ colbind = function(...) {
   )[]
 }
 
+#--- split_vector -------------------------------------------------------------------------------------------
 #' Splits a vector into list of vectors by \code{chunk} or \code{size}
 #' @details Splits a vector into consistantly sized sub-lists. The sub-list size will always be decreasing based on list order.
 #' @param vec vector; The vector to split
@@ -118,6 +125,7 @@ split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
   return(unname(split(vec, sort(rep_len(1:ceiling(chunks), length(vec))))))
 }
 
+#--- start_time ---------------------------------------------------------------------------------------------
 #' Starts an internal stopwatch
 #' @details Save the current time to later use for split/lap and overall times
 #' @return NULL
@@ -128,6 +136,7 @@ start_time <- function() {
   invisible(NULL)
 }
 
+#--- split_time ---------------------------------------------------------------------------------------------
 #' Outputs the split/lap/iteration time
 #' @details Gets the stored elapsed \\code{\link{proc.time}} from either the initial
 #' \code{\link{start_time}} or the previous \code{split_time}
@@ -145,6 +154,7 @@ split_time <- function() {
   return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
 }
 
+#--- stop_time ----------------------------------------------------------------------------------------------
 #' Stops an internal stopwatch and outputs overall time
 #' @details Gets the stored elapsed \code{proc.time()} from initial \code{\link{start_time}} to calculate
 #' overall runtime
@@ -162,6 +172,7 @@ stop_time <- function() {
   return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
 }
 
+#--- get_source_idx -----------------------------------------------------------------------------------------
 #' Gets bedgraph column indexes from common pipeline output formats
 #' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
 #' @param protocol string; the protocol used for bedgraph output. Options are: "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
@@ -197,8 +208,9 @@ get_source_idx = function(protocol = c("Bismark_cov", "MethylDackel", "MethylcTo
   }
 }
 
-#' Subsets a given list of CpGs by another list of CpGs
-#' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
+#--- parse_source_idx ---------------------------------------------------------------------------------------
+#' Generates the column structure for importing bedgraph files
+#' @details 
 #' @param chr_idx integer; column of the chromosome
 #' @param start_idx integer; column of the CpG start site
 #' @param end_idx integer; column of the CpG end site

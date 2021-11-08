@@ -1,4 +1,4 @@
-#------------------------------------------------------------------------------------------------------------
+#--- get_metadata_stats -------------------------------------------------------------------------------------
 #' Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
 #' @details Adds the mean, median, SD, and sample count and coverage (if present) for  the \code{\link{GenomicRanges}} in an \code{\link{scMethrix}} object. This can be accessed using mcols().
 #' 
@@ -30,7 +30,7 @@ get_metadata_stats <- function(scm) {
   return(scm)
 }
 
-#------------------------------------------------------------------------------------------------------------
+#--- remove_assay -------------------------------------------------------------------------------------------
 #' Removes an assay from an \code{\link{scMethrix}} object
 #' @details This will remove an assay from the scMethrix experiment object. All transformed assays may be removed, as well as the coverage assay (since it is less useful when compared to normal WGBS data), but the score assay cannot be removed. Reduced dimensionality data will be retained even if the parent assay is removed.
 #' @inheritParams generic_scMethrix_function
@@ -52,7 +52,7 @@ remove_assay <- function(scm=NULL, assay=NULL) {
   return(scm)
 }
 
-#------------------------------------------------------------------------------------------------------------
+#--- merge_scMethrix ----------------------------------------------------------------------------------------
 #' Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
 #' @details Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.
 #' 
@@ -196,8 +196,31 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "column"), v
 
   return(scm)
 }
+# 
+# merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, verbose = TRUE) {
+# 
+#   scm1 <- scm.mem[1:10,]
+#   scm2 <- scm.mem[5:20,]
+#   
+#   rrng1 <- setdiff(rowRanges(scm2),rowRanges(scm1))
+#   rrng2 <- setdiff(rowRanges(scm1),rowRanges(scm2))
+#   
+#   if (length(rrng1) != 0) {
+#     
+#     scmTemp <- create_scMethrix(rowRanges=rrng1,colData <- colData(scm1))
+#     
+#   }
+#   
+#   
+#   rrng <- reduce(c(rowRanges(scm2),rowRanges(scm1)))
+#   
+#   rowRanges(scm1) <- rrng
+#   
+#   a
+# }
 
-#------------------------------------------------------------------------------------------------------------
+
+#--- get_region_summary -------------------------------------------------------------------------------------
 #' Extracts and summarizes methylation or coverage info by regions of interest
 #' @details Takes \code{\link{scMethrix}} object and summarizes regions
 #' @inheritParams generic_scMethrix_function
@@ -348,7 +371,7 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
 }
 
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--- get_matrix -----------------------------------------------------------------------------------------------------------
 #' Extract assays from an \code{\link{scMethrix}} object
 #' @details Takes \code{\link{scMethrix}} object and returns the \code{methylation} matrix. This will return in the format used by the object (matrix or HDF5matrix).
 #' @inheritParams generic_scMethrix_function
@@ -376,7 +399,6 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
 #' # Split the matrix into parts
 #' get_matrix(scMethrix_data, n_chunks = 4, by="row")
 #' @export
-#--------------------------------------------------------------------------------------------------------------------------
 get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges=FALSE, order_by_sd=FALSE, n_chunks = 1, by=c("row","column")) {
   
   #- Input Validation --------------------------------------------------------------------------
@@ -438,6 +460,7 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
   return (mtx)
 }
 
+#--- save_HDF5_scMethrix --------------------------------------------------------------------------------------------------
 #' Saves an HDF5 \code{\link{scMethrix}} object
 #' @details Takes \code{\link{scMethrix}} object and saves it in the specified directory
 #' @inheritParams generic_scMethrix_function
@@ -492,6 +515,7 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verb
   if (verbose) message("Experiment saved in ",stop_time())
 }
 
+#--- load_HDF5_scMethrix --------------------------------------------------------------------------------------------------
 #' Loads HDF5 \code{\link{scMethrix}} object
 #' @details Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
 #' @inheritParams generic_scMethrix_function
@@ -523,7 +547,7 @@ load_HDF5_scMethrix <- function(dir = NULL, verbose = TRUE, ...) {
 }
 
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--- convert_HDF5_scMethrix -----------------------------------------------------------------------------------------------
 #' Converts HDF5 \code{\link{scMethrix}} object to an in-memory \code{\link{scMethrix}} object.
 #' @details Takes an HDF%-based \code{\link{scMethrix}} object and returns with the same object with in-memory assay slots.
 #' @inheritParams generic_scMethrix_function
@@ -558,7 +582,7 @@ convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
   return(scm)
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--- convert_scMethrix ----------------------------------------------------------------------------------------------------
 #' Converts an in-memory \code{\link{scMethrix}} to an HDF5 \code{\link{scMethrix}}
 #' @details Takes a \code{\link{scMethrix}} object and returns with the same object with delayed array assay slots
 #' with HDF5 backend. Might take long time!
@@ -590,6 +614,7 @@ convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
   return(scm)
 }
 
+#--- subset_scMethrix -----------------------------------------------------------------------------------------------------
 #' Subsets an \code{\link{scMethrix}} object based on \code{regions}, \code{contigs} and/or \code{samples}.
 #' @details Takes \code{\link{scMethrix}} object and filters CpGs based on region, contig and/or sample. Can 
 #' either subset (\code{include}) to or filter (\code{exclude}) the specified parameters.
@@ -687,7 +712,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
   
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--- get_stats ------------------------------------------------------------------------------------------------------------
 #' Estimate descriptive statistics for each sample
 #' @details Calculate descriptive statistics (mean, median, SD) either by sample or \code{per_chr}
 #' @inheritParams generic_scMethrix_function
@@ -755,7 +780,7 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE, 
   return(stats)
 }
 
-#------------------------------------------------------------------------------------------------------------
+#--- remove_uncovered ---------------------------------------------------------------------------------------
 #' Remove loci that are uncovered across all samples
 #' @details Takes \code{\link{scMethrix}} object and removes loci that are uncovered across all samples
 #' @inheritParams generic_scMethrix_function
@@ -775,7 +800,9 @@ remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Removing uncovered CpGs...", start_time())
   
-  check_uncovered <- function(mtx) DelayedMatrixStats::rowAlls(mtx,value=NA)
+  check_uncovered <- function (x) rowSums(!is.na(x))==0
+  
+  #check_uncovered <- function(mtx) DelayedMatrixStats::rowAlls(mtx,value=NA)
   
   if (n_threads != 1) {
   
@@ -806,7 +833,7 @@ remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
   return(scm)
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--- mask_by_coverage -------------------------------------------------------------------------------------
 #' Masks CpGs by coverage
 #' @details Takes \code{\link{scMethrix}} object and masks sites with low overall or high average coverage by putting NA for assay values. The sites will remain in the object and all assays will be affected.
 #'  
@@ -872,7 +899,7 @@ mask_by_coverage <- function(scm = NULL, assay = "score", low_threshold = NULL, 
   return(scm)
 }
 
-#--------------------------------------------------------------------------------------------------------------------------
+#--- mask_by_sample -------------------------------------------------------------------------------------------
 #' Masks CpGs by cell count
 #' @details Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
 #'  by putting NA for assay values. The sites will remain in the object and all assays will be affected.
@@ -935,6 +962,7 @@ mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, pr
   return(scm)
 }
 
+#--- mask_by_variance -------------------------------------------------------------------------------------------
 #' Masks non-variable CpGs
 #' @details Takes \code{\link{scMethrix}} object and masks CpGs with low variability by putting NA for assay values. The sites will remain in the object and all assays will be affected.
 #' @inheritParams generic_scMethrix_function

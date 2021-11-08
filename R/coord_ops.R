@@ -1,3 +1,4 @@
+#--- liftover_CpGs ---------------------------------------------------------------------------------------------------------
 #' Converts from one reference to another via rtracklayer::liftOver
 #' @details 
 #' This conversion is one-to-many, so for consistency, only the first element in the target assembly is used.
@@ -51,6 +52,7 @@ liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRU
   return(scm)
 }
 
+#--- extract_CpGs ---------------------------------------------------------------------------------------------------------
 #' Extracts all CpGs from a genome
 #' @param ref_genome BSgenome object or name of the installed BSgenome package. Example: BSgenome.Hsapiens.UCSC.hg19
 #' @importFrom BSgenome installed.genomes getBSgenome seqnames
@@ -117,6 +119,7 @@ extract_CpGs = function(ref_genome = NULL) {
   return(cpgs)
 }
 
+#--- subset_ref_cpgs ---------------------------------------------------------------------------------------------------------
 #' Subsets a given list of CpGs by another list of CpGs
 #' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
 #' @param ref_cpgs data.table; A reference set of CpG sites (e.g. Hg19 or mm10) in bedgraph format
@@ -153,7 +156,7 @@ subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   return(sub_cpgs)
 }
 
-
+#--- bin_granges ---------------------------------------------------------------------------------------------------------
 #' Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size} 
 #' @details Bins a single region in \code{\link{GRanges}} format into multiple regions with a specified \code{bin_size}. If \code{length(gr) %% bin_size != 0}, then the last GRange will have a length < \code{bin_size}. This is used instead of tile when you need consistently sized bins with the last bin being smaller
 #' @param gr GRanges; The \code{\link{GRanges}} object
@@ -176,6 +179,7 @@ bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
   return(unlist(as(gr, "GRangesList")))
 }
 
+#--- cast_granges ---------------------------------------------------------------------------------------------------------
 #' Casts genomic regions into \code{\link{GRanges}} format
 #' @details Casts the input as a \code{\link{GRanges}} object. Input can be \code{\link{GRanges}} or a 
 #' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input BED format
@@ -194,6 +198,7 @@ cast_granges <- function(regions) {
   return(regions)
 }
 
+#--- cast_datatable ---------------------------------------------------------------------------------------------------------
 #' Casts genomic regions into \code{\link{data.table}} format
 #' @details Casts the input as a \code{\link{data.table}} object. Input can be \code{\link{GRanges}} or a 
 #' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input BED format

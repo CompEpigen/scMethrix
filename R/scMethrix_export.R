@@ -1,4 +1,4 @@
-#------------------------------------------------------------------------------------------------------------
+#--- export_beds ---------------------------------------------------------------------------------------------
 #' Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
 #' @details The structure of the bedgraph files will be a tab-deliminated structure of:
 #' Chromosome | CpG start site | CpG end site | methylation score | coverage | Additional assays (if include = TRUE)
@@ -69,7 +69,7 @@ export_beds <- function(scm = NULL, path = NULL, suffix = NULL,  include = FALSE
   invisible()
 }
 
-#------------------------------------------------------------------------------------------------------------
+#--- export_methrix ------------------------------------------------------------------------------------------
 #' Converts an \code{\link{scMethrix}} object to methrix object
 #' @details Removes extra slot data from an \code{\link{scMethrix}} object and changes structure to match
 #' \code{\link[methrix]{methrix}} format. A 'counts' assay for coverage values must be present. 
@@ -118,6 +118,7 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
   return(m_obj) 
 }
 
+#--- export_bsseq --------------------------------------------------------------------------------------------
 #' Convert \code{\link{scMethrix}} to \code{bsseq} object
 #' @details Takes \code{\link{scMethrix}} object and returns a \code{bsseq} object. 
 #' @param scm \code{\link{methrix}} object
@@ -154,6 +155,7 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) 
   return(b)
 }
 
+#--- export_bigwigs ------------------------------------------------------------------------------------------
 #' Exports scMethrix object as bigWigs
 #' @param scm \code{\link{scMethrix}} object
 #' @param assay string; the assay to export. Default is "score"
@@ -212,7 +214,7 @@ export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = N
   message("Files generated in ",stop_time())
 }
 
-
+#--- export_seurat -------------------------------------------------------------------------------------------
 export_seurat <- function(scm,assay="score", path = NULL) {
   
   #- Input Validation --------------------------------------------------------------------------

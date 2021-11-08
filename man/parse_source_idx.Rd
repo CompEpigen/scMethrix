@@ -2,7 +2,7 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{parse_source_idx}
 \alias{parse_source_idx}
-\title{Subsets a given list of CpGs by another list of CpGs}
+\title{Generates the column structure for importing bedgraph files}
 \usage{
 parse_source_idx(
   chr_idx = NULL,
@@ -39,8 +39,5 @@ parse_source_idx(
 List of column names and indexes
 }
 \description{
-Subsets a given list of CpGs by another list of CpGs
-}
-\details{
-Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
+Generates the column structure for importing bedgraph files
 }

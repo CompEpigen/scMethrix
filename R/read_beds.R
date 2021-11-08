@@ -1,3 +1,4 @@
+#--- read_beds ----------------------------------------------------------------------------------------------
 #' Versatile BedGraph reader.
 #' @details Reads BED files and generates methylation matrices.
 #' Optionally arrays can be serialized as on-disk HDFS5 arrays.
@@ -220,6 +221,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   return(m_obj)
 }
 
+#--- read_index ---------------------------------------------------------------------------------------------
 #' Parse BED files for unique genomic coordinates
 #' @details Create list of unique genomic regions from input BED files. Populates a list of batch_size+1 with 
 #' the genomic coordinates from BED files, then runs \code{\link{unique}} when the list is full and keeps the running
@@ -318,6 +320,7 @@ read_index <- function(files, col_list, n_threads = 1, zero_based = FALSE, batch
   return(rrng)
 }
 
+#--- read_bed_by_index --------------------------------------------------------------------------------------
 #' Parses BED files for methylation values using previously generated index genomic coordinates
 #' @details Creates an NA-based vector populated with methlylation values from the input BED file in the
 #' respective indexed genomic coordinates
@@ -572,6 +575,7 @@ read_bed_by_index <- function(files, ref_cpgs = NULL, col_list = NULL, zero_base
   }
 }
 
+#--- read_hdf5_data -----------------------------------------------------------------------------------------
 #' Writes values from input BED files into an in-disk \code{\link{HDF5Array}}
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.
@@ -684,6 +688,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
   return(reads)
 }
 
+#--- read_hdf5_data2 ----------------------------------------------------------------------------------------
 # read_hdf5_data2 <- function(files, ref_cpgs, col_list, n_threads = 0, n_chunks = 1, h5_temp = NULL, zero_based = FALSE, 
 #                            verbose = TRUE) {
 #   
@@ -824,6 +829,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
 #   return(reads)
 # }
 
+#--- read_mem_data ------------------------------------------------------------------------------------------
 #' Writes values from input BED files into an in-memory \code{\link{matrix}}
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.

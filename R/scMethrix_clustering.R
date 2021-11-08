@@ -1,3 +1,4 @@
+#--- get_distance_matrix -------------------------------------------------------------------------------------
 #' Get the pair-wise distance matrix for an assay
 #' @details Utilizes mainly the bioDist package to determine various distance metrics to be used for later clustering. 
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object
@@ -56,6 +57,7 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
   return(dist)
 }
 
+#--- cluster_scMethrix ---------------------------------------------------------------------------------------
 #' Generates a cluster object for an \code{\link{scMethrix}} object
 #' @details Enables multiple methods of clustering to classify samples in an \code{\link{scMethrix}} object. Either an \code{\link{scMethrix}} object or a \code{\link[stats]{dist}} object must be provided for clustering.
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object. If this is specified the distance matrix will be a generic \code{\link[bioDist]{spearman.dist}} distance
@@ -145,6 +147,7 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
   return(scm)
 }
 
+#--- append_colData ------------------------------------------------------------------------------------------
 #' Appends colData in an scMethrix object
 #' @details Typically used for clustering. Allows additional information to be added to colData in an scMethrix object after the object creation. It does this via a left join on the original colData. Any samples not included in the colData object will be filled with NAs.
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object
