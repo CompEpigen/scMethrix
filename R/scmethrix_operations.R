@@ -1,32 +1,70 @@
-#--- get_metadata_stats -------------------------------------------------------------------------------------
+
+#--- get_coldata_stats -------------------------------------------------------------------------------------
+#' Adds descriptive statistics to colData columns in an \code{\link{scMethrix}} object.
+#' @details Adds the mean, SD, and sample count for each sample in an \code{\link{scMethrix}} object. This can be accessed using colData(). Columns with the names of 'mean','sd', and 'cpg' will be automatically overwritten, but \code{suffix} can be used to keep multiple stats columns.
+#' 
+#' This data will not be updated automatically for any subset, merge, bin, etc functions.
+#' 
+#' @inheritParams generic_scMethrix_function
+#' @param suffix string; a suffix to add to the string
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' get_coldata_stats(scMethrix_data)
+#' @export
+get_coldata_stats <- function(scm, assay = "score", suffix="") {
+  
+  #- Input Validation --------------------------------------------------------------------------
+  .validateExp(scm)
+  .validateAssay(scm,assay)
+  .validateType(suffix,"string")
+  
+  #- Function code -----------------------------------------------------------------------------
+  stats <-
+    data.table::data.table(
+      mean = DelayedMatrixStats::colMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      #median = DelayedMatrixStats::colMedians(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      sd = DelayedMatrixStats::colSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      cpgs = nrow(scm)-DelayedMatrixStats::colCounts(get_matrix(scm = scm,assay = assay), value = NA)
+    )
+  
+  colnames(stats) <- paste0(colnames(stats),suffix)
+  colData <- colData(scm)[,!(colnames(colData(scm)) %in% colnames(stats)), drop=FALSE]
+  colData(scm) <- cbind(colData,stats)
+  return(scm)
+}
+
+#--- get_rowdata_stats -------------------------------------------------------------------------------------
 #' Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
 #' @details Adds the mean, median, SD, and sample count and coverage (if present) for  the \code{\link{GenomicRanges}} in an \code{\link{scMethrix}} object. This can be accessed using mcols().
 #' 
 #' This data will not be updated automatically for any subset, merge, bin, etc functions.
 #' 
 #' @inheritParams generic_scMethrix_function
+#' @inheritParams get_coldata_stats
 #' @return An \code{\link{scMethrix}} object
 #' @examples
 #' data('scMethrix_data')
-#' get_metadata_stats(scMethrix_data)
+#' get_rowdata_stats(scMethrix_data)
 #' @export
-get_metadata_stats <- function(scm) {
-  
+get_rowdata_stats <- function(scm, assay = "score", suffix="") {
+ 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   
   #- Function code -----------------------------------------------------------------------------
   stats <-
     data.table::data.table(
-      mean_meth = DelayedMatrixStats::rowMeans2(score(scm), na.rm = TRUE),
-      median_meth = DelayedMatrixStats::rowMedians(score(scm), na.rm = TRUE),
-      sd_meth = DelayedMatrixStats::rowSds(score(scm), na.rm = TRUE),
-      cells = ncol(scm)-DelayedMatrixStats::rowCounts(score(scm), value = NA)
+      mean = DelayedMatrixStats::rowMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      #median_meth = DelayedMatrixStats::rowMedians(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      sd = DelayedMatrixStats::rowSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      cells = ncol(scm)-DelayedMatrixStats::rowCounts(get_matrix(scm = scm,assay = assay), value = NA)
     )
-    
-  if(has_cov(scm)) stats[,"counts" := DelayedMatrixStats::rowSums2(get_matrix(scm,assay="counts"), na.rm = TRUE)] 
   
-  mcols(scm) <- stats
+  colnames(stats) <- paste0(colnames(stats),suffix)
+  rowData <- rowData(scm)[,!(colnames(rowData(scm)) %in% colnames(stats)), drop=FALSE]
+  rowData(scm) <- cbind(rowData,stats)
+
   return(scm)
 }
 

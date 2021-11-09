@@ -1,16 +1,32 @@
-test_that("get_metadata_stats", {
+test_that("get_rowdata_stats", {
   
   expect_error(get_metadata_stats("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
     expect_error(get_metadata_stats(scm="not scMethrix"))
-    s <- get_metadata_stats(scm)
-    expect_equal(dim(mcols(s)),c(n_cpg,5))
+    cols <- ncol(rowData(scm))
+    s <- get_rowdata_stats(scm)
+    expect_equal(dim(rowData(s)),c(n_cpg,cols+3))
     
-    s <- remove_assay(scm,assay="counts")
-    s <- get_metadata_stats(s)
-    expect_equal(dim(mcols(s)),c(n_cpg,4))
+    stats <- rowData(s)
+    rng <- 1:10
     
+    expect_equal(rowMeans(score(s)[rng,],na.rm=TRUE),stats$mean[rng])
+    #expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median_meth[rng])
+    expect_equal(DelayedMatrixStats::rowSds(score(s)[rng,],na.rm=TRUE),stats$sd[rng])
+    expect_equal(ncol(s)-rowCounts(score(s)[rng,],val=NA),stats$cells[rng])
+  }))
+})
+
+test_that("get_coldata_stats", {
+  
+  expect_error(get_coldata_stats("not scMethrix"),msg.validateExp)
+  
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
+    expect_error(get_coldata_stats(scm="not scMethrix"))
+    s <- get_coldata_stats(scm)
+    expect_equal(dim(colData(s)),c(n_cpg,cols+3))
+
     stats <- mcols(s)
     rng <- 1:10
     
