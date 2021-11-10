@@ -1,20 +1,24 @@
-test_that("reduce_cpgs", {
+test_that("reduce_scMethrix", {
   
-  expect_error(reduce_cpgs("not scMethrix"),msg.validateExp)
+  expect_error(reduce_scMethrix("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     
-    expect_error(reduce_cpgs(scm="not scMethrix"),msg.validateExp)
-    expect_error(reduce_cpgs(scm,assay="not an assay"),msg.validateAssay)
-    expect_error(reduce_cpgs(scm,var="not a var"),msg.validateArg)
-    expect_error(reduce_cpgs(scm,top_var = 0,var="top"),"Zero loci available post NA removal")
-    
-    expect_equal(reduce_cpgs(scm,top_var = NULL),score(scm))
-    
-    cpgs = 10
-    expect_equal(dim(reduce_cpgs(scm,top_var = cpgs,var="rand")),c(cpgs,ncol(scm)))
-    expect_equal(dim(reduce_cpgs(scm,top_var = cpgs,var="top")),c(cpgs,ncol(scm)))
+    expect_error(reduce_scMethrix(scm="not scMethrix"),msg.validateExp)
+    expect_error(reduce_scMethrix(scm,assay="not an assay"),msg.validateAssay)
+    expect_error(reduce_scMethrix(scm,var="not a var"),msg.validateArg)
+    expect_error(reduce_scMethrix(scm,n_cpg = "not an int"),msg.validateType)
+    expect_error(reduce_scMethrix(scm,n_cpg = 0,var="top"),"Zero loci available post NA removal")
 
+    cpgs = 100
+    expect_equal(dim(reduce_scMethrix(scm,n_cpg = cpgs,var="rand")),c(cpgs,ncol(scm)))
+    expect_equal(dim(reduce_scMethrix(scm,n_cpg = cpgs,var="top")),c(cpgs,ncol(scm)))
+
+    s1 <- reduce_scMethrix(scm,n_cpg = cpgs,var="top")
+    s1 <- get_rowdata_stats(s1)
+    scm <- get_rowdata_stats(scm)
+    expect_equal(sort(rowData(s1)$sd,decreasing = TRUE),sort(rowData(scm)$sd,decreasing = TRUE)[1:cpgs])
+    
   }))
 })
 

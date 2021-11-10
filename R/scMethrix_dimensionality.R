@@ -1,82 +1,69 @@
-#-------------------------------------------------------------------------------------------------------------
+#--- reduce_scMethrix ----------------------------------------------------------------------------------------
 #' Reduces a assay to a representative matrix
 #' @details For the purposes of dimensionality reduction, this function selects either random CpGs or those with the highest variability. 
-#' @param scm scMethrix; Input \code{\link{scMethrix}} object
-#' @param assay string; The assay to use. Default is 'score'
-#' @param top_var integer; Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements).
+#' @inheritParams generic_scMethrix_function
+#' @param n_cpg integer; Number of variable CpGs to use. Default 1000.
 #' @param var strning; Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'
-#' @param verbose boolean; flag to output messages or not
 #' @param na.rm boolean; flag to remove NA values
 #' @return matrix; the reduced form of the input assay
 #' @importFrom stats complete.cases var
 #' @examples
 #' data('scMethrix_data')
-#' reduce_cpgs(scMethrix_data)
+#' nrow(scMethrix_data)
+#' scMethrix_data <- reduce_scMethrix(scMethrix_data)
+#' nrow(scMethrix_data)
 #' @export
-reduce_cpgs <- function(scm, assay = "score", var = c("top", "rand"), top_var = 1000, na.rm = FALSE, verbose = FALSE) {
+reduce_scMethrix <- function(scm, assay = "score", var = c("top", "rand"), n_cpg = 1000, na.rm = FALSE, verbose = FALSE) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
-  var = .validateArg(var,reduce_cpgs)
-  .validateType(top_var,c("integer","null"))
+  var = .validateArg(var,reduce_scMethrix)
+  .validateType(n_cpg,"integer")
   .validateType(na.rm,"boolean")
   .validateType(verbose,"boolean")
-
+  
   #- Function code -----------------------------------------------------------------------------  
-  if (verbose) message("Generating reduced dataset...")
+  if (verbose) message("Generating reduced dataset...",start_time())
   
-  if (is.null(top_var)) {
-    if (verbose) message("All CpGs in the dataset will be used for the reduction")
-    meth_sub <- get_matrix(scm = scm, assay = assay, add_loci = FALSE)
+  meth <- get_matrix(scm = scm, assay = assay)
+  
+  if (var == "rand") {
+    if (verbose) message("Selecting ,",n_cpg," random CpGs...")
+    ids <- sample(x = 1:nrow(meth), replace = FALSE, size = min(n_cpg, nrow(meth)))
   } else {
-    
-    top_var <- as.integer(as.character(top_var))
-    
-    if (var == "rand") {
-      message("Random CpGs within provided GRanges will be used for the reduction")
-      meth_sub <- get_matrix(scm = scm, assay = assay, add_loci = FALSE)
-      ids <- sample(x = 1:nrow(meth_sub), replace = FALSE, size = min(top_var, nrow(meth_sub)))
-      meth_sub <- meth_sub[ids, ]
-    } else {
-      message("Taking top ",top_var," most variable CpGs for the reduction")
-      meth_sub <- get_matrix(scm = scm, assay = assay, add_loci = FALSE)
-      
-      if (is_h5(scm)) {
-        sds <- DelayedMatrixStats::rowSds(meth_sub, na.rm = TRUE)
-      } else {
-        sds <- matrixStats::rowSds(meth_sub, na.rm = TRUE)
-      }
-      
-      meth_sub <- meth_sub[order(sds, decreasing = TRUE)[seq_len(min(top_var, nrow(meth_sub)))], ]
-    }
+    if (verbose) message("Selecting top ",n_cpg," most variable CpGs...")
+    sds <- DelayedMatrixStats::rowSds(meth, na.rm = TRUE)
+    ids <- head(order(sds,decreasing = TRUE),n_cpg)
   }
   
+  ids <- sort(ids)
+
   if (na.rm) {
-      count <- nrow(meth_sub)
+    n <- length(ids)
     if (is_h5(scm)) {
-      meth_sub <- meth_sub[!DelayedMatrixStats::rowAnyMissings(meth_sub), , drop = FALSE]
+      ids <- ids[!DelayedMatrixStats::rowAnyMissings(meth[ids,])]
     } else {
-      meth_sub <- meth_sub[stats::complete.cases(meth_sub), , drop = FALSE]
+      ids <- ids[stats::complete.cases(meth[ids,])]
     }
-    
-    message("Removed ",count - nrow(meth_sub)," CpGs due to NA")
   }
   
-  if (nrow(meth_sub) == 0) {
+  if (length(ids) == 0) {
     stop("Zero loci available post NA removal :(")
+  } else if (na.rm) {
+    message("Removed ",n - length(ids)," CpGs due to NA")
   }
-  
-  return (meth_sub)
+
+  return (scm[ids,])
 }
 
-#------------------------------------------------------------------------------------------------------------
+#--- dim_red_scMethrix --------------------------------------------------------------------------------------
 #' Reduces dimensionality (tSNE, UMAP, PCA, or custom)
 #' @details Does reduction stuff
 #' @param n_components integer; Number of components to use
 #' @param n_neighbors integer; number of nearest neighbors for UMAP
 #' @param type string; the type of imputation "tSNE","UMAP", or "PCA"
-#' @inheritParams reduce_cpgs 
+#' @inheritParams reduce_scMethrix 
 #' @inheritParams Rtsne::Rtsne
 #' @inheritParams umap::umap
 #' @inheritParams stats::prcomp
@@ -89,14 +76,14 @@ reduce_cpgs <- function(scm, assay = "score", var = c("top", "rand"), top_var = 
 #' data('scMethrix_data')
 #' 
 #' @export
-dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), var = c("top", "rand"), top_var = 1000, perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
+dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), var = c("top", "rand"), n_cpg = 1000, perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   type = .validateArg(type,dim_red_scMethrix)
   var = .validateArg(var,dim_red_scMethrix)
-  .validateType(top_var,"integer")
+  .validateType(n_cpg,"integer")
   .validateType(perplexity,"integer")
   .validateType(n_components,"integer")
   .validateType(n_neighbors,"integer")
@@ -105,13 +92,14 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), v
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Starting imputation...",start_time())
   
-  meth <- reduce_cpgs(scm,assay = assay, var = var, top_var = top_var, verbose = verbose, na.rm = TRUE)
+  scm <- reduce_scMethrix(scm,assay = assay, var = var, n_cpg = n_cpg, verbose = verbose,)
+  meth <- get_matrix(scm,assay=assay)
   
   if (type == "tSNE") {
     
-    meth_sub <- Rtsne::Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), k = n_components, check_duplicates=F)#, ...)
+    meth <- Rtsne::Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), k = n_components, check_duplicates=F)#, ...)
     
-    SingleCellExperiment::reducedDim(scm, "tSNE") <- meth_sub$Y
+    SingleCellExperiment::reducedDim(scm, "tSNE") <- meth$Y
     
     if (verbose) message("tSNE generated in ",stop_time())
     
