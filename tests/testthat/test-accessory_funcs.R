@@ -9,8 +9,11 @@ test_that("has_cov",{
 })
 
 test_that("get_sample_name", {
-  expect_error(get_sample_name(5),"Must be a string file path")
-  expect_equal("file.name",get_sample_name("c:/dir/dir.dir/file.name.extension"))
+  expect_error(get_sample_name(5),msg.validateType)
+  expect_equal("file",get_sample_name("c:/dir/dir.dir/file"))
+  expect_equal("file",get_sample_name("c:/dir/dir.dir/file.extension"))
+  expect_equal("file",get_sample_name("c:/dir/dir.dir/file.extension.gz"))
+  expect_equal("file.name",get_sample_name("c:/dir/dir.dir/file.name.extension.bz2"))
 })
 
 test_that("binarize", {

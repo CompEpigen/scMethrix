@@ -1,7 +1,10 @@
 #--- is_h5 --------------------------------------------------------------------------------------------------
 #' Checks if \code{\link{scMethrix}} object is an HDF5 object
+#' @details This checks the metadata whether the experiment is in HDF5 format. As this can be manually changed and will
+#' not update after user operations to the assays, it may not be reliable.
+#' may not be reliable 
 #' @param scm scMethrix; The \code{\link{scMethrix}} object
-#' @return boolean Whether the object is HDF5
+#' @return boolean; Whether the object is HDF5
 #' @examples
 #' data('scMethrix_data')
 #' is_h5(scMethrix_data)
@@ -12,9 +15,11 @@ is_h5 = function(scm) {
 }
 
 #--- has_cov ------------------------------------------------------------------------------------------------
-#' Checks if \code{\link{scMethrix}} object has a coverage matrix
+#' Checks if \code{\link{scMethrix}} object has a coverage matrix.
+#' @details This check for the existence of a \code{counts} matrix in the object
 #' @param scm scMethrix; The \code{\link{scMethrix}} object
-#' @return boolean Whether the object has a coverage matrix
+#' @return boolean; Whether the object has a coverage matrix
+#' @import SummarizedExperiment
 #' @examples
 #' data('scMethrix_data')
 #' has_cov(scMethrix_data)
@@ -26,15 +31,40 @@ has_cov = function(scm) {
 
 #--- get_sample_name ----------------------------------------------------------------------------------------
 #' Returns sample name derived from the input file name
-#' @param s string; A file.path
-#' @return string containing the sample name
+#' @details The ideal input for this package is raw *.bedgraph files. As such, the sample names used in the experiment 
+#' simply drop the extension from the input file name:
+#' 
+#' E.g., the input file \code{sample_file.bedgraph} is referred to as \code{sample_file} in the experiment.
+#' 
+#' As [data.table::fread()] is used for import, compressed \code{.gz} and \code{.bz2} files can also be used.
+#' This extension will be automatically dropped:
+#' 
+#' E.g., \code{\\sample_file.bedgraph.gz} will still become \code{sample_file}
+#' 
+#' Hence, it is advisable to strip all non-necessary information from each sample name before input.
+#' 
+#' Files without extensions will just keep their name:
+#' 
+#' E.g., \code{\\sample_file} will become \code{\\sample_file}
+#' 
+#' @param filepath string; the file path of the sample
+#' @return string; the derived sample name
 #' @import tools
 #' @examples
-#' #get_sample_name("C:/dir/dir/filename.ext")
+#' # For uncompressed files
+#' get_sample_name("C:/dir/dir/sample.bedgraph")
+#' get_sample_name("C:/dir/dir/sample.file.bedgraph")
+#' 
+#' # For compressed files
+#' get_sample_name("C:/dir/dir/sample.bedgraph.gz")
+#' get_sample_name("C:/dir/dir/sample.bedgraph.bz2")
+#' get_sample_name("C:/dir/dir/sample.file.bedgraph.bz2")
 #' @export
-get_sample_name = function(s) {
-  if (!is.character(s)) stop("Must be a string file path")
-  return(tools::file_path_sans_ext(basename(s)))
+get_sample_name = function(filepath) {
+  .validateType(filepath,"string")
+  
+  filepath <- gsub("\\.gz$|\\.bz2$","",filepath)
+  return(tools::file_path_sans_ext(basename(filepath)))
 }
 
 #--- binarize -----------------------------------------------------------------------------------------------

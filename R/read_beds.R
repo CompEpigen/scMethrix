@@ -9,7 +9,7 @@
 #' 
 #' @param files list of strings; file.paths of BED files
 #' @param ref_cpgs data.table; list of CpG sites in the tab-delimited format of chr-start-end. Must be zero-based genome.
-#' @param colData list of strings; Sample names. Will be derived from filenames if not provided
+#' @param colData data.frame; information about each samples. Default is a blank \code{data.frame} with row.names corresponding to each sample.
 #' @param stranded boolean; Whether in input data is stranded. Default FALSE
 #' @param strand_collapse boolean; whether to collapse the crick strand into watson strand. Default FALSE
 #' @param genome_name string; Name of genome. Default hg19
@@ -100,6 +100,8 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
             Defaulting to n_thread = ", n_threads)
   }
   
+  Row.names <- NULL
+  
   #- Function code -----------------------------------------------------------------------------
   # Get the correct indexes of the input beds
   if (pipeline == "Custom") {
@@ -147,20 +149,28 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   gc()
 
   # Get colData
-  parse_colData <- function(colData,reads) {
+  parse_colData <- function(colData, reads, verbose) {
 
-    if(is.null(colData)) {
-      colData <- data.frame()[1:(length(files)), ]
-      row.names(colData) <- colnames(reads$score)
-    } else {
-      cd <- data.frame()[1:(length(files)), ]
-      cd$Sample <- colnames(reads$score)
-      cd <- merge(cd,colData,by="Sample")
-      row.names(cd) <- cd$Sample
-      cd$Sample <- NULL
-      colData <- cd
+    if (verbose) message("Checking colData...")
+    
+    n_reads <- ncol(reads[[1]])
+    n_colData <- nrow(colData)
+    cd <- data.frame(row.names = colnames(reads$score))
+    
+    if(!is.null(colData)) {
+      cd <- merge(cd,colData,by="row.names",all.x=T)
+      row.names(cd) <- cd[,'Row.names']
+      cd <- subset(cd,select=-c(Row.names))
     }
-    return(colData)
+    
+    if (verbose) {
+      read2col <- setdiff(colnames(reads$score), row.names(colData))
+      col2read <- setdiff(row.names(colData), colnames(reads$score))
+      if (length(read2col) != 0) message("   Samples not present in colData: ", paste(read2col,collapse=", "))
+      if (length(col2read) != 0) message("   ColData with no corresponding reads: ", paste(col2read,collapse=", "))
+    }
+    
+    return(cd)
   }
   
   if (h5) {
@@ -185,7 +195,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(GenomicRanges::coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
-    colData <- parse_colData(colData,reads)
+    colData <- parse_colData(colData = colData, reads = reads, verbose = verbose)
     
     gc()
 
@@ -206,7 +216,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
     ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
     chrom_size = sapply(GenomicRanges::coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
-    colData <- parse_colData(colData,reads)
+    colData <- parse_colData(colData = colData, reads = reads, verbose = verbose)
     
     gc()
 
