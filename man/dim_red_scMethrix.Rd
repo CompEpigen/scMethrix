@@ -8,8 +8,6 @@ dim_red_scMethrix(
   scm,
   assay = "score",
   type = c("tSNE", "UMAP", "PCA"),
-  var = c("top", "rand"),
-  top_var = 1000,
   perplexity = 30,
   verbose = FALSE,
   n_components = 2,
@@ -18,19 +16,15 @@ dim_red_scMethrix(
 )
 }
 \arguments{
-\item{scm}{scMethrix; Input \code{\link{scMethrix}} object}
+\item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{assay}{string; The assay to use. Default is 'score'}
+\item{assay}{string; name of an existing assay. Default = "score"}
 
 \item{type}{string; the type of imputation "tSNE","UMAP", or "PCA"}
 
-\item{var}{strning; Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'}
-
-\item{top_var}{integer; Number of variable CpGs to use. Default 1000 Set it to NULL to use all CpGs (which is not recommended due to memory requirements).}
-
 \item{perplexity}{numeric; Perplexity parameter (should not be bigger than 3 * perplexity < nrow(X) - 1, see details for interpretation)}
 
-\item{verbose}{boolean; flag to output messages or not}
+\item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 
 \item{n_components}{integer; Number of components to use}
 

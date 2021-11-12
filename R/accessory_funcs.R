@@ -210,7 +210,7 @@ get_source_idx = function(protocol = c("Bismark_cov", "MethylDackel", "MethylcTo
 
 #--- parse_source_idx ---------------------------------------------------------------------------------------
 #' Generates the column structure for importing bedgraph files
-#' @details 
+#' @details Create the column object with instructions on how to generate the non-inputted columns. 
 #' @param chr_idx integer; column of the chromosome
 #' @param start_idx integer; column of the CpG start site
 #' @param end_idx integer; column of the CpG end site

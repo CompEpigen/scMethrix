@@ -18,7 +18,7 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "rand"), n_cpg
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
-  var = .validateArg(var,reduce_scMethrix)
+  var <- .validateArg(var,reduce_scMethrix)
   .validateType(n_cpg,"integer")
   .validateType(na.rm,"boolean")
   .validateType(verbose,"boolean")
@@ -63,7 +63,7 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "rand"), n_cpg
 #' @param n_components integer; Number of components to use
 #' @param n_neighbors integer; number of nearest neighbors for UMAP
 #' @param type string; the type of imputation "tSNE","UMAP", or "PCA"
-#' @inheritParams reduce_scMethrix 
+#' @inheritParams generic_scMethrix_function
 #' @inheritParams Rtsne::Rtsne
 #' @inheritParams umap::umap
 #' @inheritParams stats::prcomp
@@ -76,24 +76,21 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "rand"), n_cpg
 #' data('scMethrix_data')
 #' 
 #' @export
-dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), var = c("top", "rand"), n_cpg = 1000, perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
+dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
-  type = .validateArg(type,dim_red_scMethrix)
-  var = .validateArg(var,dim_red_scMethrix)
-  .validateType(n_cpg,"integer")
+  type <- .validateArg(type,dim_red_scMethrix)
   .validateType(perplexity,"integer")
   .validateType(n_components,"integer")
   .validateType(n_neighbors,"integer")
   .validateType(verbose,"boolean")
   
   #- Function code -----------------------------------------------------------------------------
-  if (verbose) message("Starting imputation...",start_time())
-  
-  scm <- reduce_scMethrix(scm,assay = assay, var = var, n_cpg = n_cpg, verbose = verbose,)
-  meth <- get_matrix(scm,assay=assay)
+  if (verbose) message("Starting dimensionality reduction...",start_time())
+
+  meth <- get_matrix(scm,assay = assay)
   
   if (type == "tSNE") {
     
@@ -127,9 +124,7 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), v
       message("PCA finished in ",stop_time())
     }
     
-  } else {
-    stop("Invalid imputation type specified")
-  }
+  } 
   
   gc(verbose = FALSE)
   

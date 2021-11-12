@@ -1,20 +1,19 @@
 test_that("get_rowdata_stats", {
   
-  expect_error(get_metadata_stats("not scMethrix"),msg.validateExp)
+  expect_error(get_rowdata_stats("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
-    expect_error(get_metadata_stats(scm="not scMethrix"))
+    expect_error(get_rowdata_stats(scm="not scMethrix"))
     cols <- ncol(rowData(scm))
     s <- get_rowdata_stats(scm)
     expect_equal(dim(rowData(s)),c(n_cpg,cols+3))
     
     stats <- rowData(s)
-    rng <- 1:10
     
-    expect_equal(rowMeans(score(s)[rng,],na.rm=TRUE),stats$mean[rng])
+    expect_equal(rowMeans(score(s),na.rm=TRUE),stats$mean)
     #expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median_meth[rng])
-    expect_equal(DelayedMatrixStats::rowSds(score(s)[rng,],na.rm=TRUE),stats$sd[rng])
-    expect_equal(ncol(s)-rowCounts(score(s)[rng,],val=NA),stats$cells[rng])
+    expect_equal(DelayedMatrixStats::rowSds(score(s),na.rm=TRUE),stats$sd)
+    expect_equal(ncol(s)-rowCounts(score(s),val=NA),stats$cells)
   }))
 })
 
@@ -24,16 +23,16 @@ test_that("get_coldata_stats", {
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
     expect_error(get_coldata_stats(scm="not scMethrix"))
+    cols <- ncol(rowData(scm))
     s <- get_coldata_stats(scm)
-    expect_equal(dim(colData(s)),c(n_cpg,cols+3))
+    expect_equal(dim(colData(s)),c(n_samples,cols+3))
 
-    stats <- mcols(s)
-    rng <- 1:10
+    stats <- colData(s)
     
-    expect_equal(rowMeans(score(s)[rng,],na.rm=TRUE),stats$mean_meth[rng])
-    expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median_meth[rng])
-    expect_equal(DelayedMatrixStats::rowSds(score(s)[rng,],na.rm=TRUE),stats$sd_meth[rng])
-    expect_equal(ncol(s)-rowCounts(score(s)[rng,],val=NA),stats$cells[rng])
+    expect_equal(as.numeric(colMeans(score(s),na.rm=TRUE)),stats$mean)
+    #expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median[rng])
+    expect_equal(as.numeric(DelayedMatrixStats::colSds(score(s),na.rm=TRUE)),stats$sd)
+    expect_equal(nrow(s)-colCounts(score(s),val=NA),stats$cpgs)
   }))
 })
 

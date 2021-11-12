@@ -1,7 +1,6 @@
 test_that("bin_scMethrix", {
 
   expect_error(bin_scMethrix("not scMethrix"),msg.validateExp)
-  expect_error(bin_scMethrix(scm.h5,regions=GRanges()),msg.validateType)
 
   path <- paste0(h5_dir,"bin")
   regions <- GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,1000000000)) 
@@ -49,6 +48,8 @@ test_that("bin_scMethrix", {
     #Check for region subsetting
     bin <- bin_scMethrix(scm,regions=regions,bin_size=1000,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin3"), replace = T)
     expect_equal(sum(rowRanges(bin)$n_cpgs),n_cpg)
+    
+    expect_error(bin_scMethrix(scm.h5,regions=GRanges()),"Subsetting resulted in zero entries")
   }))
 })
 

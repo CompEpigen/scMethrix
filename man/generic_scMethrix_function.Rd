@@ -15,7 +15,8 @@ generic_scMethrix_function(
   h5_dir,
   overlap_type,
   batch_size,
-  replace
+  replace,
+  na.rm
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ generic_scMethrix_function(
 \item{batch_size}{integer; The maximum number of elements to process at once.}
 
 \item{replace}{boolean; flag for whether to delete the contents of h5_dir before saving}
+
+\item{na.rm}{boolean; flag to remove NA values}
 }
 \description{
 Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package

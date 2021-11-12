@@ -56,7 +56,8 @@ invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   test_that("plot_dim_red", {
     invisible(lapply(list("PCA","tSNE","UMAP"), function(type) {
     
-      scm.dimred <- dim_red_scMethrix(scm,type = type, verbose = FALSE) 
+      scm.dimred <- suppressWarnings(impute_regions(scm))
+      scm.dimred <- dim_red_scMethrix(scm.dimred, assay="impute", type = type, verbose = FALSE) 
       
       dim_red_graph_test_helper(scm.dimred, plot_dim_red, dim_red=type)
       dim_red_graph_test_helper(scm.dimred, plot_dim_red, dim_red=type, color_anno="Group", shape_anno="Group")

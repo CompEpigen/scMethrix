@@ -41,3 +41,6 @@ List of column names and indexes
 \description{
 Generates the column structure for importing bedgraph files
 }
+\details{
+Create the column object with instructions on how to generate the non-inputted columns.
+}
