@@ -36,11 +36,11 @@ In the report, we can check genome-wide and chromosome based statistics on cover
 # Filtering
 
 ## Masking low/high coverage CpGs 
-To ensure the high quality of our dataset, the sites with very low coverage (untrustworthy methylation level) or high average coverage (technical problem) should not be used. We can mask these CpG sites. Please note, that the DSS we were using for Differential Methylation Region (DMR) calling, doesn't need the removal of the lowly covered sites, because it takes it into account by analysis. However, using a not too restrictive threshold won't interfere with DMR calling.
+To ensure the high quality of our dataset, the sites with very low coverage (untrustworthy methylation level) or high average coverage (technical problem) should not be used. We can mask these CpG sites. Some differential methylation region (DMR) callers, like DSS, will internally take into account low coverage sites, so it may not be necessary to mask them.
 
 ```{r eval=F}
 # Masking CpG sites with a coverage < 2 and an average coverage > 2
-meth <- scMethrix::mask_by_coverage(meth, low_threshold = 2, avg_threshold = 2) 
+scm <- scMethrix::mask_by_coverage(scm, low_threshold = 2, avg_threshold = 4) 
 ```
 
 ## Masking low sample count
@@ -48,12 +48,12 @@ If the coverage matrix is absent, filtering can be done via sample count instead
 
 ```{r eval=F}
 # Masking CpG sites present in fewer than 2 samples
-meth <- scMethrix::mask_by_sample(meth, low_threshold = 2) 
+scm <- scMethrix::mask_by_sample(scm, low_threshold = 2) 
 ```
 
 ```{r eval=F}
 # Masking CpG sites present in fewer than 5% of samples
-meth <- scMethrix::mask_by_sample(meth, prop_threshold = 0.05) 
+scm <- scMethrix::mask_by_sample(scm, prop_threshold = 0.05) 
 ```
 
 ## Masking low variance CpGs 
@@ -61,7 +61,7 @@ CpG sites with a low inter-individual methylation variance can increase the risk
 
 ```{r eval=F}
 # Masking sites with a variance < 0.05
-meth <- scMethrix::mask_by_variance(meth, low_threshold = 0.05)
+scm <- scMethrix::mask_by_variance(scm, low_threshold = 0.05)
 ```
 
 ## SNP filtering
@@ -81,8 +81,9 @@ library(GenomicScores)
 ```
 
 ```{r eval=F}
-meth <- scMethrix::remove_snps(meth, keep = TRUE)
+scm <- scMethrix::remove_snps(scm, keep = TRUE)
 ```
+
 * There is a possibility to keep the sites possibly overlapping with SNPs. We can use this data for detecting possible sample mismatches. For this, we need to plot the most variable sites (probably the ones that are variable in our study population) and plot them on a heatmap. 
 
 ```{r, eval=F}
@@ -95,10 +96,10 @@ pheatmap::pheatmap(get_matrix(order_by_sd(snps)[1:min(5000, length(snps)),]))
 
 ## Filtering masked sites
 
-After masking is completed, we can remove those sites that are not covered by any of the samples. 
+After masking is completed, we can remove sites that are no longer/never covered by any of the samples. 
 
 ```{r eval=F}
-meth <- scMethrix::remove_uncovered(meth) 
+scm <- scMethrix::remove_uncovered(scm) 
 ```
 
 # Querying
@@ -107,29 +108,28 @@ Often, whole genome analysis using all samples is not necessary. This package in
 
 ```{r eval=F}
 # Subsetting to include only two samples
-meth <- scMethrix::subset_methrix(meth, contigs = c("GSM2553093", "GSM2553095"), by="include")
-colnames(inc)
+
+scm.subset <- scMethrix::subset_scMethrix(scm, samples = gsm_list[1:2], by="include")
+colData(scm.subset)
 ```
 
 ```{r eval=F}
 # Subsetting to exclude two samples
-meth <- scMethrix::subset_methrix(meth, contigs = c("GSM2553093", "GSM2553095"), by="exclude")
-colnames(meth)
+scm.subset <- scMethrix::subset_scMethrix(scm, samples = gsm_list[1:2], by="exclude")
+colnames(scm.subset)
 ```
 
 ```{r eval=F}
 # Subsetting to include only chr1 and chr2
-meth <- scMethrix::subset_methrix(meth, contigs = c("chr1", "chr2"))
-meth
-GenomicRanges::seqinfo(SummarizedExperiment::rowRanges(meth))
+scm.subset <- scMethrix::subset_scMethrix(scm, contigs = c("chr1", "chr2"))
+range(rowRanges(scm.subset))
 ```
 
 ```{r subset_scMethrix, eval=F}
-# Subsetting to include only bases 1:10M in chr1
-regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,10000000)) 
-meth <- scMethrix::subset_methrix(meth, regions = regions)
-meth
-GenomicRanges::seqlengths(SummarizedExperiment::rowRanges(meth))
+# Subsetting to include only bases 1:10M in chr5
+regions <- GenomicRanges::GRanges(seqnames = "chr5", ranges = IRanges(1,10000000)) 
+scm.subset <- scMethrix::subset_scMethrix(scm, regions = regions)
+range(rowRanges(scm.subset))
 ```
 
 # Visualization and QC after filtering
@@ -144,74 +144,22 @@ methrix::methrix_report(meth = meth, output_dir = getwd(), recal_stats = TRUE, p
 ```
 The report can be found here: [processed_methrix_reports.html](https://compepigen.github.io/WGBS_best_practice/processed_methrix_reports.html)
 
-
 There are additional possibilities to visualize the study. We can look at the density of coverage both sample- and group-wise: 
   
 ```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
-scMethrix::plot_coverage(meth, type = "dens")
+scMethrix::plot_coverage(scm, type = "dens")
 ```
 
 ```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
-scMethrix::plot_coverage(meth, type = "dens", pheno = "Day", perGroup = TRUE)
+scMethrix::plot_coverage(scm, type = "dens", pheno = "Cell", show_legend = FALSE)
 ```
 
 We can visualize te beta value distribution as a violin plot or density plot. These plots (as well as the coverage plot) use the 25000 most variable CpG sites to ensure fast processing. `plot_density` and `plot_violin` has the option to use data only from a restricted region. 
 
 ```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
-scMethrix::plot_density(meth)
+scMethrix::plot_density(scm, show_legend = FALSE)
 ```
 
 ```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
-scMethrix::plot_density(meth, ranges = GRanges("chr1:1-10000000"))
-```
-
-```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
-scMethrix::plot_violin(meth)
-```
-
-## Dimensionality reduction 
-
-`scMethrix` offers principal component analysis (PCA), uniform manifold approximation and projection (UMAP), and t-distributed stochastic neighbor embedding (tSNE) to conduct and visualize dimensionality reduction. The resulting reduction is stored in the scMethrix object, and can be accessed via reducedDim().
-First, the model is calculated, then a number of sites are selected for plotting, either random or based on variance (`var` option). This ensures that the calculations remain feasible. 
-
-```{r fig.height=3, fig.width=4, eval=FALSE}
-meth <- scMethrix::dim_red_scMethrix(meth,type="PCA",top_var = 10000, n_components = 20)
-plot_dim_red(meth,type="PCA")
-```
-
-```{r fig.height=3, fig.width=4, eval=FALSE}
-meth <- scMethrix::dim_red_scMethrix(meth,type="UMAP",top_var = 10000, n_neighbors = 3)
-plot_dim_red(meth,type="UMAP")
-```
-
-```{r fig.height=3, fig.width=4, eval=FALSE}
-meth <- scMethrix::dim_red_scMethrix(meth,type="tSNE",top_var = 10000, n_components = 20)
-plot_dim_red(meth,type="tSNE")
-```
-
-At visualization, we can provide the `methrix` object to allow color or shape annotation of groups or samples.  
-
-```{r fig.height=3, fig.width=4, eval=FALSE}
-scMethrix::plot_pca(meth, col_anno = "Day", shape_anno = "Replicate")
-```
-
-`scMethrix` offers the possibility of region based filtering. With this option, selected regions (e.g. promoters) can be visualized. We will use the `AnnotationHub` package to assess basic annotation categories. 
-
-```{r message=FALSE, warning=FALSE, eval=FALSE}
-if(!requireNamespace("AnnotationHub")) 
-  BiocManager::install("AnnotationHub", update = F)
-```
-
-```{r message=FALSE, warning=FALSE, eval=FALSE}
-library("AnnotationHub")
-ah = AnnotationHub()
-qhs = query(ah, c("RefSeq", "Mus musculus", "mm10"))
-genes = qhs[[1]]
-promotors = promoters(genes)
-```
-
-```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
-meth.subset <- subset_methrix(meth,regions = promotors)
-meth <- scMethrix::dim_red_scMethrix(meth.subset,type="PCA",top_var = 10000, n_components = 20)
-plot_dim_red(meth,type="PCA")
+scMethrix::plot_violin(scm, show_legend = FALSE)
 ```

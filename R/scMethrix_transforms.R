@@ -514,6 +514,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 # }
 # 
 
+#--- collapse_samples ---------------------------------------------------------------------------------------
 #' Collapses multiple samples into a single sample by group
 #' @details 
 #' Multiple samples can be collapsed into a single meta-sample. Grouping for samples can be defined via colData. The collapse function can accept an arbitrary function for each assay on how to handle the collapsing (typically `mean` for scores, and `sum` for counts).
