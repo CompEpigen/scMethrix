@@ -500,9 +500,13 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 
 #--- save_HDF5_scMethrix --------------------------------------------------------------------------------------------------
 #' Saves an HDF5 \code{\link{scMethrix}} object
-#' @details Takes \code{\link{scMethrix}} object and saves it in the specified directory
+#' @details Takes \code{\link{scMethrix}} object and saves it in the specified directory.
+#' 
+#' If \code{quick = TRUE}, any operations done on assay matrices will not be realized. In other words, the assay information on the hard disk will not be changed. Non-matrix information will be updated (e.g., metadata) as well as any pending matrix operations. To use this, the experiment must have previously been saved using \code{quick = FALSE}.
+#' 
 #' @inheritParams generic_scMethrix_function
 #' @param replace Should it overwrite the pre-existing data? FALSE by default.
+#' @param quick boolean; Flag to skip realizing of matrix operations
 #' @param ... Parameters to pass to saveHDF5SummarizedExperiment
 #' @importFrom SummarizedExperiment assays
 #' @examples
@@ -512,7 +516,9 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 #' save_HDF5_scMethrix(scm, h5_dir = dir, replace = TRUE)
 #' @return Nothing
 #' @export
-save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verbose = TRUE, ...) {
+save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, quick = FALSE, verbose = TRUE, ...) {
+  
+  if (quick) stop("Quick save is currently not supported")
   
   #- Input Validation --------------------------------------------------------------------------
   if (is(scm, "scMethrix")) {
@@ -521,13 +527,14 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verb
     stop("A valid SingleCellExperiment-derived object needs to be supplied.", call. = FALSE)
   }
   
-  .validateType(h5_dir,"string")
+  .validateType(quick,"boolean")
+  if (!quick) .validateType(h5_dir,"string")
   .validateType(replace,"boolean")
   .validateType(verbose,"boolean")
   
   #if (is.null(h5_dir)) h5_dir = paste0(tempdir(),"/h5")
   
-  if (dir.exists(h5_dir)) {
+  if (!quick && dir.exists(h5_dir)) {
     files <- list.files (h5_dir,full.names = TRUE)
     
     if (length(files) != 0 && replace == FALSE) {
@@ -548,8 +555,11 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, verb
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Saving HDF5 experiment to disk...",start_time())
   
+  if (quick) {
+    HDF5Array::quickResaveHDF5SummarizedExperiment(x = scm, verbose=verbose)
+  } else {
     HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = h5_dir, replace = replace, chunkdim = c(length(rowRanges(scm)),1), level = 6, verbose = verbose,...)
-
+  }
   if (verbose) message("Experiment saved in ",stop_time())
 }
 
@@ -610,12 +620,12 @@ convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
   
   for (name in SummarizedExperiment::assayNames(scm)) {
     SummarizedExperiment::assay(scm,name) <- as.matrix(SummarizedExperiment::assay(scm,name))   
+    if (verbose) message("   Converted '",name,"' assay in ", split_time())
   }
   
-  #SummarizedExperiment::assays(scm)[[1]] <- as.matrix(SummarizedExperiment::assays(scm)[[1]])
   scm@metadata$is_h5 <- FALSE
   
-  if (verbose) message("Converted in ", stop_time())
+  if (verbose) message("Experiment converted in ", stop_time())
   
   return(scm)
 }
