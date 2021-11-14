@@ -183,8 +183,28 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 
   # Function to process each bin
   
+  if (n_threads > 1) {
+    if (verbose) message("Initializing cluster...")
+  
+    worker <- function (mtx,op) {
+      mtx <- mtx[,lapply(.SD,op),by=(overlap_indices$yid)]
+      mtx <- mtx[,overlap_indices:=NULL]
+      return(mtx)
+    }
+    
+    cl <- parallel::makeCluster(n_threads)
+    doParallel::registerDoParallel(cl)
+    parallel::clusterEvalQ(cl, c(library(data.table),library(scMethrix)))
+    parallel::clusterExport(cl,list('worker',"overlap_indices"), envir = environment())
+    on.exit(parallel::stopCluster(cl))
+    
+    if (verbose) message("   Cluster with ",n_threads, " cores started in ",split_time())
+  }
+  
   for (name in SummarizedExperiment::assayNames(scm)) {
 
+    gc()
+    
     if (verbose) message("Filling bins for the ",name," assay...")
     
     if (is.null(trans[[name]])) { # If no named vector is specified, default to mean
@@ -214,113 +234,25 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
         DelayedArray::write_block(block = as.matrix(mtx), viewport = grid[[as.integer(i)]], sink = sink)
         
         rm(mtx)
-        gc()
-        
+
         if (verbose) message("   Processed chunk ",i," (",split_time(),")")
       }
       
       assays[[name]] <- sink
       
-      
-       # mtx <- get_matrix(scm,assay=name)[overlap_indices$xid,] #TODO: Somehow missing rows if not subset, not sure why
-  
-
-  
-        # cl <- parallel::makeCluster(n_threads)
-        # doParallel::registerDoParallel(cl)
-        # parallel::clusterEvalQ(cl, c(library(DelayedMatrixStats)))
-        # parallel::clusterExport(cl,list('overlap_indices','worker','op'), envir = environment())
-        # on.exit(parallel::stopCluster(cl))
-        
-        
-        
-        # 
-        # 
-        # idxs <- split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid)/ceiling(length(overlap_indices$xid)/n_chunks)))
-        # 
-        # dat <- do.call("rbind",lapply(idxs, function(idx) get_matrix(scm[idx,])))
-        # dat = cbind(overlap_indices, dat)
-        # 
-        # dat[, lapply(.SD, mean, na.rm = T), by = yid, .SDcols = colnames(scm)]
-        # 
-        # avg <- t(sapply(unique(overlap_indices[,yid]), function (rid) {
-        #   message("Parsing ",rid)
-        #   idx <- overlap_indices[yid == rid,]$xid
-        #   DelayedMatrixStats::colMeans2(mtx,row=idx,na.rm=TRUE)
-        # }))
-        # colnames(avg) <- colnames(mtx)
-      
     } else {
-
-      ### Split by cols
-      # worker <- function (mtx,overlap_indices,op) {
-      #   mtx <- mtx[,lapply(.SD,op),by=(overlap_indices$yid)]
-      #   mtx <- mtx[,overlap_indices:=NULL]
-      #   return(mtx)
-      # }
-      # 
-      # mtx <- data.table(get_matrix(scm,assay=name))[overlap_indices$xid,] 
-      # cols <- split_vector(1:ncol(mtx),n_chunks)
-      # 
-      # cl <- parallel::makeCluster(n_threads)
-      # doParallel::registerDoParallel(cl)
-      # parallel::clusterEvalQ(cl, c(library(data.table)))
-      # parallel::clusterExport(cl,list('overlap_indices','worker','op'), envir = environment())
-      # on.exit(parallel::stopCluster(cl))
-      # 
-      # 
-      # mtx <- lapply(cols,function(col) mtx[,..col])
-      # #mtx <- lapply(mtx,worker,overlap_indices = overlap_indices,op = op)
-      # mtx <- parLapply(cl,mtx,worker,overlap_indices = overlap_indices,op=op)
-      # 
-      # 
-      # mtx <- setDT(unlist(mtx, recursive = FALSE))
-
-      ### Split by rids
-      # worker <- function (mtx, yid, op) {
-      #   mtx <- mtx[,lapply(.SD,op),by=(yid)]
-      #   mtx <- mtx[,yid:=NULL]
-      #   return(mtx)
-      # }
-      # mtx <- data.table(get_matrix(scm,assay=name))[overlap_indices$xid,] 
-      # 
-      # #Make two chunked lists for xid and yids
-      # yid_list <- rle(overlap_indices$yid)
-      # yid_list <- split(overlap_indices$yid,ceiling(rep(1:length(yid_list$lengths), yid_list$lengths) /
-      #                                                 (length(yid_list$lengths)/n_chunks)))
-      # lens <- sapply(yid_list,function(yids) length(yids))      
-      # xid_list <- split(overlap_indices$xid,rep(1:length(lens),lens))
-      # 
-      # cl <- parallel::makeCluster(n_threads)  
-      # doParallel::registerDoParallel(cl) 
-      # parallel::clusterEvalQ(cl, c(library(data.table)))
-      # parallel::clusterExport(cl,list('worker'), envir = environment())
-      # on.exit(parallel::stopCluster(cl))
-      # 
-      # mtx <- clusterMap(cl,worker,mtx=lapply(xid_list,function(xid) mtx[unlist(xid),]), yid = yid_list, MoreArgs = list(op = op))
-      # mtx <- rbindlist(lapply(mtx, as.data.frame.list))
-
-      ### Mapply algorithm 
-      # mtx <- mapply(worker,mtx=lapply(xid_list,function(xid) mtx[unlist(xid),]), yid = yid_list, MoreArgs = list(op = op),simplify=TRUE)
-      # cols <- row.names(mtx)
-      # mtx <- lapply(1:nrow(mtx),function(x) unlist(mtx[x,]))
-      # mtx <- t(rbindlist(lapply(mtx, as.data.frame.list)))
-      # colnames(mtx) <- cols
-
-      ### Basic algorithm
-
       mtx <- data.table(get_matrix(scm,assay=name))[overlap_indices$xid,] #TODO: Somehow missing rows if not subset, not sure why
       mtx <- mtx[,lapply(.SD,op),by=overlap_indices$yid]
-      mtx <- mtx[,overlap_indices:=NULL]
-
-      assays[[name]] <- as(mtx,class(get_matrix(scm,assay=name)))
+      out <- mtx[,overlap_indices:=NULL]
+      
+      if (verbose) message("Bins filled in ",split_time())
+      
+      assays[[name]] <- as(out,class(get_matrix(scm,assay=name)))
+      rm(out)
     }
-    
-    if (verbose) message("Bins filled in ",split_time())
   }
 
   rrng <- rrng[which(rrng$rid %in% overlap_indices$yid)]
-  
   rrng$rid <- NULL
 
   if (verbose) message("Rebuilding experiment...")
@@ -331,7 +263,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
                               replace = replace)  
   } else {
     m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_hdf5 = FALSE, 
-                              genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),)
+                              genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm))
   }
   
   if (verbose) message("Experiment binned for ", n_regions," regions containing ", length(m_obj)," total bins in ", stop_time())
