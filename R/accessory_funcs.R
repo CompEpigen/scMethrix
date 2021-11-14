@@ -113,7 +113,7 @@ fill = function(x, fill = NA) {
 colbind = function(...) {
   setDT(
     unlist(..., recursive = FALSE),
-    check.names = TRUE
+    check.names = FALSE
   )[]
 }
 

@@ -349,73 +349,118 @@ test_that("get_region_summary", {
   #expect_warning(get_region_summary(scm.mem,n_chunks=1000,region=region))
   }))
 })
+# 
+# test_that("mask_by_coverage", {
+#   expect_error(mask_by_coverage("not scMethrix"),msg.validateExp)
+#   expect_error(mask_by_coverage(scm.mem,assay="not an assay"),msg.validateAssay)
+#   expect_error(mask_by_coverage(remove_assay(scm.mem,assay="counts")))
+#   expect_error(mask_by_coverage(scm.mem,n_threads=2))
+#   expect_error(mask_by_coverage(scm.mem,low_threshold=-1),"low_threshold")
+#   expect_error(mask_by_coverage(scm.mem,low_threshold="not numeric"),msg.validateType)
+#   expect_error(mask_by_coverage(scm.mem,avg_threshold=-1,"avg_threshold"))
+#   expect_error(mask_by_coverage(scm.mem,avg_threshold="not numeric"),msg.validateType)
+#   
+#   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+# 
+#     scm <- mask_by_coverage(scm,low_threshold=2,avg_threshold=NULL)
+#     expect_equal(dim(scm),c(n_cpg,n_samples))
+#     expect_equal(dim(remove_uncovered(scm)),c(length(which(rowSums(counts(scm),na.rm=TRUE) >= 2)),n_samples))
+# 
+#     scm <- mask_by_coverage(scm,low_threshold=NULL,avg_threshold=1) #Removes all rows with a sample with a coverage of 2
+#     expect_equal(dim(scm),c(n_cpg,n_samples))
+#     expect_equal(dim(remove_uncovered(scm)),c(length(which(rowMeans(counts(scm),na.rm=TRUE) == 1)),n_samples))
+# 
+#   }))
+# })
+# 
+# test_that("mask_by_sample", {
+#   expect_error(mask_by_sample("not scMethrix"),msg.validateExp)
+#   expect_error(mask_by_sample(scm.mem,assay="not an assay"),msg.validateAssay)
+#   expect_error(mask_by_sample(scm.mem,n_threads=2))
+#   expect_error(mask_by_sample(scm.mem,low_threshold=2,prop_threshold=1))
+#   expect_error(mask_by_sample(scm.mem,low_threshold=-1),"low_threshold")
+#   expect_error(mask_by_sample(scm.mem,low_threshold="not numeric"),msg.validateType)
+#   expect_error(mask_by_sample(scm.mem,prop_threshold=-1,"prop_threshold"))
+#   expect_error(mask_by_sample(scm.mem,prop_threshold=2,"prop_threshold"))
+#   expect_error(mask_by_sample(scm.mem,prop_threshold="not numeric"),msg.validateType)
+#   
+#   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+#     
+#     scm <- mask_by_sample(scm,low_threshold=2)
+#     expect_equal(dim(scm),c(n_cpg,n_samples))
+#     expect_equal(dim(remove_uncovered(scm)),c(length(which(ncol(scm) - rowCounts(score(scm),value=NA) >= 2)),n_samples))
+#     
+#     scm <- mask_by_sample(scm,low_threshold=NULL,prop_threshold=0.25) # Since 0.25 of 4 sample is 1, same result as low_threshold = 1
+#     expect_equal(dim(scm),c(n_cpg,n_samples))
+#     expect_equal(dim(remove_uncovered(scm)),c(length(which(ncol(scm) - rowCounts(score(scm),value=NA) > 1)),n_samples))
+#     
+#   }))
+# })
+# 
+# test_that("mask_by_variance", {
+#   expect_error(mask_by_variance("not scMethrix"),msg.validateExp)
+#   expect_error(mask_by_variance(scm.mem,assay="not an assay"),msg.validateAssay)
+#   expect_error(mask_by_variance(scm.mem,n_threads=2))
+#   expect_error(mask_by_variance(scm.mem,low_threshold=2,"low_threshold must be between 0 and 1"))
+#   expect_error(mask_by_variance(scm.mem,low_threshold=-1,"low_threshold must be between 0 and 1"))
+#   expect_error(mask_by_variance(scm.mem,low_threshold="not numeric"),msg.validateType)
+#   
+#   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
+#     
+#     #Since only 4 samples, only rows with 1 unique score value are masked
+#     uniq <- apply(score(scm),1,function(x) {
+#       uniq <- unique(x)
+#       return(length(uniq[!is.na(uniq)]))
+#     })
+#     
+#     scm <- mask_by_variance(scm,low_threshold=0.05)
+# 
+#     expect_equal(dim(scm),c(n_cpg,n_samples))
+#     expect_equal(dim(remove_uncovered(scm)),c(sum(uniq != 1),n_samples))
+#   }))
+# })
 
-test_that("mask_by_coverage", {
-  expect_error(mask_by_coverage("not scMethrix"),msg.validateExp)
-  expect_error(mask_by_coverage(scm.mem,assay="not an assay"),msg.validateAssay)
-  expect_error(mask_by_coverage(remove_assay(scm.mem,assay="counts")))
-  expect_error(mask_by_coverage(scm.mem,n_threads=2))
-  expect_error(mask_by_coverage(scm.mem,low_threshold=-1),"low_threshold")
-  expect_error(mask_by_coverage(scm.mem,low_threshold="not numeric"),msg.validateType)
-  expect_error(mask_by_coverage(scm.mem,avg_threshold=-1,"avg_threshold"))
-  expect_error(mask_by_coverage(scm.mem,avg_threshold="not numeric"),msg.validateType)
-  
+test_that("mask_by_stat", {
+
+  expect_error(mask_by_stat("not scMethrix"),msg.validateExp)
+  expect_error(mask_by_stat(scm.mem,n_threads=2))
+
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
 
-    scm <- mask_by_coverage(scm,low_threshold=2,avg_threshold=NULL)
-    expect_equal(dim(scm),c(n_cpg,n_samples))
-    expect_equal(dim(remove_uncovered(scm)),c(length(which(rowSums(counts(scm),na.rm=TRUE) >= 2)),n_samples))
+    expect_error(mask_by_stat(scm,assay="not an assay"),msg.validateAssay)
+    expect_error(mask_by_stat(scm,by="not an arg"),msg.validateArg)
+    expect_error(mask_by_stat(scm,stat="not an arg"),msg.validateArg)
+    expect_error(mask_by_stat(scm,op="not an arg"),msg.validateArg)
+    expect_error(mask_by_stat(scm,na.rm="not a boolean"),msg.validateType)
+    expect_error(mask_by_stat(scm,verbose="not a boolean"),msg.validateType)
+    expect_error(mask_by_stat(scm,threshold="not a numeric"),msg.validateType)
 
-    scm <- mask_by_coverage(scm,low_threshold=NULL,avg_threshold=1) #Removes all rows with a sample with a coverage of 2
-    expect_equal(dim(scm),c(n_cpg,n_samples))
-    expect_equal(dim(remove_uncovered(scm)),c(length(which(rowMeans(counts(scm),na.rm=TRUE) == 1)),n_samples))
+    msg.cpgErr = "No CpG sites left"
+
+    s <- mask_by_stat(scm,assay="counts",threshold=2,by="row",stat="sum",op="==")
+    row_idx <- which(DelayedMatrixStats::rowSums2(counts(scm),na.rm=T) == 2)
+    expect_true(all(is.na(score(s[row_idx,]))))
+
+    s <- mask_by_stat(scm,assay="counts",threshold=1,by="row",stat="mean",op=">")
+    row_idx <- which(DelayedMatrixStats::rowMeans2(counts(scm)) > 1)
+    expect_true(all(is.na(score(s[row_idx,]))))
+
+    avg <- nrow(scm) - mean(DelayedMatrixStats::colCounts(score(scm),na.rm=T,value = as.integer(NA)))
+    s <- mask_by_stat(scm,assay="score",threshold=avg,by="col",stat="count",op=">")
+    col_idx <- (nrow(scm) - DelayedMatrixStats::colCounts(score(scm),na.rm=T,value = as.integer(NA))) > avg
+    expect_true(all(is.na(score(s[,col_idx]))))
+
+    s <- remove_uncovered(scm)
+    s <- mask_by_stat(s,assay="counts",threshold=0,by="row",stat="sum",op="==")
+    expect_false(any(DelayedMatrixStats::rowAlls(score(s),value=NA)))
+    
+    s <- remove_uncovered(scm)
+    expect_error(mask_by_stat(s,assay="counts",threshold=0,by="row",stat="sum",op=">"),msg.cpgErr)
+    
+    
+    expect_error(mask_by_stat(scm,assay="score",threshold=0,by="row",stat="var",op=">="),msg.cpgErr)
+    expect_error(mask_by_stat(scm,assay="score",threshold=1,by="row",stat="var",op="<="),msg.cpgErr)
 
   }))
 })
 
-test_that("mask_by_sample", {
-  expect_error(mask_by_sample("not scMethrix"),msg.validateExp)
-  expect_error(mask_by_sample(scm.mem,assay="not an assay"),msg.validateAssay)
-  expect_error(mask_by_sample(scm.mem,n_threads=2))
-  expect_error(mask_by_sample(scm.mem,low_threshold=2,prop_threshold=1))
-  expect_error(mask_by_sample(scm.mem,low_threshold=-1),"low_threshold")
-  expect_error(mask_by_sample(scm.mem,low_threshold="not numeric"),msg.validateType)
-  expect_error(mask_by_sample(scm.mem,prop_threshold=-1,"prop_threshold"))
-  expect_error(mask_by_sample(scm.mem,prop_threshold=2,"prop_threshold"))
-  expect_error(mask_by_sample(scm.mem,prop_threshold="not numeric"),msg.validateType)
-  
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    
-    scm <- mask_by_sample(scm,low_threshold=2)
-    expect_equal(dim(scm),c(n_cpg,n_samples))
-    expect_equal(dim(remove_uncovered(scm)),c(length(which(ncol(scm) - rowCounts(score(scm),value=NA) >= 2)),n_samples))
-    
-    scm <- mask_by_sample(scm,low_threshold=NULL,prop_threshold=0.25) # Since 0.25 of 4 sample is 1, same result as low_threshold = 1
-    expect_equal(dim(scm),c(n_cpg,n_samples))
-    expect_equal(dim(remove_uncovered(scm)),c(length(which(ncol(scm) - rowCounts(score(scm),value=NA) > 1)),n_samples))
-    
-  }))
-})
-
-test_that("mask_by_variance", {
-  expect_error(mask_by_variance("not scMethrix"),msg.validateExp)
-  expect_error(mask_by_variance(scm.mem,assay="not an assay"),msg.validateAssay)
-  expect_error(mask_by_variance(scm.mem,n_threads=2))
-  expect_error(mask_by_variance(scm.mem,low_threshold=2,"low_threshold must be between 0 and 1"))
-  expect_error(mask_by_variance(scm.mem,low_threshold=-1,"low_threshold must be between 0 and 1"))
-  expect_error(mask_by_variance(scm.mem,low_threshold="not numeric"),msg.validateType)
-  
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    
-    #Since only 4 samples, only rows with 1 unique score value are masked
-    uniq <- apply(score(scm),1,function(x) {
-      uniq <- unique(x)
-      return(length(uniq[!is.na(uniq)]))
-    })
-    
-    scm <- mask_by_variance(scm,low_threshold=0.05)
-
-    expect_equal(dim(scm),c(n_cpg,n_samples))
-    expect_equal(dim(remove_uncovered(scm)),c(sum(uniq != 1),n_samples))
-  }))
-})
