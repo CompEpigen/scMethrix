@@ -10,10 +10,15 @@ is_h5(scm)
 \item{scm}{scMethrix; The \code{\link{scMethrix}} object}
 }
 \value{
-boolean Whether the object is HDF5
+boolean; Whether the object is HDF5
 }
 \description{
 Checks if \code{\link{scMethrix}} object is an HDF5 object
+}
+\details{
+This checks the metadata whether the experiment is in HDF5 format. As this can be manually changed and will
+not update after user operations to the assays, it may not be reliable.
+may not be reliable
 }
 \examples{
 data('scMethrix_data')

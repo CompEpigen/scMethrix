@@ -2,7 +2,7 @@
 % Please edit documentation in R/scmethrix_operations.R
 \name{mask_by_sample}
 \alias{mask_by_sample}
-\title{Masks CpGs by cell count}
+\title{Masks rows or columns based on some descriptive statistic}
 \usage{
 mask_by_sample(
   scm = NULL,
@@ -20,7 +20,7 @@ mask_by_sample(
 
 \item{low_threshold}{numeric; The minimal cell count allowed. Everything below will get masked.}
 
-\item{prop_threshold}{numeric; The minimal proportion of covered cells.}
+\item{prop_threshold}{numeric; The minimal proportion of covered cells. Must be between (0,1).}
 
 \item{n_threads}{integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.}
 
@@ -30,17 +30,26 @@ mask_by_sample(
 An object of class \code{\link{scMethrix}}
 }
 \description{
-Masks CpGs by cell count
+Masks rows or columns based on some descriptive statistic
 }
 \details{
-Takes \code{\link{scMethrix}} object and masks sites with too high or too low coverage
-by putting NA for assay values. The sites will remain in the object and all assays will be affected.
+Takes \code{\link{scMethrix}} object and masks CpGs with masks sites with too high or too low coverage. All masked CpGs will have their values replaced by NA. The sites will remain in the object and all assays will be affected. These sites can later be removed with \code{\link[=remove_uncovered]{remove_uncovered()}}.
 
-\code{low_threshold} is used to mask sites with low overall cell counts. A site represented by a single sample is typically not useful.
-\code{prop_threshold} is used to mask sites with a low proportional count
+\code{low_threshold} is used to mask sites with low overall cell counts, as a CpG site represented by a single sample is typically not useful.
+\code{prop_threshold} is used to mask sites with a low proportional count. If a site is present in 10 out of 100 samples, the proportional count is 10/100 = 0.1.
 }
 \examples{
 data('scMethrix_data')
 mask_by_sample(scMethrix_data,low_threshold=2)
 mask_by_sample(scMethrix_data,prop_threshold=0.5) 
 }
+\seealso{
+Other masking: 
+\code{\link{mask_by_idx}()}
+
+Other quality control: 
+\code{\link{mask_by_idx}()},
+\code{\link{mask_by_stat}()}
+}
+\concept{masking}
+\concept{quality control}

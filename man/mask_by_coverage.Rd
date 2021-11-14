@@ -6,7 +6,6 @@
 \usage{
 mask_by_coverage(
   scm = NULL,
-  assay = "score",
   low_threshold = NULL,
   avg_threshold = NULL,
   n_threads = 1,
@@ -15,8 +14,6 @@ mask_by_coverage(
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
-
-\item{assay}{string; name of an existing assay. Default = "score"}
 
 \item{low_threshold}{numeric; The minimal coverage allowed. Everything below will get masked. If NULL, this will be ignored.}
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/accessory_funcs.R
 \name{has_cov}
 \alias{has_cov}
-\title{Checks if \code{\link{scMethrix}} object has a coverage matrix}
+\title{Checks if \code{\link{scMethrix}} object has a coverage matrix.}
 \usage{
 has_cov(scm)
 }
@@ -10,10 +10,13 @@ has_cov(scm)
 \item{scm}{scMethrix; The \code{\link{scMethrix}} object}
 }
 \value{
-boolean Whether the object has a coverage matrix
+boolean; Whether the object has a coverage matrix
 }
 \description{
-Checks if \code{\link{scMethrix}} object has a coverage matrix
+Checks if \code{\link{scMethrix}} object has a coverage matrix.
+}
+\details{
+This check for the existence of a \code{counts} matrix in the object
 }
 \examples{
 data('scMethrix_data')

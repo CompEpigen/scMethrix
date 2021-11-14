@@ -8,6 +8,7 @@ save_HDF5_scMethrix(
   scm = NULL,
   h5_dir = NULL,
   replace = FALSE,
+  quick = FALSE,
   verbose = TRUE,
   ...
 )
@@ -18,6 +19,8 @@ save_HDF5_scMethrix(
 \item{h5_dir}{string; The directory to use. Will be created if it does not exist. Default = NULL}
 
 \item{replace}{Should it overwrite the pre-existing data? FALSE by default.}
+
+\item{quick}{boolean; Flag to skip realizing of matrix operations}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 
@@ -30,7 +33,9 @@ Nothing
 Saves an HDF5 \code{\link{scMethrix}} object
 }
 \details{
-Takes \code{\link{scMethrix}} object and saves it in the specified directory
+Takes \code{\link{scMethrix}} object and saves it in the specified directory.
+
+If \code{quick = TRUE}, any operations done on assay matrices will not be realized. In other words, the assay information on the hard disk will not be changed. Non-matrix information will be updated (e.g., metadata) as well as any pending matrix operations. To use this, the experiment must have previously been saved using \code{quick = FALSE}.
 }
 \examples{
 data('scMethrix_data')

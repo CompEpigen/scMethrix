@@ -4,17 +4,41 @@
 \alias{get_sample_name}
 \title{Returns sample name derived from the input file name}
 \usage{
-get_sample_name(s)
+get_sample_name(filepath)
 }
 \arguments{
-\item{s}{string; A file.path}
+\item{filepath}{string; the file path of the sample}
 }
 \value{
-string containing the sample name
+string; the derived sample name
 }
 \description{
 Returns sample name derived from the input file name
 }
+\details{
+The ideal input for this package is raw *.bedgraph files. As such, the sample names used in the experiment
+simply drop the extension from the input file name:
+
+E.g., the input file \code{sample_file.bedgraph} is referred to as \code{sample_file} in the experiment.
+
+As \code{\link[data.table:fread]{data.table::fread()}} is used for import, compressed \code{.gz} and \code{.bz2} files can also be used.
+This extension will be automatically dropped:
+
+E.g., \code{\\sample_file.bedgraph.gz} will still become \code{sample_file}
+
+Hence, it is advisable to strip all non-necessary information from each sample name before input.
+
+Files without extensions will just keep their name:
+
+E.g., \code{\\sample_file} will become \code{\\sample_file}
+}
 \examples{
-#get_sample_name("C:/dir/dir/filename.ext")
+# For uncompressed files
+get_sample_name("C:/dir/dir/sample.bedgraph")
+get_sample_name("C:/dir/dir/sample.file.bedgraph")
+
+# For compressed files
+get_sample_name("C:/dir/dir/sample.bedgraph.gz")
+get_sample_name("C:/dir/dir/sample.bedgraph.bz2")
+get_sample_name("C:/dir/dir/sample.file.bedgraph.bz2")
 }

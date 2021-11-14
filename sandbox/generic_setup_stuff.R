@@ -64,19 +64,6 @@ files <- files[1:590]
 
 col_list <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
 
-scm1 <- load_HDF5_scMethrix("F:/sampleData/Gaiti/1")
-scm2 <- load_HDF5_scMethrix("F:/sampleData/Gaiti/2")
-scm3 <- load_HDF5_scMethrix("F:/sampleData/Gaiti/3")
-
-scm1 <- load_HDF5_scMethrix("D:/Git/sampleData/Gaiti/1")
-scm2 <- load_HDF5_scMethrix("D:/Git/sampleData/Gaiti/2")
-scm3 <- load_HDF5_scMethrix("D:/Git/sampleData/Gaiti/3")
-
-scm <- cbind(scm1,scm2)
-scm <- cbind(scm,scm3)
-
-
-
 #With Coverage
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(tempdir(),"/sse"),ref_cpgs = ref_cpgs, replace=TRUE,
                         chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6, colData = colData, n_threads=0, batch_size = 10)
@@ -114,9 +101,12 @@ saveRDS(colData, file = "colData.rds")
 library(AnnotationHub)
 ah = AnnotationHub()
 #qhs = query(ah, c("RefSeq", "Mus musculus", "mm10"))
-qhs = query(ah, c("RefSeq", "Homo sapiens", "hg38"))
+qhs = query(ah, c("RefSeq", "Homo sapiens", "hg19"))
 genes = qhs[[1]]
-proms = promoters(genes)
+proms = promoters(genes, upstream=1000, downstream=1000)
+
+hg38 <- ah[["AH97949"]]
+proms = promoters(genes(hg38), upstream=1000, downstream=1000)
 
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 hg38 <- TxDb.Hsapiens.UCSC.hg38.knownGene
@@ -127,10 +117,6 @@ reg <- reduce(c(genes(hg38),promoters(hg38)))
 
 scm <- cbind(scm1,scm2)
 scm <- cbind(scm,scm3)
-
-
-
-
 
 scm.genic <- subset_scMethrix(scm,region = reg)
 saveHDF5SummarizedExperiment(scm.genic,dir="D:/Git/sampleData/Gaiti/bin.genic")

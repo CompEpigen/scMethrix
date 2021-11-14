@@ -38,7 +38,7 @@ read_beds(
 
 \item{ref_cpgs}{data.table; list of CpG sites in the tab-delimited format of chr-start-end. Must be zero-based genome.}
 
-\item{colData}{list of strings; Sample names. Will be derived from filenames if not provided}
+\item{colData}{data.frame; information about each samples. Default is a blank \code{data.frame} with row.names corresponding to each sample.}
 
 \item{genome_name}{string; Name of genome. Default hg19}
 
