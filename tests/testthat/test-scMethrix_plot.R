@@ -3,7 +3,6 @@ test_that("prepare_plot_data", {
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(prepare_plot_data(scm, n_cpgs = "not an int"),msg.validateType)
-    expect_error(prepare_plot_data(scm, regions = "not a range"),msg.validateType)
     
     d <- prepare_plot_data(scm,na.rm=F)
     expect_equal(dim(d),c(nrow(scm)*ncol(scm),3))

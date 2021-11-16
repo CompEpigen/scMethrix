@@ -1,48 +1,35 @@
 #--- prepare_plot_data --------------------------------------------------------------------------------------
-#' Format \code{\link{scMethrix}} matrix to long form data for plotting
-#' 
+#' Formats an \code{\link{scMethrix}} matrix to long form data for plotting
 #' @inheritParams generic_scMethrix_function
 #' @param n_cpgs integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive. The seed will be set to \code{n_cpgs} for consistency.
-#' @param regions Granges; genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 #' @param pheno string; Col name of colData(m). Will be used as a factor to color different groups
 #' @param na.rm boolean; remove NA values from the output
 #' @return 'Long' matrix for methylation
 #' @export
-prepare_plot_data <- function(scm = NULL, assay="score", regions = NULL, n_cpgs = 25000, pheno = NULL, verbose = TRUE, na.rm = T){
+prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL, verbose = TRUE, na.rm = T){
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateAssay(scm,assay)
-  .validateType(regions,c("granges","null"))
   .validateType(n_cpgs,"integer")
   .validateType(pheno,c("string","null"))
   .validateType(na.rm,"boolean")
 
   Pheno <- Sample <- Value <- NULL
   
+  if (n_cpgs > nrow(scm)) n_cpgs = NULL
+  
   #- Function code -----------------------------------------------------------------------------
-  if (!is.null(regions)) {
-    meth_sub <- subset_scMethrix(scm = scm, regions = regions)
-    if (!is.null(n_cpgs)) {
-      if(verbose) message("Randomly selecting ", n_cpgs, " sites")
-      ids <- sample(x = seq_along(meth_sub), replace = FALSE, size = min(n_cpgs,
-                                                                         nrow(meth_sub)))
-      meth_sub <- get_matrix(scm = meth_sub[ids, ], assay = assay, add_loci = FALSE)
-    } else {
-      meth_sub <- get_matrix(scm = meth_sub, assay = assay, add_loci = FALSE)
-    }
-  } else if (!is.null(n_cpgs)) {
+  if (!is.null(n_cpgs)) {
     if(verbose) message("Randomly selecting ", n_cpgs, " sites")
-    
     set.seed(n_cpgs)
-    ids <- sample(x = seq_along(scm), replace = FALSE, size = min(n_cpgs,
-                                                                nrow(scm)))
+    ids <- sort(sample(x = seq_along(scm), replace = FALSE, size = min(n_cpgs, nrow(scm))))
     meth_sub <- get_matrix(scm = scm[ids, ], assay = assay, add_loci = FALSE)
   } else {
     meth_sub <- get_matrix(scm = scm, assay = assay, add_loci = FALSE)
   }
   
-  meth_sub <- as.data.frame(meth_sub)
+  meth_sub <- as.data.table(meth_sub)
   data.table::setDT(x = meth_sub)
   plot.data <- suppressWarnings(data.table::melt(meth_sub))
   
@@ -68,11 +55,12 @@ prepare_plot_data <- function(scm = NULL, assay="score", regions = NULL, n_cpgs 
   
 }
 
+#--- get_palette --------------------------------------------------------------------------------------------
 #' Getter for plot palette colors
 #' @param n_row Number of colors
 #' @param col_palette String for RColorBrewer palette name  
 #' @return RColorBrewer palette
-get_palette <- function(n_row, col_palette){
+get_palette <- function(n_row, col_palette = "RdYlGn"){
   
   #- Input Validation --------------------------------------------------------------------------
   .validateType(n_row,"integer")
@@ -91,7 +79,7 @@ get_palette <- function(n_row, col_palette){
                                                                                                   "maxcolors"], col_palette))(n_row)
   return(color_pal)
 }
-
+#--- get_shape ----------------------------------------------------------------------------------------------
 #' Getter for plot shapes. Shapes selected for optimal distinction and taken from:
 #' @details http://www.sthda.com/english/wiki/r-plot-pch-symbols-the-different-point-shapes-available-in-r
 #' @param n_row Number of shapes. Max of 15.
@@ -103,7 +91,7 @@ get_shape <- function(n_row) {
 }
 
 
-
+#--- plot_violin --------------------------------------------------------------------------------------------
 #' Violin Plot for \eqn{\beta}-Values
 #' @inheritParams prepare_plot_data
 #' @param col_palette string; Name of the RColorBrewer palette to use for plotting.
@@ -114,24 +102,21 @@ get_shape <- function(n_row) {
 #' @examples
 #' data('scMethrix_data')
 #' plot_violin(scm = scMethrix_data)
-plot_violin <- function(scm = NULL, assay="score", regions = NULL, n_cpgs = 25000, pheno = NULL,
-                        col_palette = "RdYlGn", show_legend = TRUE, verbose = TRUE) {
+plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
+                        col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   Sample <- Value <- Pheno <- NULL
   
   .validateExp(scm)
   .validateAssay(scm,assay)
-  .validateType(regions,c("granges","null"))
   .validateType(n_cpgs,"integer")
   .validateType(pheno,c("string","null"))
   .validateType(col_palette,"string")
   .validateType(show_legend,"boolean")
 
-  if (is.null(regions)) regions = rowRanges(scm)
-  
   #- Function code -----------------------------------------------------------------------------
-  plot.data <- prepare_plot_data(scm=scm, assay = assay, regions = regions, n_cpgs = n_cpgs, pheno = pheno)
+  plot.data <- prepare_plot_data(scm=scm, assay = assay, n_cpgs = n_cpgs, pheno = pheno)
   
   col_palette <- get_palette(ncol(scm), col_palette)
   # generate the violin plot
@@ -156,24 +141,21 @@ plot_violin <- function(scm = NULL, assay="score", regions = NULL, n_cpgs = 2500
 #' @examples
 #' data('scMethrix_data')
 #' plot_density(scm = scMethrix_data)
-plot_density <- function(scm = NULL, assay = "score", regions = NULL, n_cpgs = 25000, pheno = NULL,
-                         col_palette = "RdYlGn", show_legend = TRUE, verbose = TRUE) {
+plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NULL,
+                         col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   Value <- Pheno <- NULL
   
   .validateExp(scm)
   .validateAssay(scm,assay)
-  .validateType(regions,c("granges","null"))
   .validateType(n_cpgs,"integer")
   .validateType(pheno,c("string","null"))
   .validateType(col_palette,"string")
   .validateType(show_legend,"boolean")
   
-  if (is.null(regions)) regions = rowRanges(scm)
-  
   #- Function code -----------------------------------------------------------------------------
-  plot.data <- prepare_plot_data(scm=scm, regions = regions, n_cpgs = n_cpgs, pheno = pheno)
+  plot.data <- prepare_plot_data(scm=scm, n_cpgs = n_cpgs, pheno = pheno)
   col_palette <- get_palette(ncol(scm), col_palette)
   
   # generate the density plot
@@ -203,7 +185,7 @@ plot_density <- function(scm = NULL, assay = "score", regions = NULL, n_cpgs = 2
 #' plot_coverage(scm = scMethrix_data)
 #' @export
 plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = NULL,
-                          max_cov = 100, obs_lim = 1e+06, col_palette = "RdYlGn", show_legend = TRUE, verbose = TRUE) {
+                          max_cov = 100, obs_lim = 1e+06, col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -434,6 +416,7 @@ plot_imap <- function(scm) {
 #--- plot_dim_red -------------------------------------------------------------------------------------------
 #' Plot dimensionality reduction
 #' @inheritParams generic_scMethrix_function
+#' @inheritParams plot_violin
 #' @param dim_red string; name of adimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
 #' the X and Y coordinates of the dim. red., with each row being a seperate sample
 #' @param axis_labels list of strings; A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired
@@ -443,7 +426,7 @@ plot_imap <- function(scm) {
 #' @return ggplot2 object
 #' @importFrom graphics par mtext lines axis legend title
 #' @export
-plot_dim_red <- function(scm, dim_red, color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
+plot_dim_red <- function(scm, dim_red, col_palette = "RdYlGn", color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
 
   #- Input Validation --------------------------------------------------------------------------
   X <- Y <- Color <- Shape <- color <- shape <- Sample <- row_names <- NULL
@@ -468,10 +451,11 @@ plot_dim_red <- function(scm, dim_red, color_anno = NULL, shape_anno = NULL, axi
   dim_red$Sample = rownames(dim_red)
   
   #- Function code -----------------------------------------------------------------------------
+
   if (!is.null(color_anno)) {
     if (color_anno  %in% colnames(colData(scm))) {
       dim_red$Color <- as.factor(unlist(as.data.table(colData(scm))[,color_anno, with=FALSE])) #TODO: make colData a data.table
-      colors <- scale_color_manual(values= get_palette(length(unique(dim_red$Color)),col_palette = "Dark2"))
+      colors <- scale_color_manual(values= get_palette(length(unique(dim_red$Color)),col_palette = col_palette))
     } else {
       stop(paste0(color_anno, " not found in provided scMethrix object"))
     }
@@ -493,11 +477,11 @@ plot_dim_red <- function(scm, dim_red, color_anno = NULL, shape_anno = NULL, axi
   if (all(c("Color", "Shape") %in% colnames(dim_red))) {
     dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = Color,
                                             shape = Shape, label = Sample)) + geom_point(size = 3) +
-      labs(color = color_anno, shape = shape_anno) + scale_color_brewer(palette = "Dark2")
+      labs(color = color_anno, shape = shape_anno)# + scale_color_brewer(palette = col_palette)
   } else if ("Color" %in% colnames(dim_red)) {
     dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = Color,
                                             label = Sample)) + geom_point(size = 3) +
-      labs(color = color_anno) + scale_color_brewer(palette = "Dark2")
+      labs(color = color_anno)# + scale_color_brewer(palette = col_palette)
   } else if ("Shape" %in% colnames(dim_red)) {
     dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, shape = Shape,
                                             label = Sample)) + geom_point(size = 3) +
