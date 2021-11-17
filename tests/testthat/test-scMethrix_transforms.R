@@ -7,14 +7,16 @@ test_that("bin_scMethrix", {
   
  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
    
+   
+   expect_error(bin_scMethrix(scm,regions=GRanges()),"Subsetting resulted in zero entries")
     # Check default conditions and threading
-    bin <- bin_scMethrix(scm, h5_dir = paste0(h5_dir,"/bin1"), n_threads = 2, replace = T)
-    expect_equal(dim(bin),c(256,4))
+   # bin <- bin_scMethrix(scm, h5_dir = paste0(h5_dir,"/bin1"), n_threads = 2, replace = T)
+  #  expect_equal(dim(bin),c(256,4))
     
     #Check the score assay (should be mean)
     scm <- transform_assay(scm,assay="score",new_assay="bin",trans=binarize)
     scm <- transform_assay(scm,assay="score",new_assay="bin2",trans=binarize)
-    bin <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin1"), replace = T)
+    bin <- bin_scMethrix(scm,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin1"), replace = T)
     expect_equal(dim(bin),c(length(rowRanges(bin)),length(colnames(bin))))
     
     if (is_h5(scm)) {
@@ -36,7 +38,7 @@ test_that("bin_scMethrix", {
     #Check the custom transform function  (should be mean, but specified as sum)
     expect_error(bin_scMethrix(scm,trans="Not a trans"))
     
-    bin2 <- bin_scMethrix(scm,bin_size=1000,bin_by="cpg",trans = c(bin2 = function(x) sum(x,na.rm=TRUE)), 
+    bin2 <- bin_scMethrix(scm,trans = c(bin2 = function(x) sum(x,na.rm=TRUE)), 
                           h5_dir = paste0(h5_dir,"/bin2"),replace=T)
     expect_equal(score(bin),score(bin2), check.attributes = FALSE)
     expect_equal(counts(bin),counts(bin2), check.attributes = FALSE)
@@ -44,12 +46,27 @@ test_that("bin_scMethrix", {
     
     vals <- DelayedMatrixStats::colSums2(get_matrix(sub,assay="bin2"),na.rm=T)
     expect_equal(as.numeric(get_matrix(bin2,assay="bin2")[1,]),as.numeric(vals))
-    
-    #Check for region subsetting
-    bin <- bin_scMethrix(scm,regions=regions,bin_size=1000,bin_by="cpg", h5_dir = paste0(h5_dir,"/bin3"), replace = T)
-    expect_equal(sum(rowRanges(bin)$n_cpgs),n_cpg)
-    
-    expect_error(bin_scMethrix(scm.h5,regions=GRanges()),"Subsetting resulted in zero entries")
+
+    for (n_chunks in c(1,5,10,50)) {
+      
+      idx <- split_vector(1:nrow(sub),chunks = n_chunks)
+      lens <- lengths(idx)
+      
+      gr <- unlist(GRangesList(lapply(idx,function(x) range(rowRanges(sub)[x]))))
+      #cat(paste("GR: ", n_chunks, "==",length(gr),"\n"))
+      expect_equal(n_chunks,length(gr))
+
+      bin <- bin_scMethrix(sub,regions = gr)
+      #cat(paste("bin: [", paste(rowData(bin)$n_cpgs,collapse=","), "] == [",paste(lens,collapse=","),"]\n"))
+      expect_true(identical(rowData(bin)$n_cpgs,lens)) 
+      
+      for (i in 1:length(idx)) {
+        
+        vals <- DelayedMatrixStats::colMeans2(score(sub)[idx[[i]],],na.rm=T)
+        expect_equal(as.numeric(score(bin)[i,]),as.numeric(vals))
+        
+      }
+    }
   }))
 })
 

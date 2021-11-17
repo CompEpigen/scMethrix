@@ -82,7 +82,7 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
 #' regions <- unlist(tile(regions,10))
 #' bin_scMethrix(scMethrix_data, regions = regions)
 #' @export
-bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by = c("bp","cpg"), trans = NULL, 
+bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = c("bp","cpg"), trans = NULL, 
                           overlap_type = c("within", "start", "end", "any", "equal"), h5_dir = NULL, verbose = TRUE, 
                           batch_size = 20, n_threads = 1, replace = FALSE) {
   #- Input Validation --------------------------------------------------------------------------
@@ -105,7 +105,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
  
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Binning experiment...")
-  
+
   if (!is.null(regions)) {
     regions = cast_granges(regions)
     scm <- subset_scMethrix(scm, regions = regions) 
@@ -144,7 +144,6 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
 
         for(i in idx) {
           gr <- range(rowRanges(scm[c(i[1],i[length(i)]),]))
-          gr$n_cpgs <- length(i)
           rrng <- c(rrng,gr)
         }
       }
@@ -160,7 +159,6 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       idx <- idx[order(idx$subjectHits),]
       
       rrng <- rrng[unique(idx$subjectHits)]
-      rrng$n_cpgs <- rle(idx$subjectHits)$lengths
     }
     
   } else { # If no bin_size is specified, use the entire region
@@ -171,7 +169,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   rm(regions)
   
   assays <- list()
-  
+
   rrng$rid <- paste0("rid_", 1:length(rrng))
   overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, rrng, type = overlap_type))
   colnames(overlap_indices) <- c("xid", "yid")
@@ -228,7 +226,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
         split_time()
         col <- cols[[i]]
         mtx <- as.data.table(get_matrix(scm,assay=name)[overlap_indices$xid,col])
-        mtx <- mtx[,lapply(.SD,op),by=overlap_indices$yid]
+        mtx <- mtx[,lapply(.SD,op),by=list(overlap_indices$yid)]
         mtx <- mtx[,overlap_indices:=NULL]
         
         DelayedArray::write_block(block = as.matrix(mtx), viewport = grid[[as.integer(i)]], sink = sink)
@@ -241,6 +239,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
       assays[[name]] <- sink
       
     } else {
+
       mtx <- data.table(get_matrix(scm,assay=name))[overlap_indices$xid,] #TODO: Somehow missing rows if not subset, not sure why
       mtx <- mtx[,lapply(.SD,op),by=overlap_indices$yid]
       out <- mtx[,overlap_indices:=NULL]
@@ -253,6 +252,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = 100000, bin_by 
   }
 
   rrng <- rrng[which(rrng$rid %in% overlap_indices$yid)]
+  rrng$n_cpgs <- overlap_indices[, .N, by=.(yid)]$N
   rrng$rid <- NULL
 
   if (verbose) message("Rebuilding experiment...")
@@ -717,7 +717,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     op = type
   } else if (type == "kNN") {
     op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
-                                           rowmax = 1.0, colmax = 1.0, maxp = 1500, ...)$data
+                                           rowmax = 1.0, colmax = 1.0, ...)$data
   } else if (type == "iPCA") {
     if (length(n_pc) > 1) {
       warning("Caution: n_pc is given as range. This can be very time-intensive.")
@@ -734,6 +734,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   }
   
   if (!is.null(regions)) {
+
     regions = cast_granges(regions)
     scm <- subset_scMethrix(scm, regions = regions) 
     
@@ -754,7 +755,8 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
       idx <- lapply(rid_list[i],FUN = function(rid) overlap_indices[overlap_indices$yid %in% rid]$xid)
       impute <- lapply(idx,function(i) {
         imputed <- op(get_matrix(scm[i,],assay)) #TODO: make this parallel
-        if (!setequal(dim(imputed),c(length(idx),ncol(scm)))) stop("Error with imputation algorithm. Imputed matrix does not match the dimensions of the input matrix", call. = FALSE)
+
+        if (!setequal(dim(imputed),c(length(i),ncol(scm)))) stop("Error with imputation algorithm. Imputed matrix does not match the dimensions of the input matrix", call. = FALSE)
         return(imputed)
       })
       
