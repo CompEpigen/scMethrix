@@ -60,9 +60,17 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "rand"), n_cpg
 #--- dim_red_scMethrix --------------------------------------------------------------------------------------
 #' Reduces dimensionality (tSNE, UMAP, PCA, or custom)
 #' @details Does reduction stuff
+#' 
+#' The dimensionality reduction algorithms used do not allow for NA values, so the input matrix will likely need to be imputed or binned, among others. 
+#' 
+#' Certain components have hard-coded minimums for the dimensionality reduction to occur (only a concern from very small sample sets, about 30 or so). These will be automatically enforced:
+#' * tSNE: perplexity >= floor(ncol(scm)/3)
+#' * UMAP: n_neighbors >= ncol(scm)
+#' @param plot boolean; Plot after calculating
 #' @param n_components integer; Number of components to use
 #' @param n_neighbors integer; number of nearest neighbors for UMAP
 #' @param type string; the type of imputation "tSNE","UMAP", or "PCA"
+#' @param ... additional arguements for any of the imputation functions
 #' @inheritParams generic_scMethrix_function
 #' @inheritParams Rtsne::Rtsne
 #' @inheritParams umap::umap
@@ -71,12 +79,13 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "rand"), n_cpg
 #' @import Rtsne
 #' @import umap
 #' @importFrom stats prcomp
-#' @seealso [plot_dim_red()] for plotting
+#' @seealso [plot_dim_red()] for plotting, [Rtsne::Rtsne()] for Rtsne, [umap::umap()] for UMAP, [stats::prcomp()] for PCA
 #' @examples
 #' data('scMethrix_data')
-#' 
+#' #scMethrix_data <- transform_assay(scMethrix_data,assay="score",new_assay="fill",trans = fill)
+#' #dim_red_scMethrix(scMethrix_data, assay="fill", type="PCA")
 #' @export
-dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
+dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), plot = T, perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -87,28 +96,25 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), p
   .validateType(n_neighbors,"integer")
   .validateType(verbose,"boolean")
   
+  meth <- get_matrix(scm,assay = assay)
+  if (anyNA(get_matrix(scm,assay = assay))) stop("Assay matrix cannot contain NAs. You must impute or otherwise fill these values.",call. = FALSE)
+  
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Starting dimensionality reduction...",start_time())
 
-  meth <- get_matrix(scm,assay = assay)
-  
   if (type == "tSNE") {
     
-    meth <- Rtsne::Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), k = n_components, check_duplicates=F)#, ...)
-    
+    meth <- Rtsne::Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), dims = n_components, check_duplicates=F, ...)
     SingleCellExperiment::reducedDim(scm, "tSNE") <- meth$Y
-    
-    if (verbose) message("tSNE generated in ",stop_time())
-    
+  
   } else if (type == "UMAP") {
     
-    umap <- umap::umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)),n_components=n_components)#, ...)
-    
+    umap <- umap::umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)),n_components=n_components, ...)
     SingleCellExperiment::reducedDim(scm, "UMAP") <- umap$layout
     
   } else if (type == "PCA") {
     
-    meth <- stats::prcomp(x = as.matrix(t(meth)), retx = TRUE)#, ...)
+    meth <- stats::prcomp(x = as.matrix(t(meth)), retx = TRUE, ...)
     
     # Variance explained by PC's
     pc_vars <- meth$sdev^2/sum(meth$sdev^2)
@@ -124,8 +130,10 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), p
       message("PCA finished in ",stop_time())
     }
     
-  } 
+  }
   
+  if (plot) plot_dim_red(scm,type)
+  if (verbose) message("Dimensionality reduction finished in ",stop_time())
   gc(verbose = FALSE)
   
   return(scm)

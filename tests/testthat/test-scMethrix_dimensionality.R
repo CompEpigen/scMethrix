@@ -29,6 +29,8 @@ test_that("dim_red_scMethrix", {
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
 
+    expect_error(dim_red_scMethrix(scm, assay = "score"),"Assay matrix cannot contain NAs")
+    
     s <- suppressWarnings(impute_regions(scm))
     s <- reduce_scMethrix(s,assay="impute",n_cpg = 50)
     
