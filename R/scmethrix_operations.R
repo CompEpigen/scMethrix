@@ -122,7 +122,7 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #' merge_scMethrix(scMethrix_data[,1:2],scMethrix_data[,3:4],by="col")
 #' @export
 merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "column"), verbose = TRUE) {
-  
+
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm1)
   .validateExp(scm2)
@@ -221,20 +221,20 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "column"), v
   #Realize if HDF5
   if (is_h5(scm)) {
     if (verbose) message("Realizing assays to HDF5...")
-    
+  
     for (name in SummarizedExperiment::assayNames(scm)) {
       SummarizedExperiment::assay(scm,name) <- as(SummarizedExperiment::assay(scm,name), "HDF5Array")
+      }
     }
-  }
-  
+
   # Remove duplicate experiment metadata
   invisible(lapply(c(S4Vectors::metadata,int_metadata), function(op) {
     eval(parse(text = eval(expression(paste0(op@generic,"(scm) <<- ",op@generic,"(scm)[unique(names(",op@generic,"(scm)))]")))))
   }))
-  
+
   return(scm)
-}
-# 
+  }
+  #   
 # merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, verbose = TRUE) {
 # 
 #   scm1 <- scm.mem[1:10,]
@@ -247,7 +247,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "column"), v
 #     
 #     scmTemp <- create_scMethrix(rowRanges=rrng1,colData <- colData(scm1))
 #     
-#   }
+  #   }
 #   
 #   
 #   rrng <- reduce(c(rowRanges(scm2),rowRanges(scm1)))
@@ -255,7 +255,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "column"), v
 #   rowRanges(scm1) <- rrng
 #   
 #   a
-# }
+  # }
 
 
 #--- get_region_summary -------------------------------------------------------------------------------------
@@ -514,60 +514,66 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 #' dir <- paste0(tempdir(),"/h5")
 #' scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
 #' save_HDF5_scMethrix(scm, h5_dir = dir, replace = TRUE)
-#' @return Nothing
+#' @return invisible \code{\link{scMethrix}} object, with the assays stored in the h5_dir
 #' @export
 save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, quick = FALSE, verbose = TRUE, ...) {
-  
-  if (quick) stop("Quick save is currently not supported")
   
   #- Input Validation --------------------------------------------------------------------------
   if (is(scm, "scMethrix")) {
     if (!is_h5(scm)) stop("A valid scMethrix HDF5 object needs to be supplied.", call. = FALSE)
-  } else if (!is(scm, "SingleCellExperiment")) {
-    stop("A valid SingleCellExperiment-derived object needs to be supplied.", call. = FALSE)
+  } else if (!is(scm, "SummarizedExperiment")) {
+    stop("A valid SummarizedExperiment-derived object needs to be supplied.", call. = FALSE)
   }
   
   .validateType(quick,"boolean")
-  if (!quick) .validateType(h5_dir,"string")
   .validateType(replace,"boolean")
   .validateType(verbose,"boolean")
-  
-  #if (is.null(h5_dir)) h5_dir = paste0(tempdir(),"/h5")
-  
-  if (!quick && dir.exists(h5_dir)) {
-    files <- list.files (h5_dir,full.names = TRUE)
+
+  #- Function code -----------------------------------------------------------------------------
+
+  if (quick) {
+      if (!is.null(h5_dir)) warning("h5_dir is not used when quicksaving experiments.")
+      exp <- HDF5Array::quickResaveHDF5SummarizedExperiment(x = scm, verbose=verbose) 
+  } else {
     
-    if (length(files) != 0 && replace == FALSE) {
-      message("Files are present in the target directory, including: ")
-      writeLines(paste("   ",head(files)))
-      choice <- menu(c("Yes", "No"), title="Are you sure you want to delete this directory and save the HDF5 experiment?")
+    if (is.null(h5_dir)) {
+      h5_dir = tempfile("scm_")
+      warning("No h5_dir specified. Experiment will be save to temporary directory:\n   ",h5_dir) 
+    } else if (dir.exists(h5_dir) && !replace) {
+      files <- list.files (h5_dir,full.names = TRUE)
       
-      if (choice == 2 || choice == 0) {
-        message("Saving aborted. The target directory has not been affected.")
-        return(invisible(NULL))
-      } else {
-        #unlink(h5_dir, recursive=TRUE)
-        replace = TRUE
+      if (length(files) != 0) {
+        cat("Files are present in the target directory, including: \n")
+        writeLines(paste("   ",head(files)))
+        choice <- menu(c("Yes", "No"), title="Are you sure you want to delete this directory and save the HDF5 experiment?")
+        
+        if (choice == 2 || choice == 0) {
+          message("Saving aborted. The target directory has not been affected.")
+          return(invisible(NULL))
+        } else {
+          #unlink(h5_dir, recursive=TRUE)
+          replace = TRUE
+        }
       }
     }
-  }
+    
+    if (verbose) message("Saving HDF5 experiment to disk...",start_time())
+
+    exp <- HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = h5_dir, replace = replace, 
+                                              chunkdim = c(length(rowRanges(scm)),1), level = 6, verbose = verbose,...)
+  } 
   
-  #- Function code -----------------------------------------------------------------------------
-  if (verbose) message("Saving HDF5 experiment to disk...",start_time())
-  
-  if (quick) {
-    HDF5Array::quickResaveHDF5SummarizedExperiment(x = scm, verbose=verbose)
-  } else {
-    HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = h5_dir, replace = replace, chunkdim = c(length(rowRanges(scm)),1), level = 6, verbose = verbose,...)
-  }
   if (verbose) message("Experiment saved in ",stop_time())
+  
+  return(invisible(exp))
+  
 }
 
 #--- load_HDF5_scMethrix --------------------------------------------------------------------------------------------------
 #' Loads HDF5 \code{\link{scMethrix}} object
 #' @details Takes  directory with a previously saved HDF5Array format \code{\link{scMethrix}} object and loads it
 #' @inheritParams generic_scMethrix_function
-#' @param dir The directory to read in from. Default NULL
+#' @param h5_dir The directory to read in from
 #' @param ... Parameters to pass to \code{\link{loadHDF5SummarizedExperiment}}
 #' @return An object of class \code{\link{scMethrix}}
 #' @examples
@@ -577,23 +583,22 @@ save_HDF5_scMethrix <- function(scm = NULL, h5_dir = NULL, replace = FALSE, quic
 #' save_HDF5_scMethrix(scm, h5_dir = dir, replace = TRUE)
 #' n <- load_HDF5_scMethrix(dir)
 #' @export
-load_HDF5_scMethrix <- function(dir = NULL, verbose = TRUE, ...) {
+load_HDF5_scMethrix <- function(h5_dir = NULL, verbose = TRUE, ...) {
   
   #- Input Validation --------------------------------------------------------------------------
-  .validateType(dir,"directory")
+  .validateType(h5_dir,"directory")
   .validateType(verbose,"boolean")
   
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Loading HDF5 object", start_time())
   
-  scm <- HDF5Array::loadHDF5SummarizedExperiment(dir = dir, ...)
+  scm <- HDF5Array::loadHDF5SummarizedExperiment(dir = h5_dir, ...)
   scm <- as(scm, "scMethrix")
   
   if (verbose) message("Loaded in ",stop_time())
   
   return(scm)
 }
-
 
 #--- convert_HDF5_scMethrix -----------------------------------------------------------------------------------------------
 #' Converts HDF5 \code{\link{scMethrix}} object to an in-memory \code{\link{scMethrix}} object.

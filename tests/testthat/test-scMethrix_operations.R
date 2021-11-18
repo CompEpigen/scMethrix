@@ -1,3 +1,52 @@
+test_that("save_HDF5_scMethrix", {
+  
+  expect_error(save_HDF5_scMethrix("not scMethrix"),"A valid SummarizedExperiment-derived object needs to be supplied.")
+  expect_warning(save_HDF5_scMethrix(scm.h5),"No h5_dir specified")
+
+  temp_dir <- tempfile("save_")
+  scm.saved <- save_HDF5_scMethrix(scm.h5,h5_dir = temp_dir)
+  expect_s4_class(scm.saved,"scMethrix")
+  
+  # Simulate the user pressing no on the replace folder dialog
+  local({
+    local_mock(menu = function(choices,title=NULL) 2)
+    
+    test_that("save_HDF5_scMethrix | Replace: No", {
+      expect_message(save_HDF5_scMethrix(scm.h5,h5_dir = temp_dir), "Saving aborted.")
+    })
+  })
+  
+  # Simulate the user pressing yes on the replace folder dialog
+  local({
+    local_mock(menu = function(choices,title=NULL) 1)
+    
+    test_that("save_HDF5_scMethrix | Replace: Yes", {
+      bad.file = paste0(temp_dir,"/delete_me.txt")
+      file.create(bad.file)
+      expect_true(file.exists(bad.file))
+      scm.repl <- save_HDF5_scMethrix(scm.h5,h5_dir = temp_dir)
+      expect_s4_class(scm.repl,"scMethrix")
+      expect_false(file.exists(bad.file))
+    })
+  })
+  
+  bad.file = paste0(temp_dir,"/delete_me.txt")
+  file.create(bad.file)
+  expect_true(file.exists(bad.file))
+  scm.saved <- save_HDF5_scMethrix(scm.h5,h5_dir = temp_dir,replace=TRUE)
+  expect_s4_class(scm.saved,"scMethrix")
+  expect_false(file.exists(bad.file))
+  
+  scm.quick <- save_HDF5_scMethrix(scm.saved,quick=TRUE) #TODO: Should try and capture output to see what's happening
+  expect_s4_class(scm.repl,"scMethrix")
+  
+  expect_warning(save_HDF5_scMethrix(scm.saved,h5_dir = temp_dir,quick=TRUE),"h5_dir is not used ")
+  
+})
+
+
+
+
 test_that("get_rowdata_stats", {
   
   expect_error(get_rowdata_stats("not scMethrix"),msg.validateExp)
