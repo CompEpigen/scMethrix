@@ -94,6 +94,30 @@ remove_assay <- function(scm=NULL, assay=NULL) {
   return(scm)
 }
 
+#--- add_assay -------------------------------------------------------------------------------------------
+#' Adds an assay from an \code{\link{scMethrix}} object
+#' @details Simple 
+#' Fulfills the same function as \code{assay(scm, assay) <- matrix}, but with additional checks.#' 
+#' @inheritParams generic_scMethrix_function
+#' @param matrix mtx; the input matrix
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' @export
+add_assay <- function(scm=NULL, new_assay ="new_assay", matrix=NULL) {
+  
+  #- Input Validation --------------------------------------------------------------------------
+  .validateExp(scm)
+  
+  if (!.validateAssay(scm,new_assay,check.absent=T))
+    warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
+  
+  #- Function code -----------------------------------------------------------------------------
+  assay(scm, assay) <- matrix
+  
+  return(scm)
+}
+
 #--- merge_scMethrix ----------------------------------------------------------------------------------------
 #' Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
 #' @details Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.
