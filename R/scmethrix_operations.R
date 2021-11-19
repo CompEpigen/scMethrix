@@ -121,15 +121,17 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #' merge_scMethrix(scMethrix_data[1:5],scMethrix_data[6:10],by="row")
 #' merge_scMethrix(scMethrix_data[,1:2],scMethrix_data[,3:4],by="col")
 #' @export
-merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "column"), verbose = TRUE) {
+merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row", "column"), verbose = TRUE) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm1)
   .validateExp(scm2)
   .validateType(verbose,"boolean")
+  .validateType(h5_dir,c("string","null"))
   by <- .validateArg(by,merge_scMethrix)
   
   if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.", call. = FALSE)
+  #TODO: Not sure if above check is needed
   
   #- Function code -----------------------------------------------------------------------------
   names1 = SummarizedExperiment::assayNames(scm1)
@@ -144,33 +146,6 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "column"), v
     SummarizedExperiment::assays(scm1) <- SummarizedExperiment::assays(scm1)[a1]
     SummarizedExperiment::assays(scm2) <- SummarizedExperiment::assays(scm2)[a2]
   } 
-  
-  # Fix duplicate names in metadata, append if there are common elements that have different values
-  if (by == "row") {
-    slots <- c(S4Vectors::metadata,colData,int_colData)
-  }
-  else { 
-    slots <- c(S4Vectors::metadata,mcols,elementMetadata,int_elementMetadata)
-  }
-  
-  invisible(lapply(slots, function(op) {
-    
-    if (!isTRUE(all.equal(op(scm1),op(scm2))) && length(op(scm1))>0) {
-      
-      meta1 <- intersect(names(op(scm1)), names(op(scm2)))
-      meta2 <- intersect(names(op(scm2)), names(op(scm1)))
-      
-      if (length(c(meta1,meta2)) != 0) {
-        warning("Same metadata columns are present in ",op@generic,"(). These will be appended with `.1` or `.2`")
-        
-        sapply(1:2, function(s) {
-          names <- paste0("names(",op@generic,"(scm",s,"))")
-          do <- paste0(names,"[",names," %in% meta",s,"] <<- paste0(",names,"[",names," %in% meta",s,"],'.",s,"')")
-          eval(parse(text = eval(expression(do))))
-        })
-      }
-    } 
-  }))
   
   if (verbose) message("Merging assays...")
   
@@ -218,49 +193,64 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "column"), v
     }
   }
   
-  #Realize if HDF5
-  if (is_h5(scm)) {
-    if (verbose) message("Realizing assays to HDF5...")
+  # Merge the rest of the experiment metadata
+  # if (by == "row") {
+  #   slots <- c(S4Vectors::metadata,colData,int_colData)
+  # }
+  # else { 
+  #   slots <- c(S4Vectors::metadata,mcols,elementMetadata,int_elementMetadata)
+  # }
   
-    for (name in SummarizedExperiment::assayNames(scm)) {
-      SummarizedExperiment::assay(scm,name) <- as(SummarizedExperiment::assay(scm,name), "HDF5Array")
+  slots <- list(S4Vectors::metadata)
+  
+  invisible(lapply(slots, function(op) {
+    op1 <- op(scm1)
+    op2 <- op(scm2)
+    n1 <- names(op1)
+    n2 <- names(op2)
+    meta <- c(op1[setdiff(n1, n2)],op2[setdiff(n2, n1)])
+    not_shown = T
+    
+    for (n in intersect(n1,n2)) {
+      if (identical(op1[n],op2[n]) || is.null(unlist(op2[n]))) {
+        meta <- append(meta,op1[n])
+      } else if (is.null(unlist(op1[n]))) {
+        meta <- append(meta,op2[n])
+      } else {
+        if(not_shown) {warning("Same metadata columns are present in ",op@generic,
+                               "(). These will be appended with `.1` or `.2`")}
+        meta[[paste0(n,".1")]] <- unname(unlist(op1[n]))
+        meta[[paste0(n,".2")]] <- unname(unlist(op2[n]))
+        not_shown = F
       }
     }
 
-  # Remove duplicate experiment metadata
-  invisible(lapply(c(S4Vectors::metadata,int_metadata), function(op) {
-    eval(parse(text = eval(expression(paste0(op@generic,"(scm) <<- ",op@generic,"(scm)[unique(names(",op@generic,"(scm)))]")))))
+    eval(parse(text = eval(expression(paste0(op@generic,"(scm) <<- meta")))))
   }))
 
-  return(scm)
+  if (!is.null(h5_dir)) {
+    
+    
+    
+    
   }
+  
+  
+  #Realize if HDF5
+  # if (is_h5(scm)) {
+  #   if (verbose) message("Realizing assays to HDF5...")
   #   
-# merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, verbose = TRUE) {
-# 
-#   scm1 <- scm.mem[1:10,]
-#   scm2 <- scm.mem[5:20,]
-#   
-#   rrng1 <- setdiff(rowRanges(scm2),rowRanges(scm1))
-#   rrng2 <- setdiff(rowRanges(scm1),rowRanges(scm2))
-#   
-#   if (length(rrng1) != 0) {
-#     
-#     scmTemp <- create_scMethrix(rowRanges=rrng1,colData <- colData(scm1))
-#     
+  #   for (name in SummarizedExperiment::assayNames(scm)) {
+  #     SummarizedExperiment::assay(scm,name) <- as(SummarizedExperiment::assay(scm,name), "HDF5Array")
   #   }
-#   
-#   
-#   rrng <- reduce(c(rowRanges(scm2),rowRanges(scm1)))
-#   
-#   rowRanges(scm1) <- rrng
-#   
-#   a
   # }
 
+  return(scm)
+}
 
-#--- get_region_summary -------------------------------------------------------------------------------------
+#--- summarize_stats ----------------------------------------------------------------------------------------
 #' Extracts and summarizes methylation or coverage info by regions of interest
-#' @details Takes \code{\link{scMethrix}} object and summarizes regions
+#' @details Summarizes regions and/or groups for descriptive statistics.
 #' @inheritParams generic_scMethrix_function
 #' @param regions GRanges;  genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{\link{GenomicRanges}} object
 #' @param by closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default 'mean'
@@ -269,9 +259,17 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, by = c("row", "column"), v
 #' @return table of summary statistic for the given region
 #' @examples
 #' data('scMethrix_data')
-#' get_region_summary(scMethrix_data,
-#'    regions = GenomicRanges::GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,100000000)),
-#'    assay = 'score', by = 'mean')
+#' 
+#' # Determine global methylation of groups
+#' # summarize_stats(scMethrix_data, assay = 'score', group = "Group",  by = 'mean') 
+#' #TODO: update the scMethrix_data for group info
+#' 
+#' # Determine methylation status of chromosomes
+#' #summarize_stats(scMethrix_data, assay = "score", regions = range(rowRanges(scMethrix_data)))
+#' 
+#' # Determine methylation status of chromosomes by groups
+#' #summarize_stats(scMethrix_data, assay = "score", group = "Group", 
+#' #regions = range(rowRanges(scMethrix_data)))
 #' @export
 get_region_summary = function (scm = NULL, assay="score", regions = NULL, group = NULL, n_chunks=1, 
                                n_threads = 1, by = c('mean', 'median', 'maximum', 'minimum', 'sum', 'sd'), 
