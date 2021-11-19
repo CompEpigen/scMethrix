@@ -2,9 +2,9 @@
 #' Reduces a assay to a representative matrix
 #' @details For the purposes of dimensionality reduction, this function selects either random CpGs or those with the highest variability. 
 #' @inheritParams generic_scMethrix_function
-#' @param n_cpg integer; Number of variable CpGs to use. Default 1000.
-#' @param var strning; Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'
-#' @param na.rm boolean; flag to remove NA values
+#' @param n_cpg integer; Number of variable CpGs to reduce to. Default 1000.
+#' @param var string; Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'. Seed for random sampling = n_cpg.
+#' @param na.rm boolean; flag to remove features with any NA values. Final number of CpGs will likely be less than n_cpg. For 'random', Will iterate up to 10 times trying to find random cpgs.
 #' @return matrix; the reduced form of the input assay
 #' @importFrom stats complete.cases var
 #' @examples
@@ -13,7 +13,7 @@
 #' scMethrix_data <- reduce_scMethrix(scMethrix_data)
 #' nrow(scMethrix_data)
 #' @export
-reduce_scMethrix <- function(scm, assay = "score", var = c("top", "rand"), n_cpg = 1000, na.rm = FALSE, verbose = FALSE) {
+reduce_scMethrix <- function(scm, assay = "score", var = c("top", "random"), n_cpg = 1000, na.rm = FALSE, verbose = FALSE) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -23,38 +23,39 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "rand"), n_cpg
   .validateType(na.rm,"boolean")
   .validateType(verbose,"boolean")
   
-  #- Function code -----------------------------------------------------------------------------  
-  if (verbose) message("Generating reduced dataset...",start_time())
+  set.seed(n_cpg)
   
+  if (verbose) message("Selecting ",n_cpg," ",var," CpGs...",start_time())
+  
+  #- Function code -----------------------------------------------------------------------------  
+
+  n_cpg <- min(n_cpg,nrow(scm))
+
   meth <- get_matrix(scm = scm, assay = assay)
   
-  if (var == "rand") {
-    if (verbose) message("Selecting ,",n_cpg," random CpGs...")
-    ids <- sample(x = 1:nrow(meth), replace = FALSE, size = min(n_cpg, nrow(meth)))
-  } else {
-    if (verbose) message("Selecting top ",n_cpg," most variable CpGs...")
-    sds <- DelayedMatrixStats::rowSds(meth, na.rm = TRUE)
-    ids <- head(order(sds,decreasing = TRUE),n_cpg)
+  if (na.rm)
+    ids <- which(!DelayedMatrixStats::rowAnyNAs(meth))
+  else {
+    ids <- 1:nrow(scm)
   }
-  
-  ids <- sort(ids)
 
-  if (na.rm) {
-    n <- length(ids)
-    if (is_h5(scm)) {
-      ids <- ids[!DelayedMatrixStats::rowAnyMissings(meth[ids,])]
+  if (length(ids) > 0) {
+    if (var == "random") {
+      ids <- sample(x = ids, replace = FALSE, size = n_cpg)
     } else {
-      ids <- ids[stats::complete.cases(meth[ids,])]
+      sds <- DelayedMatrixStats::rowSds(meth[ids,], na.rm = TRUE)
+      ids <- head(order(sds,decreasing = TRUE),n_cpg)
     }
+    
   }
   
   if (length(ids) == 0) {
-    stop("Zero loci available post NA removal :(")
+    stop("No CpGs left after reduction. No non-zero containing rows were found.")
   } else if (na.rm) {
-    message("Removed ",n - length(ids)," CpGs due to NA")
+    message("Removed ",n_cpg - length(ids)," CpGs due to NA")
   }
 
-  return (scm[ids,])
+  return (scm[sort(ids),])
 }
 
 #--- dim_red_scMethrix --------------------------------------------------------------------------------------
