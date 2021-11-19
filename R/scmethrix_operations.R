@@ -61,6 +61,10 @@ get_rowdata_stats <- function(scm, assay = "score", suffix="") {
       cells = ncol(scm)-DelayedMatrixStats::rowCounts(get_matrix(scm = scm,assay = assay), value = NA)
     )
   
+  # Set SD to zero for rows with only one CpG (as NA rows and rows with one value will give zero SD)
+  stats[is.na(get("sd")), ("sd") := 0]
+  stats[is.na(get("mean")), ("sd") := NA]
+  
   colnames(stats) <- paste0(colnames(stats),suffix)
   rowData <- rowData(scm)[,!(colnames(rowData(scm)) %in% colnames(stats)), drop=FALSE]
   rowData(scm) <- cbind(rowData,stats)
