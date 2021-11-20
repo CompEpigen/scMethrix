@@ -20,12 +20,14 @@ vignette: >
 library(scMethrix)
 ```
 
-# Download the data
+# Download the data {download}
 
 The example data analysis presented here uses the following publicly available whole genome bisulfite sequencing data from GEO:
   [GSE56879](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE56879) 
   
 Smallwood SA, Lee HJ, Angermueller C, Krueger F et al. Single-cell genome-wide bisulfite sequencing for assessing epigenetic heterogeneity. Nat Methods 2014 Aug;11(8):817-820. [PMID: 25042786](https://pubmed.ncbi.nlm.nih.gov/25042786/)
+
+In this dataset, mouse embryonic stem cells (ESCs) have been grown in either serum or 2i medium. 2i medium is know to prevent differentiation of ESCs as well as induce [global hypomethylation](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5425728/), so the methylome should show drastic differences. In this example, 14 samples will be taken; half grown in 2i, and the rest in serum.
 
 The data can be directly downloaded from GEO, using the `GEOquery` package. The files will be downloaded into the working directory. 
 
@@ -41,8 +43,6 @@ data_dir = paste0(tempdir(),"/GSE56879/")
 dir.create(path = data_dir, showWarnings = FALSE, recursive = TRUE)
 ```
 
-In this dataset, mouse embryonic stem cells (ESCs) have been grown in either serum or 2i medium. 2i medium is know to prevent differention of ESCs as well as induce [global hypomethylation](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5425728/), so the methylome should show drastic differences. In this example, 14 samples will be taken; half grown in 2i, and the rest in serum.
-
 ```{r eval=F}
 
 gsm_list <- c("GSM1370535","GSM1370536","GSM1370537","GSM1370538","GSM1370539","GSM1370540","GSM1370541","GSM1370555","GSM1370556","GSM1370557","GSM1370558","GSM1370559","GSM1370560","GSM1370561")
@@ -57,6 +57,8 @@ bed_files <- list.files(path = data_dir,  full.names = TRUE)
 
 print(basename(bed_files))
 ```
+
+Please note: The sample name is generated from the input file name minus the extension (e.g,. `GSM1370535.bed` becomes `GSM1370535`, see [get_sample_name()](https://compepigen.github.io/scMethrix/reference/get_sample_name.html). As `data.table::fread` is used, ["Compressed files with extension .gz and .bz2 are supported if the R.utils package is installed"](https://www.rdocumentation.org/packages/data.table/versions/1.14.2/topics/fread). The ".gz" and ".bz2" extension will be droppe automatically.
 
 # Processing
 
@@ -82,7 +84,9 @@ head(mm10_cpgs)
 ## Sample annotation 
 An annotation table is also necessary to perform some analyses. The data will be added to the `scMethrix` object in the `colData` slot. Each row of the table represents a single sample. Sample names are taken from the input file names, and stored as row.names. Subsequent information about each sample (e.g., cell type, alternate IDs, sample source, etc) are stored as columns within this `data.frame`. To access this data, see [Saving experiment metadata].
 
-For this example, it can be easily extracted from the experiment's [SOFT file in GEO](https://ftp.ncbi.nlm.nih.gov/geo/series/GSE56nnn/GSE56879/soft/).
+For inputted colData, the row name must match the corresponding sample name. See [Download the data](#download) for how sample names are generated. The row order of the inputted colData is not important as it will be added as a `merge(all.x=T)` (left join) to the sample names. Hence, the inputted colData can contain samples that are not present in the inputted files, and their respective colData will not be included in the experiment.
+
+For this example, the desired colData can be easily extracted from the experiment's [SOFT file in GEO](https://ftp.ncbi.nlm.nih.gov/geo/series/GSE56nnn/GSE56879/soft/).
 
 ```{r, colData, eval=F}
 
@@ -95,7 +99,7 @@ GSE_colData <- sapply(names(soft@gsms), function(gsm) {
 
 GSE_colData <- gsub("_.*","",GSE_colData)
 GSE_colData <- GSE_colData[which(names(soft@gsms) %in% gsm_list)]
-GSE_colData <- data.frame(Sample = names(GSE_colData), Cell = GSE_colData)
+GSE_colData <- data.frame(row.names = names(GSE_colData), Medium = GSE_colData)
 
 GSE_colData
 ```
@@ -128,12 +132,11 @@ scm <- scMethrix::read_beds(
   U_idx = 6,
   stranded = FALSE,
   zero_based = FALSE, 
-  #collapse_strands = FALSE, 
   colData = GSE_colData
 )
 ```
 
-Certain operations will cause metadata to be destroyed. For range metadata, `bin_scMethrix()` will discard row metadata, as will `collapse_samples` for column (sample) metadata. It is advised to extract this data from `mcols()` and `colData()`, respectively, and store it within `metadata()` instead.
+Certain operations will cause metadata to be destroyed. For range metadata, `bin_scMethrix()` will discard row metadata (except for CpG count), as will `collapse_samples` for sample metadata (except for sample names). It is advised to extract this data from `rowData()` and `colData()`, respectively, and store it within `metadata()` instead.
 
 **Potential pitfalls: **
 Too many missing CpGs, if not expected, might indicate that something went wrong. 
@@ -144,13 +147,13 @@ Too many missing CpGs, if not expected, might indicate that something went wrong
 
 ## Extracting assay matricies
 
-After the experiment is created, an assay matrix can be generated.  Additionally, the methylation and coverage matrices can be directly obtained with the functions `score()` and `counts()`.
+After the experiment is created, an assay matrix can be generated.  The methylation and coverage matrices can be directly obtained with the functions `score()` and `counts()`, respectively, while any matrix can be accessed via `get_matrix(scm, assay="ASSAY_NAME")`.
 
 ```{r eval=F}
 mtx <- get_matrix(scm, assay="score")
 head(mtx)
 ```
-Genomic loci can also be added (`add_loci`), be formatted as a `GenomicRanges` object if desired, and ordered by variance (`order_by_sd`).
+Genomic loci can also be added (`add_loci`), be formatted as a `GenomicRanges` object, and ordered by variance (`order_by_sd`), if desired.
 
 ```{r eval=F}
 # Add genomic loci, put in a GRanges object, and order by SD
@@ -174,7 +177,7 @@ metadata(scm)
 rowData(scm)
 ```
 
-3. Sample metadata: Information about samples is stored as a `data.frame` in colData(). This can include alternate samples IDs, run IDs, tissue types, or anything associated with individual samples.
+3. Sample metadata: Information about samples is stored as a `data.frame` in colData(). This can include alternate samples IDs, run IDs, tissue types, or anything associated with individual samples. In this example, only the medium used for growing each sample is stored.
 
 ```{r eval=F}
 colData(scm)
