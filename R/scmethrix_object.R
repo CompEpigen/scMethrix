@@ -19,21 +19,36 @@
 scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 
 setMethod(f = "show", signature = "scMethrix", definition = function(object) {
+  
+  feature.names <- row.names(rowData(object))
+  if (!is.null(feature.names)) feature.names <- paste0(substr(feature.names[1:5],1,8),"…",collapse=" | ")
+  sample.names <- row.names(colData(object))
+  if (!is.null(sample.names)) {
+      sample.names <- substr(row.names(colData(object))[1:5],1,8)
+      sample.names <- gsub('[^a-zA-Z]*$','',sample.names)
+      sample.names <- paste0(sample.names,"…",collapse=" | ")
+      sample.names <- paste0(" (",sample.names,")")
+  }
+  
+  h5 <- is_h5(object)
+  if (h5) h5 = path(score(object))
+  
   cat(paste0("An object of class ", class(object), "\n"))
-  cat(paste0("   n_CpGs: ", format(nrow(object), big.mark = ","), "\n"))
-  cat(paste0("   n_samples: ", ncol(object), "\n"))
-  cat(paste0("   assays: ", (paste(SummarizedExperiment::assayNames(object),collapse=", ")),"\n"))
-  cat(paste0("   reduced dims: ", (paste(SingleCellExperiment::reducedDimNames(object),collapse=", ")),"\n"))
-  cat(paste0("   is_h5: ", is_h5(object), "\n"))
-  cat(paste0("   Reference: ", object@metadata$genome, "\n"))
+  cat(paste0("   CpGs: ", format(nrow(object), big.mark = ","),feature.names,"\n"))
+  cat(paste0("   Samples: ", ncol(object),sample.names,"\n"))
+  cat(paste0("   Assays: ", (paste(SummarizedExperiment::assayNames(object),collapse=", ")),"\n"))
+  cat(paste0("   Reduced dims: ", (paste(SingleCellExperiment::reducedDimNames(object),collapse=", ")),"\n"))
+  cat(paste0("   HDF5: ", h5, "\n"))
+  cat(paste0("   Ref.Genome: ", object@metadata$genome, "\n"))
   cat(paste0("   Physical size: ", format(utils::object.size(object), units = "auto"), "\n"))
 })
 
 # Create scMethrix obj
+#' @export
 create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, 
                              genome_name = "hg19", chrom_size = NULL, desc = NULL, h5_dir = NULL, 
                              replace = FALSE, verbose=TRUE) {
-
+  
   if (is_hdf5) {
 
     sse <- SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "HDF5Array")), 
@@ -63,6 +78,18 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
     }
 
     return(scMethrix(sse))
+}
+
+#' @export
+as.scMethrix.GRset <- function (GRset, colData = NULL) {
+  
+  if (is.null(colData)) colData <- data.frame(row.names = colnames(getBeta(GRset)))
+  
+  assays = list(score = getBeta(GRset))
+  rowRanges = rowRanges(GRset)
+  genome_name = annotation(GRset)["annotation"]
+  
+  create_scMethrix(assays = assays, colData = colData, rowRanges = rowRanges, genome_name = genome_name)
 }
 
 setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
