@@ -5,10 +5,10 @@ message("Test setup starting...")
 #            system.file("extdata", "C3.bedgraph", package="scMethrix"),
 #            system.file("extdata", "C4.bedgraph", package="scMethrix"))
 
-files <- c("F:/scMethrix/inst/extdata/C1.bedgraph","F:/scMethrix/inst/extdata/C2.bedgraph",
-           "F:/scMethrix/inst/extdata/C3.bedgraph","F:/scMethrix/inst/extdata/C4.bedgraph")
+files <- c("D:/Git/scMethrix/inst/extdata/C1.bedgraph","D:/Git/scMethrix/inst/extdata/C2.bedgraph",
+           "D:/Git/scMethrix/inst/extdata/C3.bedgraph","D:/Git/scMethrix/inst/extdata/C4.bedgraph")
 
-h5_dir <- paste0(tempdir(),"/sse")
+h5_dir <- tempfile("scm_h5_", tmpdir = tempdir())
 
 colData <- data.frame(row.names = get_sample_name(files), Group = rep(1:2,2))
 
@@ -57,6 +57,26 @@ imputation_test_helper <- function(func) {
     expect_false(all(sco[NAs] %in% imp[NAs]))
   }))
 }
+
+# Checks to see if two experiments are the same, excluding H5 status
+identical.scm <- function(scm1,scm2,exclude_is_h5 = F) {
+  
+  if (exclude_is_h5) {
+    h5 <- identical(within(metadata(scm1), rm(is_h5)),within(metadata(scm1), rm(is_h5)))
+  } else {
+    h5 <- identical(metadata(scm1),metadata(scm2))
+  }
+  
+  match = 
+    identical(as.matrix(score(scm1)),as.matrix(score(scm2))) &&
+    identical(as.matrix(counts(scm1)),as.matrix(counts(scm2))) &&
+    identical(colData(scm1),colData(scm2)) && 
+    identical(rowData(scm1),rowData(scm2)) &&
+    h5
+ 
+  return(match)
+}
+
 
 graph_test_helper <- function(scm, func, indiv_samples = TRUE, indiv_chr = FALSE, pheno = NULL, ...) {
 
