@@ -26,18 +26,16 @@ liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRU
   #- Input Validation --------------------------------------------------------------------------
   
   .validateExp(scm)
-  .validateType(chain,"string")
   .validateType(target_genome,"string")
   
   if (verbose) message("Applying liftover...")
   
   #- Function code -----------------------------------------------------------------------------
   
+  n_cpg = nrow(scm)
   rrng.new <- rtracklayer::liftOver(rowRanges(scm),chain)
   
-  n_cpg = nrow(scm)
-  
-  # Remove the missing coords
+  # Remove the missing probes
   row_idx <- (lengths(rrng.new) == 0)
   scm <- scm[!row_idx,]
   rrng.new <- rrng.new[!row_idx,]
@@ -46,7 +44,7 @@ liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRU
   row_idx <- which(lengths(rrng.new) > 1)
   rrng.new[row_idx] <- S4Vectors::endoapply(rrng.new[row_idx],head,1)
   
-  if (verbose) message("Lost ", n_cpg - nrow(scm), " CpGs and collapsed ",length(row_idx)," CpGs during liftOver." )
+  if (verbose) message("Lost ", n_cpg - nrow(scm), " CpGs during liftOver." )
   
   rowRanges(scm) <- unlist(rrng.new)
   scm@metadata$genome <- target_genome

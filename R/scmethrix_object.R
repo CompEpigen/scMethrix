@@ -20,15 +20,15 @@ scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 
 setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   
-  feature.names <- row.names(rowData(object))
-  if (!is.null(feature.names)) feature.names <- paste0(substr(feature.names[1:5],1,8),"...",collapse=" l ")
-  sample.names <- row.names(colData(object))
-  if (!is.null(sample.names)) {
-    sample.names <- substr(row.names(colData(object))[1:5],1,8)
-    sample.names <- gsub('[^a-zA-Z]*$','',sample.names)
-    sample.names <- paste0(sample.names,"...",collapse=" l ")
-    sample.names <- paste0(" (",sample.names,")")
-  }
+  feature.names <- NULL#row.names(rowData(object))
+  # if (!is.null(feature.names)) feature.names <- paste0(substr(feature.names[1:5],1,8),"...",collapse=" l ")
+  sample.names <- NULL#row.names(colData(object))
+  # if (!is.null(sample.names)) {
+  #   sample.names <- substr(row.names(colData(object))[1:5],1,8)
+  #   sample.names <- gsub('[^a-zA-Z]*$','',sample.names)
+  #   sample.names <- paste0(sample.names,"...",collapse=" l ")
+  #   sample.names <- paste0(" (",sample.names,")")
+  # }
   
   h5 <- is_h5(object)
   if (h5) h5 = path(score(object))
@@ -84,12 +84,13 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
 #' @details 
 #' @param GRset GRset; the GRset to convert to scMethrix
 #' @param colData data.table; information about the samples
+#' @param verbose boolean; be chatty
 #' @return An \code{\link{scMethrix}} object
 #' @import minfi
 #' @examples
 #' data('scMethrix_data')
 #' @export
-as.scMethrix.GRset <- function (GRset, colData = NULL) {
+as.scMethrix.GRset <- function (GRset, colData = NULL, verbose = verbose) {
   
   if (is.null(colData)) colData <- data.frame(row.names = colnames(getBeta(GRset)))
   
@@ -97,7 +98,7 @@ as.scMethrix.GRset <- function (GRset, colData = NULL) {
   rowRanges = rowRanges(GRset)
   genome_name = minfi::annotation(GRset)["annotation"]
   
-  create_scMethrix(assays = assays, colData = colData, rowRanges = rowRanges, genome_name = genome_name)
+  create_scMethrix(assays = assays, colData = colData, rowRanges = rowRanges, genome_name = genome_name, verbose = verbose)
 }
 
 setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
