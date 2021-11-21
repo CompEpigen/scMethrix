@@ -247,13 +247,33 @@
 #--- .validateExp -------------------------------------------------------------------------------------------
 #' Validates to see if object is a proper scMethrix object
 #' @param scm scMethrix; the experiment object to test
-#' @return invisible(TRUE), if the object is valid. Error if not.
+#' @param h5_dir string; the directory of an experiment object
+#' @param throws boolean; whether to throw an error on a missing experiment. Will return FALSE on missing otherwise.
+#' @return invisible(TRUE), if the object is valid. Error or FALSE if not.
 .validateExp <- function(scm = NULL, h5_dir = NULL, throws = T) {
-  if (!is(scm, "scMethrix")) {
-    if (throws) {stop(paste0("Invalid scMethrix object supplied for '",substitute(scm),"'"), call. = FALSE)
-    } else {return(invisible(FALSE)) }
-  }
+  
+  if (!is.null(h5_dir)) {
+    
+    .validateType(h5_dir,"directory")
 
+    tryCatch(
+      expr = {
+        scm <- load_HDF5_scMethrix(h5_dir)
+      },
+      error = function(e){ 
+        if (throws) {stop("Invalid scMethrix object found at ",h5_dir, call. = FALSE)
+        } else {return(invisible(FALSE))}
+      }
+    )
+  }
+  
+  if (!is.null(scm)) {
+    if (!is(scm, "scMethrix")) {
+      if (throws) {stop(paste0("Invalid scMethrix object supplied for '",substitute(scm),"'"), call. = FALSE)
+      } else {return(invisible(FALSE))}
+    }
+  }
+  
   return(invisible(TRUE))
 }
 
