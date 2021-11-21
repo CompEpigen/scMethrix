@@ -7,7 +7,7 @@
 reduce_scMethrix(
   scm,
   assay = "score",
-  var = c("top", "rand"),
+  var = c("top", "random"),
   n_cpg = 1000,
   na.rm = FALSE,
   verbose = FALSE
@@ -18,11 +18,11 @@ reduce_scMethrix(
 
 \item{assay}{string; name of an existing assay. Default = "score"}
 
-\item{var}{strning; Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'}
+\item{var}{string; Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'. Seed for random sampling = n_cpg.}
 
-\item{n_cpg}{integer; Number of variable CpGs to use. Default 1000.}
+\item{n_cpg}{integer; Number of variable CpGs to reduce to. Default 1000.}
 
-\item{na.rm}{boolean; flag to remove NA values}
+\item{na.rm}{boolean; flag to remove features with any NA values. Final number of CpGs will likely be less than n_cpg. For 'random', Will iterate up to 10 times trying to find random cpgs.}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }

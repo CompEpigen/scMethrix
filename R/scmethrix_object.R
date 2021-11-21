@@ -21,13 +21,13 @@ scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   
   feature.names <- row.names(rowData(object))
-  if (!is.null(feature.names)) feature.names <- paste0(substr(feature.names[1:5],1,8),"…",collapse=" | ")
+  if (!is.null(feature.names)) feature.names <- paste0(substr(feature.names[1:5],1,8),"...",collapse=" l ")
   sample.names <- row.names(colData(object))
   if (!is.null(sample.names)) {
-      sample.names <- substr(row.names(colData(object))[1:5],1,8)
-      sample.names <- gsub('[^a-zA-Z]*$','',sample.names)
-      sample.names <- paste0(sample.names,"…",collapse=" | ")
-      sample.names <- paste0(" (",sample.names,")")
+    sample.names <- substr(row.names(colData(object))[1:5],1,8)
+    sample.names <- gsub('[^a-zA-Z]*$','',sample.names)
+    sample.names <- paste0(sample.names,"...",collapse=" l ")
+    sample.names <- paste0(" (",sample.names,")")
   }
   
   h5 <- is_h5(object)
@@ -53,51 +53,59 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
 
     sse <- SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "HDF5Array")), 
                                                       colData = colData, 
-                                                        rowRanges = rowRanges,
-                                                        metadata = list(genome = genome_name,
-                                                                        chrom_size = chrom_size,
-                                                                        descriptive_stats = desc,
-                                                                        is_h5 = TRUE))
-
-      if (!is.null(h5_dir)) {
-        tryCatch(save_HDF5_scMethrix(scm = sse, h5_dir = h5_dir, replace = replace, verbose = verbose),
-                 error = function(e) message(e,"\nThe dataset is not 
+                                                      rowRanges = rowRanges,
+                                                      metadata = list(genome = genome_name,
+                                                                      chrom_size = chrom_size,
+                                                                      descriptive_stats = desc,
+                                                                      is_h5 = TRUE))
+    
+    if (!is.null(h5_dir)) {
+      tryCatch(save_scMethrix(scm = sse, dest = h5_dir, replace = replace, verbose = verbose),
+               error = function(e) message(e,"\nThe dataset is not 
                                                          saved. Please save manually using the 
                                                          HDF5Array::saveSummarizedExperiment command."))
-      }
-      
-    } else {
-      
-      sse <- SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "matrix")),
+    }
+    
+  } else {
+    
+    sse <- SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "matrix")),
                                                       colData = colData,
                                                       rowRanges = rowRanges,
                                                       metadata = list(genome = genome_name,
                                                                       chrom_size = chrom_size,
                                                                       descriptive_stats = desc,
                                                                       is_h5 = FALSE))
-    }
-
-    return(scMethrix(sse))
+  }
+  
+  return(scMethrix(sse))
 }
-
+#--- as.scMethrix.GRset ----------------------------------------------------------------------------------
+#' Converts from a minfi::GRset to an scMethrix object
+#' @details 
+#' @param GRset GRset; the GRset to convert to scMethrix
+#' @param colData data.table; information about the samples
+#' @return An \code{\link{scMethrix}} object
+#' @import minfi
+#' @examples
+#' data('scMethrix_data')
 #' @export
 as.scMethrix.GRset <- function (GRset, colData = NULL) {
   
   if (is.null(colData)) colData <- data.frame(row.names = colnames(getBeta(GRset)))
   
-  assays = list(score = getBeta(GRset))
+  assays = list(score = minfi::getBeta(GRset))
   rowRanges = rowRanges(GRset)
-  genome_name = annotation(GRset)["annotation"]
+  genome_name = minfi::annotation(GRset)["annotation"]
   
   create_scMethrix(assays = assays, colData = colData, rowRanges = rowRanges, genome_name = genome_name)
 }
 
 setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
-          (x); SummarizedExperiment::assay(x, i="score")}
+  (x); SummarizedExperiment::assay(x, i="score")}
 )
 
 setMethod(f = "sampleNames", signature = "scMethrix", definition = function(object)   {
-          row.names(colData(object))}
+  row.names(colData(object))}
 )
 
 utils::globalVariables(c("sampleNames")) #TODO: find out why this is necessary

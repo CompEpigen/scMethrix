@@ -4,13 +4,17 @@
 \alias{.validateExp}
 \title{Validates to see if object is a proper scMethrix object}
 \usage{
-.validateExp(scm)
+.validateExp(scm = NULL, h5_dir = NULL, throws = T)
 }
 \arguments{
 \item{scm}{scMethrix; the experiment object to test}
+
+\item{h5_dir}{string; the directory of an experiment object}
+
+\item{throws}{boolean; whether to throw an error on a missing experiment. Will return FALSE on missing otherwise.}
 }
 \value{
-invisible(TRUE), if the object is valid. Error if not.
+invisible(TRUE), if the object is valid. Error or FALSE if not.
 }
 \description{
 Validates to see if object is a proper scMethrix object

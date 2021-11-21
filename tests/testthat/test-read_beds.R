@@ -34,7 +34,7 @@ test_that("read_bed - HDF5, no coverage", {
   suppressWarnings(dir.create(path,recursive=TRUE))
   
   scm1 <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4)
-  scm2 <- load_HDF5_scMethrix(dir=path)
+  scm2 <- load_scMethrix(dest=path)
     
   expect_true(is_h5(scm1))
   #expect_false(has_cov(scm1))
@@ -57,7 +57,7 @@ test_that("read_bed - HDF5, with coverage", {
   suppressWarnings(dir.create(path,recursive=TRUE))
   
   scm1 <- read_beds(files,h5=TRUE,h5_dir=path,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
-  scm2 <- load_HDF5_scMethrix(dir=path)
+  scm2 <- load_scMethrix(dest=path)
   
   expect_true(is_h5(scm1))
   expect_true(has_cov(scm1))

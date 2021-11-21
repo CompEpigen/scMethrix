@@ -43,7 +43,8 @@ Imports:
     Seurat,
     S4Vectors,
     BSgenome,
-    Biostrings
+    Biostrings,
+    minfi
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Suggests: 
@@ -52,7 +53,8 @@ Suggests:
     knitr,
     BSgenome.Mmusculus.UCSC.mm10,
     BiocManager,
-    R.utils
+    R.utils,
+    mockr
 URL: https://github.com/CompEpigen/scMethrix
 BugReports: https://github.com/CompEpigen/scMethrix/issues
 biocViews: DNAMethylation, Sequencing, Coverage

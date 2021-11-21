@@ -11,7 +11,7 @@ test_that("get_distance_matrix", {
     expect_error(get_distance_matrix(scm),"There are NA values present")
     expect_error(get_distance_matrix(scm,assay="not an assay"),msg.validateAssay)
     
-    scm <- transform_assay(scm,new_assay="fill", trans = function(x) fill(x,fill=0))
+    scm <- transform_assay(scm,new_assay="fill", trans = function(x) fill(x,val=0))
     
     expect_error(get_distance_matrix(scm,assay="fill",type="not a metric"),msg.validateArg)
     
@@ -45,7 +45,7 @@ test_that("cluster_scMethrix", {
     expect_error(cluster_scMethrix(scm="not scMethrix"),msg.validateExp)
     expect_error(cluster_scMethrix(scm,assay="not an assay"),msg.validateAssay)
     
-    scm <- transform_assay(scm,new_assay="fill", trans = function(x) fill(x,fill=0))
+    scm <- transform_assay(scm,new_assay="fill", trans = function(x) fill(x, val=0))
 
     expect_error(cluster_scMethrix(scm,assay="fill",type="not a type"), msg.validateArg)
     

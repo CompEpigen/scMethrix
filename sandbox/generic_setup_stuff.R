@@ -68,8 +68,8 @@ col_list <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_id
 scm.big.h5 <- read_beds(files=files,h5=TRUE,h5_dir=paste0(tempdir(),"/sse"),ref_cpgs = ref_cpgs, replace=TRUE,
                         chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6, colData = colData, n_threads=0, batch_size = 10)
 saveHDF5SummarizedExperiment(scm.big.h5,dir="D:/Git/sampleData/3samp.h5",replace=TRUE)
-scm.big.h5 <- load_HDF5_scMethrix(dir="D:/Git/sampleData/500.h5")
-scm.big.h5 <- load_HDF5_scMethrix(dir="D:/Git/sampleData/3samp.h5")
+scm.big.h5 <- load_scMethrix(dir="D:/Git/sampleData/500.h5")
+scm.big.h5 <- load_scMethrix(dir="D:/Git/sampleData/3samp.h5")
 
 scm.big.mem <- read_beds(files=files,h5=FALSE,n_threads = 1, colData = colData,
                          chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, M_idx=5, U_idx=6)
@@ -125,7 +125,7 @@ saveHDF5SummarizedExperiment(scm.genic,dir="D:/Git/sampleData/Gaiti/bin.genic")
 scm.prom <- bin_scMethrix(scm,regions = promoters(hg38),bin_size=10000000,h5_dir = "D:/Git/sampleData/Gaiti/bin.prom")
 scm.gene <- bin_scMethrix(scm,regions = genes(hg38),bin_size=10000000,h5_dir = "D:/Git/sampleData/Gaiti/bin.gene")
 
-scm <- load_HDF5_scMethrix(dir="D:/Git/sampleData/3samp.h5")
+scm <- load_scMethrix(dir="D:/Git/sampleData/3samp.h5")
 scm <- mask_by_coverage(scm,avg_threshold=2)
 scm <- bin_scMethrix(scm,proms,h5_dir = paste0(tempdir(),"/h5bin"))
 scm <- convert_HDF5_scMethrix(scm)

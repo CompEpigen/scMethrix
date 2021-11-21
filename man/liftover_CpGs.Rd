@@ -29,6 +29,8 @@ LiftOver chains can be found here: \href{https://hgdownload.soe.ucsc.edu/downloa
 Here's links to common chains:
 {http://hgdownload.cse.ucsc.edu/goldenpath/hg38/liftOver/hg38ToHg19.over.chain.gz}{hg38 to hg19}
 {https://hgdownload.soe.ucsc.edu/gbdb/hg19/liftOver/hg19ToHg38.over.chain.gz}{hg19 to hg38}
+
+AnnotationHub can also be used to download chains. See an example in the vignettes:
 }
 \examples{
 \dontrun{

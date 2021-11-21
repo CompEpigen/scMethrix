@@ -42,11 +42,19 @@ table of summary statistic for the given region
 Extracts and summarizes methylation or coverage info by regions of interest
 }
 \details{
-Takes \code{\link{scMethrix}} object and summarizes regions
+Summarizes regions and/or groups for descriptive statistics.
 }
 \examples{
 data('scMethrix_data')
-get_region_summary(scMethrix_data,
-   regions = GenomicRanges::GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,100000000)),
-   assay = 'score', by = 'mean')
+
+# Determine global methylation of groups
+# summarize_stats(scMethrix_data, assay = 'score', group = "Group",  by = 'mean') 
+#TODO: update the scMethrix_data for group info
+
+# Determine methylation status of chromosomes
+#summarize_stats(scMethrix_data, assay = "score", regions = range(rowRanges(scMethrix_data)))
+
+# Determine methylation status of chromosomes by groups
+#summarize_stats(scMethrix_data, assay = "score", group = "Group", 
+#regions = range(rowRanges(scMethrix_data)))
 }

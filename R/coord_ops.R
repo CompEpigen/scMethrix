@@ -8,6 +8,9 @@
 #' Here's links to common chains:
 #' {http://hgdownload.cse.ucsc.edu/goldenpath/hg38/liftOver/hg38ToHg19.over.chain.gz}{hg38 to hg19}
 #' {https://hgdownload.soe.ucsc.edu/gbdb/hg19/liftOver/hg19ToHg38.over.chain.gz}{hg19 to hg38}
+#' 
+#' AnnotationHub can also be used to download chains. See an example in the vignettes: 
+#' 
 #' @inheritParams generic_scMethrix_function
 #' @param chain string; the file location for the desired chain to use in liftOver
 #' @param target_genome string; the target genome. This will be update the genome field in the output scMethrix object
@@ -30,8 +33,7 @@ liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRU
   
   #- Function code -----------------------------------------------------------------------------
   
-  ch = rtracklayer::import.chain(chain)
-  rrng.new <- rtracklayer::liftOver(rowRanges(scm),ch)
+  rrng.new <- rtracklayer::liftOver(rowRanges(scm),chain)
   
   n_cpg = nrow(scm)
   

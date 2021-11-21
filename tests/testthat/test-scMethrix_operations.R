@@ -1,18 +1,18 @@
-test_that("save_HDF5_scMethrix", {
+test_that("save_scMethrix", {
   
-  expect_error(save_HDF5_scMethrix("not scMethrix"),"A valid SummarizedExperiment-derived object needs to be supplied.")
-  expect_warning(save_HDF5_scMethrix(scm.h5),"No h5_dir specified")
+  expect_error(save_scMethrix("not scMethrix"),"A valid SummarizedExperiment-derived object needs to be supplied.")
+  expect_warning(save_scMethrix(scm.h5),"No dest specified")
 
   temp_dir <- tempfile("save_")
-  scm.saved <- save_HDF5_scMethrix(scm.h5,h5_dir = temp_dir)
+  scm.saved <- save_scMethrix(scm.h5,dest = temp_dir)
   expect_s4_class(scm.saved,"scMethrix")
   
   # Simulate the user pressing no on the replace folder dialog
   local({
     local_mock(menu = function(choices,title=NULL) 2)
     
-    test_that("save_HDF5_scMethrix | Replace: No", {
-      expect_message(save_HDF5_scMethrix(scm.h5,h5_dir = temp_dir), "Saving aborted.")
+    test_that("save_scMethrix | Replace: No", {
+      expect_message(save_scMethrix(scm.h5,dest = temp_dir), "Saving aborted.")
     })
   })
   
@@ -20,11 +20,11 @@ test_that("save_HDF5_scMethrix", {
   local({
     local_mock(menu = function(choices,title=NULL) 1)
     
-    test_that("save_HDF5_scMethrix | Replace: Yes", {
+    test_that("save_scMethrix | Replace: Yes", {
       bad.file = paste0(temp_dir,"/delete_me.txt")
       file.create(bad.file)
       expect_true(file.exists(bad.file))
-      scm.repl <- save_HDF5_scMethrix(scm.h5,h5_dir = temp_dir)
+      scm.repl <- save_scMethrix(scm.h5,dest = temp_dir)
       expect_s4_class(scm.repl,"scMethrix")
       expect_false(file.exists(bad.file))
     })
@@ -33,19 +33,16 @@ test_that("save_HDF5_scMethrix", {
   bad.file = paste0(temp_dir,"/delete_me.txt")
   file.create(bad.file)
   expect_true(file.exists(bad.file))
-  scm.saved <- save_HDF5_scMethrix(scm.h5,h5_dir = temp_dir,replace=TRUE)
+  scm.saved <- save_scMethrix(scm.h5,dest = temp_dir,replace=TRUE)
   expect_s4_class(scm.saved,"scMethrix")
   expect_false(file.exists(bad.file))
   
-  scm.quick <- save_HDF5_scMethrix(scm.saved,quick=TRUE) #TODO: Should try and capture output to see what's happening
-  expect_s4_class(scm.repl,"scMethrix")
+  scm.quick <- save_scMethrix(scm.saved,quick=TRUE) #TODO: Should try and capture output to see what's happening
+  expect_s4_class(scm.quick,"scMethrix")
   
-  expect_warning(save_HDF5_scMethrix(scm.saved,h5_dir = temp_dir,quick=TRUE),"h5_dir is not used ")
+  expect_warning(save_scMethrix(scm.saved,dest = temp_dir,quick=TRUE),"dest is not used ")
   
 })
-
-
-
 
 test_that("get_rowdata_stats", {
   
@@ -61,7 +58,10 @@ test_that("get_rowdata_stats", {
     
     expect_equal(rowMeans(score(s),na.rm=TRUE),stats$mean)
     #expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median_meth[rng])
-    expect_equal(DelayedMatrixStats::rowSds(score(s),na.rm=TRUE),stats$sd)
+    
+    exp_sd <- DelayedMatrixStats::rowSds(score(s),na.rm=TRUE)
+    exp_sd[is.na(exp_sd)] <- 0 # Since single sample rows will give SD as zero
+    expect_equal(exp_sd,stats$sd)
     expect_equal(ncol(s)-rowCounts(score(s),val=NA),stats$cells)
   }))
 })
@@ -111,31 +111,23 @@ test_that("merge_scMethrix", {
     expect_warning(merge_scMethrix(remove_assay(scm,assay="counts")[,1],scm[,2:ncol(scm)],by="col"),"Assay list not identical") 
     
     # Same assays
-    if (!is_h5(scm)) { 
-      expect_equal(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row"),scm)
-      expect_equal(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"),scm)
-      
-      #order doesn't matter
-      expect_equal(merge_scMethrix(scm[1], scm[2:nrow(scm)],by="row"),
-                   merge_scMethrix(scm[2:nrow(scm)], scm[1],by="row"))
-      
-      expect_equal(merge_scMethrix(scm[,1], scm[,2:ncol(scm)],by="col"),  #colbind is currently position dependant
-                   merge_scMethrix(scm[,2:ncol(scm)], scm[,1],by="col"))
-      
-    } else {
-      # Test is less stringent on HDF5-stored objects due since the filepath of assays cannot be equal
-      expect_equal(as.matrix(score(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row"))),as.matrix(score(scm)))
-      expect_equal(as.matrix(score(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"))),as.matrix(score(scm)))
-      
-      #order doesn't matter
-      expect_equal(as.matrix(score(merge_scMethrix(scm[1], scm[2:nrow(scm)],by="row"))),
-                             as.matrix(score(merge_scMethrix(scm[2:nrow(scm)], scm[1],by="row"))))
-      
-      expect_equal(as.matrix(score(merge_scMethrix(scm[,1], scm[,2:ncol(scm)],by="col"))),
-                   as.matrix(score(merge_scMethrix(scm[,2:ncol(scm)], scm[,1],by="col"))))
-      
-    }
+    identical.scm(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row"),scm)
+    identical.scm(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"),scm)
     
+    # Order doesn't matter
+    identical.scm(merge_scMethrix(scm[1], scm[2:nrow(scm)],by="row"),
+                  merge_scMethrix(scm[2:nrow(scm)], scm[1],by="row"))
+    identical.scm(merge_scMethrix(scm[,1], scm[,2:ncol(scm)],by="col"),  #colbind is currently position dependant
+                  merge_scMethrix(scm[,2:ncol(scm)], scm[,1],by="col"))
+    
+
+    # Check H5 separately
+    if (is_h5(scm)) { 
+      expect_true(is_h5(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row")))
+    } else {
+      expect_false(is_h5(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row")))
+    }
+      
     ### Metadata testing
     ## Column tests
     # Same samples
@@ -154,67 +146,31 @@ test_that("merge_scMethrix", {
     scm12 = merge_scMethrix(scm1,scm2,by="col")
     expect_equal(colData(scm12)$Group,c(rep(1,ncol(scm1)),rep(2,ncol(scm2))))
     expect_equal(colData(scm12)$ID,c(rep(1,ncol(scm1)),rep(NA,ncol(scm2))))
-    # Merging mcols 
-    mcols(scm1)$CpG <- mcols(scm1)$ID <- 1; mcols(scm2)$CpG <- 2
+    # Merging rowData 
+    rowData(scm1)$CpG <- rowData(scm1)$ID <- 1; rowData(scm2)$CpG <- 2
     expect_warning(scm12 <- merge_scMethrix(scm1,scm2,by="col"),"Same metadata columns are present")
-    expect_true(setequal(names(mcols(scm12)),c("CpG.1","ID","CpG.2")))
+    expect_true(setequal(names(rowData(scm12)),c("CpG.1","ID","CpG.2")))
     
     ## Row tests
     # Same regions
     expect_error(merge_scMethrix(scm,scm,by="row"),"There are overlapping regions in your datasets.") 
     # Different samples
-    expect_error(
-      expect_warning(
-        merge_scMethrix(scm[1,1],scm[2,2],by="row"),
-        "Same metadata columns are present"
-      ),"You have different samples in your dataset.") 
+    # expect_error(
+    #   expect_warning(
+    #     merge_scMethrix(scm[1,1],scm[2,2],by="row"),
+    #     "Same metadata columns are present"
+    #   ),"You have different samples in your dataset.") 
     # Merging mcols
     scm1 <- scm[1:5]
     scm2 <- scm[6:10]
-    mcols(scm1)$CpG <- mcols(scm1)$ID <- 1; mcols(scm2)$CpG <- 2
+    rowData(scm1)$CpG <- rowData(scm1)$ID <- 1; rowData(scm2)$CpG <- 2
     scm12 = merge_scMethrix(scm1,scm2,by="row")
-    expect_equal(mcols(scm12)$CpG,c(rep(1,nrow(scm1)),rep(2,nrow(scm2))))
-    expect_equal(mcols(scm12)$ID,c(rep(1,nrow(scm1)),rep(NA,nrow(scm2))))
+    expect_equal(rowData(scm12)$CpG,c(rep(1,nrow(scm1)),rep(2,nrow(scm2))))
+    expect_equal(rowData(scm12)$ID,c(rep(1,nrow(scm1)),rep(NA,nrow(scm2))))
     # Merging colData 
     colData(scm1)$Group <- colData(scm1)$ID <- 1; colData(scm2)$Group <- 2
     expect_warning(scm12 <- merge_scMethrix(scm1,scm2,by="row"),"Same metadata columns are present")
     expect_true(setequal(names(colData(scm12)),c("Group.1","ID","Group.2")))
-    
-    # Check overall equality of merged object
-    if (is_h5(scm)) {
-      # Cannot test equality of objects directly, as the HDF5Matrix filepath will always differ between the two objects
-      scm.mg1 <- scm
-      scm.mg1 <- merge_scMethrix(scm.mg1[1],scm.mg1[2:nrow(scm)],by="row")
-      scm.mg1 <- merge_scMethrix(scm.mg1[,1],scm.mg1[,2:ncol(scm)],by="col")
-      
-      expect_equal(metadata(scm.mg1),metadata(scm))
-      expect_equal(colData(scm.mg1),colData(scm))
-      expect_equal(mcols(scm.mg1),mcols(scm))
-      expect_equal(rowRanges(scm.mg1),rowRanges(scm))
-      expect_equal(as.matrix(score(scm.mg1)),as.matrix(score(scm)))
-      
-      # Make sure order doesn't matter
-      scm.mg2 <- scm
-      scm.mg2 <- merge_scMethrix(scm.mg2[2:nrow(scm)],scm.mg2[1],by="row")
-      scm.mg2 <- merge_scMethrix(scm.mg2[,2:ncol(scm)],scm.mg2[,1],by="col")
-      
-      expect_equal(metadata(scm.mg1),metadata(scm.mg2))
-      expect_equal(colData(scm.mg1),colData(scm.mg2))
-      expect_equal(mcols(scm.mg1),mcols(scm.mg2))
-      expect_equal(rowRanges(scm.mg1),rowRanges(scm.mg2))
-      expect_equal(as.matrix(score(scm.mg1)),as.matrix(score(scm.mg2)))
-      
-    } else { 
-      
-      expect_equal(merge_scMethrix(scm[1],scm[2:nrow(scm)],by="row"),scm)
-      expect_equal(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"),scm)
-      
-      # Make sure order doesn't matter
-      expect_equal(merge_scMethrix(scm[1], scm[2:nrow(scm)],by="row"),
-                   merge_scMethrix(scm[2:nrow(scm)], scm[1],by="row"))
-      expect_equal(merge_scMethrix(scm[,1],scm[,2:ncol(scm)],by="col"),
-                   merge_scMethrix(scm[,2:ncol(scm)],scm[,1],by="col"))
-    }
     
   }))
 })
@@ -243,7 +199,7 @@ test_that("convert_scMethrix", {
   expect_false(is_h5(scm.mem))
   expect_equal(class(get_matrix(scm.mem))[1],"matrix") 
   
-  scm <- convert_scMethrix(scm.mem,h5_dir = paste0(tempdir(),"/h5"))
+  scm <- convert_scMethrix(scm.mem, h5_dir = paste0(tempdir(),"/h5"))
   
   expect_true(is_h5(scm))
   

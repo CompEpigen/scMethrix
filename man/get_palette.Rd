@@ -4,7 +4,7 @@
 \alias{get_palette}
 \title{Getter for plot palette colors}
 \usage{
-get_palette(n_row, col_palette)
+get_palette(n_row, col_palette = "RdYlGn")
 }
 \arguments{
 \item{n_row}{Number of colors}

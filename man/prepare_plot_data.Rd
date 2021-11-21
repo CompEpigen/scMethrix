@@ -2,12 +2,11 @@
 % Please edit documentation in R/scMethrix_plot.R
 \name{prepare_plot_data}
 \alias{prepare_plot_data}
-\title{Format \code{\link{scMethrix}} matrix to long form data for plotting}
+\title{Formats an \code{\link{scMethrix}} matrix to long form data for plotting}
 \usage{
 prepare_plot_data(
   scm = NULL,
   assay = "score",
-  regions = NULL,
   n_cpgs = 25000,
   pheno = NULL,
   verbose = TRUE,
@@ -18,8 +17,6 @@ prepare_plot_data(
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{assay}{string; name of an existing assay. Default = "score"}
-
-\item{regions}{Granges; genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
 
 \item{n_cpgs}{integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive. The seed will be set to \code{n_cpgs} for consistency.}
 
@@ -33,5 +30,5 @@ prepare_plot_data(
 'Long' matrix for methylation
 }
 \description{
-Format \code{\link{scMethrix}} matrix to long form data for plotting
+Formats an \code{\link{scMethrix}} matrix to long form data for plotting
 }

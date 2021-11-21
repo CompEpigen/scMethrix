@@ -11,7 +11,7 @@ plot_coverage(
   max_cov = 100,
   obs_lim = 1e+06,
   col_palette = "RdYlGn",
-  show_legend = TRUE,
+  show_legend = FALSE,
   verbose = TRUE
 )
 }

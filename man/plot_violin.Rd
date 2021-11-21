@@ -7,11 +7,10 @@
 plot_violin(
   scm = NULL,
   assay = "score",
-  regions = NULL,
   n_cpgs = 25000,
   pheno = NULL,
   col_palette = "RdYlGn",
-  show_legend = TRUE,
+  show_legend = FALSE,
   verbose = TRUE
 )
 }
@@ -19,8 +18,6 @@ plot_violin(
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
 \item{assay}{string; name of an existing assay. Default = "score"}
-
-\item{regions}{Granges; genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object}
 
 \item{n_cpgs}{integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive. The seed will be set to \code{n_cpgs} for consistency.}
 

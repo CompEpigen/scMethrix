@@ -7,6 +7,7 @@
 plot_dim_red(
   scm,
   dim_red,
+  col_palette = "RdYlGn",
   color_anno = NULL,
   shape_anno = NULL,
   axis_labels = NULL,
@@ -19,6 +20,8 @@ plot_dim_red(
 
 \item{dim_red}{string; name of adimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
 the X and Y coordinates of the dim. red., with each row being a seperate sample}
+
+\item{col_palette}{string; Name of the RColorBrewer palette to use for plotting.}
 
 \item{color_anno}{string; Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object}
 

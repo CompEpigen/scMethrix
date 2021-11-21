@@ -62,9 +62,16 @@ has_cov = function(scm) {
 #' @export
 get_sample_name = function(filepath) {
   .validateType(filepath,"string")
-  
   filepath <- gsub("\\.gz$|\\.bz2$","",filepath)
   return(tools::file_path_sans_ext(basename(filepath)))
+}
+
+get_psuedo_checksum <- function() {
+  
+  
+  
+  
+  
 }
 
 #--- binarize -----------------------------------------------------------------------------------------------
@@ -94,14 +101,14 @@ binarize = function(x,threshold = NULL, rep_na = NA, verbose = FALSE) {
 #--- fill ---------------------------------------------------------------------------------------------------
 #' Fills a vector with a specified \code{fill} value
 #' @param x vector; A vector in which to fill the NA values
-#' @param fill basic data type; Any value from one of R's basic data types (character, numeric, integer, logical, complex)
+#' @param val basic data type; Any value from one of R's basic data types (character, numeric, integer, logical, complex)
 #' @return vector; Same values as input vector, but NA values are replaced with \code{fill} if above of below the threshold, or 'rep.na' if NA
 #' @examples
 #' vals <- c(0,0.25,0.5,0.75,1,NA)
-#' fill(vals, fill=2)
+#' fill(vals, val=2)
 #' @export
-fill = function(x, fill = NA) {
-  x[is.na(x)] <- fill
+fill = function(x, val = 0) {
+  x[is.na(x)] <- val
   return(x)
 }
 

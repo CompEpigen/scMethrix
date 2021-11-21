@@ -4,12 +4,12 @@
 \alias{fill}
 \title{Fills a vector with a specified \code{fill} value}
 \usage{
-fill(x, fill = NA)
+fill(x, val = 0)
 }
 \arguments{
 \item{x}{vector; A vector in which to fill the NA values}
 
-\item{fill}{basic data type; Any value from one of R's basic data types (character, numeric, integer, logical, complex)}
+\item{val}{basic data type; Any value from one of R's basic data types (character, numeric, integer, logical, complex)}
 }
 \value{
 vector; Same values as input vector, but NA values are replaced with \code{fill} if above of below the threshold, or 'rep.na' if NA
@@ -19,5 +19,5 @@ Fills a vector with a specified \code{fill} value
 }
 \examples{
 vals <- c(0,0.25,0.5,0.75,1,NA)
-fill(vals, fill=2)
+fill(vals, val=2)
 }

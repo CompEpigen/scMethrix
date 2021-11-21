@@ -7,6 +7,7 @@
 merge_scMethrix(
   scm1 = NULL,
   scm2 = NULL,
+  h5_dir = NULL,
   by = c("row", "column"),
   verbose = TRUE
 )
@@ -15,6 +16,8 @@ merge_scMethrix(
 \item{scm1}{\code{\link{scMethrix}}; A single cell methylation experiment}
 
 \item{scm2}{\code{\link{scMethrix}}; A single cell methylation experiment}
+
+\item{h5_dir}{string; The directory to use. Will be created if it does not exist. Default = NULL}
 
 \item{by}{string; Merge by 'columns' or 'rows'}
 

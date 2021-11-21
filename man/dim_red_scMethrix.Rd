@@ -8,6 +8,7 @@ dim_red_scMethrix(
   scm,
   assay = "score",
   type = c("tSNE", "UMAP", "PCA"),
+  plot = T,
   perplexity = 30,
   verbose = FALSE,
   n_components = 2,
@@ -22,6 +23,8 @@ dim_red_scMethrix(
 
 \item{type}{string; the type of imputation "tSNE","UMAP", or "PCA"}
 
+\item{plot}{boolean; Plot after calculating}
+
 \item{perplexity}{numeric; Perplexity parameter (should not be bigger than 3 * perplexity < nrow(X) - 1, see details for interpretation)}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
@@ -30,7 +33,7 @@ dim_red_scMethrix(
 
 \item{n_neighbors}{integer; number of nearest neighbors for UMAP}
 
-\item{...}{Other arguments that can be passed to Rtsne}
+\item{...}{additional arguements for any of the imputation functions}
 }
 \value{
 \code{\link{scMethrix}} object with reducedDim assay
@@ -40,11 +43,20 @@ Reduces dimensionality (tSNE, UMAP, PCA, or custom)
 }
 \details{
 Does reduction stuff
+
+The dimensionality reduction algorithms used do not allow for NA values, so the input matrix will likely need to be imputed or binned, among others.
+
+Certain components have hard-coded minimums for the dimensionality reduction to occur (only a concern from very small sample sets, about 30 or so). These will be automatically enforced:
+\itemize{
+\item tSNE: perplexity >= floor(ncol(scm)/3)
+\item UMAP: n_neighbors >= ncol(scm)
+}
 }
 \examples{
 data('scMethrix_data')
-
+#scMethrix_data <- transform_assay(scMethrix_data,assay="score",new_assay="fill",trans = fill)
+#dim_red_scMethrix(scMethrix_data, assay="fill", type="PCA")
 }
 \seealso{
-\code{\link[=plot_dim_red]{plot_dim_red()}} for plotting
+\code{\link[=plot_dim_red]{plot_dim_red()}} for plotting, \code{\link[Rtsne:Rtsne]{Rtsne::Rtsne()}} for Rtsne, \code{\link[umap:umap]{umap::umap()}} for UMAP, \code{\link[stats:prcomp]{stats::prcomp()}} for PCA
 }

@@ -212,9 +212,9 @@
     } else if(type == "List"){
       valid <- is.list(input)
     } else if (type == "File") {
-      valid <- all(file.exists(input))
+      valid <- file_test("-f", input)
     } else if (type == "Directory") {
-      valid <- all(dir.exists(input))
+      valid <- file_test("-d", input)
     } else if(type == "GRanges" | type == "GenomicRanges"){
       valid <- is(input, "GRanges")
     } else if (type == "Function") {
@@ -258,7 +258,7 @@
 
     tryCatch(
       expr = {
-        scm <- load_HDF5_scMethrix(h5_dir)
+        scm <- load_scMethrix(h5_dir)
       },
       error = function(e){ 
         if (throws) {stop("Invalid scMethrix object found at ",h5_dir, call. = FALSE)

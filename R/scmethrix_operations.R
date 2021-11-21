@@ -221,9 +221,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row
   #   
   #  
   # }))
-  
-  browser()
-  
+
   # Merge by row
   if (by == "row") {
     if (nrow(SummarizedExperiment::colData(scm1)) != nrow(SummarizedExperiment::colData(scm2)) || 
@@ -550,13 +548,13 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
 #' scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
-#' save_HDF5_scMethrix(scm, h5_dir = dir, replace = TRUE)
+#' save_scMethrix(scm, h5_dir = dir, replace = TRUE)
 #' @return invisible \code{\link{scMethrix}} object, with the assays stored in the h5_dir
 #' @export
 save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FALSE, verbose = TRUE, ...) {
-  
+
   #- Input Validation --------------------------------------------------------------------------
-  if (!is(scm, "SummarizedExperiment")) {
+  if (!extends(class(scm),"SummarizedExperiment")) {
     stop("A valid SummarizedExperiment-derived object needs to be supplied.", call. = FALSE)
   }
   
@@ -568,7 +566,7 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
 
   if (verbose) message("Saving scMethrix object", start_time())
   
-  if (is_h5(scm)) {
+  if (metadata(scm)$is_h5 == TRUE) {
     if (quick) {
         if (!is.null(dest)) warning("dest is not used when quicksaving experiments. Experiment will be saved in it's original directory")
         exp <- HDF5Array::quickResaveHDF5SummarizedExperiment(x = scm, verbose=verbose) 
@@ -629,22 +627,22 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
 #' scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
-#' save_HDF5_scMethrix(scm, h5_dir = dir, replace = TRUE)
-#' n <- load_HDF5_scMethrix(dir)
+#' save_scMethrix(scm, h5_dir = dir, replace = TRUE)
+#' n <- load_scMethrix(dir)
 #' @export
 load_scMethrix <- function(dest = NULL, verbose = TRUE, ...) {
-  
-  browser()
-  
+
   .validateType(verbose,"boolean")
  
   if (verbose) message("Loading scMethrix object", start_time())
   
   if (.validateType(dest,"file",throws=F)) {
     scm <- readRDS(dest)
-  } else {
+  } else if (.validateType(dest,"dir")) {
     scm <- HDF5Array::loadHDF5SummarizedExperiment(dir = dest, ...)
     scm <- as(scm, "scMethrix")
+  } else {
+    stop("Invalid type. Must be either a directory or file for 'dest'")
   }
   
   if (verbose) message("Loaded in ",stop_time())

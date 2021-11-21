@@ -24,7 +24,7 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
   if (!.validateAssay(scm,new_assay,check.absent=T))
     #new_assay %in% SummarizedExperiment::assayNames(scm)) 
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
-
+  
   #- Function code -----------------------------------------------------------------------------
   if (is_h5(scm)) {
     
@@ -38,15 +38,15 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
                                                  filepath = tempfile(pattern="trans_sink_",tmpdir=h5_temp),
                                                  name = new_assay, level = 6)
     
+
     blocs <- DelayedArray::blockApply(get_matrix(scm,assay=assay), grid = grid, FUN = trans)
     
     for(i in 1:length(blocs)) {
       DelayedArray::write_block(block = as.matrix(blocs[[i]]), viewport = grid[[as.integer(i)]], sink = trans_sink)
     }
-    
-    rm(blocs)
+
     mtx <- as(trans_sink, "HDF5Matrix")
-    
+
   } else {
     mtx <- get_matrix(scm,assay=assay)
     dims <- dimnames(mtx)
@@ -86,7 +86,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = 
                           overlap_type = c("within", "start", "end", "any", "equal"), h5_dir = NULL, verbose = TRUE, 
                           batch_size = 20, n_threads = 1, replace = FALSE) {
   #- Input Validation --------------------------------------------------------------------------
-  yid <- NULL
+  yid <- . <- NULL
 
   .validateExp(scm)
   .validateType(regions,c("granges","null"))
@@ -175,7 +175,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = 
   colnames(overlap_indices) <- c("xid", "yid")
   overlap_indices[,yid := paste0("rid_", yid)]
   
-  if (verbose) message("Generated ",length(rrng)," bins in ",split_time())
+  if (verbose) message("   Mapped ",length(rrng)," bins in ",split_time())
   
   gc()
 
@@ -582,7 +582,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
 #' data('scMethrix_data')
 #' @export
 #' @import Melissa
-#' @references Kapourani CA, Sanguinetti G (2019). “Melissa: Bayesian clustering and imputation of single cell methylomes.” Genome Biology, 20, 61. doi: 10.1186/s13059-019-1665-8.
+#' @references Kapourani CA, Sanguinetti G (2019). 'Melissa: Bayesian clustering and imputation of single cell methylomes.' Genome Biology, 20, 61. doi: 10.1186/s13059-019-1665-8.
 impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay = "impute") {
   
   #- Input Validation --------------------------------------------------------------------------
@@ -680,7 +680,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #' impute_regions(scMethrix_data)
 #' @export
 #' @references Hastie T, Tibshirani R, Narasimhan B, Chu G (2021). impute: impute: Imputation for microarray data. R package version 1.66.0.
-#' @references Stekhoven, D. J., & Bühlmann, P. (2012). MissForest—non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.
+#' @references Stekhoven, D. J., & Buehlmann, P. (2012). MissForest - non-parametric missing value imputation for mixed-type data. Bioinformatics, 28(1), 112-118.
 #' @references Bro, R., Kjeldahl, K. Smilde, A. K. and Kiers, H. A. L. (2008) Cross-validation of component models: A critical look at current methods. Analytical and Bioanalytical Chemistry, 5, 1241-1251.
 #' @references Josse, J. and Husson, F. (2011). Selecting the number of components in PCA using cross-validation approximations. Computational Statistics and Data Analysis. 56 (6), pp. 1869-1879.
 impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regions = NULL, n_chunks = 1, 
