@@ -177,6 +177,53 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row
   
   if (verbose) message("Merging assays...")
   
+  # Merge the rest of the experiment metadata
+  if (by == "row") {
+    slots <- c(S4Vectors::metadata,colData)
+  }
+  else {
+    slots <- c(S4Vectors::metadata,rowData)
+  }
+  
+  # slots <- list(S4Vectors::metadata)
+  
+  for (i in 1:length(slots)) {
+    
+    op <- slots[[i]]
+    
+    op1 <- op(scm1)
+    op2 <- op(scm2)
+    n1 <- names(op1)
+    n2 <- names(op2)
+    meta <- c(op1[setdiff(n1, n2)],op2[setdiff(n2, n1)])
+    not_shown = T
+    
+    for (n in intersect(n1,n2)) {
+      if (identical(op1[n],op2[n]) || is.null(unlist(op2[n]))) {
+        meta <- append(meta,op1[n])
+      } else if (is.null(unlist(op1[n]))) {
+        meta <- append(meta,op2[n])
+      } else {
+        if(not_shown) {warning("Same metadata columns are present in ",op@generic,
+                               "(). These will be appended with `.1` or `.2`")}
+        meta[[paste0(n,".1")]] <- unname(unlist(op1[n]))
+        meta[[paste0(n,".2")]] <- unname(unlist(op2[n]))
+        not_shown = F
+      }
+    }
+    
+    eval(parse(text=eval(expression(paste0(op@generic,"(scm1) <- meta")))))
+    blank <- meta[-(1:length(names(meta)))]
+    eval(parse(text=eval(expression(paste0(op@generic,"(scm2) <- blank")))))
+
+  }
+  # invisible(lapply(slots, function(op) {
+  #   
+  #  
+  # }))
+  
+  browser()
+  
   # Merge by row
   if (by == "row") {
     if (nrow(SummarizedExperiment::colData(scm1)) != nrow(SummarizedExperiment::colData(scm2)) || 
@@ -221,47 +268,8 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row
     }
   }
  
-  # Merge the rest of the experiment metadata
-  # if (by == "row") {
-  #   slots <- c(S4Vectors::metadata,colData,int_colData)
-  # }
-  # else { 
-  #   slots <- c(S4Vectors::metadata,mcols,elementMetadata,int_elementMetadata)
-  # }
-  
-  slots <- list(S4Vectors::metadata)
-  
-  invisible(lapply(slots, function(op) {
-    op1 <- op(scm1)
-    op2 <- op(scm2)
-    n1 <- names(op1)
-    n2 <- names(op2)
-    meta <- c(op1[setdiff(n1, n2)],op2[setdiff(n2, n1)])
-    not_shown = T
-    
-    for (n in intersect(n1,n2)) {
-      if (identical(op1[n],op2[n]) || is.null(unlist(op2[n]))) {
-        meta <- append(meta,op1[n])
-      } else if (is.null(unlist(op1[n]))) {
-        meta <- append(meta,op2[n])
-      } else {
-        if(not_shown) {warning("Same metadata columns are present in ",op@generic,
-                               "(). These will be appended with `.1` or `.2`")}
-        meta[[paste0(n,".1")]] <- unname(unlist(op1[n]))
-        meta[[paste0(n,".2")]] <- unname(unlist(op2[n]))
-        not_shown = F
-      }
-    }
-
-    eval(parse(text = eval(expression(paste0(op@generic,"(scm) <<- meta")))))
-  }))
  
-  if (!is.null(h5_dir)) {
   
-  
-  
-    
-  }
   
   
   #Realize if HDF5
