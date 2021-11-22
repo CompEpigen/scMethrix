@@ -79,6 +79,7 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
   
   return(scMethrix(sse))
 }
+
 #--- as.scMethrix.GRset ----------------------------------------------------------------------------------
 #' Converts from a minfi::GRset to an scMethrix object
 #' @details 
@@ -92,11 +93,16 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
 #' @export
 as.scMethrix.GRset <- function (GRset, colData = NULL, verbose = verbose) {
   
-  if (is.null(colData)) colData <- data.frame(row.names = colnames(getBeta(GRset)))
+  if (is.null(colData)) {
+    colData <- data.frame(row.names = colnames(getBeta(GRset)))
+  } else { # Ensure that colData is in same order as assays
+    ord <- match(colnames(getBeta(GRset)),row.names(colData)) 
+    colData <- colData[ord,]
+  }
   
   assays = list(score = minfi::getBeta(GRset))
   rowRanges = rowRanges(GRset)
-  genome_name = minfi::annotation(GRset)["annotation"]
+  genome_name = minfi::annotation(GRset)[["annotation"]]
   
   create_scMethrix(assays = assays, colData = colData, rowRanges = rowRanges, genome_name = genome_name, verbose = verbose)
 }

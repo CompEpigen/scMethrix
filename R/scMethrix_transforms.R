@@ -260,19 +260,24 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = 
   }
 
   n_cpgs <- overlap_indices[, .N, by=.(yid)]$N
-  if (fill) n_cpgs <- c(n_cpgs,rep(0,length(regions) - length(n_cpgs)))
+  gr <- rrng[which(rrng$rid %in% overlap_indices$yid)]
   
-  rrng$n_cpgs <- n_cpgs
-  rrng$rid <- NULL
+  if (fill) {
+    n_cpgs <- c(n_cpgs,rep(0,length(regions) - length(n_cpgs)))
+    gr <- c(gr, rrng[which(!rrng$rid %in% overlap_indices$yid)])
+  }
+  
+  gr$n_cpgs <- n_cpgs
+  gr$rid <- NULL
 
   if (verbose) message("Rebuilding experiment...")
   
   if (is_h5(scm)) {
-    m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_hdf5 = TRUE, 
+    m_obj <- create_scMethrix(assays = assays, rowRanges=gr, is_hdf5 = TRUE, 
                               h5_dir = h5_dir, genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),
                               replace = replace)  
   } else {
-    m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_hdf5 = FALSE, 
+    m_obj <- create_scMethrix(assays = assays, rowRanges=gr, is_hdf5 = FALSE, 
                               genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm))
   }
   

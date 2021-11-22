@@ -282,7 +282,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row
   return(scm)
 }
 
-#--- summarize_stats ----------------------------------------------------------------------------------------
+#--- summarize_regions ----------------------------------------------------------------------------------------
 #' Extracts and summarizes methylation or coverage info by regions of interest
 #' @details Summarizes regions and/or groups for descriptive statistics.
 #' @inheritParams generic_scMethrix_function
