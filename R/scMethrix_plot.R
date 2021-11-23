@@ -86,7 +86,7 @@ get_palette <- function(n_row, col_palette = "RdYlGn"){
 #' @return list of shapes (by integer)
 get_shape <- function(n_row) {
   .validateType(n_row,"integer")
-  shapes <- c(21:25,3,4,7:14)
+  shapes <- c(15:25,3,4,7:14)
   return(shapes[1:n_row])
 }
 
@@ -426,10 +426,10 @@ plot_imap <- function(scm) {
 #' @return ggplot2 object
 #' @importFrom graphics par mtext lines axis legend title
 #' @export
-plot_dim_red <- function(scm, dim_red, col_palette = "RdYlGn", color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
+plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
 
   #- Input Validation --------------------------------------------------------------------------
-  X <- Y <- Color <- Shape <- color <- shape <- Sample <- row_names <- NULL
+  X <- Y <- Color <- Shape <- color <- shape <- shapes  <- colors <- Sample <- row_names <- NULL
   
   .validateExp(scm)
   .validateType(dim_red,"string")
@@ -454,7 +454,7 @@ plot_dim_red <- function(scm, dim_red, col_palette = "RdYlGn", color_anno = NULL
 
   if (!is.null(color_anno)) {
     if (color_anno  %in% colnames(colData(scm))) {
-      dim_red$Color <- as.factor(unlist(as.data.table(colData(scm))[,color_anno, with=FALSE])) #TODO: make colData a data.table
+      dim_red$Color <- as.factor(unlist(as.data.table(colData(scm))[,color_anno, with=FALSE]))
       colors <- scale_color_manual(values= get_palette(length(unique(dim_red$Color)),col_palette = col_palette))
     } else {
       stop(paste0(color_anno, " not found in provided scMethrix object"))
@@ -463,7 +463,7 @@ plot_dim_red <- function(scm, dim_red, col_palette = "RdYlGn", color_anno = NULL
     
   if (!is.null(shape_anno)) {
     if (shape_anno %in% colnames(colData(scm))) {
-      dim_red$Shape <- as.factor(unlist(as.data.table(colData(scm))[,shape_anno, with=FALSE])) #TODO: make colData a data.table
+      dim_red$Shape <- as.factor(unlist(as.data.table(colData(scm))[,shape_anno, with=FALSE])) 
       shapes <- scale_shape_manual(values = get_shape(length(unique(dim_red$Shape))))
     } else {
       stop(paste0(shape_anno, " not found in provided scMethrix object"))
@@ -476,32 +476,29 @@ plot_dim_red <- function(scm, dim_red, col_palette = "RdYlGn", color_anno = NULL
   
   if (all(c("Color", "Shape") %in% colnames(dim_red))) {
     dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = Color,
-                                            shape = Shape, label = Sample)) + geom_point(size = 3) +
-      labs(color = color_anno, shape = shape_anno)# + scale_color_brewer(palette = col_palette)
+                                            shape = Shape, label = Sample)) + 
+      labs(color = color_anno, shape = shape_anno)
   } else if ("Color" %in% colnames(dim_red)) {
     dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = Color,
-                                            label = Sample)) + geom_point(size = 3) +
-      labs(color = color_anno)# + scale_color_brewer(palette = col_palette)
+                                            label = Sample))  + labs(color = color_anno)
   } else if ("Shape" %in% colnames(dim_red)) {
     dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, shape = Shape,
-                                            label = Sample)) + geom_point(size = 3) +
-      labs(shape = shape_anno)
+                                            label = Sample)) + labs(shape = shape_anno)
   } else {
     dimred_gg <- ggplot2::ggplot(data = as.data.frame(dim_red), aes(x = X, y = Y,
-                                                           label = Sample)) + geom_point(size = 3, fill = "black",
-                                                                                            color = "gray70")
+                                                           label = Sample))
   }
   
   dimred_gg <- dimred_gg  + ggplot2::theme_classic(base_size = 12) + 
     ggplot2::xlab(axis_labels$X) + ggplot2::ylab(axis_labels$Y) + 
     ggplot2::theme(axis.text.x = element_text(colour = "black", size = 12),
-          axis.text.y = element_text(colour = "black", size = 12))
+          axis.text.y = element_text(colour = "black", size = 12)) + geom_point(size = 4, stroke = .2, alpha = .5)
   
   if (show_dp_labels) {
     dimred_gg <- dimred_gg + ggplot2::geom_label(size = 4) 
   }
   
-  dimred_gg <- dimred_gg + color + shape
+  dimred_gg <- dimred_gg + colors + shapes
   
   return(dimred_gg)
   

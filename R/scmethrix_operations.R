@@ -638,7 +638,7 @@ load_scMethrix <- function(dest = NULL, verbose = TRUE, ...) {
   
   if (.validateType(dest,"file",throws=F)) {
     scm <- readRDS(dest)
-  } else if (.validateType(dest,"dir")) {
+  } else if (.validateType(dest,"dir",throws=F)) {
     scm <- HDF5Array::loadHDF5SummarizedExperiment(dir = dest, ...)
     scm <- as(scm, "scMethrix")
   } else {

@@ -15,6 +15,7 @@ bin_scMethrix(
   verbose = TRUE,
   batch_size = 20,
   n_threads = 1,
+  fill = F,
   replace = FALSE
 )
 }
@@ -40,6 +41,8 @@ operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is
 \item{batch_size}{integer; The maximum number of elements to process at once.}
 
 \item{n_threads}{integer; Maximum number of parallel instances. Default = 1}
+
+\item{fill}{boolean; Should the assay be filled with all input regions}
 
 \item{replace}{boolean; flag for whether to delete the contents of h5_dir before saving}
 }

@@ -7,7 +7,7 @@
 plot_dim_red(
   scm,
   dim_red,
-  col_palette = "RdYlGn",
+  col_palette = "Paired",
   color_anno = NULL,
   shape_anno = NULL,
   axis_labels = NULL,

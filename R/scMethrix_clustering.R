@@ -174,7 +174,7 @@ append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
-  .validateType(colData,c("vector","dataframe","S4"))
+  #.validateType(colData,c("vector","dataframe","S4")) #TODO: fix this or remove functino totally
   .validateType(name,"string")
   
   Row.names <- NULL

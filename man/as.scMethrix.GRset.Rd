@@ -4,12 +4,14 @@
 \alias{as.scMethrix.GRset}
 \title{Converts from a minfi::GRset to an scMethrix object}
 \usage{
-as.scMethrix.GRset(GRset, colData = NULL)
+as.scMethrix.GRset(GRset, colData = NULL, verbose = verbose)
 }
 \arguments{
 \item{GRset}{GRset; the GRset to convert to scMethrix}
 
 \item{colData}{data.table; information about the samples}
+
+\item{verbose}{boolean; be chatty}
 }
 \value{
 An \code{\link{scMethrix}} object
