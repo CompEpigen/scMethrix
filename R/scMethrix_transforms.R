@@ -726,7 +726,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   if (is_h5(scm)) warning("Imputation cannot be done on HDF5 data. Data will be cast as matrix for imputation.")
 
   yid <- NULL
-  
+
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Starting imputation...",start_time())
   
@@ -794,66 +794,3 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   return(scm)
 }
 
-#--- generate_training_set ----------------------------------------------------------------------------------
-#' Splits an scMethrix object into two for use as a training and test set
-#' @details Typically used for teaching classification algorithms. The seed can be set for consistency.
-#' @param training_prop numeric; The size of the training set as a proportion of the experiment (0 to 1)
-#' For a range, the optimal value will be estimated; this is time-intensive.
-#' @param seed string; value to use for sampling
-#' @inheritParams generic_scMethrix_function
-#' @return list; two \code{\link{scMethrix}} objects names 'training' and 'test'
-#' @examples
-#' data('scMethrix_data')
-#' generate_training_set(scMethrix_data, training_prop = 0.2)
-#' @export
-generate_training_set <- function(scm = NULL, training_prop = 0.2, seed = "123") {
- 
-  #- Input Validation --------------------------------------------------------------------------
-   .validateExp(scm)
-  .validateType(training_prop,"numeric")
-  .validateType(seed,"string")
-  
-  if (training_prop > 1 || training_prop < 0) stop("training_prop must in the range of [0,1]", call. = FALSE)
-  
-  #- Function code -----------------------------------------------------------------------------
-  set.seed(seed)
-  idx <- sort(sample(1:nrow(scm),floor(nrow(scm)*training_prop)))
-  
-  training <- scm[idx,]
-  test <- scm[setdiff(1:nrow(scm),idx),]
-  
-  return(list(training = training,test = test))
-}
-
-#--- generate_random_subset ---------------------------------------------------------------------------------
-#' Generates a random subset of CpG sites
-#' @details From an \code{\link{scMethrix}} object, this will randomly select \code{n_cpgs} and create a new
-#' object containing only those CpGs. This is typically used for approximation or visualization. The seed
-#' can be specified for consistency. 
-#' @param n_cpgs numeric; The number of CpGs to include
-#' @param seed string; value to use for sampling
-#' @inheritParams generic_scMethrix_function
-#' @return scMethrix; an experiment with n_cpgs
-#' @examples
-#' data('scMethrix_data')
-#' generate_random_subset(scMethrix_data,n_cpgs = round(nrow(scMethrix_data)/2))
-#' @export
-generate_random_subset <- function(scm = NULL, n_cpgs = 10000, seed = "123") {
-  
-  #- Input Validation --------------------------------------------------------------------------
-  .validateExp(scm)
-  .validateType(n_cpgs,"integer")
-  .validateType(seed,"string")
-  
-  if (n_cpgs > nrow(scm) || n_cpgs < 1) {
-    n_cpgs = max(1,n_cpgs)
-    n_cpgs = min(nrow(scm),n_cpgs)
-    warning("Invalid n_cpgs. Must be between 1 and ",nrow(scm),". Defaulted to ",n_cpgs)
-  }
-  
-  #- Function code -----------------------------------------------------------------------------
-  set.seed(seed)
-  idx <- sort(sample(1:nrow(scm),n_cpgs))
-  
-  return(scm[idx,])
-}

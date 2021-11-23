@@ -152,33 +152,3 @@ test_that("impute_regions", {
   expect_error(impute_regions(scm.mem, type=function(x) sum(x)),"Error with imputation algorithm")
   
 })
-
-test_that("generate_training_set", {
-  
-  expect_error(generate_training_set("not scMethrix"),msg.validateExp)
-  
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(generate_training_set(scm,training_prop = 2),"training_prop must in the range of")
-    
-    n <- nrow(scm)
-    prop <- 0.2
-    
-    set <- generate_training_set(scm,training_prop = prop)
-    expect_equal(nrow(set$training),round(n*prop))
-    expect_equal(nrow(set$test),round(n*(1-prop)))
-    expect_equivalent(scm,merge_scMethrix(set$training,set$test))
-  }))
-})
-
-test_that("generate_random_subset", {
-  
-  expect_error(generate_random_subset("not scMethrix"),msg.validateExp)
-  
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_warning(generate_random_subset(scm,n_cpgs = nrow(scm)+1))
-    expect_warning(generate_random_subset(scm,n_cpgs = -1))
-    
-    m <- generate_random_subset(scm,n_cpgs = 100)
-    expect_equal(nrow(m),100)
-  }))
-})
