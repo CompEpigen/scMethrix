@@ -179,69 +179,90 @@
 #--- .validateType ------------------------------------------------------------------------------------------
 .validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
                                                "List","File","Directory","GRanges","GenomicRanges","Function","Null",
-                                               "NA","Dataframe","DF","S4","Distance"), throws=T) {
-  
+                                               "NA","Dataframe","DF","S4","Distance","Chain","Soft"), throws=T, recursive_sub = NULL) {
+
   #- Input Validation --------------------------------------------------------------------------
   if (length(type) == length(eval(formals(.validateType)[["type"]]))) {
     stop("No valid type specified.")
   }
   
   types <- sapply(type,function(type) .validateArg(type,.validateType))
-  # inputs <- input#list(input,NULL) # necessary to avoid iterating through iterable objects (e.g. GRanges)s
+  
+  if (is.null(recursive_sub)) recursive_sub = gsub('"', "'", deparse(substitute(input)))
   
   #- Function code -----------------------------------------------------------------------------
   valid <- F
-  
-  for (type in types) {
-    if (type == "Null") {
-      valid <- is.null(input)
-    }  else if (type == "NA") {
-      valid <- is.na(input)
-    } else if (type == "Integer") {
-      if(is.numeric(input)) valid <- (input == round(input))
-    } else if (type == "Numeric") {
-      valid = is.numeric(input)
-    } else if (type == "Character") {
-      valid = is.character(input) && nchar(input)==1
-    } else if (type == "String") {
-      valid = is.character(input)
-    } else if(type == "Boolean" | type == "Logical"){
-      valid <- is.logical(input)
-    } else if(type == "Vector"){
-      valid <- is.vector(input)
-    } else if(type == "List"){
-      valid <- is.list(input)
-    } else if (type == "File") {
-      valid <- file_test("-f", input)
-    } else if (type == "Directory") {
-      valid <- file_test("-d", input)
-    } else if(type == "GRanges" | type == "GenomicRanges"){
-      valid <- is(input, "GRanges")
-    } else if (type == "Function") {
-      valid <- is.function(input)
-    } else if (type == "Dataframe" | type == "DF") {
-      valid <- is.data.frame(input)
-    } else if (type == "S4") {
-      valid <- isS4(input)
-    } else if (type == "Distance") {
-      valid <- is(input,"dist")
-    } else {
-      stop("Invalid type with '",type,"'. This type is not supported for validation.", call. = FALSE)
-    }
-    
-    if (valid) {
-      break
-    } else if (type == types[length(types)]) {
-      if (throws) {
-        stop("Invalid type input for '",substitute(input),"'. Must be of type: '",
-             paste0(types, collapse="', '"),"'", call. = FALSE)
-      } else {
-        return(invisible(FALSE)) 
+
+    # Check for list structures
+  if (length(input) > 1) {
+    for (type in types) {
+      if(type == "List"){
+        valid <- is.list(input)
+      } else if(type == "GRanges" | type == "GenomicRanges"){
+        valid <- is(input, "GRanges")
+      } else if (type == "Dataframe" | type == "DF") {
+        valid <- is.data.frame(input)
+      } else if (type == "Distance") {
+        valid <- is(input,"dist")
       }
     }
+    if (valid) return(invisible(TRUE))
   }
   
-  return(invisible(TRUE))
+  if (length(input) <= 1) {
+    for (type in types) {
+      if (type == "Null") {
+        valid <- is.null(input)
+      }  else if (type == "NA") {
+        valid <- is.na(input)
+      } else if (type == "Integer") {
+        if(is.numeric(input)) valid <- (input == round(input))
+      } else if (type == "Numeric") {
+        valid = is.numeric(input)
+      } else if (type == "Character") {
+        valid = is.character(input) && nchar(input)==1
+      } else if (type == "String") {
+        valid = is.character(input)
+      } else if(type == "Boolean" | type == "Logical"){
+        valid <- is.logical(input)
+      } else if(type == "List"){
+        valid <- is.list(input)
+      } else if (type == "File") {
+        valid <- file_test("-f", input)
+      } else if (type == "Directory") {
+        valid <- file_test("-d", input)
+      } else if(type == "GRanges" | type == "GenomicRanges"){
+        valid <- is(input, "GRanges")
+      } else if (type == "Function") {
+        valid <- is.function(input)
+      } else if (type == "Dataframe" | type == "DF") {
+        valid <- is.data.frame(input)
+      } else if (type == "S4") {
+        valid <- isS4(input)
+      } else if (type == "Distance") {
+        valid <- is(input,"dist")
+      } else if (type == "Chain") {
+        valid <- (class(input) == "Chain")
+      } else if (type == "Soft") {
+        valid <- (class(input) == "GSE")
+      } else {
+        stop("Invalid type with '",type,"'. This type is not supported for validation.", call. = FALSE)
+      }
+      
+      if (valid) {
+        break
+      } else if (type == types[length(types)]) {
+        if (throws) {
+          stop("Invalid type input for '",recursive_sub,"'. Must be of type: '",
+               paste0(types, collapse="', '"),"'", call. = FALSE)
+        } else {
+          return(invisible(FALSE)) 
+        }
+      }
+    } 
+  } else {valid = any(sapply(input, .validateType, type = types, throws = throws, recursive_sub = recursive_sub))}
+  
+  return(invisible(valid))
 }
 
 #--- .validateExp -------------------------------------------------------------------------------------------
@@ -312,4 +333,87 @@
   # } 
   
   return(max(min(parallel::detectCores(),n_threads),1))
+}
+
+#' Empty Value
+#'
+#' Rails-inspired helper that checks if vector values are "empty", i.e. if it's: \code{NULL}, zero-length, \code{NA}, \code{NaN}, \code{FALSE}, an empty string or \code{0}. Note that unlike its native R \code{is.<something>} sibling functions, \code{is.empty} is vectorised (hence the "values").
+#' 
+#' Take from: Rapporter\\rapportools <https://github.com/Rapporter/rapportools> 
+
+#' @param x an object to check its emptiness
+#' @param trim trim whitespace? (\code{TRUE} by default)
+#' @param ... additional arguments for \code{\link{sapply}}
+#' @examples \dontrun{
+#' is.empty(NULL)     # [1] TRUE
+#' is.empty(c())      # [1] TRUE
+#' is.empty(NA)       # [1] TRUE
+#' is.empty(NaN)      # [1] TRUE
+#' is.empty("")       # [1] TRUE
+#' is.empty(0)        # [1] TRUE
+#' is.empty(0.00)     # [1] TRUE
+#' is.empty("    ")   # [1] TRUE
+#' is.empty("foobar") # [1] FALSE
+#' is.empty("    ", trim = FALSE)    # [1] FALSE
+#' # is.empty is vectorised!
+#' all(is.empty(rep("", 10)))        # [1] TRUE
+#' all(is.empty(matrix(NA, 10, 10))) # [1] TRUE
+#' }
+#' @export
+is.empty <- function(x, trim = TRUE, ...) {
+  if (length(x) <= 1) {
+    if (is.null(x))
+      return (TRUE)
+    if (length(x) == 0)
+      return (TRUE)
+    if (is.na(x) || is.nan(x))
+      return (TRUE)
+    if (is.character(x) && nchar(ifelse(trim, trim.space(x), x)) == 0)
+      return (TRUE)
+    if (is.logical(x) && !isTRUE(x))
+      return (TRUE)
+    if (is.numeric(x) && x == 0)
+      return (TRUE)
+    return (FALSE)
+  } else
+    sapply(x, is.empty, trim = trim, ...)
+}
+
+#' Trim Spaces
+#'
+#' Removes leading and/or trailing space(s) from a character vector. By default, it removes both leading and trailing spaces.
+#' 
+#' Take from: Rapporter\\rapportools <https://github.com/Rapporter/rapportools> 
+#' 
+#' @param x a character vector which values need whitespace trimming
+#' @param what which part of the string should be trimmed. Defaults to \code{both} which removes trailing and leading spaces. If \code{none}, no trimming will be performed.
+#' @param space.regex a character value containing a regex that defines a space character
+#' @param ... additional arguments for \code{\link{gsub}} function
+#' @return a character vector with (hopefully) trimmed spaces
+trim.space <- function(x, what = c('both', 'leading', 'trailing', 'none'), space.regex = '[:space:]', ...){
+  if (missing(x))
+    stop('nothing to trim spaces to =(')
+  re <- switch(match.arg(what),
+               both     = sprintf('^[%s]+|[%s]+$', space.regex, space.regex),
+               leading  = sprintf('^[%s]+', space.regex),
+               trailing = sprintf('[%s]+$', space.regex),
+               none     = {
+                 return (x)
+               })
+  vgsub(re, '', x, ...)
+}
+
+#' Vectorised String Replacement
+#'
+#' A simple wrapper for \code{\link{gsub}} that replaces all patterns from \code{pattern} argument with ones in \code{replacement} over vector provided in argument \code{x}.
+#' @param pattern see eponymous argument for \code{\link{gsub}} function
+#' @param replacement see eponymous argument for \code{\link{gsub}} function
+#' @param x see eponymous argument for \code{\link{gsub}} function
+#' @param ... additional arguments for \code{\link{gsub}} function
+#' @references See original thread for more details \url{http://stackoverflow.com/a/6954308/457898}. Special thanks to user Jean-Robert for this one!
+#' @return a character vector with string replacements
+vgsub <- function(pattern, replacement, x, ...){
+  for(i in 1:length(pattern))
+    x <- gsub(pattern[i], replacement[i], x, ...)
+  x
 }
