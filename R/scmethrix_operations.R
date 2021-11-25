@@ -548,7 +548,7 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
 #' scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
-#' save_scMethrix(scm, h5_dir = dir, replace = TRUE)
+#' save_scMethrix(scm, dest = dir, replace = TRUE)
 #' @return invisible \code{\link{scMethrix}} object, with the assays stored in the h5_dir
 #' @export
 save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FALSE, verbose = TRUE, ...) {
@@ -566,7 +566,7 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
 
   if (verbose) message("Saving scMethrix object", start_time())
   
-  if (metadata(scm)$is_h5 == TRUE) {
+  if (S4Vectors::metadata(scm)$is_h5 == TRUE) {
     if (quick) {
         if (!is.null(dest)) warning("dest is not used when quicksaving experiments. Experiment will be saved in it's original directory")
         exp <- HDF5Array::quickResaveHDF5SummarizedExperiment(x = scm, verbose=verbose) 
@@ -627,8 +627,8 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
 #' scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
-#' save_scMethrix(scm, h5_dir = dir, replace = TRUE)
-#' n <- load_scMethrix(dir)
+#' save_scMethrix(scm, dest = dir, replace = TRUE)
+#' n <- load_scMethrix(dest = dir)
 #' @export
 load_scMethrix <- function(dest = NULL, verbose = TRUE, ...) {
 
@@ -696,7 +696,7 @@ convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
 #' data('scMethrix_data')
 #' convert_scMethrix(scMethrix_data, h5_dir=paste0(tempdir(),"/h5"))
 #' @export
-convert_scMethrix <- function(scm = NULL, h5_dir = NULL, verbose = TRUE) {
+convert_scMethrix <- function(scm = NULL, type = c("HDF5","memory"), h5_dir = NULL, verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -1155,7 +1155,7 @@ mask_by_stat <- function(scm = NULL, assay="score", threshold = 0, by=c("row","c
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   stat = .validateArg(stat,mask_by_stat)
-  op = .validateArg(op,mask_by_stat)
+  op = .validateArg(op,mask_by_stat,partial.match = F)
   by = .validateArg(by,mask_by_stat)
   .validateType(na.rm,"boolean")
   n_threads <- .validateThreads(n_threads)
