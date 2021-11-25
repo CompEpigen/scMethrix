@@ -60,6 +60,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #' @param n_row Number of colors
 #' @param col_palette String for RColorBrewer palette name  
 #' @return RColorBrewer palette
+#' @export
 get_palette <- function(n_row, col_palette = "RdYlGn"){
   
   #- Input Validation --------------------------------------------------------------------------
@@ -84,6 +85,7 @@ get_palette <- function(n_row, col_palette = "RdYlGn"){
 #' @details http://www.sthda.com/english/wiki/r-plot-pch-symbols-the-different-point-shapes-available-in-r
 #' @param n_row Number of shapes. Max of 15.
 #' @return list of shapes (by integer)
+#' @export
 get_shape <- function(n_row) {
   .validateType(n_row,"integer")
   shapes <- c(15:25,3,4,7:14)
@@ -426,30 +428,158 @@ plot_imap <- function(scm) {
 #' @return ggplot2 object
 #' @importFrom graphics par mtext lines axis legend title
 #' @export
-plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
+# plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, legend_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
+#   
+#   #- Input Validation --------------------------------------------------------------------------
+#   X <- Y <- Color <- Shape <- color <- shape <- shapes  <- colors <- Sample <- row_names <- NULL
+#   
+#   .validateExp(scm)
+#   .validateType(dim_red,"string")
+#   if (!(dim_red %in% reducedDimNames(scm))) stop("Invalid dim_red specified. '",dim_red,"' does not exist in the experiment.")
+#   .validateType(color_anno,c("string","null"))
+#   .validateType(shape_anno,c("string","null"))
+#   .validateType(axis_labels,c("string","null"))
+#   .validateType(show_dp_labels,"boolean")
+#   
+#   dim_red <- reducedDim(scm,type=dim_red)
+#   
+#   if (ncol(dim_red) != 2) {
+#     warning("More than two columns in the dimentionality reduction. Only the first two will be used")
+#     dim_red <- dim_red[,1:2]
+#   }
+# 
+#   dim_red = as.data.frame(dim_red)
+#   colnames(dim_red) <- c("X", "Y")
+#   dim_red <- merge(dim_red,colData(scm),by="row.names")
+#   names(dim_red)[names(dim_red) == 'Row.names'] <- 'Sample'
+#   dim_red$Sample <- as.character(dim_red$Sample)
+#   
+#   dim_red <- as.data.frame(dim_red)
+#   #dim_red[, shape_anno] <- as.factor(dim_red[, shape_anno])
+#   
+#   #- Function code -----------------------------------------------------------------------------
+#   
+#   # if (!is.null(color_anno)) {
+#   #   if (color_anno  %in% colnames(colData(scm))) {
+#   #     dim_red$Color <- as.factor(unlist(as.data.table(colData(scm))[,color_anno, with=FALSE]))
+#   #     colors <- scale_color_manual(values= get_palette(length(unique(dim_red$Color)),col_palette = col_palette))
+#   #   } else {
+#   #     stop(paste0(color_anno, " not found in provided scMethrix object"))
+#   #   }
+#   # }
+#   # 
+#   # if (!is.null(shape_anno)) {
+#   #   if (shape_anno %in% colnames(colData(scm))) {
+#   #     dim_red$Shape <- as.factor(unlist(as.data.table(colData(scm))[,shape_anno, with=FALSE])) 
+#   #     shapes <- scale_shape_manual(values = get_shape(length(unique(dim_red$Shape))))
+#   #   } else {
+#   #     stop(paste0(shape_anno, " not found in provided scMethrix object"))
+#   #   }
+#   # }  
+#   
+#   if (is.null(axis_labels)) {
+#     axis_labels = list(X="",Y="")
+#   }
+#   
+#   
+#   Cell_order <- dim_red$Order
+#   names(Cell_order) <- dim_red$Cell
+#   Cell_order <- Cell_order[!duplicated(names(Cell_order))]
+#   Cell_order <- names(sort(Cell_order))
+#   dim_red$Cell <- factor(dim_red$Cell, levels = Cell_order)
+#   
+#   Cell_color <- dim_red$Color
+#   names(Cell_color) <- dim_red$Cell
+#   Cell_color <- Cell_color[!duplicated(names(Cell_color))]
+#   Cell_color <- Cell_color[order(factor(names(Cell_color), levels=Cell_order))]
+#   
+#   Cell_shape <- dim_red$Shape
+#   names(Cell_shape) <- dim_red$Cell
+#   Cell_shape <- Cell_shape[!duplicated(names(Cell_shape))]
+#   Cell_shape <- Cell_shape[order(factor(names(Cell_shape), levels=Cell_order))]
+# 
+#   browser()
+#   
+#   if (all(c("Color", "Shape") %in% colnames(dim_red))) {
+#   #  dimred_gg <- 
+#      dimred_gg <-  ggplot2::ggplot(data = dim_red, aes(x = X, y = Y)) + 
+#       geom_point(aes(fill = Cell, shape = Cell),size = 4, stroke = .2, alpha = .5) +
+#       scale_shape_manual(values = Cell_shape) + 
+#       scale_fill_manual(values = Cell_color) 
+#       
+#      # geom_mark_hull(aes(fill=Cell),concavity = 1)
+#       
+#       
+#     #   
+#     #   scale_shape_manual(values = Cell_shape, labels = names(Cell_shape)) +
+#     # scale_fill_manual(values = Cell_color, labels = names(Cell_color))
+#     #   
+#     #   
+#     #   
+#     #   scale_discrete_manual_ext(c("group", "color","shape"), values = list(color = c("yellow", "darkred"),linetype = c("solid", "dashed")), name = "Legend name")
+#     #   
+#     #   
+#     #   
+#     # scale_discrete_manual(aes(group = Cell, color = Color, shape = Shape))
+#     # 
+#     # 
+#     # 
+#     #    +
+#     #     scale_group_discrete("Model 1") +
+#     # 
+#     #   
+#     #   
+#     #   
+#     #   
+#     # labs(color  = "Cell type", group = "Cell type", shape = "Cell type")
+#       
+#       
+#   } else if ("Color" %in% colnames(dim_red)) {
+#     dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = Color,
+#                                                      label = Sample))  + labs(color = color_anno)
+#   } else if ("Shape" %in% colnames(dim_red)) {
+#     dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, shape = Shape,
+#                                                      label = Sample)) + labs(shape = shape_anno)
+#   } else {
+#     dimred_gg <- ggplot2::ggplot(data = as.data.frame(dim_red), aes(x = X, y = Y,
+#                                                                     label = Sample))
+#   }
+# 
+#   dimred_gg <- dimred_gg  + ggplot2::theme_classic(base_size = 12) + 
+#     ggplot2::xlab(axis_labels$X) + ggplot2::ylab(axis_labels$Y) + 
+#     ggplot2::theme(axis.text.x = element_text(colour = "black", size = 12),
+#                    axis.text.y = element_text(colour = "black", size = 12)) 
+#   #+ geom_point(size = 4, stroke = .2, alpha = .5)
+#   
+#   if (show_dp_labels) dimred_gg <- dimred_gg + ggplot2::geom_label(size = 4) 
+#   
+#   return(dimred_gg)
+#   
+# }
+plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, legend_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
 
   #- Input Validation --------------------------------------------------------------------------
   X <- Y <- Color <- Shape <- color <- shape <- shapes  <- colors <- Sample <- row_names <- NULL
-  
+
   .validateExp(scm)
   .validateType(dim_red,"string")
   if (!(dim_red %in% reducedDimNames(scm))) stop("Invalid dim_red specified. '",dim_red,"' does not exist in the experiment.")
   .validateType(color_anno,c("string","null"))
   .validateType(shape_anno,c("string","null"))
-  .validateType(unlist(axis_labels),c("string","null"))
+  .validateType(axis_labels,c("string","null"))
   .validateType(show_dp_labels,"boolean")
-  
+
   dim_red <- reducedDim(scm,type=dim_red)
-  
+
   if (ncol(dim_red) != 2) {
     warning("More than two columns in the dimentionality reduction. Only the first two will be used")
     dim_red <- dim_red[,1:2]
   }
-  
+
   dim_red = as.data.frame(dim_red)
   colnames(dim_red) <- c("X", "Y")
   dim_red$Sample = rownames(dim_red)
-  
+
   #- Function code -----------------------------------------------------------------------------
 
   if (!is.null(color_anno)) {
@@ -460,23 +590,23 @@ plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL
       stop(paste0(color_anno, " not found in provided scMethrix object"))
     }
   }
-    
+
   if (!is.null(shape_anno)) {
     if (shape_anno %in% colnames(colData(scm))) {
-      dim_red$Shape <- as.factor(unlist(as.data.table(colData(scm))[,shape_anno, with=FALSE])) 
+      dim_red$Shape <- as.factor(unlist(as.data.table(colData(scm))[,shape_anno, with=FALSE]))
       shapes <- scale_shape_manual(values = get_shape(length(unique(dim_red$Shape))))
     } else {
       stop(paste0(shape_anno, " not found in provided scMethrix object"))
     }
-  }  
+  }
 
   if (is.null(axis_labels)) {
     axis_labels = list(X="",Y="")
   }
-  
+
   if (all(c("Color", "Shape") %in% colnames(dim_red))) {
     dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = Color,
-                                            shape = Shape, label = Sample)) + 
+                                            shape = Shape, label = Sample)) +
       labs(color = color_anno, shape = shape_anno)
   } else if ("Color" %in% colnames(dim_red)) {
     dimred_gg <- ggplot2::ggplot(data = dim_red, aes(x = X, y = Y, color = Color,
@@ -488,20 +618,18 @@ plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL
     dimred_gg <- ggplot2::ggplot(data = as.data.frame(dim_red), aes(x = X, y = Y,
                                                            label = Sample))
   }
-  
-  dimred_gg <- dimred_gg  + ggplot2::theme_classic(base_size = 12) + 
-    ggplot2::xlab(axis_labels$X) + ggplot2::ylab(axis_labels$Y) + 
+
+  dimred_gg <- dimred_gg  + ggplot2::theme_classic(base_size = 12) +
+    ggplot2::xlab(axis_labels$X) + ggplot2::ylab(axis_labels$Y) +
     ggplot2::theme(axis.text.x = element_text(colour = "black", size = 12),
           axis.text.y = element_text(colour = "black", size = 12)) + geom_point(size = 4, stroke = .2, alpha = .5)
-  
-  if (show_dp_labels) {
-    dimred_gg <- dimred_gg + ggplot2::geom_label(size = 4) 
-  }
-  
+
+  if (show_dp_labels) dimred_gg <- dimred_gg + ggplot2::geom_label(size = 4)
+
   dimred_gg <- dimred_gg + colors + shapes
-  
+
   return(dimred_gg)
-  
+
 }
 
 #------------------------------------------------------------------------------------------------------------
