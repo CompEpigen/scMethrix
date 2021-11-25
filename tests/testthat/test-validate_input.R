@@ -14,19 +14,25 @@ test_that(".validateAssay",{
 
 
 test_that(".validateArg",{
-  func <- function(var = c("banana","banjo")) {}
+  func <- function(var = c("banana","banjo","ban")) {}
   
   var = "banana"
-  expect_equivalent(.validateArg(var,func),"banana")    
+  expect_equivalent(.validateArg(var,func),"banana")  
+  
   var = "banjo"
   expect_equivalent(.validateArg(var,func),"banjo")  
+  
   var = "bAnA"
   expect_equivalent(.validateArg(var,func),"banana")  
-  expect_error(.validateArg(var,func,ignore.case = F), msg.validateArg)  
+  expect_error(.validateArg(var,func,ignore.case = F), msg.validateArg) 
+  
   var = c("banana","banjo")
-  expect_equivalent(.validateArg(var,func),"banana")    
+  expect_equivalent(.validateArg(var,func),"banana")   
+  
   var = "ban"
+  expect_equivalent(.validateArg(var,func,partial.match = F), "ban")  
   expect_error(.validateArg(var,func), msg.validateArg)  
+  
   var = "bad input"
   expect_error(.validateArg(var,func), msg.validateArg) 
   

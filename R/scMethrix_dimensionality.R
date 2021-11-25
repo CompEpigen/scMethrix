@@ -86,7 +86,7 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "random"), n_c
 #' #scMethrix_data <- transform_assay(scMethrix_data,assay="score",new_assay="fill",trans = fill)
 #' #dim_red_scMethrix(scMethrix_data, assay="fill", type="PCA")
 #' @export
-dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), plot = T, perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
+dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), plot = F, perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
 
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)

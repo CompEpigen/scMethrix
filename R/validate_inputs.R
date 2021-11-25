@@ -18,7 +18,8 @@
 #' @param arg variable; the variable in which to check
 #' @param ignore.case boolean; ignores case of the choices
 #' @return arg, if the value is in the function definition.
-.validateArg <- function(arg, parent = NULL, ignore.case = T) {
+#' @export
+.validateArg <- function(arg, parent = NULL, ignore.case = T, partial.match = T) {
   
   #.validateType(ignore.case,"boolean")
   
@@ -27,28 +28,30 @@
     parent <- deparse(sys.calls()[[sys.nframe()-1]])
     parent <- unlist(strsplit(parent, "[(]"))[[1]]
   }
-  
+
   name = substitute(arg)
   choices <- eval(formals(parent)[[name]])
+
+  arg <- head(arg,1)
   
-  arg <- tryCatch(
-    {
-      if (ignore.case) {
-        m <- match.arg(arg = tolower(arg), choices = tolower(choices))
-        i <- which(tolower(choices) %in% m)
-        choices[i]
-        
-      } else {
-        match.arg(arg = arg, choices = choices)
-      }
-    },
-    error=function(cond) {
-      stop(paste0("Invalid arg input for '",paste(name),"'. Found: '",arg,"'; Must match: '",
-                  paste0(eval(formals(parent)[[name]]), collapse="', '"),"'"), call. = FALSE)
+  if (partial.match) {
+    if (ignore.case) {
+      m <- grepl(tolower(arg), tolower(choices), fixed = TRUE)
+    } else {
+      m <- grepl(arg, choices, fixed = TRUE)
     }
-  )
+  } else {
+    if (ignore.case) {
+      m <- choices %in% arg
+    } else {
+      m <- tolower(choices) %in% tolower(arg)
+    }
+  }
   
-  return(arg)
+  if (sum(m) != 1) stop(paste0("Invalid arg input for '",paste(name),"'. Found: '",arg,"'; Must match one of: '",
+                               paste0(eval(formals(parent)[[name]]), collapse="', '"),"'"), call. = FALSE)
+
+  return(choices[which(m)])
 }
 
 #--- .validateAssay -----------------------------------------------------------------------------------------
@@ -58,6 +61,7 @@
 #' @param assay string; the name of the assay
 #' @param check.absent boolean; Checks if the assay is present
 #' @return string or boolean; if \code{check.absent == T}, the name of the matched assay or error if it doesn't exist. If \code{check_assay == F}, the boolean value for if the assay exists in the experiment
+#' @export
 .validateAssay <- function(scm = NULL, assay = NULL, check.absent = F) {
   
   #- Input Validation --------------------------------------------------------------------------
@@ -77,104 +81,6 @@
     return(!(assay %in% SummarizedExperiment::assayNames(scm)))
   }
 }
-
-# .validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
-#                                                "List","File","Directory","GRanges","GenomicRanges","Function","Null",
-#                                                "Dataframe","DF","S4")) {
-# 
-#   if (b) browser()
-#   
-#   if (length(type) == length(eval(formals(.validateType)[["type"]]))) {
-#     stop("No valid type specified.")
-#   }
-#   
-#   types <- sapply(type,function(type) .validateArg(type,.validateType))
-#   inputs <- input#list(input,NULL) # necessary to avoid iterating through iterable objects (e.g. GRanges)
-# 
-#   for (type in types) {
-#     
-#     #For container formats that are iterable
-#     if (c("GRanges","GenomicRanges","S4")) {
-#       
-#       valid <- F
-#       
-#       for (type in types) {
-#         
-#         if(type == "Vector"){
-#           valid <- is.vector(input)
-#         } else if(type == "List"){
-#           valid <- is.list(input)
-#         } else if(type == "GRanges" | type == "GenomicRanges"){
-#           valid <- is(input, "GRanges")
-#         } else if (type == "Dataframe" | type == "DF") {
-#           valid <- is.data.frame(input) 
-#         } else if (type == "S4") {
-#           valid <- isS4(input) 
-#         } else {
-#           stop("Invalid type with '",type,"'. This type is not supported. Also, this should never be reached.")
-#         }
-#         
-#       }
-#       
-#       if (!valid) {
-#         stop("Invalid type input for '",substitute(input),"'. Must be of type: '",
-#              paste0(type, collapse="', '"),"'", call. = FALSE)
-#       }
-#     }
-#       
-#       
-#     } else {
-#       for (input in inputs) {#inputs[1:(length(inputs)-1)]) {
-#         
-#         valid <- F
-#         
-#         for (type in types) {
-#           
-#           if (type == "Integer") {
-#             if(is.numeric(input)) valid <- (input == round(input))
-#           } else if (type == "Numeric") {
-#             valid = is.numeric(input) 
-#           } else if (type == "Character") {
-#             valid = is.character(input) && nchar(input)==1
-#           } else if (type == "String") {
-#             valid = is.character(input) 
-#           } else if(type == "Boolean" | type == "Logical"){
-#             valid <- is.logical(input)
-#           } else if (type == "File") {
-#             valid <- all(file.exists(input))
-#           } else if (type == "Directory") {
-#             valid <- all(dir.exists(input))
-#           } else if (type == "Function") {
-#             valid <- is.function(i)
-#           } else if (type == "Null") {
-#             valid <- is.null(input) 
-#           } else {
-#             stop("Invalid type with '",type,"'. This type is not supported. Also, this should never be reached.")
-#           }
-#           
-#         }
-#         
-#         if (!valid) {
-#           stop("Invalid type input for '",substitute(input),"'. Must be of type: '",
-#                paste0(type, collapse="', '"),"'", call. = FALSE)
-#         }
-#       }
-#       
-#     }
-#     
-#     
-#     
-#     
-#     
-#   }
-#   
-#   
-#   
-#   
-#   
-#   
-#   return(invisible(TRUE))
-# }
 
 #--- .validateType ------------------------------------------------------------------------------------------
 .validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
@@ -228,9 +134,9 @@
       } else if(type == "List"){
         valid <- is.list(input)
       } else if (type == "File") {
-        valid <- file_test("-f", input)
+        valid <- utils::file_test("-f", input)
       } else if (type == "Directory") {
-        valid <- file_test("-d", input)
+        valid <- utils::file_test("-d", input)
       } else if(type == "GRanges" | type == "GenomicRanges"){
         valid <- is(input, "GRanges")
       } else if (type == "Function") {
@@ -271,6 +177,7 @@
 #' @param h5_dir string; the directory of an experiment object
 #' @param throws boolean; whether to throw an error on a missing experiment. Will return FALSE on missing otherwise.
 #' @return invisible(TRUE), if the object is valid. Error or FALSE if not.
+#' @export
 .validateExp <- function(scm = NULL, h5_dir = NULL, throws = T) {
   
   if (!is.null(h5_dir)) {
@@ -303,6 +210,7 @@
 #' @param value numeric; the value to test
 #' @param ... string; the expressions to test
 #' @return invisible(TRUE), if the object is valid. Error if not.
+#' @export
 .validateValue <- function(value,...) {
   
   if (!is.null(value) && !is.na(value)) {
@@ -310,11 +218,19 @@
     if (!.validateType(value,c("numeric","integer"),throws=F))
       stop("Invalid value for '",substitute(value),"'. Must be of 'numeric' or 'integer' type.")
     
+    conds = c()
+
     for (condition in list(...)) {
       if (!(eval(parse(text=paste0(value,condition))))) {
-        stop ("Invalid value: '",substitute(value)," = ",value,"'. Must fit condition: ",substitute(value)," ",condition, call. = FALSE)
+        conds <- c(conds,condition)
       }
     }
+    
+    if (length(conds != 0)) {
+      conds <- paste(substitute(value),conds, collapse="', '")
+      stop ("Invalid value: '",substitute(value)," = ",value,"'. Must fit condition: '",conds,"'", call. = FALSE)
+    }
+    
   }
   return(invisible(TRUE))
 }

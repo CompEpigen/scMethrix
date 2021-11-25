@@ -59,8 +59,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   #.validateType(colData,"dataframe")
   .validateType(genome_name,"string")
   .validateType(batch_size,"integer")
-  .validateValue(batch_size,">= 1",paste("<=", length(files)))
-  #batch_size <- max(min(batch_size,length(files)),1)
+  batch_size <- max(min(length(files),batch_size),1)
   n_threads <- .validateThreads(n_threads)
   .validateType(h5,"boolean")
   if (h5) .validateType(h5_dir,c("string","null"))
@@ -161,7 +160,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     
     if(!is.null(colData)) {
       cd <- merge(cd,colData,by="row.names",all.x=T)
-      row.names(cd) <- cd[,'Row.names',drop=FALSE]
+      rownames(cd) <- cd[,'Row.names']
       cd <- subset(cd,select=-c(Row.names))
     }
     
@@ -214,6 +213,8 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     
     reads <- read_mem_data(files, ref_cpgs, col_list = col_list, batch_size = batch_size, n_threads = n_threads,
                            zero_based = zero_based,verbose = verbose, strand_collapse = strand_collapse, fill = fill)
+    
+    ref_cpgs <- ref_cpgs[, `:=` (end,start+1)]
     
     message("Building scMethrix object")
     if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
@@ -656,7 +657,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
     #parallel::clusterExport(cl,list('read_bed_by_index','get_sample_name'))
   }
   
-  if (verbose) message("   Generated ,",length(files)," chunks...")
+  if (verbose) message("   Generated ",length(files)," chunks...")
   split_time()
   
   # Read data to the sinks

@@ -44,6 +44,18 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
 })
 
 # Create scMethrix obj
+#' @param assays 
+#'
+#' @param colData 
+#' @param rowRanges 
+#' @param is_hdf5 
+#' @param genome_name 
+#' @param chrom_size 
+#' @param desc 
+#' @param h5_dir 
+#' @param replace 
+#' @param verbose 
+#'
 #' @export
 create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, 
                              genome_name = "hg19", chrom_size = NULL, desc = NULL, h5_dir = NULL, 
@@ -97,7 +109,7 @@ as.scMethrix.GRset <- function (GRset, colData = NULL, verbose = verbose) {
     colData <- data.frame(row.names = colnames(getBeta(GRset)))
   } else { # Ensure that colData is in same order as assays
     ord <- match(colnames(getBeta(GRset)),row.names(colData)) 
-    colData <- colData[ord,]
+    colData <- colData[ord,,drop=FALSE]
   }
   
   assays = list(score = minfi::getBeta(GRset))
