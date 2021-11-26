@@ -1,3 +1,50 @@
+#--- temporaray metadata functions --------------------------------------------------------------------------
+#' Checks if \code{\link{scMethrix}} object is an HDF5 object
+#' @export
+cd <- function(scm) {
+
+  d <- colData(scm)
+  
+  if (ncol(d) == 0) {
+    cat(paste("DataFrame with",nrow(d),"rows and 0 columns\n"))
+    if (nrow(scm) > 10) {
+      invisible(sapply(row.names(d)[1:5],function(row) cat(row,"\n")))
+      cat("...\n")
+      invisible(sapply(row.names(d)[(nrow(d)-5):nrow(d)],function(row) cat(row,"\n")))
+    } else {
+      invisible(sapply(row.names(d),function(row) cat(row,"\n")))
+    }
+  } else {
+    d
+  }
+}
+
+#' Checks if \code{\link{scMethrix}} object is an HDF5 object
+#' @export
+rd <- function(scm) {
+  
+  d <- rowData(scm)
+  
+  if (ncol(d) == 0) {
+    cat(paste("DataFrame with",nrow(d),"rows and 0 columns\n"))
+    if (nrow(scm) > 10) {
+      invisible(sapply(row.names(d)[1:5],function(row) cat(row,"\n")))
+      cat("...\n")
+      invisible(sapply(row.names(d)[(nrow(d)-5):nrow(d)],function(row) cat(row,"\n")))
+    } else {
+      invisible(sapply(row.names(d),function(row) cat(row,"\n")))
+    }
+  } else {
+    d
+  }
+}
+
+#' Checks if \code{\link{scMethrix}} object is an HDF5 object
+#' @export
+md <- function(scm) {
+  metadata(scm)
+}
+
 #--- is_h5 --------------------------------------------------------------------------------------------------
 #' Checks if \code{\link{scMethrix}} object is an HDF5 object
 #' @details This checks the metadata whether the experiment is in HDF5 format. As this can be manually changed and will
@@ -112,15 +159,31 @@ fill = function(x, val = 0) {
   return(x)
 }
 
+
+normalize <- function(x, min = NULL, max = NULL, scale = F) {
+  
+  if (!scale && !is.null(c(min,max))) {
+    return (((x-min)/(max-min)))
+  } 
+  
+  val <- (x - min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T))
+  
+  if (scale) {
+    val <- (max-min)*val+min
+  }
+  
+  return (val)
+}
+
 #--- colbind ------------------------------------------------------------------------------------------------
 #' A faster version of cbind when trying to combine lists of data.tables
-#' @param ... A list of data.tables with identical # of rows
+#' @param list A list of data.tables with identical # of rows
 #' @return data.table; the cbinded output 
 #' @export
-colbind = function(...) {
+colbind = function(list) {
   setDT(
-    unlist(..., recursive = FALSE),
-    check.names = FALSE
+    unlist(list, recursive = FALSE),
+    check.names = TRUE
   )[]
 }
 
@@ -356,3 +419,6 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
               has_cov = has_cov,
               select = FALSE))
 }
+
+
+
