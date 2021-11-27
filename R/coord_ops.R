@@ -102,16 +102,14 @@ extract_CpGs = function(ref_genome = NULL) {
   ref_genome = BSgenome::getBSgenome(genome = ref_genome)
   
   chrs = GenomeInfoDb::standardChromosomes(ref_genome)
-  
   # Code borrowed from from: https://support.bioconductor.org/p/95239/
   cgs = lapply(chrs, function(x) start(Biostrings::matchPattern("CG", ref_genome[[x]])))
   cpgs = do.call(c, lapply(seq_along(chrs), function(x) GenomicRanges::GRanges(names(ref_genome)[x],
                                                                                IRanges::IRanges(cgs[[x]], width = 2))))
   cpgs = data.table::as.data.table(as.data.frame(cpgs, stringsAsFactors = FALSE))
-  cpgs[,width:=NULL][,strand:=NULL]
-  colnames(cpgs) = c("chr", "start", "end")
-  cpgs[, `:=`(chr, as.character(chr))][, `:=`(start, as.numeric(start))][, `:=`(end,
-                                                                                as.numeric(end))]
+  colnames(cpgs) = c("chr", "start", "end", "width", "strand")
+  cpgs[, `:=`(chr, as.character(chr))][, `:=`(start, as.numeric(start))]
+  cpgs[, `:=`(end, as.numeric(end))][, `:=`(width, as.numeric(width))]
   data.table::setkey(x = cpgs, "chr", "start")
   message(paste0("Extracted ", format(nrow(cpgs), big.mark = ","), " CpGs from ",
                  length(chrs), " contigs (",stop_time(),")"))
