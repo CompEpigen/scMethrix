@@ -113,14 +113,6 @@ get_sample_name = function(filepath) {
   return(tools::file_path_sans_ext(basename(filepath)))
 }
 
-get_psuedo_checksum <- function() {
-  
-  
-  
-  
-  
-}
-
 #--- binarize -----------------------------------------------------------------------------------------------
 #' Binarize an input value based on a \code{threshold}
 #' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
@@ -159,7 +151,15 @@ fill = function(x, val = 0) {
   return(x)
 }
 
-
+#--- normalize ----------------------------------------------------------------------------------------------
+#' Fills a vector with a specified \code{fill} value
+#' @param x vector; A vector in which to fill the NA values
+#' @param val basic data type; Any value from one of R's basic data types (character, numeric, integer, logical, complex)
+#' @return vector; Same values as input vector, but NA values are replaced with \code{fill} if above of below the threshold, or 'rep.na' if NA
+#' @examples
+#' vals <- c(0,0.25,0.5,0.75,1,NA)
+#' fill(vals, val=2)
+#' @export
 normalize <- function(x, min = NULL, max = NULL, scale = F) {
   
   if (!scale && !is.null(c(min,max))) {
@@ -175,16 +175,24 @@ normalize <- function(x, min = NULL, max = NULL, scale = F) {
   return (val)
 }
 
-#--- colbind ------------------------------------------------------------------------------------------------
+#--- cbindlist ------------------------------------------------------------------------------------------------
 #' A faster version of cbind when trying to combine lists of data.tables
 #' @param list A list of data.tables with identical # of rows
 #' @return data.table; the cbinded output 
-#' @export
-colbind = function(list) {
+cbindlist = function(list) {
   setDT(
     unlist(list, recursive = FALSE),
     check.names = TRUE
   )[]
+}
+
+#--- cbind2 ------------------------------------------------------------------------------------------------
+#' A faster version of cbind when trying to combine lists of data.tables
+#' @describeIn cbindlist
+#' @param ... Multiple data.tables with identical # of rows
+#' @return data.table; the cbinded output 
+cbind2 = function(...) {
+  cbindlist(list(...))
 }
 
 #--- split_vector -------------------------------------------------------------------------------------------
