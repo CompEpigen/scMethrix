@@ -67,17 +67,27 @@ get_palette <- function(n_row, col_palette = "RdYlGn"){
   .validateType(n_row,"integer")
   .validateType(col_palette,"string")
   
-  if (n_row == 0) {
-    stop("Zero colors present in the palette")
+  if (n_row == 2) {
+    
+   color_pal <- c("#FFA900","#0056FF")
+    
+  } else {
+  
+  color_pal <- colorRampPalette(ggsci::pal_locuszoom()(7))(n_row)
+  
   }
   
-  if (!col_palette %in% row.names(RColorBrewer::brewer.pal.info)){
-    stop("Please provide a valid RColorBrewer palettte. Possible values are: ", paste0(row.names(RColorBrewer::brewer.pal.info)), sep=", ")
-  }
-  
-  #- Function code -----------------------------------------------------------------------------
-  color_pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(RColorBrewer::brewer.pal.info[col_palette,
-                                                                                                  "maxcolors"], col_palette))(n_row)
+    # if (n_row == 0) {
+  #   stop("Zero colors present in the palette")
+  # }
+  # 
+  # if (!col_palette %in% row.names(RColorBrewer::brewer.pal.info)){
+  #   stop("Please provide a valid RColorBrewer palettte. Possible values are: ", paste0(row.names(RColorBrewer::brewer.pal.info)), sep=", ")
+  # }
+  # 
+  # #- Function code -----------------------------------------------------------------------------
+  # color_pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(RColorBrewer::brewer.pal.info[col_palette,
+  #                                                                                                 "maxcolors"], col_palette))(n_row)
   return(color_pal)
 }
 #--- get_shape ----------------------------------------------------------------------------------------------
@@ -105,7 +115,7 @@ get_shape <- function(n_row) {
 #' data('scMethrix_data')
 #' plot_violin(scm = scMethrix_data)
 plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
-                        col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE) {
+                        col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE,...) {
   
   #- Input Validation --------------------------------------------------------------------------
   Sample <- Value <- Pheno <- NULL
@@ -131,7 +141,7 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
                                                                      colour = "black"), axis.text.y = element_text(size = 12, colour = "black"),
           axis.title.y = element_blank(), legend.title = element_blank())
   
-  return(p + scMethrix_theme())
+  return(p + scMethrix_theme(...))
 }
 
 #--- plot_density -------------------------------------------------------------------------------------------
@@ -144,7 +154,7 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
 #' data('scMethrix_data')
 #' plot_density(scm = scMethrix_data)
 plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NULL,
-                         col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE) {
+                         col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE, na.rm = F,...) {
   
   #- Input Validation --------------------------------------------------------------------------
   Value <- Pheno <- NULL
@@ -157,21 +167,24 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
   .validateType(show_legend,"boolean")
   
   #- Function code -----------------------------------------------------------------------------
-  plot.data <- prepare_plot_data(scm=scm, n_cpgs = n_cpgs, pheno = pheno)
+  plot.data <- prepare_plot_data(scm=scm, assay = assay, n_cpgs = n_cpgs, pheno = pheno)
   col_palette <- get_palette(ncol(scm), col_palette)
-  
-  # generate the density plot
 
-  p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, color = Pheno)) + geom_density(lwd = 1, position = "identity", show.legend = show_legend) + ggplot2::theme_classic() +
-    ggplot2::xlab("Methylation") + ggplot2::theme_classic(base_size = 14) +
-    ggplot2::scale_fill_manual(values = col_palette) +
-    ggplot2::xlab(expression(beta * "-Value")) + theme(axis.title.x = element_blank(),
-                                                       axis.text.x = element_text(size = 12, colour = "black"), axis.text.y = element_text(size = 12,
-                                                                                                                                           colour = "black"), axis.title.y = element_blank(), legend.title = element_blank())
+    # generate the density plot
+
+  p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, color = Pheno)) + geom_density(lwd = 1, position = "identity", show.legend = show_legend,kernel="cosine",na.rm = na.rm) + ggplot2::theme_classic() +
+    ggplot2::xlab("Methylation") + ggplot2::ylab("Density") + ggplot2::theme_classic(base_size = 14) +
+    ggplot2::scale_color_manual(values = col_palette) +
+    ggplot2::xlab("β-Value") + theme(axis.title.x = element_blank(), 
+                                     axis.text.x = element_text(size = 12, colour = "black"), 
+                                     axis.text.y = element_text(size = 12, colour = "black"), 
+                                     axis.title.y = element_blank(), legend.title = element_blank())+
+                                     ggplot2::scale_color_manual(values = get_palette(length(levels(plot.data$Pheno))))
+    
   
   gc(verbose = FALSE)
   
-  return(p + scMethrix_theme())
+  return(p + scMethrix_theme(...))
 }
 
 #--- plot_coverage ------------------------------------------------------------------------------------------
@@ -187,7 +200,7 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
 #' plot_coverage(scm = scMethrix_data)
 #' @export
 plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = NULL,
-                          max_cov = 100, obs_lim = 1e+06, col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE) {
+                          max_cov = 100, obs_lim = 1e+06, col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE,...) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -200,7 +213,7 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   
   Value <- Sample <- Pheno <- NULL
   
-  colors_palette <- get_palette(ncol(scm), col_palette)
+  colors_palette <- get_palette(ncol(scm))
   
   #- Function code -----------------------------------------------------------------------------
   if (matrixStats::product(dim(scm)) > obs_lim) {
@@ -213,8 +226,8 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
     sel_rows <- seq_len(nrow(scm))
   }
 
-  plot.data <- prepare_plot_data(scm = scm[sel_rows, ], assay = "counts", pheno = pheno, na.rm = F)
-  setnafill(plot.data,fill=0,cols="Value")
+  plot.data <- prepare_plot_data(scm = scm[sel_rows, ], assay = "counts", pheno = pheno, na.rm = T)
+  #setnafill(plot.data,fill=0,cols="Value")
   
   plot.data <- plot.data[Value <= max_cov, ]
 
@@ -222,29 +235,32 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   if (is.null(pheno)) {
     if (type == "density") {
       p <- ggplot2::ggplot(plot.data, aes(Value, color = Sample)) +
-        ggplot2::geom_density(alpha = 0.5, adjust = 1.5, lwd = 1, show.legend = show_legend,
-                              position = "identity") + ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
-        ggplot2::scale_fill_manual(values = colors_palette)
+        ggplot2::geom_density(alpha = 0.5, adjust = 3, lwd = 1.5, show.legend = show_legend, na.rm = T,
+                              position = "identity") + ggplot2::theme_classic() +
+        ggplot2::scale_color_manual(values = colors_palette) + 
+        ggplot2::ylab("Density") + ggplot2::xlab("Coverage") +
+        scale_x_sqrt(breaks=c(0,1,2,4,8))# + scale_y_sqrt(breaks=c(0,1,2,4,8))
       
     } else if (type == "histogram") {
       p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, fill = Sample)) + 
         ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black", show.legend = show_legend) + 
         ggplot2::theme_classic() +
-        ggplot2::xlab("Coverage")+
-        ggplot2::scale_fill_manual(values = colors_palette)
+        ggplot2::xlab("Coverage") + ggplot2::ylab("Density")
+        ggplot2::scale_color_manual(values = colors_palette)
       # print(p)
     }
   } else {
     if (type == "density") {
       p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, color = Pheno)) +
         ggplot2::geom_density(alpha = 0.6, adjust = 1.5, lwd = 1, show.legend = show_legend,
-                              position = "identity") + ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
+                              position = "identity") + ggplot2::theme_classic() + 
+        ggplot2::xlab("Coverage") + ggplot2::ylab("Density") +
         ggplot2::scale_fill_manual(values = colors_palette)
       # print(p)
     } else if (type == "histogram") {
       p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, fill = Pheno)) +
         ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black", show.legend = show_legend) + 
-        ggplot2::theme_classic() + ggplot2::xlab("Coverage") +
+        ggplot2::theme_classic() + ggplot2::xlab("Coverage") + ggplot2::ylab("Density") +
         ggplot2::scale_fill_manual(values = colors_palette)
       # print(p)
     }
@@ -256,7 +272,7 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
                                                                        colour = "black"), axis.text.y = element_text(size = 12, colour = "black"),
             axis.title.y = element_blank(), legend.title = element_blank())
   
-  return(p + scMethrix_theme())
+  return(p + scMethrix_theme(...))
 }
 
 #--- plot_sparsity ------------------------------------------------------------------------------------------
@@ -269,7 +285,7 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
 #' data('scMethrix_data')
 #' plot_sparsity(scm = scMethrix_data)
 #' @export
-plot_sparsity <- function(scm = NULL, assay = "score", type = c("box", "scatter"), pheno = NULL, verbose = TRUE) {
+plot_sparsity <- function(scm = NULL, assay = "score", type = c("box", "scatter","both"), pheno = NULL, show_legend = FALSE, verbose = TRUE,...) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -279,14 +295,32 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("box", "scatter"
   
   Sparsity <- variable <- NULL
   
-  sparsity <- DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay),value=NA)
+  sparsity <- DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay),value=NA)*100
+  
+  avg.spars <- mean(sparsity/nrow(scm))
+  sd.spars <- sd(sparsity/nrow(scm))
+
+  if (verbose) message("Mean: ", round(avg.spars,2), " ± ", round(sd.spars,2))
+  
+  colors_palette <- get_palette(ncol(scm))
   
   #- Function code -----------------------------------------------------------------------------
   if (!is.null(pheno)) {
     if (pheno %in% colnames(colData(scm))) {
       pheno <- as.character(scm@colData[, pheno])
+      pheno <- factor(pheno, levels = pheno)
       sparsity <- data.frame(Phenotype = pheno, Sparsity = sparsity/nrow(scm))
-      p <- ggplot2::ggplot(sparsity, aes(x=pheno, y=Sparsity, color = pheno))
+      p <- ggplot2::ggplot(sparsity, aes(x=pheno, y=Sparsity, color = pheno))+
+        ggplot2::scale_color_manual(values = colors_palette) + ylab("Sparsity (%)") + xlab("Sample") +
+        geom_hline(yintercept=avg.spars, linetype="dashed", 
+                   color = "black", size=1)+
+        scale_y_continuous(
+          sec.axis = dup_axis(
+            breaks = avg.spars,
+            labels = parse(text="bar(x)"),
+            name = NULL
+          )
+        )
     } else {
       stop("Please provide a valid phenotype annotation column.")
     }
@@ -295,10 +329,11 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("box", "scatter"
     p <- ggplot2::ggplot(sparsity, aes(x="", y=Sparsity))
   }
 
-  if (type == "box") {p <- p + ggplot2::geom_boxplot()
-  } else if (type == "scatter") {p <- p + ggplot2::geom_point() }
+  if (type == "box") {p <- p + ggplot2::geom_boxplot(show.legend = show_legend)
+  } else if (type == "scatter") {p <- p + ggplot2::geom_point(show.legend = show_legend)+
+    ggplot2::scale_color_manual(values = colors_palette) + ylab("Sparsity (%)") }
 
-  p <- p + scMethrix_theme() + ggplot2::theme(axis.title.x = element_blank())
+  p <- p + scMethrix_theme(...)
 
   return(p)
 }
@@ -321,8 +356,8 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("box", "scatter"
 #' plot_stats(scMethrix_data)
 #' @export
 #'
-plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), per_chr = FALSE, ignore_chr = NULL,
-                       ignore_samples = NULL, n_col = NULL, n_row = NULL, pheno = NULL, verbose = TRUE) {
+plot_stats <- function(scm, assay = "score", stat = c("mean", "median","count"), per_chr = FALSE, ignore_chr = NULL,
+                       ignore_samples = NULL, n_col = NULL, n_row = NULL, pheno = NULL, verbose = TRUE, axis_labels = NULL,show_legend = FALSE,...) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -337,18 +372,64 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), per_chr
   Chromosome <- . <- Sample <- mean_meth <- sd_meth <- median_meth <- mean_cov <- sd_cov <- NULL
   median_cov <- measurement <- sd_low <- sd_high <- NULL
 
+  y_title = tools::toTitleCase(paste(stat,assay))
+  
+  colors_palette <- get_palette(ncol(scm))
+
+  if (stat == "count") {
+    
+    plot_dat = get_stats(scm, assay = assay, per_chr = TRUE, ignore_chr = ignore_chr, ignore_samples = ignore_samples)
+    plot_dat$Sample_Name <- factor(plot_dat$Sample_Name, levels = sampleNames(scm))
+    plot_dat$Chr <- gsub("^.{0,3}", "", plot_dat$Chr)
+    
+    plot_dat$Chr <- factor(plot_dat$Chr, levels = unique(plot_dat$Chr))
+
+    plot_dat[, which(grepl("^mean|median", colnames(plot_dat))):=NULL]
+    
+    colnames(plot_dat) <- c("Chromosome", "Sample", "measurement",
+                            "sd")
+    
+    avg.count <- mean(plot_dat$measurement)
+    sd.count <- sd(plot_dat$measurement)
+
+    if (verbose) message("Mean: ", round(avg.count,2), " ± ", round(sd.count,2))
+    
+    plot_dat_gg <- ggplot(data = plot_dat, aes(x = Chromosome, y = measurement, fill = Chromosome)) +
+     ggplot2::geom_boxplot(col = "black", show.legend = show_legend) + 
+      #ggplot2::geom_jitter(size = 0.6) + 
+      ggplot2::theme_minimal(base_size = 12) + 
+      ggplot2::theme(axis.title.x = element_blank(), 
+                     axis.title.y = element_blank(),
+                     axis.text.x = element_text(hjust = 1, size = 10, colour = "black"),
+                     axis.text.y = element_text(size = 10, colour = "black")) +
+      ylab("Coverage")   +           geom_hline(yintercept=avg.count, linetype="dashed", 
+                                                 color = "black", size=1)+  scale_y_continuous(
+        sec.axis = dup_axis(
+          breaks = avg.count,
+          labels = parse(text="bar(x)"),
+          name = NULL
+        ) ,labels = function(l) {
+          trans = l / 1000;
+          paste0(trans, "K")
+        })
+      
+    
+  } else {
+  
   plot_dat = get_stats(scm, assay = assay, per_chr = per_chr, ignore_chr = ignore_chr, ignore_samples = ignore_samples)
+  plot_dat$Sample_Name <- factor(plot_dat$Sample_Name, levels = sampleNames(scm))
 
   #- Function code -----------------------------------------------------------------------------
   if (per_chr) {
     if (stat == "mean") {
-      plot_dat[, which(grepl("^median", colnames(plot_dat))):=NULL]
-    } else {
-      plot_dat[, which(grepl("^mean", colnames(plot_dat))):=NULL]
+      plot_dat[, which(grepl("^median|count", colnames(plot_dat))):=NULL]
+    } else if (stat == "median"){
+      plot_dat[, which(grepl("^mean|count", colnames(plot_dat))):=NULL]
     }
 
     colnames(plot_dat) <- c("Chromosome", "Sample", "measurement",
                             "sd")
+
     plot_dat[, `:=`(measurement, as.numeric(as.character(measurement)))]
     plot_dat[, `:=`(sd, as.numeric(as.character(sd)))]
     plot_dat[, `:=`(sd_low, measurement - sd)]
@@ -357,22 +438,22 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), per_chr
                               no = plot_dat$sd_low)
     
     plot_dat_gg <- ggplot(data = plot_dat, aes(x = Chromosome, y = measurement)) +
-      ggplot2::geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray70") +
+      ggplot2::geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray25") +
       ggplot2::geom_point(col = "maroon") + 
       ggplot2::facet_wrap(~Sample, nrow = n_row, ncol = n_col) + 
       ggplot2::theme_minimal(base_size = 12) + 
       ggplot2::theme(axis.title.x = element_blank(), 
+                     axis.title.y = element_blank(),
             axis.text.x = element_text(hjust = 1, size = 10, colour = "black"),
-            axis.text.y = element_text(size = 10, colour = "black"), axis.title.y = element_blank())
+            axis.text.y = element_text(size = 10, colour = "black")) +
+      ylab(y_title)
   } else {
     if (stat == "mean") {
-      plot_dat[, which(grepl("^median", colnames(plot_dat))):=NULL]
-      plot_title <- paste("Mean",assay)
-    } else {
-      plot_dat[, which(grepl("^mean", colnames(plot_dat))):=NULL]
-      plot_title <- paste("Median",assay)
-    }
-    
+      plot_dat[, which(grepl("^median|count", colnames(plot_dat))):=NULL]
+    } else if (stat == "median"){
+      plot_dat[, which(grepl("^mean|count", colnames(plot_dat))):=NULL]
+    } 
+
     colnames(plot_dat) <- c("Sample", "measurement", "sd")
     plot_dat[, `:=`(measurement, as.numeric(as.character(measurement)))]
     plot_dat[, `:=`(sd, as.numeric(as.character(sd)))]
@@ -380,19 +461,23 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median"), per_chr
     plot_dat[, `:=`(sd_high, measurement + sd)]
     plot_dat$sd_low <- ifelse(test = plot_dat$sd_low < 0, yes = 0,
                               no = plot_dat$sd_low)
-    
+    plot_dat$sd_high <- ifelse(test = plot_dat$sd_high > 1, yes = 1,
+                              no = plot_dat$sd_high)
+
     plot_dat_gg <- ggplot2::ggplot(data = plot_dat, aes(x = Sample, y = measurement)) +
       ggplot2::geom_point(col = "maroon", size = 2) + 
-      ggplot2::geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray70") + 
-      ggplot2::geom_point(col = "maroon") + theme_minimal(base_size = 12) + 
+      ggplot2::geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray25") + 
+      ggplot2::geom_point(col = "maroon",size = 5) + theme_minimal(base_size = 16) + 
       ggplot2::theme(axis.title.x = element_blank(),
             axis.text.x = element_text(angle = 45, hjust = 1, size = 12, colour = "black"), 
             axis.text.y = element_text(size = 12, colour = "black"), 
-            axis.title.y = element_blank()) + 
-      ggplot2::ggtitle(label = plot_title)
+            axis.title.y = element_blank()) +
+      ylab(y_title)
+      #ggplot2::ggtitle(label = plot_title)
+  }
   }
   
-  return(plot_dat_gg  + scMethrix_theme())
+  return(plot_dat_gg  + scMethrix_theme(...))
 }
 
 plot_melissa <- function() {
@@ -556,7 +641,7 @@ plot_imap <- function(scm) {
 #   return(dimred_gg)
 #   
 # }
-plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, legend_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
+plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, legend_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE,...) {
 
   #- Input Validation --------------------------------------------------------------------------
   X <- Y <- Color <- Shape <- color <- shape <- shapes  <- colors <- Sample <- row_names <- NULL
@@ -626,7 +711,7 @@ plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL
 
   if (show_dp_labels) dimred_gg <- dimred_gg + ggplot2::geom_label(size = 4)
 
-  dimred_gg <- dimred_gg + colors + shapes
+  dimred_gg <- dimred_gg + colors + shapes + scMethrix_theme(...)
 
   return(dimred_gg)
 
@@ -740,8 +825,8 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
     ggplot2::geom_line() + ggplot2::geom_point() + 
     ggplot2::geom_pointrange(aes(ymin=mean-sd, ymax=mean+sd)) +
     ggplot2::xlab("Sparsity (proportion)") + ggplot2::ylab(type) + ggplot2::labs(fill = "Imputation") +
-    ggplot2::scale_x_continuous(breaks=seq(0,1,.05)) + 
-    scMethrix_theme() 
+    ggplot2::scale_x_continuous(breaks=seq(0,1,.05))  
+    #scMethrix_theme() 
 }
 
 #--- scMethrix_theme ----------------------------------------------------------------------------------------
@@ -750,35 +835,36 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
 #' @param base_family string; Family of text
 #' @return ggplot element; data for the ggplot theme
 #' @export
-scMethrix_theme <- function(base_size = 12, base_family = "") {
+scMethrix_theme <- function(base_size = 12, base_family = "",...) {
 
   update_geom_defaults("line", list(size = 1.2))
   update_geom_defaults("point", list(size = 3))
 
-  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+  theme_bw(base_size = base_size, base_family = base_family) %+replace%
     ggplot2::theme(
-      line =              element_line(colour = '#DADADA', size = 0.75, 
+      line =              element_line(colour = '#DADADA', size = 0.75,
                                        linetype = 1, lineend = "butt"),
-      rect =              element_rect(fill = "#F0F0F0", colour = "#F0F0F0", 
+      rect =              element_rect(fill = "#F0F0F0", colour = "#F0F0F0",
                                        size = 0.5, linetype = 1),
       text =              element_text(family = base_family, face = "plain",
                                        colour = "#656565", size = base_size,
-                                       hjust = 0.5, vjust = 0.5, angle = 0, 
+                                       hjust = 0.5, vjust = 0.5, angle = 0,
                                        lineheight = 0.9),
-      plot.title =        element_text(size = rel(1.5), family = '' , 
-                                       face = 'bold', hjust = -0.05, 
+      plot.title =        element_text(size = rel(1.5), family = '' ,
+                                       face = 'bold', hjust = -0.05,
                                        vjust = 1.5, colour = '#3B3B3B'),
       axis.text =         element_text(),
       axis.ticks =        element_line(),
       axis.ticks.length.x = unit(.25, "cm"),
+      axis.text.x = element_text(angle = 90),
       axis.line =         element_line(colour = '#969696', size = 1, #TODO: Prefer only bottom line
                                        linetype = 1, lineend = "butt"),
-      panel.grid.major =  element_line(colour = '#DADADA', size = 0.75, 
+      panel.grid.major =  element_line(colour = '#DADADA', size = 0.75,
                                        linetype = 1, lineend = "butt"),
       panel.grid.minor =  element_blank(),
-      plot.background =   element_rect(),
+      plot.background =   element_blank(),
       panel.background =  element_rect(),
-      legend.key =        element_rect(colour = '#DADADA'),
+      legend.key =        element_rect(colour = '#DADADA'),...,
       complete = TRUE
     )
 }
