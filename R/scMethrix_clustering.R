@@ -120,7 +120,7 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
     if (!setequal(labels(fit),sampleNames(scm))) stop("Invalid cluster function. Must output a named vector containing all samples in the experiment.")
     colData <- data.frame(Sample = names(fit), Cluster = fit)
   } else if (type=="hierarchical") {
-    fit <- stats::hclust(dist, method="ward.D", ...)
+    fit <- stats::hclust(dist, ...)
     fit <- stats::cutree(fit, k=n_clusters)
     colData <- data.frame(Sample = names(fit), Cluster = fit)
   } else if (type=="partition") {

@@ -734,7 +734,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     op = type
   } else if (type == "kNN") {
     op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
-                                           rowmax = 1.0, colmax = 1.0, ...)$data
+                                           rowmax = 0.999, colmax = 0.999, ...)$data
   } else if (type == "iPCA") {
     if (length(n_pc) > 1) {
       warning("Caution: n_pc is given as range. This can be very time-intensive.")
@@ -787,7 +787,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     
   }
   
-  if (any(is.na(assay(scm,new_assay)))) warning("NAs still present in the new_assay. This should not happen.")
+  if (any(is.na(assay(scm,new_assay)))) warning("NAs are present in ",new_assay," after imputation.")
    
   if (verbose) message("Imputed in ",stop_time())
   

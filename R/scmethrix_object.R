@@ -70,12 +70,10 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
                                                                       chrom_size = chrom_size,
                                                                       descriptive_stats = desc,
                                                                       is_h5 = TRUE))
-    
+
     if (!is.null(h5_dir)) {
       tryCatch(save_scMethrix(scm = sse, dest = h5_dir, replace = replace, verbose = verbose),
-               error = function(e) message(e,"\nThe dataset is not 
-                                                         saved. Please save manually using the 
-                                                         HDF5Array::saveSummarizedExperiment command."))
+               error = function(e) message(e,"\nThe dataset is not saved. Please save manually using the HDF5Array::saveSummarizedExperiment command."))
     }
     
   } else {
