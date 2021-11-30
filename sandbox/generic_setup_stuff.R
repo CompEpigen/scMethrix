@@ -101,7 +101,7 @@ saveRDS(colData, file = "colData.rds")
 library(AnnotationHub)
 ah = AnnotationHub()
 #qhs = query(ah, c("RefSeq", "Mus musculus", "mm10"))
-qhs = query(ah, c("RefSeq", "Homo sapiens", "hg19"))
+qhs = AnnotationHub::query(ah, c("RefSeq", "Homo sapiens", "hg38"))
 genes = qhs[[1]]
 proms = promoters(genes, upstream=1000, downstream=1000)
 
