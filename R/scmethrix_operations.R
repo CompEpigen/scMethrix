@@ -20,13 +20,19 @@ get_coldata_stats <- function(scm, assay = "score", suffix="") {
   .validateType(suffix,"string")
   
   #- Function code -----------------------------------------------------------------------------
+  
+  cpgs <- nrow(scm)-DelayedMatrixStats::colCounts(get_matrix(scm = scm,assay = assay), value = NA)
+  
   stats <-
     data.table::data.table(
       mean = DelayedMatrixStats::colMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
       #median = DelayedMatrixStats::colMedians(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
       sd = DelayedMatrixStats::colSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      cpgs = nrow(scm)-DelayedMatrixStats::colCounts(get_matrix(scm = scm,assay = assay), value = NA)
+      cpgs = cpgs,
+      sparsity = cpgs/nrow(scm)
     )
+  
+  stats <- round(stats,2)
   
   colnames(stats) <- paste0(colnames(stats),suffix)
   colData <- colData(scm)[,!(colnames(colData(scm)) %in% colnames(stats)), drop=FALSE]
@@ -53,13 +59,19 @@ get_rowdata_stats <- function(scm, assay = "score", suffix="") {
   .validateExp(scm)
   
   #- Function code -----------------------------------------------------------------------------
+  
+  cells <- ncol(scm)-DelayedMatrixStats::rowCounts(get_matrix(scm = scm,assay = assay), value = NA)
+  
   stats <-
     data.table::data.table(
       mean = DelayedMatrixStats::rowMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
       #median_meth = DelayedMatrixStats::rowMedians(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
       sd = DelayedMatrixStats::rowSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      cells = ncol(scm)-DelayedMatrixStats::rowCounts(get_matrix(scm = scm,assay = assay), value = NA)
+      cells = cells,
+      sparsity = (cells/ncol(scm))
     )
+  
+  stats <- round(stats,2)
   
   # Set SD to zero for rows with only one CpG (as NA rows and rows with one value will give zero SD)
   stats[is.na(get("sd")), ("sd") := 0]
@@ -565,8 +577,8 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
   #- Function code -----------------------------------------------------------------------------
 
   if (verbose) message("Saving scMethrix object", start_time())
-  
-  if (S4Vectors::metadata(scm)$is_h5 == TRUE) {
+
+  if (is_h5(scm)) {
     if (quick) {
         if (!is.null(dest)) warning("dest is not used when quicksaving experiments. Experiment will be saved in it's original directory")
         exp <- HDF5Array::quickResaveHDF5SummarizedExperiment(x = scm, verbose=verbose) 
@@ -607,7 +619,6 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
     }
     
     saveRDS(scm,dest)
-    
   }
   
   if (verbose) message("Experiment saved in ",stop_time())
@@ -846,18 +857,19 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE, 
   
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Getting descriptive statistics...",start_time())
-  
+
   ends <- len <- GenomeInfoDb::seqnames(scm)@lengths
   for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
   starts <- head(c(1, ends + 1), -1)
-  
+
   if (per_chr) {
     stats <- lapply(1:length(starts), function(x) {
-      s <- data.table::data.table(
+      data.table::data.table(
         Chr = levels(seqnames(scm))[x],
         Sample_Name = colnames(scm),
         mean_meth = DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
         median_meth = DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
+        count = length(starts[x]:ends[x]) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], value=NA),
         sd_meth = DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE)
       )
     })
@@ -869,6 +881,7 @@ get_stats <- function(scm = NULL, assay="score",per_chr = TRUE, verbose = TRUE, 
       Sample_Name = colnames(scm),
       mean_meth = DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), na.rm = TRUE),
       median_meth = DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), na.rm = TRUE),
+      count = nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), value=NA),
       sd_meth = DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), na.rm = TRUE)
     )
   }
@@ -1131,32 +1144,32 @@ mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, 
 #' 
 #' ## Mask by low CpG count
 #' # This will mask any samples that have < 170 total CpGs present
-#' mask_by_stat(scMethrix_data, assay="score", threshold = 170, by = "col", stat="count", op="<")
+#' mask_scMethrix(scMethrix_data, assay="score", threshold = 170, by = "col", stat="count", op="<")
 #' 
 #' #' ## Mask by low sample count
 #' # This will remove CpGs that are not present in > 2 samples
-#' mask_by_stat(scMethrix_data, assay="score", threshold=2, by = "row", stat="count", op="<=")
+#' mask_scMethrix(scMethrix_data, assay="score", threshold=2, by = "row", stat="count", op="<=")
 #' 
 #' ## Mask by low coverage
 #' # This will mask each CpG in the counts assay where the total coverage is < 5
-#' mask_by_stat(scMethrix_data, assay="counts", threshold=5, by = "row", stat="sum", op="<")
+#' mask_scMethrix(scMethrix_data, assay="counts", threshold=5, by = "row", stat="sum", op="<")
 #' 
 #' ## Mask by high average coverage
 #' # This will mask each CpG in the counts assay where the average coverage is > 1
-#' mask_by_stat(scMethrix_data, assay="counts", threshold=1, by = "row", stat="mean", op=">")
+#' mask_scMethrix(scMethrix_data, assay="counts", threshold=1, by = "row", stat="mean", op=">")
 #' 
 #' ## Mask by variance
 #' # This will mask low variance (homogenous) CpG sites in the score assay where var < 0.05
-#' mask_by_stat(scMethrix_data, assay="score", threshold=0.05, by = "row", stat="var", op="<")
+#' mask_scMethrix(scMethrix_data, assay="score", threshold=0.05, by = "row", stat="var", op="<")
 #' @export
-mask_by_stat <- function(scm = NULL, assay="score", threshold = 0, by=c("row","column"), stat = c("count","sum","mean","median","sd","variance","proportion"), op = c("==","!=",">","<",">=","<="), na.rm = TRUE, n_threads=1 , verbose = TRUE) {
+mask_scMethrix <- function(scm = NULL, assay="score", threshold = 0, by=c("row","column"), stat = c("count","sum","mean","median","sd","variance","proportion"), op = c("==","!=",">","<",">=","<="), na.rm = TRUE, n_threads=1 , verbose = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
-  stat = .validateArg(stat,mask_by_stat)
-  op = .validateArg(op,mask_by_stat,partial.match = F)
-  by = .validateArg(by,mask_by_stat)
+  stat = .validateArg(stat,mask_scMethrix)
+  op = .validateArg(op,mask_scMethrix,partial.match = F)
+  by = .validateArg(by,mask_scMethrix)
   .validateType(na.rm,"boolean")
   n_threads <- .validateThreads(n_threads)
   .validateType(verbose,"boolean")
