@@ -682,14 +682,7 @@ convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
   if (!is_h5(scm)) stop("Input scMethrix must be in HDF5 format.")
   
   #- Function code -----------------------------------------------------------------------------
-  if (verbose) message("Converting HDF5 scMethrix to in-memory", start_time())
   
-  for (name in SummarizedExperiment::assayNames(scm)) {
-    SummarizedExperiment::assay(scm,name) <- as.matrix(SummarizedExperiment::assay(scm,name))   
-    if (verbose) message("   Converted '",name,"' assay in ", split_time())
-  }
-  
-  scm@metadata$is_h5 <- FALSE
   
   if (verbose) message("Experiment converted in ", stop_time())
   
@@ -701,27 +694,50 @@ convert_HDF5_scMethrix <- function(scm = NULL, verbose = TRUE) {
 #' @details Takes a \code{\link{scMethrix}} object and returns with the same object with delayed array assay slots
 #' with HDF5 backend. Might take long time!
 #' @inheritParams generic_scMethrix_function
+#' @param type string; what type of scMethrix to convert to. If NULL, this will convert to the opposite type, otherwise, will convert (if necessary) to the type specified
 #' @return An object of class \code{\link{scMethrix}}, HDF5 format
 #' @importFrom SummarizedExperiment assays
 #' @examples
 #' data('scMethrix_data')
 #' convert_scMethrix(scMethrix_data, h5_dir=paste0(tempdir(),"/h5"))
 #' @export
-convert_scMethrix <- function(scm = NULL, type = c("HDF5","memory"), h5_dir = NULL, verbose = TRUE) {
-  
+convert_scMethrix <- function(scm = NULL, type = c(NA,"HDF5","memory"), h5_dir = NULL, verbose = TRUE) {
+
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
-  if (is_h5(scm)) stop("Input scMethrix is already in HDF5 format.")
+  type <- .validateArg(type,convert_scMethrix)
   .validateType(h5_dir,c("string","null"))
   .validateType(verbose,"boolean")
+
+  if (is.na(type)) {
+    type <- ifelse(is_h5(scm),"memory","HDF5")
+  }
+  
+  if (is_h5(scm) && type == "HDF5") return(scm)
+  
+  if (!is_h5(scm) && type == "memory") return(scm)
   
   #- Function code -----------------------------------------------------------------------------
-  if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
   
-  scm <- create_scMethrix(assays = assays(scm), h5_dir = h5_dir,
-                          rowRanges = rowRanges(scm), is_hdf5 = TRUE, genome_name = scm@metadata$genome,
-                          colData = scm@colData, chrom_size = scm@metadata$chrom_sizes, 
-                          desc = scm@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
+  if (type == "HDF5") {
+  
+    if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
+    
+    scm <- create_scMethrix(assays = assays(scm), h5_dir = h5_dir,
+                            rowRanges = rowRanges(scm), is_hdf5 = TRUE, genome_name = scm@metadata$genome,
+                            colData = scm@colData, chrom_size = scm@metadata$chrom_sizes, 
+                            desc = scm@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
+  } else {
+    
+    if (verbose) message("Converting HDF5 scMethrix to in-memory", start_time())
+    
+    for (name in SummarizedExperiment::assayNames(scm)) {
+      SummarizedExperiment::assay(scm,name) <- as.matrix(SummarizedExperiment::assay(scm,name))   
+      if (verbose) message("   Converted '",name,"' assay in ", split_time())
+    }
+    
+    scm@metadata$is_h5 <- FALSE
+  }
   
   if (verbose) message("Converted in ", stop_time())
   
@@ -947,172 +963,6 @@ remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
   if (!sum(row_idx) == 0) scm <- scm[!row_idx, ]
   
   return(scm)
-}
-
-#--- mask_by_coverage -------------------------------------------------------------------------------------
-#' Masks CpGs by coverage
-#' @details Takes \code{\link{scMethrix}} object and masks sites with low overall or high average coverage by putting NA for assay values. The sites will remain in the object and all assays will be affected.
-#'  
-#'  \code{low_threshold} is used to mask sites with low overall coverage.
-#'  \code{avg_threshold} is used to mask sites with high aberrant counts. For single cell data, this is typically CpG sites with an average count > 2, as there are only two strands in a cell to sequence.
-#'  
-#' @inheritParams generic_scMethrix_function
-#' @param low_threshold numeric; The minimal coverage allowed. Everything below will get masked. If NULL, this will be ignored.
-#' @param avg_threshold numeric; The max average coverage. Typical value is 2, as there should only be 2 reads per cell. If NULL, this will be ignored. 
-#' @param n_threads integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1
-#' @return An object of class \code{\link{scMethrix}}
-#' @importFrom SummarizedExperiment assays assays<-
-#' @examples
-#' data('scMethrix_data')
-#' mask_by_coverage(scMethrix_data,low_threshold=2, avg_threshold=2)
-#' @export
-mask_by_coverage <- function(scm = NULL, low_threshold = NULL, avg_threshold = NULL, n_threads=1 , verbose = TRUE) {
-  
-  #- Input Validation --------------------------------------------------------------------------
-  .validateExp(scm)
-  .validateType(low_threshold,c("numeric","null"))
-  .validateType(avg_threshold,c("numeric","null"))
-  if (!is.null(low_threshold)) .validateValue(low_threshold,"> 0")
-  if (!is.null(avg_threshold)) .validateValue(avg_threshold,"> 0")
-  n_threads <- .validateThreads(n_threads)
-  .validateType(verbose,"boolean")
-  
-  if (!is_h5(scm) && n_threads != 1) 
-    stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
-  
-  if (!has_cov(scm)) stop("Cannot mask as no coverage matrix is present in the object.")
-  
-  # if(!is.numeric(low_threshold) || !is.numeric(low_threshold)){
-  #   stop("Thresholds must be a numeric value.")
-  # }
-  
-  #- Function code -----------------------------------------------------------------------------
-  if (verbose) message("Masking by coverage...",start_time())
-  
-  avg_row_idx <- low_row_idx <- NULL
-  
-  if (!is.null(low_threshold)) {
-    
-    if (verbose) message("Finding low coverage CpG sites...")
-    low_row_idx <- which(DelayedMatrixStats::rowSums2(counts(scm),na.rm=TRUE) < low_threshold)
-    if (verbose) message("   Found ",length(low_row_idx)," CpGs with coverage < ", low_threshold)
-    
-  }
-  
-  if (!is.null(avg_threshold)) {
-    
-    if (verbose) message("Finding high average count CpG sites...")
-    avg_row_idx <- which(DelayedMatrixStats::rowMeans2(counts(scm), na.rm = TRUE) > avg_threshold)
-    if (verbose) message("   Found ",length(avg_row_idx)," CpGs with average coverage > ",avg_threshold)
-    
-  }
-  
-  row_idx <- unique(c(low_row_idx,avg_row_idx))
-  scm <- mask_by_idx(scm, row_idx = row_idx, verbose = verbose)
-  
-  return(scm)
-}
-
-#--- mask_by_sample -------------------------------------------------------------------------------------------
-#' Masks rows or columns based on some descriptive statistic
-#' @details Takes \code{\link{scMethrix}} object and masks CpGs with masks sites with too high or too low coverage. All masked CpGs will have their values replaced by NA. The sites will remain in the object and all assays will be affected. These sites can later be removed with [remove_uncovered()].
-#'
-#'  \code{low_threshold} is used to mask sites with low overall cell counts, as a CpG site represented by a single sample is typically not useful.
-#'  \code{prop_threshold} is used to mask sites with a low proportional count. If a site is present in 10 out of 100 samples, the proportional count is 10/100 = 0.1.
-#' @family masking
-#' @family quality control
-#' @inheritParams generic_scMethrix_function
-#' @param low_threshold numeric; The minimal cell count allowed. Everything below will get masked.
-#' @param prop_threshold numeric; The minimal proportion of covered cells. Must be between (0,1).
-#' @param n_threads integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
-#' @return An object of class \code{\link{scMethrix}}
-#' @importFrom SummarizedExperiment assays assays<-
-#' @examples
-#' data('scMethrix_data')
-#' mask_by_sample(scMethrix_data,low_threshold=2)
-#' mask_by_sample(scMethrix_data,prop_threshold=0.5) 
-#' @export
-mask_by_sample <- function(scm = NULL, assay = "score", low_threshold = NULL, prop_threshold = NULL, n_threads=1 , verbose = TRUE) {
-  
-  #- Input Validation --------------------------------------------------------------------------
-  .validateExp(scm)
-  assay <- .validateAssay(scm,assay)
-  .validateType(low_threshold,c("numeric","null"))
-  .validateType(prop_threshold,c("numeric","null"))
-  if (!is.null(low_threshold)) .validateValue(low_threshold,"> 0")
-  if (!is.null(prop_threshold)) .validateValue(low_threshold,"> 0","< 1")
-  n_threads <- .validateThreads(n_threads)
-  .validateType(verbose,"boolean")
-  
-  if (!is_h5(scm) & n_threads != 1) 
-    stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.", call. = FALSE)
-  
-  if (!is.null(low_threshold) && !is.null(prop_threshold) || is.null(low_threshold) && is.null(prop_threshold))
-    stop("low_threshold and prop_threshold are mutually exclusive. One must have a value and one must be NULL", call. = FALSE)
-  
-  #- Function code -----------------------------------------------------------------------------
-  if (verbose) message("Masking by sample count...",start_time())
-  row_idx <- NULL
-  
-  if (!is.null(low_threshold)) {
-    if (verbose) message("Finding low sample count CpG sites...")
-    row_idx <- which(DelayedMatrixStats::rowCounts(get_matrix(scm), 
-                                                   value = as.integer(NA)) > (ncol(scm)-low_threshold))
-    if (verbose) message("   Found ",length(row_idx)," CpGs with count < ",low_threshold)
-  } else if (!is.null(prop_threshold)) {
-    if (verbose) message("Finding low sample proportion CpG sites...")
-    row_idx <- which(DelayedMatrixStats::rowCounts(get_matrix(scm), 
-                                                   value = as.integer(NA)) > ncol(scm)*(1-prop_threshold))
-    if (verbose) message("   Found ",length(row_idx)," CpGs with cell proportion < ",prop_threshold)
-  }
-  
-  scm <- mask_by_idx(scm, row_idx = row_idx, verbose = verbose)
-  
-  return(scm)
-}
-
-#' Masks non-variable CpGs
-#' @details Takes \code{\link{scMethrix}} object and masks CpGs with low variability by putting NA for assay values. The sites will remain in the object and all assays will be affected.
-#' @inheritParams generic_scMethrix_function
-#' @param low_threshold numeric; The variability threshold. Masking is done for all CpGs less than or equal to this value. A CpG that is methylated or unmethylated in all samples will have a variability of 0, whereas a completely variable CpG will have a value of 1. Default = 0.05.
-#' @param n_threads integer; Number of parallel instances. Can only be used if \code{\link{scMethrix}} is in HDF5 format. Default = 1.
-#' @return An object of class \code{\link{scMethrix}}
-#' @importFrom SummarizedExperiment assays assays<-
-#' @examples
-#' data('scMethrix_data')
-#' mask_by_variance(scMethrix_data,low_threshold=0.05)
-#' @export
-mask_by_variance <- function(scm = NULL, assay = "score", low_threshold = 0.05, n_threads = 1, verbose = TRUE) {
-  
-  #- Input Validation --------------------------------------------------------------------------
-  .validateExp(scm)
-  .validateType(low_threshold,c("numeric","null"))
-  n_threads <- .validateThreads(n_threads)
-  assay <- .validateAssay(scm,assay)
-  
-  .validateType(verbose,"boolean")
-  
-  if (!is_h5(scm) & n_threads != 1) 
-    stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage. \nNumber of cores (n_threads) needs to be 1.")
-  
-  if (!is.numeric(low_threshold) || low_threshold > 1 || low_threshold < 0) stop("low_threshold must be between 0 and 1")
-  
-  #- Function code -----------------------------------------------------------------------------
-  if (verbose) message("Masking non-variable CpG sites...",start_time())
-  
-  n <- DelayedMatrixStats::colCounts(get_matrix(scm), value = as.integer(NA))
-  
-  vals <- DelayedMatrixStats::rowSds(get_matrix(scm,assay=assay), na.rm = TRUE) 
-  vals[which(is.na(vals))] <- 0
-  vals <- vals/DelayedMatrixStats::rowMeans2(get_matrix(scm,assay=assay), na.rm = TRUE)
-  vals[which(is.nan(vals))] = 0 #For case of all non-methylated CpGs (hence 0/0 = NaN)
-  
-  row_idx <- which(vals <= low_threshold)
-  
-  scm <- mask_by_idx(scm, row_idx = row_idx, verbose = verbose)
-  
-  return(scm)
-  
 }
 
 #--- mask_scMethrix -------------------------------------------------------------------------------------

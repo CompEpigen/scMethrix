@@ -20,9 +20,9 @@
 #' @return arg, if the value is in the function definition.
 #' @export
 .validateArg <- function(arg, parent = NULL, ignore.case = T, partial.match = T) {
-  
+
   #.validateType(ignore.case,"boolean")
-  
+
   #- Function code -----------------------------------------------------------------------------
   if (is.null(parent)) {
     parent <- deparse(sys.calls()[[sys.nframe()-1]])
@@ -31,9 +31,10 @@
 
   name = substitute(arg)
   choices <- eval(formals(parent)[[name]])
-
   arg <- head(arg,1)
-  
+
+  if (any(sapply(choices, is.na)) && is.na(arg)) return (NA)
+
   if (partial.match) {
     if (ignore.case) {
       m <- grepl(tolower(arg), tolower(choices), fixed = TRUE)

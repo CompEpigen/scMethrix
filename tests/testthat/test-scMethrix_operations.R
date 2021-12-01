@@ -117,7 +117,7 @@ test_that("merge_scMethrix", {
     # Order doesn't matter
     identical.scm(merge_scMethrix(scm[1], scm[2:nrow(scm)],by="row"),
                   merge_scMethrix(scm[2:nrow(scm)], scm[1],by="row"))
-    identical.scm(merge_scMethrix(scm[,1], scm[,2:ncol(scm)],by="col"),  #colbind is currently position dependant
+    identical.scm(merge_scMethrix(scm[,1], scm[,2:ncol(scm)],by="col"),  #cbindlist is currently position dependant
                   merge_scMethrix(scm[,2:ncol(scm)], scm[,1],by="col"))
     
 
@@ -177,24 +177,14 @@ test_that("merge_scMethrix", {
 
 test_that("convert_HDF5_scMethrix", {
 
-  expect_error(convert_HDF5_scMethrix("not scMethrix"),msg.validateExp)
-  
-  expect_true(is_h5(scm.h5))
-  expect_equal(class(get_matrix(scm.h5))[1],"HDF5Matrix")
-  
-  scm <- convert_HDF5_scMethrix(scm.h5)
-  
-  expect_false(is_h5(scm))
-  
-  for (name in assayNames(scm)) {
-    expect_equal(as.numeric(get_matrix(scm,name)),as.numeric(get_matrix(scm.h5,name)))
-    expect_true("matrix" %in% class(get_matrix(scm,name))) 
-  }
+
 })
 
 test_that("convert_scMethrix", {
   
   expect_error(convert_scMethrix("not scMethrix"),msg.validateExp)
+  
+  # convert memory to hdf5
   
   expect_false(is_h5(scm.mem))
   expect_equal(class(get_matrix(scm.mem))[1],"matrix") 
@@ -206,6 +196,48 @@ test_that("convert_scMethrix", {
   for (name in assayNames(scm)) {
     expect_equal(as.numeric(get_matrix(scm,name)),as.numeric(get_matrix(scm.h5,name)))
     expect_true("HDF5Matrix" %in% class(get_matrix(scm,name))) 
+  }
+  
+  # convert hdf5 to memory
+  
+  expect_true(is_h5(scm.h5))
+  expect_equal(class(get_matrix(scm.h5))[1],"HDF5Matrix")
+  
+  scm <- convert_scMethrix(scm.h5)
+  
+  expect_false(is_h5(scm))
+  
+  for (name in assayNames(scm)) {
+    expect_equal(as.numeric(get_matrix(scm,name)),as.numeric(get_matrix(scm.h5,name)))
+    expect_true("matrix" %in% class(get_matrix(scm,name))) 
+  }
+  
+  # convert HDF5, but do nothing because it's already in type
+  
+  expect_true(is_h5(scm.h5))
+  expect_equal(class(get_matrix(scm.h5))[1],"HDF5Matrix")
+  
+  scm <- convert_scMethrix(scm.h5,type="HDF5")
+  
+  expect_true(is_h5(scm))
+  
+  for (name in assayNames(scm)) {
+    expect_equal(as.numeric(get_matrix(scm,name)),as.numeric(get_matrix(scm.h5,name)))
+    expect_true("HDF5Matrix" %in% class(get_matrix(scm,name))) 
+  }
+  
+  # convert memory, but do nothing because it's already in type
+  
+  expect_false(is_h5(scm.mem))
+  expect_equal(class(get_matrix(scm.mem))[1],"matrix") 
+  
+  scm <- convert_scMethrix(scm.mem, type = "memory", h5_dir = paste0(tempdir(),"/h5"))
+  
+  expect_false(is_h5(scm))
+  
+  for (name in assayNames(scm)) {
+    expect_equal(as.numeric(get_matrix(scm,name)),as.numeric(get_matrix(scm.h5,name)))
+    expect_true("matrix" %in% class(get_matrix(scm,name))) 
   }
   
 })

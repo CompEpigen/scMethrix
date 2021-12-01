@@ -63,31 +63,30 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
   
   if (is_hdf5) {
 
-    sse <- SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "HDF5Array")), 
+    scm <- scMethrix(SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "HDF5Array")), 
                                                       colData = colData, 
                                                       rowRanges = rowRanges,
                                                       metadata = list(genome = genome_name,
                                                                       chrom_size = chrom_size,
                                                                       descriptive_stats = desc,
-                                                                      is_h5 = TRUE))
-
+                                                                      is_h5 = TRUE)))
     if (!is.null(h5_dir)) {
-      tryCatch(save_scMethrix(scm = sse, dest = h5_dir, replace = replace, verbose = verbose),
+      tryCatch(save_scMethrix(scm = scm, dest = h5_dir, replace = replace, verbose = verbose),
                error = function(e) message(e,"\nThe dataset is not saved. Please save manually using the HDF5Array::saveSummarizedExperiment command."))
     }
     
   } else {
     
-    sse <- SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "matrix")),
+    scm <- scMethrix(SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "matrix")),
                                                       colData = colData,
                                                       rowRanges = rowRanges,
                                                       metadata = list(genome = genome_name,
                                                                       chrom_size = chrom_size,
                                                                       descriptive_stats = desc,
-                                                                      is_h5 = FALSE))
+                                                                      is_h5 = FALSE)))
   }
   
-  return(scMethrix(sse))
+  return(scm)
 }
 
 #--- as.scMethrix.GRset ----------------------------------------------------------------------------------
