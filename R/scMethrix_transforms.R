@@ -270,6 +270,8 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = 
   gr$n_cpgs <- n_cpgs
   gr$rid <- NULL
 
+  
+  
   if (verbose) message("Rebuilding experiment...")
   
   if (is_h5(scm)) {

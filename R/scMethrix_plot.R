@@ -73,7 +73,7 @@ get_palette <- function(n_row, col_palette = "RdYlGn"){
     
   } else {
   
-  color_pal <- colorRampPalette(ggsci::pal_locuszoom()(7))(n_row)
+      color_pal <- grDevices::colorRampPalette(ggsci::pal_locuszoom()(7))(n_row)
   
   }
   
@@ -108,6 +108,7 @@ get_shape <- function(n_row) {
 #' @inheritParams prepare_plot_data
 #' @param col_palette string; Name of the RColorBrewer palette to use for plotting.
 #' @param show_legend boolean; Display the legend on the plot
+#' @param ... Additional parameters to feed to scMethrix_theme()
 #' @return ggplot2 object
 #' @export
 #' @import ggplot2
@@ -148,13 +149,14 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
 #' Density Plot of \eqn{\beta}-Values
 #'
 #' @inheritParams plot_violin
+#' @param na.rm boolean; Remove NA values from the plot
 #' @return ggplot2 object
 #' @export
 #' @examples
 #' data('scMethrix_data')
 #' plot_density(scm = scMethrix_data)
 plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NULL,
-                         col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE, na.rm = F,...) {
+                         col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE, na.rm = T,...) {
   
   #- Input Validation --------------------------------------------------------------------------
   Value <- Pheno <- NULL
@@ -357,7 +359,7 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("box", "scatter"
 #' @export
 #'
 plot_stats <- function(scm, assay = "score", stat = c("mean", "median","count"), per_chr = FALSE, ignore_chr = NULL,
-                       ignore_samples = NULL, n_col = NULL, n_row = NULL, pheno = NULL, verbose = TRUE, axis_labels = NULL,show_legend = FALSE,...) {
+                       ignore_samples = NULL, n_col = NULL, n_row = NULL, pheno = NULL, verbose = TRUE, show_legend = FALSE,...) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
@@ -372,6 +374,8 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median","count"),
   Chromosome <- . <- Sample <- mean_meth <- sd_meth <- median_meth <- mean_cov <- sd_cov <- NULL
   median_cov <- measurement <- sd_low <- sd_high <- NULL
 
+  #- Function code --------------------------------------------------------------------------
+  
   y_title = tools::toTitleCase(paste(stat,assay))
   
   colors_palette <- get_palette(ncol(scm))
@@ -833,6 +837,7 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
 #' Theme for ggplot
 #' @param base_size integer; Size of text
 #' @param base_family string; Family of text
+#' @param ... Additional arguments for ggplot2::theme
 #' @return ggplot element; data for the ggplot theme
 #' @export
 scMethrix_theme <- function(base_size = 12, base_family = "",...) {

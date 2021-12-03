@@ -62,7 +62,6 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
                              replace = FALSE, verbose=TRUE) {
   
   if (is_hdf5) {
-
     scm <- scMethrix(SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "HDF5Array")), 
                                                       colData = colData, 
                                                       rowRanges = rowRanges,
@@ -76,7 +75,6 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
     }
     
   } else {
-    
     scm <- scMethrix(SingleCellExperiment::SingleCellExperiment(assays = lapply(assays,function(x) as(x, "matrix")),
                                                       colData = colData,
                                                       rowRanges = rowRanges,
