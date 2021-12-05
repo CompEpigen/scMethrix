@@ -34,6 +34,7 @@
 #' @param U_idx integer; column index for read counts supporting Un-methylation in bedgraph files
 #' @param strand_idx integer; column index for strand information in bedgraph files
 #' @param cov_idx integer; column index for total-coverage in bedgraph files
+#' @param keep_cov boolean; Should the coverage matrix be kept in the final object
 #' @export
 #' @return An object of class \code{\link{scMethrix}}
 #' @rawNamespace import(data.table, except = c(shift, first, second))
@@ -318,13 +319,9 @@ read_index <- function(files, col_list, n_threads = 1, zero_based = FALSE, batch
 #' Parses BED files for methylation values using previously generated index genomic coordinates
 #' @details Creates an NA-based vector populated with methlylation values from the input BED file in the
 #' respective indexed genomic coordinates
-#' @param files string; file.paths of BED files to parse to parse
-#' @param ref_cpgs data.table; The index of all unique coordinates from the input BED files
-#' @param zero_based boolean; Whether the input data is 0 or 1 based
+#' @param file string; file.paths of BED file to parse
 #' @param col_list string; The column index object for the input BED files
-#' @param strand_collapse boolean; Default FALSE
-#' @param fill boolean; Fill the output matrix to match the ref_cpgs. This must be used for HDF5 input formats to ensure consistent
-#' spacing for the grid. It is optional for in-memory formats.
+#' @inheritParams read_beds
 #' @return data.table containing vector of all indexed methylation values for the input BED
 #' @examples
 #' \dontrun{
@@ -756,11 +753,11 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
      # {stop("Error in input. dim(read_bed_by_index) = (", toString(dim(beta)), 
        #       ") and dim(grid) = (",toString(dim(grid[[as.integer(i)]])),"). This should never happen.")}
       
-      DelayedArray::write_block(block = as.matrix(colbind(lapply(bed, `[[`, "beta"))), 
+      DelayedArray::write_block(block = as.matrix(cbindlist(lapply(bed, `[[`, "beta"))), 
                                 viewport = grid[[as.integer(i)]], sink = M_sink)
 
       if (col_list$has_cov) 
-        DelayedArray::write_block(block = as.matrix(colbind(lapply(bed, `[[`, "cov"))),
+        DelayedArray::write_block(block = as.matrix(cbindlist(lapply(bed, `[[`, "cov"))),
                                   viewport = grid[[as.integer(i)]], sink = cov_sink)
       
     } else {
@@ -990,10 +987,10 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads 
   }
   
   if (col_list$has_cov) {
-    reads <- list(score = colbind(lapply(reads, `[[`, "beta")),
-                  counts = colbind(lapply(reads, `[[`, "cov")))
+    reads <- list(score = cbindlist(lapply(reads, `[[`, "beta")),
+                  counts = cbindlist(lapply(reads, `[[`, "cov")))
   } else {
-    reads <- list(score = colbind(lapply(reads, `[[`, "beta")))
+    reads <- list(score = cbindlist(lapply(reads, `[[`, "beta")))
   }
     
   #reads <- lapply(reads,function(x) as.matrix(do.call(cbind, x)))
