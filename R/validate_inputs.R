@@ -17,6 +17,7 @@
 #' @param parent closure; the parent function in which to check the input
 #' @param arg variable; the variable in which to check
 #' @param ignore.case boolean; ignores case of the choices
+#' @param partial.match boolean; whether to allow partial matching
 #' @return arg, if the value is in the function definition.
 #' @export
 .validateArg <- function(arg, parent = NULL, ignore.case = T, partial.match = T) {

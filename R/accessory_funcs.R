@@ -1,5 +1,6 @@
 #--- temporaray metadata functions --------------------------------------------------------------------------
-#' Checks if \code{\link{scMethrix}} object is an HDF5 object
+#' Same as colData(scm), but shorter syntax, and will output row names if there is no columns
+#' @param scm an scMethrix
 #' @export
 cd <- function(scm) {
 
@@ -19,7 +20,8 @@ cd <- function(scm) {
   }
 }
 
-#' Checks if \code{\link{scMethrix}} object is an HDF5 object
+#' Same as rowData(scm), but shorter syntax, and will output row names if there is no columns
+#' @param scm an scMethrix
 #' @export
 rd <- function(scm) {
   
@@ -39,7 +41,8 @@ rd <- function(scm) {
   }
 }
 
-#' Checks if \code{\link{scMethrix}} object is an HDF5 object
+#' Same as metadata(scm), but shorter syntax
+#' @param scm an scMethrix
 #' @export
 md <- function(scm) {
   metadata(scm)
@@ -154,11 +157,21 @@ fill = function(x, val = 0) {
 #--- normalize ----------------------------------------------------------------------------------------------
 #' Fills a vector with a specified \code{fill} value
 #' @param x vector; A vector in which to fill the NA values
-#' @param val basic data type; Any value from one of R's basic data types (character, numeric, integer, logical, complex)
-#' @return vector; Same values as input vector, but NA values are replaced with \code{fill} if above of below the threshold, or 'rep.na' if NA
+#' @param min numeric; the minimum value to normalize to
+#' @param max numeric; the maximum value to normalize to
+#' @param scale boolean; should the numbers normalize to 0-1, or scaled to min-max
+#' @return vector; the normalized vector
 #' @examples
-#' vals <- c(0,0.25,0.5,0.75,1,NA)
-#' fill(vals, val=2)
+#' vals <- c(0,1,2,3.4,5)
+#' 
+#' #Normalize to 0,1
+#' normalize(vals)
+#' 
+#' #Normalize to 0,1, but the known min and max are 0-10 for the input data
+#' normalize(vals, min = 0, max = 10)
+#' 
+#' #Normalize to 0-10
+#' normalize(vals, min = 0, max = 10, scale = T)
 #' @export
 normalize <- function(x, min = NULL, max = NULL, scale = F) {
   
@@ -168,7 +181,7 @@ normalize <- function(x, min = NULL, max = NULL, scale = F) {
   
   val <- (x - min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T))
   
-  if (scale) {
+  if (scale && !is.null(c(min,max))) {
     val <- (max-min)*val+min
   }
   

@@ -47,7 +47,7 @@
 #     sub.mtx <- lapply(col_idx,function(idx) as.data.table(sub.mtx[,idx,drop=FALSE]))
 #     sub.mtx <- parLapply(cl,sub.mtx,worker,op = op)
 # 
-#     out <- cbind(out,colbind(sub.mtx))
+#     out <- cbind(out,cbindlist(sub.mtx))
 #     
 #     rm(sub.mtx)
 #     gc()
