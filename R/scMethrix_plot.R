@@ -60,6 +60,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #' @param n_row Number of colors
 #' @param col_palette String for RColorBrewer palette name  
 #' @return RColorBrewer palette
+#' @import ggsci
 #' @export
 get_palette <- function(n_row, col_palette = "RdYlGn"){
   
@@ -645,7 +646,7 @@ plot_imap <- function(scm) {
 #   return(dimred_gg)
 #   
 # }
-plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, legend_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE,...) {
+plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE,...) {
 
   #- Input Validation --------------------------------------------------------------------------
   X <- Y <- Color <- Shape <- color <- shape <- shapes  <- colors <- Sample <- row_names <- NULL

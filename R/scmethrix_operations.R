@@ -294,126 +294,94 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row
   return(scm)
 }
 
-
-#--- merge_scMethrix ----------------------------------------------------------------------------------------
-#' Merges two \code{\link{scMethrix}} objects by \code{row} or \code{col}
-#' @details Merges the assay data from two \code{\link{scMethrix}} objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.
-#' 
-#' Requirements for merging
-#'    - If merging by rows, all CpG sites must be unique and samples must be identical
-#'    - If merging by columns, all samples must be unique and CpG sites must be identical
-#' 
-#' Metadata will be retained in certain situations:
-#'    For row merges:
-#'       - Ranges metadata (\code{mcols()}) will be merged, with missing columns in either assay filled with NAs
-#'       - Sample metadata (\code{colData()}) will attempt to be merged. Overlapping, non-identical columns will be appended with `.1` and `.2`.
-#'
-#'    For row merges:
-#'       - Ranges metadata (\code{mcols()}) will attempt to be merged. Overlapping, non-identical columns will be appended with `.1` and `.2`.
-#'       - Sample metadata (\code{colData()}) will be merged, with missing columns in either assay filled with NAs
-#' 
-#'    For both merges:
-#'       - Experiment metadata (\code{metadata()}) will attempt to be merged. Overlapping, non-identical elements will be appended with `.1` and `.2`.
-#'  
-#'    Custom experiment metadata can manually be added via \code{metadata() <-}, or to rowRanges via \code{mcols() <-}.
-#' @inheritParams generic_scMethrix_function
-#' @param scm1 \code{\link{scMethrix}}; A single cell methylation experiment
-#' @param scm2 \code{\link{scMethrix}}; A single cell methylation experiment
-#' @param by string; Merge by 'columns' or 'rows'
-#' @return A merged \code{\link{scMethrix}} object
-#' @examples
-#' data('scMethrix_data')
-#' merge_scMethrix(scMethrix_data[1:5],scMethrix_data[6:10],by="row")
-#' merge_scMethrix(scMethrix_data[,1:2],scMethrix_data[,3:4],by="col")
-#' @export
-merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, verbose = TRUE) {
-
-  #- Input Validation --------------------------------------------------------------------------
-  .validateExp(scm1)
-  .validateExp(scm2)
-  .validateType(verbose,"boolean")
-
-  if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.", call. = FALSE)
-  #TODO: Not sure if above check is needed
-
-  #- Function code -----------------------------------------------------------------------------
-  names1 = SummarizedExperiment::assayNames(scm1)
-  names2 = SummarizedExperiment::assayNames(scm2)
-
-  if (verbose) message("Merging experiment metadata")
-
-  if (!all((sort(names1)==sort(names2)))) {
-    warning("Assay list not identical. All non-identical assays will be dropped from merged object.")
-    a1 <- intersect(names1, names2)
-    a2 <- intersect(names2, names1)
-    SummarizedExperiment::assays(scm1) <- SummarizedExperiment::assays(scm1)[a1]
-    SummarizedExperiment::assays(scm2) <- SummarizedExperiment::assays(scm2)[a2]
-  }
-
-  if (verbose) message("Merging assays...")
-
-  browser()
-  
-  add.gr.scm1 <- setdiff(rowRanges(scm2),rowRanges(scm1))
-  mtx <- matrix(nrow=length(add.gr.scm1), ncol = ncol(scm1))
-  assays = sapply(assayNames(scm1),function(x) mtx,simplify = FALSE,USE.NAMES = TRUE)
-  scm.temp <- create_scMethrix(assays = assays,rowRanges = add.gr.scm1, colData <- colData(scm1))
-  scm1 <- rbind(scm1,scm.temp)
-  scm1 <- sort(scm1)
-  
-  add.gr.scm2 <-  setdiff(rowRanges(scm1),rowRanges(scm2))
-  mtx <- matrix(nrow=length(add.gr.scm2), ncol = ncol(scm2))
-  assays = sapply(assayNames(scm2),function(x) mtx,simplify = FALSE,USE.NAMES = TRUE)
-  scm.temp <- create_scMethrix(assays = assays,rowRanges = add.gr.scm2, colData <- colData(scm2))
-  scm2 <- rbind(scm2,scm.temp)
-  scm2 <- sort(scm2)
-  
-  scm.rowData <- cbind(rowData(scm1),rowData(scm2))
-  
-  rowData(scm1) <- scm.rowData
-  rowData(scm2) <- scm.rowData
-  # 
-  # # Merge the rest of the experiment metadata
-  # slots <- c(S4Vectors::metadata,scMethrix::rowData,scMethrix::colData)
-  # 
-  # for (i in 1:length(slots)) {
-  # 
-  # 
-  #   
-  #   op <- slots[[i]]
-  # 
-  #   op1 <- op(scm1)
-  #   op2 <- op(scm2)
-  #   n1 <- names(op1)
-  #   n2 <- names(op2)
-  #   meta <- c(op1[setdiff(n1, n2)],op2[setdiff(n2, n1)])
-  #   not_shown = T
-  # 
-  #   for (n in intersect(n1,n2)) {
-  #     if (identical(op1[n],op2[n]) || is.null(unlist(op2[n]))) {
-  #       meta <- append(meta,op1[n])
-  #     } else if (is.null(unlist(op1[n]))) {
-  #       meta <- append(meta,op2[n])
-  #     } else {
-  #       if(not_shown) {warning("Same metadata columns are present in ",op@generic,
-  #                              "(). These will be appended with `.1` or `.2`")}
-  #       meta[[paste0(n,".1")]] <- unname(unlist(op1[n]))
-  #       meta[[paste0(n,".2")]] <- unname(unlist(op2[n]))
-  #       not_shown = F
-  #     }
-  #   }
-  # 
-  #   eval(parse(text=eval(expression(paste0(op@generic,"(scm1) <- meta")))))
-  #   blank <- meta[-(1:length(names(meta)))]
-  #   eval(parse(text=eval(expression(paste0(op@generic,"(scm2) <- blank")))))
-  # }
-  # 
-  # browser()
-
-  scm <- cbind(scm1,scm2)
-
-  return(scm)
-}
+# merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, verbose = TRUE) {
+# 
+#   #- Input Validation --------------------------------------------------------------------------
+#   .validateExp(scm1)
+#   .validateExp(scm2)
+#   .validateType(verbose,"boolean")
+# 
+#   if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.", call. = FALSE)
+#   #TODO: Not sure if above check is needed
+# 
+#   #- Function code -----------------------------------------------------------------------------
+#   names1 = SummarizedExperiment::assayNames(scm1)
+#   names2 = SummarizedExperiment::assayNames(scm2)
+# 
+#   if (verbose) message("Merging experiment metadata")
+# 
+#   if (!all((sort(names1)==sort(names2)))) {
+#     warning("Assay list not identical. All non-identical assays will be dropped from merged object.")
+#     a1 <- intersect(names1, names2)
+#     a2 <- intersect(names2, names1)
+#     SummarizedExperiment::assays(scm1) <- SummarizedExperiment::assays(scm1)[a1]
+#     SummarizedExperiment::assays(scm2) <- SummarizedExperiment::assays(scm2)[a2]
+#   }
+# 
+#   if (verbose) message("Merging assays...")
+# 
+#   browser()
+# 
+#   add.gr.scm1 <- setdiff(rowRanges(scm2),rowRanges(scm1))
+#   mtx <- matrix(nrow=length(add.gr.scm1), ncol = ncol(scm1))
+#   assays = sapply(assayNames(scm1),function(x) mtx,simplify = FALSE,USE.NAMES = TRUE)
+#   scm.temp <- create_scMethrix(assays = assays,rowRanges = add.gr.scm1, colData <- colData(scm1))
+#   scm1 <- rbind(scm1,scm.temp)
+#   scm1 <- sort(scm1)
+# 
+#   add.gr.scm2 <-  setdiff(rowRanges(scm1),rowRanges(scm2))
+#   mtx <- matrix(nrow=length(add.gr.scm2), ncol = ncol(scm2))
+#   assays = sapply(assayNames(scm2),function(x) mtx,simplify = FALSE,USE.NAMES = TRUE)
+#   scm.temp <- create_scMethrix(assays = assays,rowRanges = add.gr.scm2, colData <- colData(scm2))
+#   scm2 <- rbind(scm2,scm.temp)
+#   scm2 <- sort(scm2)
+# 
+#   scm.rowData <- cbind(rowData(scm1),rowData(scm2))
+# 
+#   rowData(scm1) <- scm.rowData
+#   rowData(scm2) <- scm.rowData
+#   #
+#   # # Merge the rest of the experiment metadata
+#   # slots <- c(S4Vectors::metadata,scMethrix::rowData,scMethrix::colData)
+#   #
+#   # for (i in 1:length(slots)) {
+#   #
+#   #
+#   #
+#   #   op <- slots[[i]]
+#   #
+#   #   op1 <- op(scm1)
+#   #   op2 <- op(scm2)
+#   #   n1 <- names(op1)
+#   #   n2 <- names(op2)
+#   #   meta <- c(op1[setdiff(n1, n2)],op2[setdiff(n2, n1)])
+#   #   not_shown = T
+#   #
+#   #   for (n in intersect(n1,n2)) {
+#   #     if (identical(op1[n],op2[n]) || is.null(unlist(op2[n]))) {
+#   #       meta <- append(meta,op1[n])
+#   #     } else if (is.null(unlist(op1[n]))) {
+#   #       meta <- append(meta,op2[n])
+#   #     } else {
+#   #       if(not_shown) {warning("Same metadata columns are present in ",op@generic,
+#   #                              "(). These will be appended with `.1` or `.2`")}
+#   #       meta[[paste0(n,".1")]] <- unname(unlist(op1[n]))
+#   #       meta[[paste0(n,".2")]] <- unname(unlist(op2[n]))
+#   #       not_shown = F
+#   #     }
+#   #   }
+#   #
+#   #   eval(parse(text=eval(expression(paste0(op@generic,"(scm1) <- meta")))))
+#   #   blank <- meta[-(1:length(names(meta)))]
+#   #   eval(parse(text=eval(expression(paste0(op@generic,"(scm2) <- blank")))))
+#   # }
+#   #
+#   # browser()
+# 
+#   scm <- cbind(scm1,scm2)
+# 
+#   return(scm)
+# }
 
 #--- summarize_regions ----------------------------------------------------------------------------------------
 #' Extracts and summarizes methylation or coverage info by regions of interest
@@ -936,52 +904,38 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
   
 }
 
-#--- expand_scMethrix -----------------------------------------------------------------------------------------------------
-#' Expands an \code{\link{scMethrix}} object to match input \code{regions}.
-#' @details Takes \code{\link{scMethrix}} object and adds CpGs to the object
-#' @inheritParams generic_scMethrix_function
-#' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
-#' @param overlap_type string; defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
-#' @examples
-#' data('scMethrix_data')
-#' @return An object of class \code{\link{scMethrix}}
-#' @export
-expand_scMethrix <- function(scm = NULL, regions = NULL, overlap_type=c("within", "start", "end", "any", "equal"),verbose=TRUE) {
-  
-  #- Input Validation --------------------------------------------------------------------------
-  .validateExp(scm)  
-  .validateType(regions,c("Granges","null"))
-  overlap_type <- .validateArg(overlap_type,subset_scMethrix)
-  .validateType(verbose,"boolean")
-
-  #- Function code -----------------------------------------------------------------------------
-  if (verbose) message("Expanding CpG sites...",start_time())
-
-    if (!is.null(regions)) {
-      regions <- cast_granges(regions)
-      if (verbose) message("   Subsetting by regions")
-      scm <- scm[GenomicRanges::findOverlaps(rowRanges(scm), regions)@from]
-    }
-    
-    if (!is.null(contigs)) {
-      if (verbose) message("   Subsetting by contigs")
-      scm <- subset(scm, subset = as.vector(GenomeInfoDb::seqnames(scm)) %in% contigs)
-    }
-    
-    if (!is.null(samples)) {
-      if (verbose) message("   Subsetting by samples")
-      scm <- subset(scm, select = row.names(SummarizedExperiment::colData(scm)) %in% samples)
-    }
-    
-  if (nrow(scm) == 0) stop("Subsetting resulted in zero entries", call. = FALSE)
-  
-  if (verbose) message("Subset in ",stop_time())
-  
-  return(scm)
-  
-}
-
-
+# #--- expand_scMethrix -----------------------------------------------------------------------------------------------------
+# #' Expands an \code{\link{scMethrix}} object to match input \code{regions}.
+# #' @details Takes \code{\link{scMethrix}} object and adds CpGs to the object
+# #' @inheritParams generic_scMethrix_function
+# #' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
+# #' @param overlap_type string; defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
+# #' @examples
+# #' data('scMethrix_data')
+# #' @return An object of class \code{\link{scMethrix}}
+# #' @export
+# expand_scMethrix <- function(scm = NULL, regions = NULL, overlap_type=c("within", "start", "end", "any", "equal"),verbose=TRUE) {
+# 
+#   #- Input Validation --------------------------------------------------------------------------
+#   .validateExp(scm)
+#   .validateType(regions,c("Granges","null"))
+#   overlap_type <- .validateArg(overlap_type,expand_scMethrix)
+#   .validateType(verbose,"boolean")
+# 
+#   #- Function code -----------------------------------------------------------------------------
+#   if (verbose) message("Expanding CpG sites...",start_time())
+# 
+#   if (!is.null(regions)) {
+#     regions <- cast_granges(regions)
+#     if (verbose) message("   Subsetting by regions")
+#     scm <- scm[GenomicRanges::findOverlaps(rowRanges(scm), regions)@from]
+#   }
+# 
+#   if (verbose) message("Subset in ",stop_time())
+# 
+#   return(scm)
+# 
+# }
 
 #--- get_stats ------------------------------------------------------------------------------------------------------------
 #' Estimate descriptive statistics for each sample
@@ -1236,7 +1190,7 @@ mask_scMethrix <- function(scm = NULL, assay="score", threshold = 0, by=c("row",
 #' @param row_idx numeric; A vector of row indexes to replace all values with NA
 #' @return An object of class \code{\link{scMethrix}}
 #' @importFrom SummarizedExperiment assays assays<-
-#' @seealso [mask_by_stat()] wraps this function and generates idxs by statistics, [remove_uncovered()] to remove the masked sites
+#' @seealso [mask_scMethrix()] wraps this function and generates idxs by statistics, [remove_uncovered()] to remove the masked sites
 #' @export
 mask_by_idx <- function (scm, col_idx = NULL, row_idx = NULL, verbose = TRUE) {
   

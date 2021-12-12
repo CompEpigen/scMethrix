@@ -45,7 +45,7 @@ rd <- function(scm) {
 #' @param scm an scMethrix
 #' @export
 md <- function(scm) {
-  metadata(scm)
+  S4Vectors::metadata(scm)
 }
 
 #--- is_h5 --------------------------------------------------------------------------------------------------
@@ -171,9 +171,9 @@ fill = function(x, val = 0) {
 #' normalize(vals, min = 0, max = 10)
 #' 
 #' #Normalize to 0-10
-#' normalize(vals, min = 0, max = 10, scale = T)
+#' normalize(vals, min = 0, max = 10, scale = TRUE)
 #' @export
-normalize <- function(x, min = NULL, max = NULL, scale = F) {
+normalize <- function(x, min = NULL, max = NULL, scale = FALSE) {
   
   if (!scale && !is.null(c(min,max))) {
     return (((x-min)/(max-min)))
@@ -197,15 +197,6 @@ cbindlist = function(list) {
     unlist(list, recursive = FALSE),
     check.names = TRUE
   )[]
-}
-
-#--- cbind2 ------------------------------------------------------------------------------------------------
-#' A faster version of cbind when trying to combine lists of data.tables
-#' @describeIn cbindlist
-#' @param ... Multiple data.tables with identical # of rows
-#' @return data.table; the cbinded output 
-cbind2 = function(...) {
-  cbindlist(list(...))
 }
 
 #--- split_vector -------------------------------------------------------------------------------------------

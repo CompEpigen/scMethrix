@@ -43,19 +43,15 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   cat(paste0("   Physical size: ", format(utils::object.size(object), units = "auto"), "\n"))
 })
 
-# Create scMethrix obj
-#' @param assays 
-#'
-#' @param colData 
-#' @param rowRanges 
-#' @param is_hdf5 
-#' @param genome_name 
-#' @param chrom_size 
-#' @param desc 
-#' @param h5_dir 
-#' @param replace 
-#' @param verbose 
-#'
+#' Create an scMethrix object
+#' @inheritParams generic_scMethrix_function
+#' @param assays list of matrices; The assays to include in the experiment
+#' @param colData data.frame; the data corresponding to each sample in the assays
+#' @param rowRanges GenomicRanges; the genomic loci corresponding to the assays
+#' @param is_hdf5 boolean; flag for HDF5 format
+#' @param genome_name string; the name of the genome build used
+#' @param chrom_size named list of integers; the size of each chromosome in the genomic ranges
+#' @param desc named list of strings; list of relevent experiment data
 #' @export
 create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is_hdf5 = FALSE, 
                              genome_name = "hg19", chrom_size = NULL, desc = NULL, h5_dir = NULL, 
@@ -89,7 +85,7 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
 
 #--- as.scMethrix.GRset ----------------------------------------------------------------------------------
 #' Converts from a minfi::GRset to an scMethrix object
-#' @details 
+#' @details Used in converting .IDAT files into scMethrix objects
 #' @param GRset GRset; the GRset to convert to scMethrix
 #' @param colData data.table; information about the samples
 #' @param verbose boolean; be chatty
@@ -142,8 +138,8 @@ utils::globalVariables(c("sampleNames")) #TODO: find out why this is necessary
 #' @param n_chunks integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1
 #' @param n_threads integer; Maximum number of parallel instances. Default = 1
 #' @param batch_size integer; The maximum number of elements to process at once.
-#' @param h5_dir string; The directory to use. Will be created if it does not exist. Default = NULL
-#' @param replace boolean; flag for whether to delete the contents of h5_dir before saving 
+#' @param h5_dir string; The directory to store HDF5 files. Will be created if it does not exist. Default = NULL
+#' @param replace boolean; flag for whether to delete the contents of \code{h5_dir} before saving 
 #' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 #' @param na.rm boolean; flag to remove NA values
 generic_scMethrix_function <- function(scm, assay, new_assay, trans, verbose, n_chunks, n_threads, h5_dir, overlap_type, batch_size, replace, na.rm) {}
