@@ -61,6 +61,14 @@ proms = trim(proms) # Necessary as a few ranges throw warnings
 scm.bin <- scMethrix::bin_scMethrix(scm, regions=proms)
 ```
 
+To improve binning speed, it may be advisable to convert to an in-memory `scMethrix` objects. First, subset to the target region (this is done internally within `bin_scMethrix` anyways), convert to in-memory, then perform the binning.
+
+```{r, eval=F}
+scm.bin <- scMethrix::subset_scMethrix(scm, regions = proms)
+scm.bin <- scMethrix::convert_scMethrix(scm.bin, type = "memory")
+scm.bin <- scMethrix::bin_scMethrix(scm, regions = proms)
+```
+
 # Collapse samples
 It may be desirable to collapse multiple samples into a single meta-sample. Using simple grouping, samples can be collapsed via any arbitrary function. The `colname` used will become the new sample name, and the samples in each group will be listed in the `Samples` column of colData().
 

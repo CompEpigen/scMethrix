@@ -39,21 +39,21 @@ library(GEOquery)
 ```
 
 ```{r message=FALSE, warning=FALSE, eval=F}
-data_dir = paste0(tempdir(),"/GSE56879/")
+data_dir = paste0("D:/Git/sampleData/Vignette.GSE56879/")
 dir.create(path = data_dir, showWarnings = FALSE, recursive = TRUE)
 ```
 
 ```{r eval=F}
-
 gsm_list <- c("GSM1370535","GSM1370536","GSM1370537","GSM1370538","GSM1370539","GSM1370540","GSM1370541","GSM1370555","GSM1370556","GSM1370557","GSM1370558","GSM1370559","GSM1370560","GSM1370561")
+gsm_list <- c(paste0("GSM",1370535+0:11),  paste0("GSM",1370555+0:19))
 
-lapply(gsm_list, function(gsm){
-  file <- GEOquery::getGEOSuppFiles(GEO = gsm, baseDir = data_dir, makeDirectory = FALSE, filter_regex = ".*.cov.txt.gz")
+bed_files <- sapply(gsm_list, function(gsm){
+GEOquery::getGEOSuppFiles(GEO = gsm, baseDir = data_dir, makeDirectory = FALSE, filter_regex = ".*.cov.txt.gz")
 })
 
-bed_files <- list.files(path = data_dir,  full.names = TRUE)
-file.rename(bed_files,gsub("(.*GSM.*?)_.*","\\1.gz",bed_files))
-bed_files <- list.files(path = data_dir,  full.names = TRUE)
+bed_files <- list.files(path = data_dir,  full.names = TRUE, pattern = ".*.cov.txt.gz")
+file.rename(bed_files,gsub("(.*GSM.*?)_.*","\\1.bedgraph.gz",bed_files))
+bed_files <- list.files(path = data_dir,  full.names = TRUE, pattern = ".*.bedgraph.gz")
 
 print(basename(bed_files))
 ```
@@ -77,7 +77,7 @@ library(BSgenome.Mmusculus.UCSC.mm10)
 ```
 
 ```{r, ref_data, eval=F}
-mm10_cpgs <- suppressWarnings(scmMethrix::extract_CpGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10"))
+mm10_cpgs <- suppressWarnings(scMethrix::extract_CpGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10"))
 head(mm10_cpgs)
 ```
 
@@ -124,6 +124,8 @@ A more detailed description of the `read_beds` function is here: [read_beds](htt
 scm <- scMethrix::read_beds(
   files = bed_files,
   ref_cpgs = mm10_cpgs,
+  h5 = T,
+  h5_dir = "D:\\Git\\sampleData\\Vignette.GSE56879\\h5",
   chr_idx = 1,
   start_idx = 2,
   end_idx = 3,
