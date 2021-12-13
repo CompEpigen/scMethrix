@@ -310,8 +310,7 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("box", "scatter"
   #- Function code -----------------------------------------------------------------------------
   if (!is.null(pheno)) {
     if (pheno %in% colnames(colData(scm))) {
-      pheno <- as.character(scm@colData[, pheno])
-      pheno <- factor(pheno, levels = pheno)
+      pheno <- factor(as.character(scm@colData[, pheno]))
       sparsity <- data.frame(Phenotype = pheno, Sparsity = sparsity/nrow(scm))
       p <- ggplot2::ggplot(sparsity, aes(x=pheno, y=Sparsity, color = pheno))+
         ggplot2::scale_color_manual(values = colors_palette) + ylab("Sparsity (%)") + xlab("Sample") +

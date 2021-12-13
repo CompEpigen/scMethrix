@@ -52,16 +52,15 @@ test_that("get_rowdata_stats", {
     expect_error(get_rowdata_stats(scm="not scMethrix"))
     cols <- ncol(rowData(scm))
     s <- get_rowdata_stats(scm)
-    expect_equal(dim(rowData(s)),c(n_cpg,cols+3))
-    
+    expect_equal(dim(rowData(s)),c(n_cpg,cols+4))
     stats <- rowData(s)
     
-    expect_equal(rowMeans(score(s),na.rm=TRUE),stats$mean)
+    expect_equal(round(rowMeans(score(s),na.rm=TRUE),2),round(stats$mean,2))
     #expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median_meth[rng])
     
     exp_sd <- DelayedMatrixStats::rowSds(score(s),na.rm=TRUE)
     exp_sd[is.na(exp_sd)] <- 0 # Since single sample rows will give SD as zero
-    expect_equal(exp_sd,stats$sd)
+    expect_equal(round(exp_sd,2),round(stats$sd,2))
     expect_equal(ncol(s)-rowCounts(score(s),val=NA),stats$cells)
   }))
 })
@@ -74,13 +73,13 @@ test_that("get_coldata_stats", {
     expect_error(get_coldata_stats(scm="not scMethrix"))
     cols <- ncol(rowData(scm))
     s <- get_coldata_stats(scm)
-    expect_equal(dim(colData(s)),c(n_samples,cols+3))
+    expect_equal(dim(colData(s)),c(n_samples,cols+4))
 
     stats <- colData(s)
     
-    expect_equal(as.numeric(colMeans(score(s),na.rm=TRUE)),stats$mean)
+    expect_equal(round(as.numeric(colMeans(score(s),na.rm=TRUE)),2),round(stats$mean,2))
     #expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median[rng])
-    expect_equal(as.numeric(DelayedMatrixStats::colSds(score(s),na.rm=TRUE)),stats$sd)
+    expect_equal(round(as.numeric(DelayedMatrixStats::colSds(score(s),na.rm=TRUE)),2),round(stats$sd,2))
     expect_equal(nrow(s)-colCounts(score(s),val=NA),stats$cpgs)
   }))
 })
@@ -173,11 +172,6 @@ test_that("merge_scMethrix", {
     expect_true(setequal(names(colData(scm12)),c("Group.1","ID","Group.2")))
     
   }))
-})
-
-test_that("convert_HDF5_scMethrix", {
-
-
 })
 
 test_that("convert_scMethrix", {
@@ -352,8 +346,8 @@ test_that("get_stats", {
     chr <- length(seqlengths(rowRanges(scm)))
     
     samples <- nrow(colData(scm))
-    expect_equal(dim(get_stats(scm)),c(chr*samples,5))
-    expect_equal(dim(get_stats(scm,per_chr = FALSE)),c(samples,4))
+    expect_equal(dim(get_stats(scm)),c(chr*samples,6))
+    expect_equal(dim(get_stats(scm,per_chr = FALSE)),c(samples,5))
     
     stats <- get_stats(scm,per_chr=FALSE)
     expect_equal(mean(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"mean_meth"]))
@@ -457,46 +451,46 @@ test_that("get_region_summary", {
 #   }))
 # })
 
-test_that("mask_by_stat", {
+test_that("mask_scMethrix", {
 
-  expect_error(mask_by_stat("not scMethrix"),msg.validateExp)
-  expect_error(mask_by_stat(scm.mem,n_threads=2))
+  expect_error(mask_scMethrix("not scMethrix"),msg.validateExp)
+  expect_error(mask_scMethrix(scm.mem,n_threads=2))
 
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
 
-    expect_error(mask_by_stat(scm,assay="not an assay"),msg.validateAssay)
-    expect_error(mask_by_stat(scm,by="not an arg"),msg.validateArg)
-    expect_error(mask_by_stat(scm,stat="not an arg"),msg.validateArg)
-    expect_error(mask_by_stat(scm,op="not an arg"),msg.validateArg)
-    expect_error(mask_by_stat(scm,na.rm="not a boolean"),msg.validateType)
-    expect_error(mask_by_stat(scm,verbose="not a boolean"),msg.validateType)
-    expect_error(mask_by_stat(scm,threshold="not a numeric"),msg.validateType)
+    expect_error(mask_scMethrix(scm,assay="not an assay"),msg.validateAssay)
+    expect_error(mask_scMethrix(scm,by="not an arg"),msg.validateArg)
+    expect_error(mask_scMethrix(scm,stat="not an arg"),msg.validateArg)
+    expect_error(mask_scMethrix(scm,op="not an arg"),msg.validateArg)
+    expect_error(mask_scMethrix(scm,na.rm="not a boolean"),msg.validateType)
+    expect_error(mask_scMethrix(scm,verbose="not a boolean"),msg.validateType)
+    expect_error(mask_scMethrix(scm,threshold="not a numeric"),msg.validateType)
 
     msg.cpgErr = "No CpG sites left"
 
-    s <- mask_by_stat(scm,assay="counts",threshold=2,by="row",stat="sum",op="==")
+    s <- mask_scMethrix(scm,assay="counts",threshold=2,by="row",stat="sum",op="==")
     row_idx <- which(DelayedMatrixStats::rowSums2(counts(scm),na.rm=T) == 2)
     expect_true(all(is.na(score(s[row_idx,]))))
 
-    s <- mask_by_stat(scm,assay="counts",threshold=1,by="row",stat="mean",op=">")
+    s <- mask_scMethrix(scm,assay="counts",threshold=1,by="row",stat="mean",op=">")
     row_idx <- which(DelayedMatrixStats::rowMeans2(counts(scm)) > 1)
     expect_true(all(is.na(score(s[row_idx,]))))
 
     avg <- nrow(scm) - mean(DelayedMatrixStats::colCounts(score(scm),na.rm=T,value = as.integer(NA)))
-    s <- mask_by_stat(scm,assay="score",threshold=avg,by="col",stat="count",op=">")
+    s <- mask_scMethrix(scm,assay="score",threshold=avg,by="col",stat="count",op=">")
     col_idx <- (nrow(scm) - DelayedMatrixStats::colCounts(score(scm),na.rm=T,value = as.integer(NA))) > avg
     expect_true(all(is.na(score(s[,col_idx]))))
 
     s <- remove_uncovered(scm)
-    s <- mask_by_stat(s,assay="counts",threshold=0,by="row",stat="sum",op="==")
+    s <- mask_scMethrix(s,assay="counts",threshold=0,by="row",stat="sum",op="==")
     expect_false(any(DelayedMatrixStats::rowAlls(score(s),value=NA)))
     
     s <- remove_uncovered(scm)
-    expect_error(mask_by_stat(s,assay="counts",threshold=0,by="row",stat="sum",op=">"),msg.cpgErr)
+    expect_error(mask_scMethrix(s,assay="counts",threshold=0,by="row",stat="sum",op=">"),msg.cpgErr)
     
     
-    expect_error(mask_by_stat(scm,assay="score",threshold=0,by="row",stat="var",op=">="),msg.cpgErr)
-    expect_error(mask_by_stat(scm,assay="score",threshold=1,by="row",stat="var",op="<="),msg.cpgErr)
+    expect_error(mask_scMethrix(scm,assay="score",threshold=0,by="row",stat="var",op=">="),msg.cpgErr)
+    expect_error(mask_scMethrix(scm,assay="score",threshold=1,by="row",stat="var",op="<="),msg.cpgErr)
 
   }))
 })

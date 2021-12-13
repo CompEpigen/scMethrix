@@ -44,7 +44,7 @@ invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="box")
     graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="scatter")
     graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="box",     pheno="Group")
-    graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="scatter", pheno="Group", )
+    graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="scatter", pheno="Group")
   })
   
   test_that("plot_stats", {
