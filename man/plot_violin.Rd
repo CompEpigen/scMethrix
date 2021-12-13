@@ -11,7 +11,8 @@ plot_violin(
   pheno = NULL,
   col_palette = "RdYlGn",
   show_legend = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ plot_violin(
 \item{show_legend}{boolean; Display the legend on the plot}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
+
+\item{...}{Additional parameters to feed to scMethrix_theme()}
 }
 \value{
 ggplot2 object

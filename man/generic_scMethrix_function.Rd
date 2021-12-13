@@ -34,13 +34,13 @@ generic_scMethrix_function(
 
 \item{n_threads}{integer; Maximum number of parallel instances. Default = 1}
 
-\item{h5_dir}{string; The directory to use. Will be created if it does not exist. Default = NULL}
+\item{h5_dir}{string; The directory to store HDF5 files. Will be created if it does not exist. Default = NULL}
 
 \item{overlap_type}{defines the type of the overlap of the CpG sites with the target region. Default value is \code{within}. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.}
 
 \item{batch_size}{integer; The maximum number of elements to process at once.}
 
-\item{replace}{boolean; flag for whether to delete the contents of h5_dir before saving}
+\item{replace}{boolean; flag for whether to delete the contents of \code{h5_dir} before saving}
 
 \item{na.rm}{boolean; flag to remove NA values}
 }

@@ -4,7 +4,7 @@
 \alias{.validateArg}
 \title{Validates arguments. Allows partial matching.}
 \usage{
-.validateArg(arg, parent = NULL, ignore.case = T)
+.validateArg(arg, parent = NULL, ignore.case = T, partial.match = T)
 }
 \arguments{
 \item{arg}{variable; the variable in which to check}
@@ -12,6 +12,8 @@
 \item{parent}{closure; the parent function in which to check the input}
 
 \item{ignore.case}{boolean; ignores case of the choices}
+
+\item{partial.match}{boolean; whether to allow partial matching}
 }
 \value{
 arg, if the value is in the function definition.

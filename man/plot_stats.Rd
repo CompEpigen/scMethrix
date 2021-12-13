@@ -7,14 +7,16 @@
 plot_stats(
   scm,
   assay = "score",
-  stat = c("mean", "median"),
+  stat = c("mean", "median", "count"),
   per_chr = FALSE,
   ignore_chr = NULL,
   ignore_samples = NULL,
   n_col = NULL,
   n_row = NULL,
   pheno = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  show_legend = FALSE,
+  ...
 )
 }
 \arguments{
@@ -37,6 +39,10 @@ plot_stats(
 \item{pheno}{string; Col name of colData(m). Will be used as a factor to color different groups}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
+
+\item{show_legend}{boolean; Display the legend on the plot}
+
+\item{...}{Additional parameters to feed to scMethrix_theme()}
 }
 \value{
 ggplot2 object

@@ -16,6 +16,8 @@ save_scMethrix(
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
+\item{dest}{string; the destination folder for the scMethrix object}
+
 \item{replace}{Should it overwrite the pre-existing data? FALSE by default.}
 
 \item{quick}{boolean; Flag to skip realizing of matrix operations}
@@ -44,5 +46,5 @@ If \code{quick = TRUE} for HDF5 experiments, any operations done on assay matric
 data('scMethrix_data')
 dir <- paste0(tempdir(),"/h5")
 scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
-save_scMethrix(scm, h5_dir = dir, replace = TRUE)
+save_scMethrix(scm, dest = dir, replace = TRUE)
 }

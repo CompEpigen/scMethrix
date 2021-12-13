@@ -5,27 +5,29 @@
 \title{Parses BED files for methylation values using previously generated index genomic coordinates}
 \usage{
 read_bed_by_index(
-  files,
+  file,
   ref_cpgs = NULL,
   col_list = NULL,
   zero_based = FALSE,
   strand_collapse = FALSE,
-  fill = TRUE
+  fill = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{files}{string; file.paths of BED files to parse to parse}
+\item{file}{string; file.paths of BED file to parse}
 
-\item{ref_cpgs}{data.table; The index of all unique coordinates from the input BED files}
+\item{ref_cpgs}{data.table; list of CpG sites in the tab-delimited format of chr-start-end. Must be zero-based genome.}
 
 \item{col_list}{string; The column index object for the input BED files}
 
-\item{zero_based}{boolean; Whether the input data is 0 or 1 based}
+\item{zero_based}{boolean; flag for whether the input data is zero-based or not}
 
-\item{strand_collapse}{boolean; Default FALSE}
+\item{strand_collapse}{boolean; whether to collapse the crick strand into watson strand. Default FALSE}
 
-\item{fill}{boolean; Fill the output matrix to match the ref_cpgs. This must be used for HDF5 input formats to ensure consistent
-spacing for the grid. It is optional for in-memory formats.}
+\item{fill}{boolean; flag whether to fill the output matrixes with all CpGs in ref_cpgs. This must be TRUE for HDF5-based experiments. Performance is typically better if fill = TRUE, but may require more memory.}
+
+\item{verbose}{boolean; flag to output messages or not.}
 }
 \value{
 data.table containing vector of all indexed methylation values for the input BED

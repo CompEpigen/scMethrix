@@ -19,6 +19,9 @@ An \code{\link{scMethrix}} object
 \description{
 Converts from a minfi::GRset to an scMethrix object
 }
+\details{
+Used in converting .IDAT files into scMethrix objects
+}
 \examples{
 data('scMethrix_data')
 }

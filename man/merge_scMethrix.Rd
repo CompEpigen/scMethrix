@@ -17,7 +17,7 @@ merge_scMethrix(
 
 \item{scm2}{\code{\link{scMethrix}}; A single cell methylation experiment}
 
-\item{h5_dir}{string; The directory to use. Will be created if it does not exist. Default = NULL}
+\item{h5_dir}{string; The directory to store HDF5 files. Will be created if it does not exist. Default = NULL}
 
 \item{by}{string; Merge by 'columns' or 'rows'}
 

@@ -34,7 +34,7 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 
 \item{verbose}{boolean; flag to output messages or not.}
 
-\item{fill}{boolean; flag whether to fill the output matrixes with all CpGs in ref_cpgs. This must be TRUE for HDF5-based experiments.}
+\item{fill}{boolean; flag whether to fill the output matrixes with all CpGs in ref_cpgs. This must be TRUE for HDF5-based experiments. Performance is typically better if fill = TRUE, but may require more memory.}
 }
 \value{
 matrix of the methylation values for input BED files

@@ -9,13 +9,14 @@ read_beds(
   ref_cpgs = NULL,
   colData = NULL,
   genome_name = "hg19",
-  batch_size = min(20, length(files)),
+  batch_size = 20,
   n_threads = 1,
   h5 = FALSE,
   h5_dir = NULL,
   h5_temp = NULL,
   desc = NULL,
   verbose = TRUE,
+  keep_cov = T,
   zero_based = FALSE,
   replace = FALSE,
   fill = TRUE,
@@ -57,11 +58,13 @@ Be-careful - there is a linear increase in memory usage with number of threads. 
 
 \item{verbose}{boolean; flag to output messages or not.}
 
+\item{keep_cov}{boolean; Should the coverage matrix be kept in the final object}
+
 \item{zero_based}{boolean; flag for whether the input data is zero-based or not}
 
 \item{replace}{boolean; flag for whether to delete the contents of h5_dir before saving}
 
-\item{fill}{boolean; flag whether to fill the output matrixes with all CpGs in ref_cpgs. This must be TRUE for HDF5-based experiments.}
+\item{fill}{boolean; flag whether to fill the output matrixes with all CpGs in ref_cpgs. This must be TRUE for HDF5-based experiments. Performance is typically better if fill = TRUE, but may require more memory.}
 
 \item{pipeline}{string; Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
 If not known use idx arguments for manual column assignments.}

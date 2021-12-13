@@ -8,7 +8,7 @@ dim_red_scMethrix(
   scm,
   assay = "score",
   type = c("tSNE", "UMAP", "PCA"),
-  plot = T,
+  plot = F,
   perplexity = 30,
   verbose = FALSE,
   n_components = 2,

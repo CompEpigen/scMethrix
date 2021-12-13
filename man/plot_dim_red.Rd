@@ -12,7 +12,8 @@ plot_dim_red(
   shape_anno = NULL,
   axis_labels = NULL,
   show_dp_labels = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ the X and Y coordinates of the dim. red., with each row being a seperate sample}
 \item{show_dp_labels}{boolean; Flag to show the labels for dots. Default FALSE}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
+
+\item{...}{Additional parameters to feed to scMethrix_theme()}
 }
 \value{
 ggplot2 object

@@ -8,9 +8,11 @@ inheritParams generic_plot_function}
 plot_sparsity(
   scm = NULL,
   assay = "score",
-  type = c("box", "scatter"),
+  type = c("box", "scatter", "both"),
   pheno = NULL,
-  verbose = TRUE
+  show_legend = FALSE,
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -22,7 +24,11 @@ plot_sparsity(
 
 \item{pheno}{string; Col name of colData(m). Will be used as a factor to color different groups}
 
+\item{show_legend}{boolean; Display the legend on the plot}
+
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
+
+\item{...}{Additional parameters to feed to scMethrix_theme()}
 }
 \value{
 ggplot2 object

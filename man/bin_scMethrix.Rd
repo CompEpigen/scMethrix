@@ -34,7 +34,7 @@ operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is
 
 \item{overlap_type}{defines the type of the overlap of the CpG sites with the target region. Default value is \code{within}. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.}
 
-\item{h5_dir}{string; The directory to use. Will be created if it does not exist. Default = NULL}
+\item{h5_dir}{string; The directory to store HDF5 files. Will be created if it does not exist. Default = NULL}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 
@@ -44,7 +44,7 @@ operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is
 
 \item{fill}{boolean; Should the assay be filled with all input regions}
 
-\item{replace}{boolean; flag for whether to delete the contents of h5_dir before saving}
+\item{replace}{boolean; flag for whether to delete the contents of \code{h5_dir} before saving}
 }
 \value{
 An \code{\link{scMethrix}} object

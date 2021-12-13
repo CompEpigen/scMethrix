@@ -4,12 +4,19 @@
 \alias{convert_scMethrix}
 \title{Converts an in-memory \code{\link{scMethrix}} to an HDF5 \code{\link{scMethrix}}}
 \usage{
-convert_scMethrix(scm = NULL, h5_dir = NULL, verbose = TRUE)
+convert_scMethrix(
+  scm = NULL,
+  type = c(NA, "HDF5", "memory"),
+  h5_dir = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{scm}{\code{\link{scMethrix}}; the single cell methylation experiment}
 
-\item{h5_dir}{string; The directory to use. Will be created if it does not exist. Default = NULL}
+\item{type}{string; what type of scMethrix to convert to. If NULL, this will convert to the opposite type, otherwise, will convert (if necessary) to the type specified}
+
+\item{h5_dir}{string; The directory to store HDF5 files. Will be created if it does not exist. Default = NULL}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }

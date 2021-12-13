@@ -26,6 +26,6 @@ Takes directory with a previously saved HDF5Array format \code{\link{scMethrix}}
 data('scMethrix_data')
 dir <- paste0(tempdir(),"/h5")
 scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
-save_scMethrix(scm, h5_dir = dir, replace = TRUE)
-n <- load_scMethrix(dir)
+save_scMethrix(scm, dest = dir, replace = TRUE)
+n <- load_scMethrix(dest = dir)
 }

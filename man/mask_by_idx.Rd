@@ -25,14 +25,10 @@ Specified rows and columns are masked with NA values
 This iterates through all assays in the inputted \code{\link{scMethrix}} object and replaces all rows in row_idx and cols in col_idx.
 }
 \seealso{
-\code{\link[=mask_by_stat]{mask_by_stat()}} wraps this function and generates idxs by statistics, \code{\link[=remove_uncovered]{remove_uncovered()}} to remove the masked sites
-
-Other masking: 
-\code{\link{mask_by_sample}()}
+\code{\link[=mask_scMethrix]{mask_scMethrix()}} wraps this function and generates idxs by statistics, \code{\link[=remove_uncovered]{remove_uncovered()}} to remove the masked sites
 
 Other quality control: 
-\code{\link{mask_by_sample}()},
-\code{\link{mask_by_stat}()}
+\code{\link{mask_scMethrix}()}
 }
 \concept{masking}
 \concept{quality control}

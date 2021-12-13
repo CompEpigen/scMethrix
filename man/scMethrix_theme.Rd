@@ -4,12 +4,14 @@
 \alias{scMethrix_theme}
 \title{Theme for ggplot}
 \usage{
-scMethrix_theme(base_size = 12, base_family = "")
+scMethrix_theme(base_size = 12, base_family = "", ...)
 }
 \arguments{
 \item{base_size}{integer; Size of text}
 
 \item{base_family}{string; Family of text}
+
+\item{...}{Additional arguments for ggplot2::theme}
 }
 \value{
 ggplot element; data for the ggplot theme

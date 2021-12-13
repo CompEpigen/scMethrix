@@ -11,7 +11,9 @@ plot_density(
   pheno = NULL,
   col_palette = "RdYlGn",
   show_legend = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  na.rm = T,
+  ...
 )
 }
 \arguments{
@@ -28,6 +30,10 @@ plot_density(
 \item{show_legend}{boolean; Display the legend on the plot}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
+
+\item{na.rm}{boolean; Remove NA values from the plot}
+
+\item{...}{Additional parameters to feed to scMethrix_theme()}
 }
 \value{
 ggplot2 object

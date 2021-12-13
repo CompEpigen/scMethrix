@@ -12,7 +12,8 @@ plot_coverage(
   obs_lim = 1e+06,
   col_palette = "RdYlGn",
   show_legend = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ random sites will be selected from the genome.}
 \item{show_legend}{boolean; Display the legend on the plot}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
+
+\item{...}{Additional parameters to feed to scMethrix_theme()}
 }
 \value{
 ggplot2 object

@@ -23,14 +23,14 @@ collapse_samples(
 \item{trans}{named vector of closures; The transforms for each assay in a named vector. Default NULL, meaning that
 operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is mean(x, na.rm=TRUE)}
 
-\item{h5_dir}{string; The directory to use. Will be created if it does not exist. Default = NULL}
+\item{h5_dir}{string; The directory to store HDF5 files. Will be created if it does not exist. Default = NULL}
 
 \item{batch_size}{The number of CpGs to calculate at once.
 \code{\link{IRanges}} package.}
 
 \item{n_threads}{integer; Maximum number of parallel instances. Default = 1}
 
-\item{replace}{boolean; flag for whether to delete the contents of h5_dir before saving}
+\item{replace}{boolean; flag for whether to delete the contents of \code{h5_dir} before saving}
 
 \item{verbose}{boolean; Flag for outputting function status messages. Default = TRUE}
 }
