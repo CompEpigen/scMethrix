@@ -128,9 +128,98 @@ utils::globalVariables(c("sampleNames")) #TODO: find out why this is necessary
 #   (object); row.names(colData(object))}
 # )
 
+#--- Metadata functions --------------------------------------------------------------------------
+#' Same as colData(scm), but shorter syntax, and will output row names if there is no columns
+#' @inheritParams generic_scMethrix_function
+#' @export
+cd <- function(scm) {
+  
+  d <- colData(scm)
+  
+  if (ncol(d) == 0) {
+    cat(paste("DataFrame with",nrow(d),"rows and 0 columns\n"))
+    if (nrow(scm) > 10) {
+      invisible(sapply(row.names(d)[1:5],function(row) cat(row,"\n")))
+      cat("...\n")
+      invisible(sapply(row.names(d)[(nrow(d)-5):nrow(d)],function(row) cat(row,"\n")))
+    } else {
+      invisible(sapply(row.names(d),function(row) cat(row,"\n")))
+    }
+  } else {
+    d
+  }
+}
+
+#' Same as rowData(scm), but shorter syntax, and will output row names if there is no columns
+#' @inheritParams generic_scMethrix_function
+#' @export
+rd <- function(scm) {
+  
+  d <- rowData(scm)
+  
+  if (ncol(d) == 0) {
+    cat(paste("DataFrame with",nrow(d),"rows and 0 columns\n"))
+    if (nrow(scm) > 10) {
+      invisible(sapply(row.names(d)[1:5],function(row) cat(row,"\n")))
+      cat("...\n")
+      invisible(sapply(row.names(d)[(nrow(d)-5):nrow(d)],function(row) cat(row,"\n")))
+    } else {
+      invisible(sapply(row.names(d),function(row) cat(row,"\n")))
+    }
+  } else {
+    d
+  }
+}
+
+#' Same as metadata(scm), but shorter syntax
+#' @inheritParams generic_scMethrix_function
+#' @export
+md <- function(scm) {
+  S4Vectors::metadata(scm)
+}
+
+#--- is_h5 --------------------------------------------------------------------------------------------------
+#' Checks if \code{\link{scMethrix}} object is an HDF5 object
+#' @details This checks the metadata whether the experiment is in HDF5 format. This is found from the metadata attribute \code{is_h5}. 
+#' 
+#' A secondary check of all assays also occurs to ensure they are all of appropriate type. An error will be thrown if any assays are the wrong type. This should not occur during normal usage of the package, but may be caused by manual manipulation of assays. If this does occur, [convert_scMethrix()] should be used to restore consistency.
+#' @inheritParams generic_scMethrix_function
+#' @return boolean; Whether the object is HDF5
+#' @examples
+#' data('scMethrix_data')
+#' is_h5(scMethrix_data)
+#' @export
+is_h5 = function(scm) {
+  .validateExp(scm)
+  
+  exp_type = if (scm@metadata$is_h5) c("HDF5Matrix","DelayedMatrix") else "matrix"
+  for (name in SummarizedExperiment::assayNames(scm)) {
+    if (!any(exp_type %in% class(assay(scm,name)))) 
+      stop("Error in scMethrix object. The '",name,"' assay is of type '",
+           paste0(class(assay(scm,name)),collapse="', "), "' instead of HDF5Matrix.\nRecommend using convert_scMethrix() to force type of all assays.", call. = FALSE)
+  }
+  
+  return (scm@metadata$is_h5)
+}
+
+#--- has_cov ------------------------------------------------------------------------------------------------
+#' Checks if [scMethrix()] object has a coverage matrix.
+#' @details This check for the existence of a \code{counts} matrix in the object
+#' @inheritParams generic_scMethrix_function
+#' @return boolean; Whether the object has a coverage matrix
+#' @import SummarizedExperiment
+#' @examples
+#' data('scMethrix_data')
+#' has_cov(scMethrix_data)
+#' @export
+has_cov = function(scm) {
+  .validateExp(scm)
+  return("counts" %in% SummarizedExperiment::assayNames(scm))
+}
+
 #--- generic_scMethrix_function -----------------------------------------------------------------------------
 #' Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package
-#' @param scm \code{\link{scMethrix}}; the single cell methylation experiment
+#' @param scm [scMethrix()]; a single cell methylation experiment object
 #' @param assay string; name of an existing assay. Default = "score"
 #' @param new_assay string; name for transformed assay. Default = "new_assay"
 #' @param trans closure; The transformation function. Default = mean

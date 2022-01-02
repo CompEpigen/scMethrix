@@ -1,6 +1,14 @@
 test_that("is_h5",{
   expect_true(is_h5(scm.h5))
   expect_false(is_h5(scm.mem))
+  
+  scm <- scm.mem
+  scm@metadata$is_h5 = TRUE
+  expect_error(is_h5(scm),"Error in scMethrix object.")
+  
+  scm <- scm.h5
+  scm@metadata$is_h5 = FALSE
+  expect_error(is_h5(scm),"Error in scMethrix object.")
 })
 
 test_that("has_cov",{

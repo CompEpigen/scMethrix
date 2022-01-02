@@ -1,84 +1,3 @@
-#--- temporaray metadata functions --------------------------------------------------------------------------
-#' Same as colData(scm), but shorter syntax, and will output row names if there is no columns
-#' @param scm an scMethrix
-#' @export
-cd <- function(scm) {
-
-  d <- colData(scm)
-  
-  if (ncol(d) == 0) {
-    cat(paste("DataFrame with",nrow(d),"rows and 0 columns\n"))
-    if (nrow(scm) > 10) {
-      invisible(sapply(row.names(d)[1:5],function(row) cat(row,"\n")))
-      cat("...\n")
-      invisible(sapply(row.names(d)[(nrow(d)-5):nrow(d)],function(row) cat(row,"\n")))
-    } else {
-      invisible(sapply(row.names(d),function(row) cat(row,"\n")))
-    }
-  } else {
-    d
-  }
-}
-
-#' Same as rowData(scm), but shorter syntax, and will output row names if there is no columns
-#' @param scm an scMethrix
-#' @export
-rd <- function(scm) {
-  
-  d <- rowData(scm)
-  
-  if (ncol(d) == 0) {
-    cat(paste("DataFrame with",nrow(d),"rows and 0 columns\n"))
-    if (nrow(scm) > 10) {
-      invisible(sapply(row.names(d)[1:5],function(row) cat(row,"\n")))
-      cat("...\n")
-      invisible(sapply(row.names(d)[(nrow(d)-5):nrow(d)],function(row) cat(row,"\n")))
-    } else {
-      invisible(sapply(row.names(d),function(row) cat(row,"\n")))
-    }
-  } else {
-    d
-  }
-}
-
-#' Same as metadata(scm), but shorter syntax
-#' @param scm an scMethrix
-#' @export
-md <- function(scm) {
-  S4Vectors::metadata(scm)
-}
-
-#--- is_h5 --------------------------------------------------------------------------------------------------
-#' Checks if \code{\link{scMethrix}} object is an HDF5 object
-#' @details This checks the metadata whether the experiment is in HDF5 format. As this can be manually changed and will
-#' not update after user operations to the assays, it may not be reliable.
-#' may not be reliable 
-#' @param scm scMethrix; The \code{\link{scMethrix}} object
-#' @return boolean; Whether the object is HDF5
-#' @examples
-#' data('scMethrix_data')
-#' is_h5(scMethrix_data)
-#' @export
-is_h5 = function(scm) {
-  .validateExp(scm)
-  return(scm@metadata$is_h5)
-}
-
-#--- has_cov ------------------------------------------------------------------------------------------------
-#' Checks if \code{\link{scMethrix}} object has a coverage matrix.
-#' @details This check for the existence of a \code{counts} matrix in the object
-#' @param scm scMethrix; The \code{\link{scMethrix}} object
-#' @return boolean; Whether the object has a coverage matrix
-#' @import SummarizedExperiment
-#' @examples
-#' data('scMethrix_data')
-#' has_cov(scMethrix_data)
-#' @export
-has_cov = function(scm) {
-  .validateExp(scm)
-  return("counts" %in% SummarizedExperiment::assayNames(scm))
-}
-
 #--- get_sample_name ----------------------------------------------------------------------------------------
 #' Returns sample name derived from the input file name
 #' @details The ideal input for this package is raw *.bedgraph files. As such, the sample names used in the experiment 
@@ -86,8 +5,7 @@ has_cov = function(scm) {
 #' 
 #' E.g., the input file \code{sample_file.bedgraph} is referred to as \code{sample_file} in the experiment.
 #' 
-#' As [data.table::fread()] is used for import, compressed \code{.gz} and \code{.bz2} files can also be used.
-#' This extension will be automatically dropped:
+#' As [data.table::fread()] is used for \code{BedGraph} import, compressed \code{.gz} and \code{.bz2} files can also be used. This extension will be automatically dropped:
 #' 
 #' E.g., \code{\\sample_file.bedgraph.gz} will still become \code{sample_file}
 #' 
@@ -119,7 +37,7 @@ get_sample_name = function(filepath) {
 #--- binarize -----------------------------------------------------------------------------------------------
 #' Binarize an input value based on a \code{threshold}
 #' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
-#'  If \code{x} = \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}
+#'  If \code{x} == \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}.
 #' @param x numeric; A vector to binarize
 #' @param threshold numeric; The threshold for binarizing. Will default to the center number between max and min.
 #' @param rep_na numeric; The value to replace missing values with. Default NA. 
@@ -155,11 +73,19 @@ fill = function(x, val = 0) {
 }
 
 #--- normalize ----------------------------------------------------------------------------------------------
-#' Fills a vector with a specified \code{fill} value
+#' Performs min-max normalization on a vector
+#' @details 
+#' There are 3 use cases for this function:
+#' 1. Normalize data to 0-1
+#' * Via the max and min values of the vector, each value will be normalized
+#' 2. Normalize data to 0-1, but the max and min values for the vector are known
+#' * Gives a minor performance increase as max/min functions are not called on the vector, but may not represent actual normalization. User must ensure that the data source is consistent for values.
+#' 3. Normalize data to a custom range
+#' * Same use case as 1, but allows a different range (e.g. 0 to 100, or -1 to 1)
 #' @param x vector; A vector in which to fill the NA values
 #' @param min numeric; the minimum value to normalize to
 #' @param max numeric; the maximum value to normalize to
-#' @param scale boolean; should the numbers normalize to 0-1, or scaled to min-max
+#' @param scale boolean; flag for scaling. If FALSE, the numbers normalize to 0-1. If TRUE, the numbers are normalized to 0-1, then scaled to the \code{min} and \code{max} values
 #' @return vector; the normalized vector
 #' @examples
 #' vals <- c(0,1,2,3.4,5)
@@ -189,7 +115,7 @@ normalize <- function(x, min = NULL, max = NULL, scale = FALSE) {
 }
 
 #--- cbindlist ------------------------------------------------------------------------------------------------
-#' A faster version of cbind when trying to combine lists of data.tables
+#' A faster version of cbind when trying to combine lists of identical length data.tables
 #' @param list A list of data.tables with identical # of rows
 #' @return data.table; the cbinded output 
 cbindlist = function(list) {
@@ -435,7 +361,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 
 #--- .generate_random_bedgraph -----------------------------------------------------------------------------
 #' Creates random bedgraph files. Used for testing.
-#' @param numfile integer; Number of files to generate
+#' @param numfiles integer; Number of files to generate
 #' @param numrows integer; Max number of CpG sites in sample
 #' @param chrs integer; Number of chromosomes
 #' @param minsparsity numeric; Minimum sparsity (minrows = numrows*sparsity)
@@ -444,8 +370,9 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' @param randomize boolean; Randomize the chr and IRange mapping
 #' @param values list of numerics; List of values to choose from
 #' @param dir string; the directory path to store the bedgraph files in
+#' @importFrom stats runif
 #' @return NULL, with bedgraph files placed in the specified \code{dir}
-.generate_random_bedgraph <- function(numfile = 1, numrows = 1000000, chrs = 10, minsparsity = 0.5, maxsparsity = 1, rangeFactor = 2, randomize = FALSE, values = c(0,25,50,75,100), dir = NULL) {
+.generate_random_bedgraph <- function(numfiles = 1, numrows = 1000000, chrs = 10, minsparsity = 0.5, maxsparsity = 1, rangeFactor = 2, randomize = FALSE, values = c(0,25,50,75,100), dir = NULL) {
   
   start.time <- Sys.time()
   
