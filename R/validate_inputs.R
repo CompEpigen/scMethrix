@@ -18,12 +18,15 @@
 #' @param arg variable; the variable in which to check
 #' @param ignore.case boolean; ignores case of the choices
 #' @param partial.match boolean; whether to allow partial matching
+#' @param multiple.match boolean; when to allow multiple input args. By default (FALSE), only the first input arg is used.
 #' @return arg, if the value is in the function definition.
 #' @export
-.validateArg <- function(arg, parent = NULL, ignore.case = T, partial.match = T) {
+.validateArg <- function(arg, parent = NULL, ignore.case = T, partial.match = T, multiple.match = F) {
 
   #.validateType(ignore.case,"boolean")
 
+  
+  
   #- Function code -----------------------------------------------------------------------------
   if (is.null(parent)) {
     parent <- deparse(sys.calls()[[sys.nframe()-1]])
@@ -32,7 +35,13 @@
 
   name = substitute(arg)
   choices <- eval(formals(parent)[[name]])
-  arg <- head(arg,1)
+  
+  if (!multiple.match) {
+    arg <- head(arg,1)
+  } else {
+    return(sapply(arg, function(var) .validateArg(var, parent = parent, ignore.case = ignore.case, 
+                                                partial.match = partial.match, multiple.match = F)))
+  }
 
   if (any(sapply(choices, is.na)) && is.na(arg)) return (NA)
 
