@@ -62,6 +62,23 @@ test_that("get_rowdata_stats", {
     exp_sd[is.na(exp_sd)] <- 0 # Since single sample rows will give SD as zero
     expect_equal(round(exp_sd,2),round(stats$sd,2))
     expect_equal(ncol(s)-rowCounts(score(s),val=NA),stats$cells)
+    
+    # Check for stat subset
+    rd <- rowData(get_rowdata_stats(scm,stats=c("Mean")))
+    expect_equal(dim(rd),c(n_cpg,cols+1))
+    expect_true(tolower(colnames(rd))[cols+1] %like% "mean")
+    rd <- rowData(get_rowdata_stats(scm,stats=c("SD")))
+    expect_true(tolower(colnames(rd))[cols+1] %like% "sd")
+    rd <- rowData(get_rowdata_stats(scm,stats=c("Cells")))
+    expect_true(tolower(colnames(rd))[cols+1] %like% "cells")
+    rd <- rowData(get_rowdata_stats(scm,stats=c("Sparsity")))
+    expect_true(tolower(colnames(rd))[cols+1] %like% "sparsity")
+    
+    rd <- rowData(get_rowdata_stats(scm,stat=c("Mean","SD")))
+    expect_equal(dim(rd),c(n_cpg,cols+2))
+    expect_true(any(tolower(colnames(rd)) %like% "mean"))
+    expect_true(any(tolower(colnames(rd)) %like% "sd"))
+    
   }))
 })
 
@@ -81,6 +98,22 @@ test_that("get_coldata_stats", {
     #expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median[rng])
     expect_equal(round(as.numeric(DelayedMatrixStats::colSds(score(s),na.rm=TRUE)),2),round(stats$sd,2))
     expect_equal(nrow(s)-colCounts(score(s),val=NA),stats$cpgs)
+    
+    # Check for stat subset
+    cd <- colData(get_coldata_stats(scm,stats=c("Mean")))
+    expect_equal(dim(cd),c(n_samples,cols+1))
+    expect_true(tolower(colnames(cd))[cols+1] %like% "mean")
+    cd <- colData(get_coldata_stats(scm,stats=c("SD")))
+    expect_true(tolower(colnames(cd))[cols+1] %like% "sd")
+    cd <- colData(get_coldata_stats(scm,stats=c("CpGs")))
+    expect_true(tolower(colnames(cd))[cols+1] %like% "cpgs")
+    cd <- colData(get_coldata_stats(scm,stats=c("Sparsity")))
+    expect_true(tolower(colnames(cd))[cols+1] %like% "sparsity")
+    
+    cd <- colData(get_coldata_stats(scm,stat=c("Mean","SD")))
+    expect_equal(dim(cd),c(n_samples,cols+2))
+    expect_true(any(tolower(colnames(cd)) %like% "mean"))
+    expect_true(any(tolower(colnames(cd)) %like% "sd"))
   }))
 })
 
@@ -359,6 +392,22 @@ test_that("get_stats", {
     expect_equal(mean(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"mean_meth"]))
     expect_equal(median(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"median_meth"]))
     expect_equal(sd(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"sd_meth"]))
+    
+    # Check for stat subset
+    stats <- get_stats(scm,stat="Mean")
+    expect_equal(dim(stats),c(chr*samples,3))
+    expect_true(tolower(colnames(stats)[ncol(stats)]) %like% "mean")
+    stats <- get_stats(scm,stat="Median")
+    expect_true(tolower(colnames(stats)[ncol(stats)]) %like% "median")
+    stats <- get_stats(scm,stat="Count")
+    expect_true(tolower(colnames(stats)[ncol(stats)]) %like% "count")
+    stats <- get_stats(scm,stat="SD")
+    expect_true(tolower(colnames(stats)[ncol(stats)]) %like% "sd")
+    
+    stats <- get_stats(scm,stat=c("Mean","Median"))
+    expect_equal(dim(stats),c(chr*samples,4))
+    expect_true(any(tolower(colnames(stats)) %like% "mean"))
+    expect_true(any(tolower(colnames(stats)) %like% "median"))
     
   }))
 })
