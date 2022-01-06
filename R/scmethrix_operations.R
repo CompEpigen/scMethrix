@@ -31,11 +31,11 @@ get_coldata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean",
   
   stats <-
     data.table::data.table(
-      mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      Mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
       #median = DelayedMatrixStats::colMedians(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      sd = if (calc_sd) DelayedMatrixStats::colSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      cpgs = if (calc_cpgs) cpgs,
-      sparsity = if (calc_sparsity) cpgs/nrow(scm)
+      SD = if (calc_sd) DelayedMatrixStats::colSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      CpGs = if (calc_cpgs) cpgs,
+      Sparsity = if (calc_sparsity) cpgs/nrow(scm)
     )
   
   stats <- round(stats,2)
@@ -77,11 +77,11 @@ get_rowdata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean",
   
   stats <-
     data.table::data.table(
-      mean = if (calc_mean) DelayedMatrixStats::rowMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      Mean = if (calc_mean) DelayedMatrixStats::rowMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
       #median_meth = DelayedMatrixStats::rowMedians(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      sd = if (calc_sd) DelayedMatrixStats::rowSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      cells = if (calc_cells) cells,
-      sparsity = if (calc_sparsity) (cells/ncol(scm))
+      SD = if (calc_sd) DelayedMatrixStats::rowSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      Cells = if (calc_cells) cells,
+      Sparsity = if (calc_sparsity) (cells/ncol(scm))
     )
   
   stats <- round(stats,2)
@@ -990,9 +990,11 @@ get_stats <- function(scm = NULL, assay="score", per_chr = TRUE, verbose = TRUE,
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Getting descriptive statistics...",start_time())
 
+  browser()
+  
   chrs = rowRanges(scm)@seqnames
   ends = cumsum(chrs@lengths)
-  starts = c(1, head(end, -1) + 1)
+  starts = c(1, head(ends, -1) + 1)
   # 
   # ends <- len <- GenomeInfoDb::seqnames(scm)@lengths
   # for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
@@ -1002,11 +1004,11 @@ get_stats <- function(scm = NULL, assay="score", per_chr = TRUE, verbose = TRUE,
     stats <- lapply(1:length(starts), function(x) {
       data.table::data.table(
         Chr = levels(seqnames(scm))[x],
-        Sample_Name = colnames(scm),
-        mean_meth = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
-        median_meth = if (calc_median) DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
-        count = if (calc_count) length(starts[x]:ends[x]) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], value=NA),
-        sd_meth = if (calc_SD) DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE)
+        Sample = colnames(scm),
+        Mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
+        Median = if (calc_median) DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
+        Count = if (calc_count) length(starts[x]:ends[x]) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], value=NA),
+        SD = if (calc_SD) DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE)
       )
     })
 
@@ -1014,17 +1016,17 @@ get_stats <- function(scm = NULL, assay="score", per_chr = TRUE, verbose = TRUE,
     
   } else {
     stats <- data.table::data.table(
-      Sample_Name = colnames(scm),
-      mean_meth = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), na.rm = TRUE),
-      median_meth = if (calc_median) DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), na.rm = TRUE),
-      count =  if (calc_count) nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), value=NA),
-      sd_meth = if (calc_SD) DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), na.rm = TRUE)
+      Sample = colnames(scm),
+      Mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), na.rm = TRUE),
+      Median = if (calc_median) DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), na.rm = TRUE),
+      Count =  if (calc_count) nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), value=NA),
+      SD = if (calc_SD) DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), na.rm = TRUE)
     )
   }
   
   if (per_chr) stats <- stats[!(Chr %in% ignore_chr)]
   
-  stats <- stats[!(Sample_Name %in% ignore_samples)]
+  stats <- stats[!(Sample %in% ignore_samples)]
   
   gc()
   if (verbose) message("Finished in ", stop_time())
