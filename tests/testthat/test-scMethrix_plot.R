@@ -41,10 +41,23 @@ invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   })
   
   test_that("plot_sparsity", {
-    graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="box")
-    graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="scatter")
-    graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="box",     pheno="Group")
-    graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="scatter", pheno="Group")
+    
+    graph_test_helper(scm, plot_sparsity, type="Scatterplot", by="Sample")
+    # graph_test_helper(scm, plot_sparsity, type="Scatterplot", by="Sample", phenotype="Group", indiv_samples = F)
+    # graph_test_helper(scm, plot_sparsity, type="Scatterplot", by="Chromosome")
+    
+    graph_test_helper(scm, plot_sparsity, type="Jitterplot", by="Sample")
+    # graph_test_helper(scm, plot_sparsity, type="Jitterplot", by="Sample", phenotype="Group")
+    # graph_test_helper(scm, plot_sparsity, type="Jitterplot", by="Chromosome")
+    
+    graph_test_helper(scm, plot_sparsity, type="Boxplot", by="Sample")
+    # graph_test_helper(scm, plot_sparsity, type="Boxplot", by="Sample", phenotype="Group")
+    # graph_test_helper(scm, plot_sparsity, type="Boxplot", by="Chromosome", indiv_chr = T)
+    
+    # graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="box")
+    # graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="scatter")
+    # graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="box",     pheno="Group")
+    # graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="scatter", pheno="Group")
   })
   
   test_that("plot_stats", {
