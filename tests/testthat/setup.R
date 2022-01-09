@@ -78,20 +78,25 @@ identical.scm <- function(scm1,scm2,exclude_is_h5 = F) {
 }
 
 
-graph_test_helper <- function(scm, func, indiv_samples = TRUE, indiv_chr = FALSE, pheno = NULL, ...) {
+graph_test_helper <- function(scm, func, plot, indiv_samples = TRUE, indiv_chr = FALSE, pheno = NULL, 
+                              expected_samples = NULL, samples = NULL, groups = NULL, ...) {
 
   frmat <- function(x) sort(as.character(unique(x)))
   
   expect_error(func("not scMethrix"),msg.validateExp)
-  
+
   if (is.null(pheno)) {
     plot <- func(scm = scm, verbose = FALSE, ...)
   } else {
     plot <- func(scm = scm, pheno = pheno, verbose = FALSE, ...)
   }
-
+  
   expect_true("ggplot" %in% class(plot))
-    
+
+  xlabs <- frmat(ggplot_build(p)$layout$panel_params[[1]]$x$get_labels())
+  ylabs <- frmat(ggplot_build(p)$layout$panel_params[[1]]$y$get_labels())
+  legdlabs <- ggplot_build(p)$plot$scales$scales[[1]]$get_labels()
+  
   if (indiv_samples) {
     expect_equivalent(frmat(plot$data$Sample),frmat(colnames(scm)))
   } else {
@@ -110,10 +115,41 @@ graph_test_helper <- function(scm, func, indiv_samples = TRUE, indiv_chr = FALSE
     if ("Pheno" %in% colnames(plot$data)) expect_equal(frmat(plot$data$Pheno),frmat(plot$data$Sample))
   }
   
+  if (!is.null(samples)) {
+    expect_equivalent(frmat(plot$data$Sample),frmat(samples))
+  }
+  
+  if (!is.null(groups)) {
+    
+    
+    
+  }
+  
+  
   expect_error(print(plot),NA) # Checks if the plot is printable
   
   return(invisible(plot))
 }
+
+graph_test_helper2 <- function(plot, expected_x = NULL, expected_y = NULL, expected_group = NULL, ...) {
+
+  frmat <- function(x) sort(as.character(unique(x)))
+  
+  expect_true("ggplot" %in% class(plot))
+  
+  x_labs <- frmat(ggplot_build(plot)$layout$panel_params[[1]]$x$get_labels())
+  y_labs <- frmat(ggplot_build(plot)$layout$panel_params[[1]]$y$get_labels())
+  grp_labs <- ggplot_build(plot)$plot$scales$scales[[1]]$get_labels()
+  
+  if (!is.null(expected_x)) expect_equivalent(frmat(x_labs),frmat(expected_x))
+  if (!is.null(expected_y)) expect_equivalent(frmat(y_labs),frmat(expected_y))
+  if (!is.null(expected_group)) expect_equivalent(frmat(grp_labs),frmat(expected_group))
+  
+  expect_error(print(plot),NA) # Checks if the plot is printable
+  
+  return(invisible(plot))
+}
+
 
 dim_red_graph_test_helper <- function(scm, func, color_anno = NULL, shape_anno=NULL, ...) {
 

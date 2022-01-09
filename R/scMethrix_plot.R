@@ -306,8 +306,13 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
     phenotype = NULL
   }
 
-  if (!is.null(phenotype) && !phenotype %in% colnames(colData(scm))) 
-    stop("Please provide a valid phenotype annotation column. The column must exist within colData(scm).")
+  if (!is.null(phenotype) && by == "Sample") {
+    if (!phenotype %in% colnames(colData(scm))) {
+      stop("Please provide a valid phenotype annotation column. The column must exist within colData(scm).")
+    } else {
+      by = "Phenotype"
+    }
+  }
   
   #- Function code -----------------------------------------------------------------------------
   
@@ -326,65 +331,49 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
     pheno <- as.data.table(pheno)
     #pheno[ , Members := .N, by = .(Group)]
     stats <- merge(stats,pheno,by="Sample")
-    setnames(stats, phenotype, "Pheno")
+    setnames(stats, phenotype, "Phenotype")
+  } else {
+    stats[,Phenotype := Sample]
   }
   
+  setnames(stats, "Chr", "Chromosome")
+  stats <- stats[, lapply(.SD, as.character), by=.(Count,Sites)]
   x_lab <- "Sample"
   
+  
+  # Setup the graph data
   if (type == "Scatterplot") {
-    if (by == "Sample") {
-      if (!is.null(phenotype)) {
-        sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = Pheno]
-        setnames(sparsity, "Pheno", "Sample")
-      } else {
-        sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = Sample]
-      }
-    } else if (by == "Chromosome") {
-        sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = Chr]
-        setnames(sparsity, "Chr", "Sample")
-    }
     
-    sparsity[, Group := Sample]
-    
+    sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = by]
+    gg_data <- ggplot2::ggplot(sparsity, aes_string(x = by, y = "Sparsity", color = by))
     gg_elem <- ggplot2::geom_point(show.legend = show_legend)
     
   } else {
-    if (!is.null(phenotype)) {
-      sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = list(Pheno,Chr)]
-    } else {
-      sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = list(Sample,Chr)]
-    }
     
-    if (by == "Sample") {
-      setnames(sparsity, "Pheno", "Sample",skip_absent = TRUE)
-      setnames(sparsity, "Chr", "Group")
-    } else if (by == "Chromosome") {
-      setnames(sparsity, "Sample", "Group",skip_absent = TRUE)
-      setnames(sparsity, "Pheno", "Group",skip_absent = TRUE)
-      setnames(sparsity, "Chr", "Sample")
+    if (!is.null(phenotype)) {
+      sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = list(Phenotype,Chromosome)]
+    } else {
+      sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = list(Sample,Chromosome)]
     }
     
     if (type == "Boxplot") {
       gg_elem <- ggplot2::geom_boxplot(show.legend = show_legend)
-      sparsity[,Group := Sample]
+      gg_color <- by
+      gg_data <- ggplot2::ggplot(sparsity, aes_string(x=by, y="Sparsity", fill = gg_color))
     } else {
-      gg_elem <- ggplot2::geom_point(show.legend = show_legend,position=position_dodge(width=1/length(unique(sparsity$Group))))
+      dodge_dist = 2#length(ggplot_build(gg_data)$plot$scales$scales[[3]]$get_labels())
+      gg_elem <- ggplot2::geom_point(show.legend = show_legend, 
+                                     position = position_dodge(width = 1/dodge_dist))
+      if (by == "Phenotype" || by == "Sample") gg_color <- "Chromosome"
+      else if (!is.null(phenotype)) gg_color <- "Phenotype"
+      else gg_color <- "Sample"
+      gg_data <- ggplot2::ggplot(sparsity, aes_string(x=by, y="Sparsity", color = gg_color))
     }
   }
-  
-  # Set x label
-  x_lab <- "Sample"
-  if (!is.null(phenotype)) x_lab <- "Phenotype"
-  if (by == "Chromosome") x_lab <- "Chromosome"
-  
-  # Set legend label
-  legend_lab <- "Sample"
-  if (by == "Sample") legend_lab <- "Chromosome"
-  if (by == "Chromosome" && !is.null(phenotype)) legend_lab = "Phenotype"
-  
-  p <- ggplot2::ggplot(sparsity, aes(x=as.character(Sample), y=Sparsity, color = as.character(Group))) + gg_elem + 
-            ggplot2::scale_color_manual(values = get_palette(ncol(scm)),name = legend_lab) + 
-            ylab("Sparsity (%)") + xlab(x_lab) 
+
+  p <- gg_data + gg_elem + 
+    ggplot2::scale_color_manual(values = get_palette(ncol(scm))) + #,name = legend_lab) + 
+    ylab("Sparsity (%)")# + xlab(x_lab) 
   
   if (show_avg) {
     avg.spars = mean(sparsity$Sparsity)

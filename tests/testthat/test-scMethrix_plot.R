@@ -41,23 +41,35 @@ invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   })
   
   test_that("plot_sparsity", {
+
+      samp <- sampleNames(scm)
+      chr <- levels(rowRanges(scm)@seqnames)
+      pheno <- unique(colData(scm)$Group)
     
-    graph_test_helper(scm, plot_sparsity, type="Scatterplot", by="Sample")
-    # graph_test_helper(scm, plot_sparsity, type="Scatterplot", by="Sample", phenotype="Group", indiv_samples = F)
-    # graph_test_helper(scm, plot_sparsity, type="Scatterplot", by="Chromosome")
-    
-    graph_test_helper(scm, plot_sparsity, type="Jitterplot", by="Sample")
-    # graph_test_helper(scm, plot_sparsity, type="Jitterplot", by="Sample", phenotype="Group")
-    # graph_test_helper(scm, plot_sparsity, type="Jitterplot", by="Chromosome")
-    
-    graph_test_helper(scm, plot_sparsity, type="Boxplot", by="Sample")
-    # graph_test_helper(scm, plot_sparsity, type="Boxplot", by="Sample", phenotype="Group")
-    # graph_test_helper(scm, plot_sparsity, type="Boxplot", by="Chromosome", indiv_chr = T)
-    
-    # graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="box")
-    # graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="scatter")
-    # graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="box",     pheno="Group")
-    # graph_test_helper(scm, plot_sparsity, indiv_samples = F, type="scatter", pheno="Group")
+      plot = plot_sparsity(scm,type = "Scatterplot", by = "Sample")
+      graph_test_helper2(plot, expected_x = samp)
+      plot = plot_sparsity(scm,type = "Scatterplot", phenotype = "Group")
+      graph_test_helper2(plot, expected_x = pheno)
+      plot = plot_sparsity(scm,type = "Scatterplot", by = "Chromosome")
+      graph_test_helper2(plot, expected_x = chr)
+      
+      plot = plot_sparsity(scm,type = "Boxplot", by = "Sample")
+      graph_test_helper2(plot, expected_x = samp)
+      plot = plot_sparsity(scm,type = "Boxplot", phenotype = "Group")
+      graph_test_helper2(plot, expected_x = pheno)
+      plot = plot_sparsity(scm,type = "Boxplot", by = "Chromosome")
+      graph_test_helper2(plot, expected_x = chr)
+      
+      plot = plot_sparsity(scm,type = "Jitterplot", by = "Sample")
+      graph_test_helper2(plot, expected_x = samp, expected_group = chr)
+      plot = plot_sparsity(scm,type = "Jitterplot", phenotype = "Group")
+      graph_test_helper2(plot, expected_x = pheno, expected_group = chr)
+      
+      plot = plot_sparsity(scm,type = "Jitterplot", by = "Chromosome")
+      graph_test_helper2(plot, expected_x = chr, expected_group = samp)
+      plot = plot_sparsity(scm,type = "Jitterplot", by = "Chromosome", phenotype = "Group",show_legend = T)
+      graph_test_helper2(plot, expected_x = chr, expected_group = pheno)
+      
   })
   
   test_that("plot_stats", {
