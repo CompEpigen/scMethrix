@@ -25,8 +25,6 @@
 
   #.validateType(ignore.case,"boolean")
 
-  
-  
   #- Function code -----------------------------------------------------------------------------
   if (is.null(parent)) {
     parent <- deparse(sys.calls()[[sys.nframe()-1]])
@@ -38,31 +36,36 @@
   
   if (!multiple.match) {
     arg <- head(arg,1)
-  } else {
-    return(sapply(arg, function(var) .validateArg(var, parent = parent, ignore.case = ignore.case, 
-                                                partial.match = partial.match, multiple.match = F)))
-  }
+  } 
 
   if (any(sapply(choices, is.na)) && is.na(arg)) return (NA)
 
-  if (partial.match) {
-    if (ignore.case) {
-      m <- grepl(tolower(arg), tolower(choices), fixed = TRUE)
-    } else {
-      m <- grepl(arg, choices, fixed = TRUE)
-    }
-  } else {
-    if (ignore.case) {
-      m <- choices %in% arg
-    } else {
-      m <- tolower(choices) %in% tolower(arg)
-    }
-  }
+  matches <- NULL
   
-  if (sum(m) != 1) stop(paste0("Invalid arg input for '",paste(name),"'. Found: '",arg,"'; Must match one of: '",
-                               paste0(eval(formals(parent)[[name]]), collapse="', '"),"'"), call. = FALSE)
+  for (n in 1:length(arg)) {
+  
+    if (partial.match) {
+      if (ignore.case) {
+        m <- grepl(tolower(arg[n]), tolower(choices), fixed = TRUE)
+      } else {
+        m <- grepl(arg[n], choices, fixed = TRUE)
+      }
+    } else {
+      if (ignore.case) {
+        m <- choices %in% arg[n]
+      } else {
+        m <- tolower(choices) %in% tolower(arg[n])
+      }
+    }
+    
+    if (sum(m) != 1) stop(paste0("Invalid arg input for '",paste(name),"'. Found: '",arg[n],"'; Must match one of: '",
+                                 paste0(eval(formals(parent)[[name]]), collapse="', '"),"'"), call. = FALSE)
 
-  return(choices[which(m)])
+    matches <- append(matches, choices[which(m)])
+    
+  }
+    
+  return(matches)
 }
 
 #--- .validateAssay -----------------------------------------------------------------------------------------
