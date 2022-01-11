@@ -990,8 +990,6 @@ get_stats <- function(scm = NULL, assay="score", per_chr = TRUE, verbose = TRUE,
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Getting descriptive statistics...",start_time())
 
-  browser()
-  
   chrs = rowRanges(scm)@seqnames
   ends = cumsum(chrs@lengths)
   starts = c(1, head(ends, -1) + 1)

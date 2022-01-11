@@ -111,12 +111,10 @@ as.scMethrix.GRset <- function (GRset, colData = NULL, verbose = verbose) {
 }
 
 setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
-  (x); SummarizedExperiment::assay(x, i="score")}
-)
+  (x); SummarizedExperiment::assay(x, i="score")})
 
 setMethod(f = "sampleNames", signature = "scMethrix", definition = function(object)   {
-  row.names(colData(object))}
-)
+  row.names(colData(object))})
 
 utils::globalVariables(c("sampleNames")) #TODO: find out why this is necessary
 

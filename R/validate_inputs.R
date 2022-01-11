@@ -97,6 +97,25 @@
 }
 
 #--- .validateType ------------------------------------------------------------------------------------------
+#' Validates an input type
+#' @param input the variable(s) to check. List structures are accepted and will be parsed. The input must be stored in a variable before passing to the function.
+#' @param type list of string; the types to check for.
+#' @param throws boolean; flag should the function throw an error (throws=TRUE) or return FALSE (throws=FALSE) if the validate fails. Default TRUE.
+#' @param recursive_sub string; This is an internal variable used when recursively looping through lists. Do not modify the value.
+#' @return invisible(TRUE) if validation passes. Error if validation fails (with throws=T) or invisible(FALSE) (with throws=T)
+#' @export
+#' @examples
+#' testvar = "test"
+#' print(.validateType(testvar,"string"))          # TRUE
+#'
+#' testvar = 5
+#' .validateType(testvar,"string")                 # ERROR
+#'
+#' testvar = 5
+#' print(.validateType(testvar,"string",throws=F)) # FALSE
+#'
+#' testvar = list("test","test2")
+#' print(.validateType(testvar,"string","list"))   # TRUE
 .validateType <- function(input = NULL, type=c("Integer","Numeric","Character","String","Boolean","Logical","Vector",
                                                "List","File","Directory","GRanges","GenomicRanges","Function","Null",
                                                "NA","Dataframe","DF","S4","Distance","Chain","Soft"), throws=T, recursive_sub = NULL) {

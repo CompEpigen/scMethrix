@@ -1,5 +1,4 @@
-
-# Validatoin ------------------------------------------------------------------------------------------------------
+# Validation ------------------------------------------------------------------------------------------------------
 library(scMethrix)
 
 if(!requireNamespace("GEOquery")) {
@@ -76,7 +75,7 @@ colData(scm)$Sample <- row.names(colData(scm))
 density <- plot_density(scm,base_size = 20,col_palette="Blues")
 coverage <- plot_coverage(scm,base_size=20,type="density",max_cov=10)
 sparsity <- plot_sparsity(scm,base_size=20,type="scatter",pheno="Sample")
-stat <- plot_stats(scm, per_chr = T, stat = "count",base_size=20)
+stat <- plot_stats(scm, per_chr = T, stat = "count", base_size=20)
 
 Cairo(file="stats.png",
       type="png",
