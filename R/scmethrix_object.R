@@ -1,47 +1,20 @@
 #' Class scMethrix
 #' @description S4 class scMethrix
-#' @slot assays A list of two matrices containing 'Methylation' and 'Coverage' information
-#' #slot bins A list of matricies for different size of binning for methylation data
-#' @slot elementMetadata A DataFrame describing rows in correspoding assay matrices.
-#' @slot colData genome: the name of the BSgenome that was used to extract CpGs, isHDF5: is it stored in HDF5 Array format
-#' @slot metadata a list of meta data associated with the assays
-#' @slot rowRanges A \code{\link{GRanges}} object of the genomic coordinates of CpG sites
+#' @slot assays list; assays containing methylation or coverage information
+#' @slot colData data.frame; metadata corresponding to samples
+#' @slot metadata list; metadata pertaining to the experiment
+#' @slot rowRanges [GenomicRanges::GRanges()]; the genomic coordinates of CpG sites and associated metadata
 #' @slot NAMES NULL
 #' @slot int_colData NULL 
 #' @slot int_metadata NULL
 #' @slot int_elementMetadata NULL 
-#' @exportClass scMethrix
+#' @slot elementMetadata NULL
+#' @export
 #' @importFrom stats median quantile sd
 #' @importFrom utils data head write.table menu
 #' @importFrom methods is as new
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
-#'
 scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")
-
-setMethod(f = "show", signature = "scMethrix", definition = function(object) {
-  
-  feature.names <- NULL#row.names(rowData(object))
-  # if (!is.null(feature.names)) feature.names <- paste0(substr(feature.names[1:5],1,8),"...",collapse=" l ")
-  sample.names <- NULL#row.names(colData(object))
-  # if (!is.null(sample.names)) {
-  #   sample.names <- substr(row.names(colData(object))[1:5],1,8)
-  #   sample.names <- gsub('[^a-zA-Z]*$','',sample.names)
-  #   sample.names <- paste0(sample.names,"...",collapse=" l ")
-  #   sample.names <- paste0(" (",sample.names,")")
-  # }
-  
-  h5 <- is_h5(object)
-  if (h5) h5 = path(score(object))
-  
-  cat(paste0("An object of class ", class(object), "\n"))
-  cat(paste0("   CpGs: ", format(nrow(object), big.mark = ","),feature.names,"\n"))
-  cat(paste0("   Samples: ", ncol(object),sample.names,"\n"))
-  cat(paste0("   Assays: ", (paste(SummarizedExperiment::assayNames(object),collapse=", ")),"\n"))
-  cat(paste0("   Reduced dims: ", (paste(SingleCellExperiment::reducedDimNames(object),collapse=", ")),"\n"))
-  cat(paste0("   HDF5: ", h5, "\n"))
-  cat(paste0("   Ref.Genome: ", object@metadata$genome, "\n"))
-  cat(paste0("   Physical size: ", format(utils::object.size(object), units = "auto"), "\n"))
-})
 
 #' Create an scMethrix object
 #' @inheritParams generic_scMethrix_function
@@ -83,50 +56,94 @@ create_scMethrix <- function(assays = NULL, colData = NULL, rowRanges = NULL, is
   return(scm)
 }
 
-#--- as.scMethrix.GRset ----------------------------------------------------------------------------------
-#' Converts from a minfi::GRset to an scMethrix object
-#' @details Used in converting .IDAT files into scMethrix objects
-#' @param GRset GRset; the GRset to convert to scMethrix
-#' @param colData data.table; information about the samples
-#' @param verbose boolean; be chatty
-#' @return An \code{\link{scMethrix}} object
-#' @import minfi
-#' @examples
-#' data('scMethrix_data')
-#' @export
-as.scMethrix.GRset <- function (GRset, colData = NULL, verbose = verbose) {
+#---- Generic methods -------------------------------------------------------------------------------------------------
+#' @describeIn scMethrix Show method for an [scMethrix()] object
+setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   
-  if (is.null(colData)) {
-    colData <- data.frame(row.names = colnames(getBeta(GRset)))
-  } else { # Ensure that colData is in same order as assays
-    ord <- match(colnames(getBeta(GRset)),row.names(colData)) 
-    colData <- colData[ord,,drop=FALSE]
-  }
+  feature.names <- NULL#row.names(rowData(object))
+  # if (!is.null(feature.names)) feature.names <- paste0(substr(feature.names[1:5],1,8),"...",collapse=" l ")
+  sample.names <- NULL#row.names(colData(object))
+  # if (!is.null(sample.names)) {
+  #   sample.names <- substr(row.names(colData(object))[1:5],1,8)
+  #   sample.names <- gsub('[^a-zA-Z]*$','',sample.names)
+  #   sample.names <- paste0(sample.names,"...",collapse=" l ")
+  #   sample.names <- paste0(" (",sample.names,")")
+  # }
   
-  assays = list(score = minfi::getBeta(GRset))
-  rowRanges = rowRanges(GRset)
-  genome_name = minfi::annotation(GRset)[["annotation"]]
+  h5 <- is_h5(object)
+  if (h5) h5 = path(score(object))
   
-  create_scMethrix(assays = assays, colData = colData, rowRanges = rowRanges, genome_name = genome_name, verbose = verbose)
-}
+  cat(paste0("An object of class ", class(object), "\n"))
+  cat(paste0("   CpGs: ", format(nrow(object), big.mark = ","),feature.names,"\n"))
+  cat(paste0("   Samples: ", ncol(object),sample.names,"\n"))
+  cat(paste0("   Assays: ", (paste(SummarizedExperiment::assayNames(object),collapse=", ")),"\n"))
+  cat(paste0("   Reduced dims: ", (paste(SingleCellExperiment::reducedDimNames(object),collapse=", ")),"\n"))
+  cat(paste0("   HDF5: ", h5, "\n"))
+  cat(paste0("   Ref.Genome: ", object@metadata$genome, "\n"))
+  cat(paste0("   Physical size: ", format(utils::object.size(object), units = "auto"), "\n"))
+})
 
+#' @describeIn scMethrix Gets the assay named "score"
 setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
   (x); SummarizedExperiment::assay(x, i="score")})
 
+#' @describeIn scMethrix Gets the assay named "counts"
+setMethod(f = "score", signature = "scMethrix", definition = function(x)   {
+  (x); SummarizedExperiment::assay(x, i="counts")})
+
+setGeneric("sampleNames", function(object) standardGeneric("sampleNames"))
+
+#' @describeIn scMethrix Gets the sample names stored as rows in [colData()]
 setMethod(f = "sampleNames", signature = "scMethrix", definition = function(object)   {
   row.names(colData(object))})
 
-utils::globalVariables(c("sampleNames")) #TODO: find out why this is necessary
+setGeneric("featureNames", function(object) standardGeneric("featureNames"))
 
-# lociNames <- function(x) {
-#           row.names(rowData(x))
-# }
+#' @describeIn scMethrix Gets the sample names stored as rows in [rowData()]
+setMethod(f = "featureNames", signature = "scMethrix", definition = function(object)   {
+  row.names(rowData(object))}
+)
 
-# setMethod(f = "featureNames", signature = "scMethrix", definition = function(object)   {
-#   (object); row.names(colData(object))}
-# )
+#---- Coercion --------------------------------------------------------------------------------------------------------
+#' @rdname scMethrix
+#' @aliases coerce,GRset,scMethrix-method,scMethrix-method coerce
+#' @section
+#' Coercion from GRset:
+#'  A [minfi::GenomicRatioSet()] can be converted to an [scMethrix()] object using the [methods::as()] function.
+#'  \preformatted{\code{as(x, "scMethrix")}}
+#' @md
+#' @export
+setAs("GenomicRatioSet", "scMethrix", function(GRset) {
+  
+  if (!is.null(colData(GRset))) {
+    colData <- colData(GRset)
+  } else {
+    colData <- data.frame(row.names = colnames(getBeta(GRset)))
+  }
+  
+  beta <- minfi::getBeta(GRset)
+  ord <- match(colnames(beta),row.names(colData)) #Ensure colData order consistency
+  colData <- colData[ord,,drop=FALSE]
+  
+  create_scMethrix(assays = list(score = beta), 
+                   colData = colData(GRset), 
+                   rowRanges = rowRanges(GRset), 
+                   genome_name = minfi::annotation(GRset)[["annotation"]])
+})
 
-#--- Metadata functions --------------------------------------------------------------------------
+#' @rdname scMethrix
+#' @aliases coerce,SingleCellExperiment,scMethrix-method,scMethrix-method coerce
+#' @section
+#' Coercion from SingleCellExperiment:
+#'  A [SingleCellExperiment::SingleCellExperiment()] can be converted to an [scMethrix()] object using the [methods::as()] function.
+#'  \preformatted{\code{as(x, "scMethrix")}}
+#' @md
+#' @export
+setAs("SingleCellExperiment", "scMethrix", function(from) {
+  new("DAGList", as(from, "SingleCellExperiment"))
+})
+
+#---- Metadata functions --------------------------------------------------------------------------
 #' Same as colData(scm), but shorter syntax, and will output row names if there is no columns
 #' @inheritParams generic_scMethrix_function
 #' @export
@@ -176,7 +193,7 @@ md <- function(scm) {
   S4Vectors::metadata(scm)
 }
 
-#--- is_h5 --------------------------------------------------------------------------------------------------
+#---- is_h5 --------------------------------------------------------------------------------------------------
 #' Checks if \code{\link{scMethrix}} object is an HDF5 object
 #' @details This checks the metadata whether the experiment is in HDF5 format. This is found from the metadata attribute \code{is_h5}. 
 #' 
@@ -200,7 +217,7 @@ is_h5 = function(scm) {
   return (scm@metadata$is_h5)
 }
 
-#--- has_cov ------------------------------------------------------------------------------------------------
+#---- has_cov ------------------------------------------------------------------------------------------------
 #' Checks if [scMethrix()] object has a coverage matrix.
 #' @details This check for the existence of a \code{counts} matrix in the object
 #' @inheritParams generic_scMethrix_function
@@ -215,7 +232,7 @@ has_cov = function(scm) {
   return("counts" %in% SummarizedExperiment::assayNames(scm))
 }
 
-#--- generic_scMethrix_function -----------------------------------------------------------------------------
+#---- generic_scMethrix_function -----------------------------------------------------------------------------
 #' Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package
 #' @param scm [scMethrix()]; a single cell methylation experiment object
 #' @param assay string; name of an existing assay. Default = "score"
