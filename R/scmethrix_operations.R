@@ -1,127 +1,5 @@
 
-#--- get_coldata_stats -------------------------------------------------------------------------------------
-#' Adds descriptive statistics to colData columns in an \code{\link{scMethrix}} object.
-#' @details Adds the mean, SD, and sample count for each sample in an \code{\link{scMethrix}} object. This can be accessed using colData(). Columns with the names of 'mean','sd', and 'cpg' will be automatically overwritten, but \code{suffix} can be used to keep multiple stats columns.
-#' 
-#' This data will not be updated automatically for any subset, merge, bin, etc functions.
-#' 
-#' @inheritParams generic_scMethrix_function
-#' @param suffix string; a suffix to add to the string
-#' @return An \code{\link{scMethrix}} object
-#' @examples
-#' data('scMethrix_data')
-#' get_coldata_stats(scMethrix_data)
-#' @export
-get_coldata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean","SD","CpGs","Sparsity")) {
-  
-  #- Input Validation --------------------------------------------------------------------------
-  .validateExp(scm)
-  .validateAssay(scm,assay)
-  .validateType(suffix,"string")
-  stats <- .validateArg(stats, get_coldata_stats,multiple.match=T)
-  
-  calc_mean <- "Mean" %in% stats
-  calc_sd <- "SD" %in% stats
-  calc_cpgs <- "CpGs" %in% stats
-  calc_sparsity <- "Sparsity" %in% stats
-  
-  #- Function code -----------------------------------------------------------------------------
-  
-  cpgs <- nrow(scm)-DelayedMatrixStats::colCounts(get_matrix(scm = scm,assay = assay), value = NA)
-  
-  stats <-
-    data.table::data.table(
-      Mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      #median = DelayedMatrixStats::colMedians(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      SD = if (calc_sd) DelayedMatrixStats::colSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      CpGs = if (calc_cpgs) cpgs,
-      Sparsity = if (calc_sparsity) cpgs/nrow(scm)
-    )
-  
-  stats <- round(stats,2)
-  
-  colnames(stats) <- paste0(colnames(stats),suffix)
-  colData <- colData(scm)[,!(colnames(colData(scm)) %in% colnames(stats)), drop=FALSE]
-  colData(scm) <- cbind(colData,stats)
-  return(scm)
-}
-
-#--- get_rowdata_stats -------------------------------------------------------------------------------------
-#' Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
-#' @details Adds the mean, median, SD, and sample count and coverage (if present) for  the \code{\link{GenomicRanges}} in an \code{\link{scMethrix}} object. This can be accessed using mcols().
-#' 
-#' This data will not be updated automatically for any subset, merge, bin, etc functions.
-#' 
-#' @inheritParams generic_scMethrix_function
-#' @inheritParams get_coldata_stats
-#' @return An \code{\link{scMethrix}} object
-#' @examples
-#' data('scMethrix_data')
-#' get_rowdata_stats(scMethrix_data)
-#' @export
-get_rowdata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean","SD","Cells","Sparsity")) {
-  
-  #- Input Validation --------------------------------------------------------------------------
-  .validateExp(scm)  
-  .validateAssay(scm,assay)
-  .validateType(suffix,"string")
-  
-  calc_mean <- "Mean" %in% stats
-  calc_sd <- "SD" %in% stats
-  calc_cells <- "Cells" %in% stats
-  calc_sparsity <- "Sparsity" %in% stats
-  
-  #- Function code -----------------------------------------------------------------------------
-  
-  cells <- ncol(scm)-DelayedMatrixStats::rowCounts(get_matrix(scm = scm,assay = assay), value = NA)
-  
-  stats <-
-    data.table::data.table(
-      Mean = if (calc_mean) DelayedMatrixStats::rowMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      #median_meth = DelayedMatrixStats::rowMedians(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      SD = if (calc_sd) DelayedMatrixStats::rowSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
-      Cells = if (calc_cells) cells,
-      Sparsity = if (calc_sparsity) (cells/ncol(scm))
-    )
-  
-  stats <- round(stats,2)
-
-  # Set SD to zero for rows with only one CpG (as NA rows and rows with one value will give zero SD), and set rows with zero cells to NA
-  if (calc_sd) {
-    stats[is.na(get("sd")), ("sd") := 0]
-    stats[cells == 0, ("sd") := NA]
-  }
-  
-  colnames(stats) <- paste0(colnames(stats),suffix)
-  rowData <- rowData(scm)[,!(colnames(rowData(scm)) %in% colnames(stats)), drop=FALSE]
-  rowData(scm) <- cbind(rowData,stats)
-  
-  return(scm)
-}
-
-#--- remove_assay -------------------------------------------------------------------------------------------
-#' Removes an assay from an \code{\link{scMethrix}} object
-#' @details This will remove an assay from the scMethrix experiment object. All transformed assays may be removed, as well as the coverage assay (since it is less useful when compared to normal WGBS data), but the score assay cannot be removed. Reduced dimensionality data will be retained even if the parent assay is removed.
-#' @inheritParams generic_scMethrix_function
-#' @return An \code{\link{scMethrix}} object
-#' @examples
-#' data('scMethrix_data')
-#' remove_assay(scMethrix_data,assay="counts")
-#' @export
-remove_assay <- function(scm=NULL, assay=NULL) {
-  
-  #- Input Validation --------------------------------------------------------------------------
-  .validateExp(scm)
-  assay <- .validateAssay(scm,assay)
-  if (assay == "score") stop("Score assay cannot be removed.", call. = FALSE)
-  
-  #- Function code -----------------------------------------------------------------------------
-  assays(scm) <- SummarizedExperiment::assays(scm)[-which(SummarizedExperiment::assayNames(scm) == assay)]
-  
-  return(scm)
-}
-
-#--- add_assay -------------------------------------------------------------------------------------------
+#---- add_assay -------------------------------------------------------------------------------------------
 #' Adds an assay from an \code{\link{scMethrix}} object
 #' @details Simple 
 #' Fulfills the same function as \code{assay(scm, assay) <- matrix}, but with additional checks.#' 
@@ -141,6 +19,28 @@ add_assay <- function(scm=NULL, new_assay ="new_assay", matrix=NULL) {
   
   #- Function code -----------------------------------------------------------------------------
   assay(scm, assay) <- matrix
+  
+  return(scm)
+}
+
+#---- remove_assay -------------------------------------------------------------------------------------------
+#' Removes an assay from an \code{\link{scMethrix}} object
+#' @details This will remove an assay from the scMethrix experiment object. All transformed assays may be removed, as well as the coverage assay (since it is less useful when compared to normal WGBS data), but the score assay cannot be removed. Reduced dimensionality data will be retained even if the parent assay is removed.
+#' @inheritParams generic_scMethrix_function
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' remove_assay(scMethrix_data,assay="counts")
+#' @export
+remove_assay <- function(scm=NULL, assay=NULL) {
+  
+  #- Input Validation --------------------------------------------------------------------------
+  .validateExp(scm)
+  assay <- .validateAssay(scm,assay)
+  if (assay == "score") stop("Score assay cannot be removed.", call. = FALSE)
+  
+  #- Function code -----------------------------------------------------------------------------
+  assays(scm) <- SummarizedExperiment::assays(scm)[-which(SummarizedExperiment::assayNames(scm) == assay)]
   
   return(scm)
 }
@@ -919,6 +819,189 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
   
 }
 
+#---- get_stats ------------------------------------------------------------------------------------------------------------
+#' Estimate descriptive statistics for each sample
+#' @details Calculate descriptive statistics (mean, median, SD) either by sample or \code{per_chr}
+#' @inheritParams generic_scMethrix_function
+#' @param per_chr boolean; Estimate stats per chromosome. Default TRUE
+#' @param ignore_chr string; list of chromosomes to ignore
+#' @param ignore_samples string; list of samples to ignore
+#' @param stats list of strings; the stats to include. Default is 'Mean', 'Median', 'SD', and 'Count'.
+#' @examples
+#' data('scMethrix_data')
+#' 
+#' #Get stats for each sample and chromosome
+#' get_stats(scMethrix_data)
+#' 
+#' #Get stats for each sample
+#' get_stats(scMethrix_data,per_chr = FALSE)
+#' @return data.table of summary stats
+#' @export
+get_stats <- function(scm = NULL, assay="score", per_chr = TRUE, verbose = TRUE, ignore_chr = NULL, ignore_samples = NULL, stats = c("Mean","Median","SD","Count")) {
+  
+  #- Input Validation --------------------------------------------------------------------------
+  .validateExp(scm)  
+  assay <- .validateAssay(scm,assay)
+  .validateType(per_chr,"boolean")
+  .validateType(verbose,"boolean")
+  .validateType(ignore_chr,c("string","null"))
+  .validateType(ignore_samples,c("string","null"))
+  stats <- .validateArg(stats, get_stats, multiple.match=T)
+  
+  Chromosome <- Sample <- x <- NULL
+  
+  calc_mean <- "Mean" %in% stats
+  calc_median <- "Median" %in% stats
+  calc_SD <- "SD" %in% stats
+  calc_count <- "Count" %in% stats
+  
+  #- Function code -----------------------------------------------------------------------------
+  if (verbose) message("Getting descriptive statistics...",start_time())
+  
+  chrs = rowRanges(scm)@seqnames
+  ends = cumsum(chrs@lengths)
+  starts = c(1, head(ends, -1) + 1)
+  # 
+  # ends <- len <- GenomeInfoDb::seqnames(scm)@lengths
+  # for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
+  # starts <- head(c(1, ends + 1), -1)
+  
+  if (per_chr) {
+    stats <- lapply(1:length(starts), function(x) {
+      data.table::data.table(
+        Chromosome = levels(seqnames(scm))[x],
+        Sample = colnames(scm),
+        Mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
+        Median = if (calc_median) DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
+        Count = if (calc_count) length(starts[x]:ends[x]) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], value=NA),
+        SD = if (calc_SD) DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE)
+      )
+    })
+    
+    stats <- data.table::rbindlist(l = stats, use.names = TRUE)
+    
+  } else {
+    stats <- data.table::data.table(
+      Sample = colnames(scm),
+      Mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), na.rm = TRUE),
+      Median = if (calc_median) DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), na.rm = TRUE),
+      Count =  if (calc_count) nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), value=NA),
+      SD = if (calc_SD) DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), na.rm = TRUE)
+    )
+  }
+  
+  if (per_chr) stats <- stats[!(Chr %in% ignore_chr)]
+  
+  stats <- stats[!(Sample %in% ignore_samples)]
+  
+  gc()
+  if (verbose) message("Finished in ", stop_time())
+  
+  return(stats)
+}
+
+#---- get_coldata_stats -------------------------------------------------------------------------------------
+#' Adds descriptive statistics to colData columns in an \code{\link{scMethrix}} object.
+#' @details Adds the mean, SD, and sample count for each sample in an \code{\link{scMethrix}} object. This can be accessed using colData(). Columns with the names of 'mean','sd', and 'cpg' will be automatically overwritten, but \code{suffix} can be used to keep multiple stats columns.
+#' 
+#' This data will not be updated automatically for any subset, merge, bin, etc functions.
+#' 
+#' @inheritParams generic_scMethrix_function
+#' @param suffix string; a suffix to add to the string
+#' @param stats list of strings; the stats to include. Default is 'Mean', 'SD', 'CpGs', and 'Sparsity'.
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' get_coldata_stats(scMethrix_data)
+#' @export
+get_coldata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean","SD","CpGs","Sparsity")) {
+  
+  #- Input Validation --------------------------------------------------------------------------
+  .validateExp(scm)
+  .validateAssay(scm,assay)
+  .validateType(suffix,"string")
+  stats <- .validateArg(stats, get_coldata_stats,multiple.match=T)
+  
+  calc_mean <- "Mean" %in% stats
+  calc_sd <- "SD" %in% stats
+  calc_cpgs <- "CpGs" %in% stats
+  calc_sparsity <- "Sparsity" %in% stats
+  
+  #- Function code -----------------------------------------------------------------------------
+  
+  cpgs <- nrow(scm)-DelayedMatrixStats::colCounts(get_matrix(scm = scm,assay = assay), value = NA)
+  
+  stats <-
+    data.table::data.table(
+      Mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      #median = DelayedMatrixStats::colMedians(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      SD = if (calc_sd) DelayedMatrixStats::colSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      CpGs = if (calc_cpgs) cpgs,
+      Sparsity = if (calc_sparsity) cpgs/nrow(scm)
+    )
+  
+  stats <- round(stats,2)
+  
+  colnames(stats) <- paste0(colnames(stats),suffix)
+  colData <- colData(scm)[,!(colnames(colData(scm)) %in% colnames(stats)), drop=FALSE]
+  colData(scm) <- cbind(colData,stats)
+  return(scm)
+}
+
+#--- get_rowdata_stats -------------------------------------------------------------------------------------
+#' Adds descriptive statistics to metadata columns in an \code{\link{scMethrix}} object.
+#' @details Adds the mean, median, SD, and sample count and coverage (if present) for  the \code{\link{GenomicRanges}} in an \code{\link{scMethrix}} object. This can be accessed using mcols().
+#' 
+#' This data will not be updated automatically for any subset, merge, bin, etc functions.
+#' 
+#' @inheritParams generic_scMethrix_function
+#' @inheritParams get_coldata_stats
+#' @param stats list of strings; the stats to include. Default is 'Mean', 'SD', 'Cells', and 'Sparsity'.
+#' @return An \code{\link{scMethrix}} object
+#' @examples
+#' data('scMethrix_data')
+#' get_rowdata_stats(scMethrix_data)
+#' @export
+get_rowdata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean","SD","Cells","Sparsity")) {
+  
+  #- Input Validation --------------------------------------------------------------------------
+  .validateExp(scm)  
+  .validateAssay(scm,assay)
+  .validateType(suffix,"string")
+  
+  calc_mean <- "Mean" %in% stats
+  calc_sd <- "SD" %in% stats
+  calc_cells <- "Cells" %in% stats
+  calc_sparsity <- "Sparsity" %in% stats
+  
+  #- Function code -----------------------------------------------------------------------------
+  
+  cells <- ncol(scm)-DelayedMatrixStats::rowCounts(get_matrix(scm = scm,assay = assay), value = NA)
+  
+  stats <-
+    data.table::data.table(
+      Mean = if (calc_mean) DelayedMatrixStats::rowMeans2(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      #median_meth = DelayedMatrixStats::rowMedians(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      SD = if (calc_sd) DelayedMatrixStats::rowSds(get_matrix(scm = scm,assay = assay), na.rm = TRUE),
+      Cells = if (calc_cells) cells,
+      Sparsity = if (calc_sparsity) (cells/ncol(scm))
+    )
+  
+  stats <- round(stats,2)
+  
+  # Set SD to zero for rows with only one CpG (as NA rows and rows with one value will give zero SD), and set rows with zero cells to NA
+  if (calc_sd) {
+    stats[is.na(get("sd")), ("sd") := 0]
+    stats[cells == 0, ("sd") := NA]
+  }
+  
+  colnames(stats) <- paste0(colnames(stats),suffix)
+  rowData <- rowData(scm)[,!(colnames(rowData(scm)) %in% colnames(stats)), drop=FALSE]
+  rowData(scm) <- cbind(rowData,stats)
+  
+  return(scm)
+}
+
 # #--- expand_scMethrix -----------------------------------------------------------------------------------------------------
 # #' Expands an \code{\link{scMethrix}} object to match input \code{regions}.
 # #' @details Takes \code{\link{scMethrix}} object and adds CpGs to the object
@@ -951,86 +1034,6 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #   return(scm)
 # 
 # }
-
-#--- get_stats ------------------------------------------------------------------------------------------------------------
-#' Estimate descriptive statistics for each sample
-#' @details Calculate descriptive statistics (mean, median, SD) either by sample or \code{per_chr}
-#' @inheritParams generic_scMethrix_function
-#' @param per_chr boolean; Estimate stats per chromosome. Default TRUE
-#' @param ignore_chr string; list of chromosomes to ignore
-#' @param ignore_samples string; list of samples to ignore
-#' @examples
-#' data('scMethrix_data')
-#' 
-#' #Get stats for each sample and chromosome
-#' get_stats(scMethrix_data)
-#' 
-#' #Get stats for each sample
-#' get_stats(scMethrix_data,per_chr = FALSE)
-#' @return data.table of summary stats
-#' @export
-get_stats <- function(scm = NULL, assay="score", per_chr = TRUE, verbose = TRUE, ignore_chr = NULL, ignore_samples = NULL, stats = c("Mean","Median","SD","Count")) {
-
-  #- Input Validation --------------------------------------------------------------------------
-  .validateExp(scm)  
-  assay <- .validateAssay(scm,assay)
-  .validateType(per_chr,"boolean")
-  .validateType(verbose,"boolean")
-  .validateType(ignore_chr,c("string","null"))
-  .validateType(ignore_samples,c("string","null"))
-  stats <- .validateArg(stats, get_stats, multiple.match=T)
-  
-  Chr <- Sample_Name <- x <- NULL
-  
-  calc_mean <- "Mean" %in% stats
-  calc_median <- "Median" %in% stats
-  calc_SD <- "SD" %in% stats
-  calc_count <- "Count" %in% stats
-  
-  #- Function code -----------------------------------------------------------------------------
-  if (verbose) message("Getting descriptive statistics...",start_time())
-
-  chrs = rowRanges(scm)@seqnames
-  ends = cumsum(chrs@lengths)
-  starts = c(1, head(ends, -1) + 1)
-  # 
-  # ends <- len <- GenomeInfoDb::seqnames(scm)@lengths
-  # for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
-  # starts <- head(c(1, ends + 1), -1)
-
-  if (per_chr) {
-    stats <- lapply(1:length(starts), function(x) {
-      data.table::data.table(
-        Chr = levels(seqnames(scm))[x],
-        Sample = colnames(scm),
-        Mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
-        Median = if (calc_median) DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
-        Count = if (calc_count) length(starts[x]:ends[x]) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], value=NA),
-        SD = if (calc_SD) DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE)
-      )
-    })
-
-    stats <- data.table::rbindlist(l = stats, use.names = TRUE)
-    
-  } else {
-    stats <- data.table::data.table(
-      Sample = colnames(scm),
-      Mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), na.rm = TRUE),
-      Median = if (calc_median) DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), na.rm = TRUE),
-      Count =  if (calc_count) nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), value=NA),
-      SD = if (calc_SD) DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), na.rm = TRUE)
-    )
-  }
-  
-  if (per_chr) stats <- stats[!(Chr %in% ignore_chr)]
-  
-  stats <- stats[!(Sample %in% ignore_samples)]
-  
-  gc()
-  if (verbose) message("Finished in ", stop_time())
-  
-  return(stats)
-}
 
 #--- remove_uncovered ---------------------------------------------------------------------------------------
 #' Remove loci that are uncovered across all samples
