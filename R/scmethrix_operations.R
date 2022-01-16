@@ -700,10 +700,11 @@ convert_scMethrix <- function(scm = NULL, type = c(NA,"HDF5","memory"), h5_dir =
   
     if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
     
-    scm <- create_scMethrix(assays = assays(scm), h5_dir = h5_dir,
-                            rowRanges = rowRanges(scm), is_hdf5 = TRUE, genome_name = scm@metadata$genome,
-                            colData = scm@colData, chrom_size = scm@metadata$chrom_sizes, 
-                            desc = scm@metadata$descriptive_stats, replace = TRUE, verbose = verbose)
+    metadata <- metadata(scm)
+    metadata <- metadata[names(metadata) == "is_h5"]
+    
+    scm <- scMethrix(assays = assays(scm), h5_dir = h5_dir, rowRanges = rowRanges(scm), is_h5 = TRUE, 
+                     colData = colData(scm), replace = TRUE, verbose = verbose)
   } else {
     
     if (verbose) message("Converting HDF5 scMethrix to in-memory", start_time())

@@ -105,13 +105,13 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
   #TODO: Need to export create_methrix function in the methrix package to use this
   if (is_h5(scm)) {
     # m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="counts"),
-    #                                  cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = TRUE, genome_name = scm@metadata$genome,
+    #                                  cpg_loci = rrng[, .(chr, start, strand)], is_h5 = TRUE, genome = scm@metadata$genome,
     #                                  col_data = scm@colData, h5_dir = h5_dir, ref_cpg_dt = ref_cpgs_chr,
     #                                  chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
   } else {
     # m_obj <- methrix::create_methrix(beta_mat = get_matrix(scm,type="score"), cov_mat = get_matrix(scm,type="counts"),
-    #                                  cpg_loci = rrng[, .(chr, start, strand)], is_hdf5 = FALSE, 
-    #                                  genome_name = scm@metadata$genome, col_data = scm@colData, 
+    #                                  cpg_loci = rrng[, .(chr, start, strand)], is_h5 = FALSE, 
+    #                                  genome = scm@metadata$genome, col_data = scm@colData, 
     #                                  ref_cpg_dt = ref_cpgs_chr, chrom_sizes = chrom_sizes)#, desc = descriptive_stats)
   }
   

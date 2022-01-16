@@ -270,17 +270,14 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = 
   gr$n_cpgs <- n_cpgs
   gr$rid <- NULL
 
-  
-  
   if (verbose) message("Rebuilding experiment...")
   
   if (is_h5(scm)) {
-    m_obj <- create_scMethrix(assays = assays, rowRanges=gr, is_hdf5 = TRUE, 
-                              h5_dir = h5_dir, genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),
-                              replace = replace)  
+    m_obj <- scMethrix(assays = assays, rowRanges=gr, colData = colData(scm), is_h5 = TRUE, h5_dir = h5_dir, 
+                       metadata <- metadata(scm), replace = replace, verbose = verbose)  
   } else {
-    m_obj <- create_scMethrix(assays = assays, rowRanges=gr, is_hdf5 = FALSE, 
-                              genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm))
+    m_obj <- scMethrix(assays = assays, rowRanges=gr, colData = colData(scm), is_h5 = FALSE, 
+                       metadata <- metadata(scm), replace = replace, verbose = verbose) 
   }
   
   if (verbose) message("Experiment binned for ", n_regions," regions containing ", length(m_obj)," total bins in ", stop_time())
@@ -448,12 +445,12 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = 
 #   if (verbose) message("Rebuilding experiment...")
 #   
 #   if (is_h5(scm)) {
-#     m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_hdf5 = TRUE, 
-#                               h5_dir = h5_dir, genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),
+#     m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_h5 = TRUE, 
+#                               h5_dir = h5_dir, genome = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),
 #                               replace = replace)  
 #   } else {
-#     m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_hdf5 = FALSE, 
-#                               genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),)
+#     m_obj <- create_scMethrix(assays = assays, rowRanges=rrng, is_h5 = FALSE, 
+#                               genome = scm@metadata$genome,desc = scm@metadata$desc,colData = colData(scm),)
 #   }
 #   
 #   if (verbose) message("Experiment binned for ",length(regions)," regions containing ",length(m_obj)," total bins in ",stop_time())
@@ -576,14 +573,13 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   if (verbose) message("Rebuilding experiment...")
   
   if (is_h5(scm)) {
-    m_obj <- create_scMethrix(assays = assays, rowRanges=rowRanges(scm), is_hdf5 = TRUE, 
-                              h5_dir = h5_dir, genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData,
-                              replace = replace)  
+    m_obj <- scMethrix(assays = assays, rowRanges = rowRanges(scm), colData = colData, is_h5 = TRUE, h5_dir = h5_dir, 
+                       metadata <- metadata(scm), replace = replace, verbose = verbose)  
   } else {
-    m_obj <- create_scMethrix(assays = assays, rowRanges=rowRanges(scm), is_hdf5 = FALSE, 
-                              genome_name = scm@metadata$genome,desc = scm@metadata$desc,colData = colData,)
+    m_obj <- scMethrix(assays = assays, rowRanges = rowRanges(scm), colData = colData, is_h5 = FALSE, 
+                       metadata <- metadata(scm), replace = replace, verbose = verbose) 
   }
-  
+
   if (verbose) message("Experiment collapsed into ", nrow(colData)," sample groups in ",stop_time())
   
   return (m_obj)

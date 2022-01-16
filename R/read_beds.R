@@ -12,11 +12,11 @@
 #' @param colData data.frame; information about each samples. Default is a blank \code{data.frame} with row.names corresponding to each sample.
 #' @param stranded boolean; Whether in input data is stranded. Default FALSE
 #' @param strand_collapse boolean; whether to collapse the crick strand into watson strand. Default FALSE
-#' @param genome_name string; Name of genome. Default hg19
+#' @param genome string; Name of genome. Default = NULL
 #' @param batch_size integer; Max number of files to hold in memory at once. Default 20
 #' @param n_threads integer; number of threads to use. Default 1.
 #' Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.
-#' @param h5 boolean; Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}
+#' @param is_h5 boolean; Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}
 #' @param h5_dir string; directory to store H5 based object. This can be NULL and the experiment can be manually saved later
 #' @param h5_temp string; temporary directory to store hdf5
 #' @param desc string; Description of the experiment
@@ -46,8 +46,8 @@
 # Must generate an index CpG file first:
 #   sort-bed [input files] | bedops --chop 1 --ec - > CpG_index
 
-read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg19", batch_size = 20, n_threads = 1, 
-                      h5 = FALSE, h5_dir = NULL, h5_temp = NULL, desc = NULL, verbose = TRUE, keep_cov = T,
+read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome = NULL, batch_size = 20, n_threads = 1, 
+                      is_h5 = FALSE, h5_dir = NULL, h5_temp = NULL, metadata = NULL, verbose = TRUE, keep_cov = T,
                       zero_based = FALSE, replace = FALSE, fill = TRUE,
                       pipeline = c("Custom","Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"),
                       stranded = FALSE, strand_collapse = FALSE, chr_idx = NULL, start_idx = NULL, end_idx = NULL, beta_idx = NULL,
@@ -58,13 +58,13 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   .validateType(files,"string")
   #.validateType(ref_cpgs)
   #.validateType(colData,"dataframe")
-  .validateType(genome_name,"string")
+  .validateType(genome,c("string","null"))
   .validateType(batch_size,"integer")
   batch_size <- max(min(length(files),batch_size),1)
   n_threads <- .validateThreads(n_threads)
-  .validateType(h5,"boolean")
+  .validateType(is_h5,"boolean")
   .validateType(h5_dir,c("string","null"))
-  .validateType(desc,c("string","null"))
+  .validateType(metadata,c("list","null"))
   .validateType(verbose,"boolean")
   .validateType(zero_based,"boolean")
   .validateType(replace,"boolean")
@@ -188,7 +188,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
     return(cd)
   }
 
-  if (h5) {
+  if (is_h5) {
     reads <- read_hdf5_data(files = files, ref_cpgs = ref_cpgs, col_list = col_list, 
                                                 n_threads = n_threads, h5_temp = h5_temp, batch_size = batch_size,
                                                 zero_based = zero_based, verbose = verbose, strand_collapse = strand_collapse)
@@ -202,14 +202,12 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome_name = "hg1
   message("Building scMethrix object")
   if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
   ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
-  chrom_size = sapply(GenomicRanges::coverage(ref_cpgs), function(x) {length(x)-x@lengths[1]})
   colData <- parse_colData(colData = colData, reads = reads, verbose = verbose)
   
   gc()
 
-  m_obj <- create_scMethrix(assays = reads, 
-                            rowRanges=ref_cpgs, is_hdf5 = h5, genome_name = genome_name, h5_dir = h5_dir,
-                            replace = replace, desc = desc, colData = colData, chrom_size = chrom_size )
+  m_obj <- scMethrix(assays = reads, rowRanges = ref_cpgs, is_h5 = is_h5, genome = genome, h5_dir = h5_dir,
+                     replace = replace, metadata = metadata, colData = colData)
   
   gc()
   message("Object built!\n")
