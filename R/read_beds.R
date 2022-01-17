@@ -19,7 +19,7 @@
 #' @param is_h5 boolean; Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}
 #' @param h5_dir string; directory to store H5 based object. This can be NULL and the experiment can be manually saved later
 #' @param h5_temp string; temporary directory to store hdf5
-#' @param desc string; Description of the experiment
+#' @param metadata named [list()] of strings; list of relevant experiment data. Elements with the name of 'is_h5' and 'genome' will be replaced by the arguments above. Default = NULL.
 #' @param verbose boolean; flag to output messages or not.
 #' @param zero_based boolean; flag for whether the input data is zero-based or not
 #' @param replace boolean; flag for whether to delete the contents of h5_dir before saving

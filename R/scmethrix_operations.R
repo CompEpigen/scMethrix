@@ -14,7 +14,7 @@ add_assay <- function(scm=NULL, new_assay ="new_assay", matrix=NULL) {
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   
-  if (!.validateAssay(scm,new_assay,check.absent=T))
+  if (!.validateAssay(scm,new_assay,is.absent=T))
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   
   #- Function code -----------------------------------------------------------------------------
@@ -891,7 +891,7 @@ get_stats <- function(scm = NULL, assay="score", per_chr = TRUE, verbose = TRUE,
     )
   }
   
-  if (per_chr) stats <- stats[!(Chr %in% ignore_chr)]
+  if (per_chr) stats <- stats[!(Chromosome %in% ignore_chr)]
   
   stats <- stats[!(Sample %in% ignore_samples)]
   

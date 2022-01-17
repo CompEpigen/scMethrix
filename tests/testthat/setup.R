@@ -12,11 +12,11 @@ h5_dir <- tempfile("scm_h5_", tmpdir = tempdir())
 
 colData <- DataFrame(row.names = get_sample_name(files), Group = rep(1:2,2))
 
-col_list <- parse_source_idx(chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
-scm.h5 <- read_beds(files,is_h5=TRUE,h5_dir=h5_dir,replace=TRUE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5, colData = colData)
-scm.mem <- read_beds(files,is_h5=FALSE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5, colData = colData)
-
-#scm.mem <- read_beds(files,h5=FALSE,chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5)
+col_list <- parse_source_idx(chr_idx = 1, start_idx = 2, end_idx = 3, beta_idx = 4, cov_idx = 5)
+scm.h5  <- read_beds(files, is_h5 = TRUE,h5_dir = h5_dir, replace = TRUE, genome = "hg19",
+                     chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5, colData = colData)
+scm.mem <- read_beds(files, is_h5=FALSE, genome = "hg19",                     
+                     chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5, colData = colData)
 
 mcols(scm.h5)$CpG <- mcols(scm.mem)$CpG <- 1:nrow(scm.mem)
 

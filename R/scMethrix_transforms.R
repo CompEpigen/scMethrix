@@ -21,7 +21,7 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
   .validateType(trans, "function")
   .validateType(h5_temp, c("string","null"))
   
-  if (!.validateAssay(scm,new_assay,check.absent=T))
+  if (!.validateAssay(scm,new_assay,is.absent=T))
     #new_assay %in% SummarizedExperiment::assayNames(scm)) 
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   

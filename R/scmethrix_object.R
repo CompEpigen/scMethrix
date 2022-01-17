@@ -12,10 +12,10 @@
 #' coerce,GRset,scMethrix-method,scMethrix-method coerce
 #' coerce,SingleCellExperiment,scMethrix-method,scMethrix-method coerce
 #' @section Coercion:
-#' An scMethrix object can be coerced from a [minfi::GenomicRatioSet()] or [SingleCellExperiment::SingleCellExperiment()] using the [methods::as()] function. However, coverage information cannot be recovered from a [minfi::GenomicRatioSet()].
+#' An scMethrix object can be coerced from a [minfi::GenomicRatioSet()] or [SingleCellExperiment::SingleCellExperiment()] using the [methods::as()] function. However, due to limitations of [minfi::GenomicRatioSet()], coverage information cannot be recovered from a [minfi::GenomicRatioSet()]. As well, the output [scMethrix()] object will be in HDF5 format by default.
 #' \preformatted{(x, "scMethrix")}
-#' @importFrom stats median quantile sd
-#' @importFrom utils data head write.table menu
+#' @importFrom stats median quantile sd density
+#' @importFrom utils data head write.table menu browseURL
 #' @importFrom methods is as new
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #' @seealso scMethrix
@@ -38,7 +38,7 @@ scMethrix <- function(assays = list(), colData = S4Vectors::DataFrame(), rowRang
   # Ensure consistent metadata
   if (is.null(genome) && "genome" %in% names(metadata)) genome <- metadata[["genome"]]
   metadata <- metadata[!names(metadata) == "is_h5"]
-  metadata <- list(is_h5 = is_h5, genome = genome, metadata = metadata)
+  metadata <- c(list(is_h5 = is_h5, genome = genome), metadata)
   
   # Save the experiment into memory or HDF5 format
   if (is_h5) {
@@ -65,27 +65,17 @@ scMethrix <- function(assays = list(), colData = S4Vectors::DataFrame(), rowRang
 #' @describeIn scMethrix-class Show method for an [scMethrix()] object
 setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   
-  feature.names <- NULL#row.names(rowData(object))
-  # if (!is.null(feature.names)) feature.names <- paste0(substr(feature.names[1:5],1,8),"...",collapse=" l ")
-  sample.names <- NULL#row.names(colData(object))
-  # if (!is.null(sample.names)) {
-  #   sample.names <- substr(row.names(colData(object))[1:5],1,8)
-  #   sample.names <- gsub('[^a-zA-Z]*$','',sample.names)
-  #   sample.names <- paste0(sample.names,"...",collapse=" l ")
-  #   sample.names <- paste0(" (",sample.names,")")
-  # }
-  
   h5 <- is_h5(object)
-  if (h5) h5 = path(score(object))
+  if (h5) h5 <- path(score(object))
   
   cat(paste0("An object of class ", class(object), "\n"))
-  cat(paste0("   CpGs: ", format(nrow(object), big.mark = ","),feature.names,"\n"))
-  cat(paste0("   Samples: ", ncol(object),sample.names,"\n"))
+  cat(paste0("   CpGs: ", format(nrow(object), big.mark = ","),"\n"))
+  cat(paste0("   Samples: ", ncol(object),"\n"))
   cat(paste0("   Assays: ", (paste(SummarizedExperiment::assayNames(object),collapse=", ")),"\n"))
   cat(paste0("   Reduced dims: ", (paste(SingleCellExperiment::reducedDimNames(object),collapse=", ")),"\n"))
   cat(paste0("   HDF5: ", h5, "\n"))
-  cat(paste0("   Ref.Genome: ", object@metadata$genome, "\n"))
-  cat(paste0("   Physical size: ", format(utils::object.size(object), units = "auto"), "\n"))
+  cat(paste0("   Ref.Genome: ", S4Vectors::metadata(object)$genome, "\n"))
+  cat(paste0("   Memory size: ", format(utils::object.size(object), units = "auto"), "\n"))
 })
 
 #---- showMore ---------------------------------------------------------------------------------------------------------
@@ -113,8 +103,8 @@ setMethod(f = "showMore", signature = "scMethrix", definition = function(object)
   cat(paste0("   Assays: ", (paste(SummarizedExperiment::assayNames(object),collapse=", ")),"\n"))
   cat(paste0("   Reduced dims: ", (paste(SingleCellExperiment::reducedDimNames(object),collapse=", ")),"\n"))
   cat(paste0("   HDF5: ", h5, "\n"))
-  cat(paste0("   Ref.Genome: ", object@metadata$genome, "\n"))
-  cat(paste0("   Physical size: ", format(utils::object.size(object), units = "auto"), "\n"))
+  cat(paste0("   Ref.Genome: ", S4Vectors::metadata(object)$genome, "\n"))
+  cat(paste0("   Memory size: ", format(utils::object.size(object), units = "auto"), "\n"))
 })
 
 #---- score ------------------------------------------------------------------------------------------------------------
@@ -123,7 +113,7 @@ setMethod(f = "score", signature = "scMethrix", definition = function(x) {get_ma
 
 #---- counts -----------------------------------------------------------------------------------------------------------
 #' @describeIn scMethrix-class Gets the assay named "counts"
-setMethod(f = "counts", signature = "scMethrix", definition = function(object) {get_matrix(x,"counts")})
+setMethod(f = "counts", signature = "scMethrix", definition = function(object) {get_matrix(object,"counts")})
 
 #---- has_cov ----------------------------------------------------------------------------------------------------------
 setGeneric("has_cov", function(object) standardGeneric("has_cov"))
@@ -157,7 +147,7 @@ setAs("GenomicRatioSet", "scMethrix", function(from) {
   if (!is.null(colData(from))) {
     colData <- colData(from)
   } else {
-    colData <- data.frame(row.names = colnames(getBeta(from)))
+    colData <- data.frame(row.names = colnames(minfi::getBeta(from)))
   }
   
   beta <- minfi::getBeta(from)
@@ -165,9 +155,10 @@ setAs("GenomicRatioSet", "scMethrix", function(from) {
   colData <- colData[ord,,drop=FALSE]
   
   scMethrix(assays = list(score = beta), 
-                   colData = colData(from), 
-                   rowRanges = rowRanges(from), 
-                   genome_name = minfi::annotation(from)[["annotation"]])
+            colData = colData(from), 
+            rowRanges = rowRanges(from), 
+            is_h5 = TRUE,
+            genome = minfi::annotation(from)[["annotation"]])
 })
 
 #' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
@@ -235,7 +226,6 @@ setGeneric("is_h5", function(object) standardGeneric("is_h5"))
 #' @section is_h5():
 #'  This checks the metadata whether the experiment is in HDF5 format. This is found from the metadata attribute \code{is_h5}. A secondary check of all assays also occurs to ensure they are all of appropriate type. An error will be thrown if any assays are the wrong type. This should not occur during normal usage of the package, but may be caused by manual manipulation of assays. If this does occur, [convert_scMethrix()] should be used to restore consistency.
 setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   {
-  .validateExp(object)
 
   exp_type = if (object@metadata$is_h5) c("HDF5Matrix","DelayedMatrix") else "matrix"
   for (name in SummarizedExperiment::assayNames(object)) {
@@ -246,6 +236,9 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
   
   return (object@metadata$is_h5)
 })
+
+
+
 
 #---- generic_scMethrix_function -----------------------------------------------------------------------------
 #' Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package

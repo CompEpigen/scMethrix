@@ -314,6 +314,8 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
     }
   }
   
+  Sample <- Phenotype <- Count <- Sites <- Chromosome <- . <- NULL
+  
   #- Function code -----------------------------------------------------------------------------
   
   chrs = rowRanges(scm)@seqnames
