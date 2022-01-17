@@ -1,5 +1,5 @@
-#--- .validateArg -------------------------------------------------------------------------------------------
-#' Validates arguments. Allows partial matching.
+#---- .validateArg -------------------------------------------------------------------------------------------
+#' Validates inputs with multiple valid arguments. Allows partial matching.
 #' @details Check the parent function input arguments to see whether the inputted value is part of the set. Will return a formatted error message with the incorrect variable name and all the acceptable inputs.
 #' 
 #' To use, it can be called as such:
@@ -10,29 +10,33 @@
 #' 
 #' }
 #' 
-#' If the argument for values is acceptable (e.g. "apple" or "ban"), it will return the matched string.
+#' If the argument for values is acceptable (e.g. "apple" or "ban"), it will return the matched string. If there is multiple matches (e.g., 'file' could match to c('file','filetype','rawfile')), it will still match if the strings exactly match.
 #' 
 #' This can be used with pipes, but will give erroneous names for the input variable
 #' 
-#' @param parent closure; the parent function in which to check the input
+#' @param choices function definition or list of strings; This can be a function definition, and the argument with the identical name as the inputted 'arg' variable will be used, or can be a list of strings. If NULL, this will automatically assume that the parent function for which this function is called will be the function definition.
 #' @param arg variable; the variable in which to check
 #' @param ignore.case boolean; ignores case of the choices
 #' @param partial.match boolean; whether to allow partial matching
 #' @param multiple.match boolean; when to allow multiple input args. By default (FALSE), only the first input arg is used.
 #' @return arg, if the value is in the function definition.
 #' @export
-.validateArg <- function(arg, parent = NULL, ignore.case = T, partial.match = T, multiple.match = F) {
+.validateArg <- function(arg, choices = NULL, ignore.case = TRUE, partial.match = TRUE, multiple.match = FALSE) {
 
+  #- Input Validation --------------------------------------------------------------------------
   #.validateType(ignore.case,"boolean")
+  #.validateType(partial.match,"boolean")
+  #.validateType(multiple.match,"boolean")
 
-  #- Function code -----------------------------------------------------------------------------
-  if (is.null(parent)) {
-    parent <- deparse(sys.calls()[[sys.nframe()-1]])
-    parent <- unlist(strsplit(parent, "[(]"))[[1]]
+  if (is.null(choices)) {
+    choices <- deparse(sys.calls()[[sys.nframe()-1]])
+    choices <- unlist(strsplit(choices, "[(]"))[[1]]
+  } else if (is.function(choices)) {
+    name = substitute(arg)
+    choices <- eval(formals(choices)[[name]])
   }
-
-  name = substitute(arg)
-  choices <- eval(formals(parent)[[name]])
+  
+  #- Function code -----------------------------------------------------------------------------
   
   if (!multiple.match) {
     arg <- head(arg,1)
@@ -58,8 +62,8 @@
       }
     }
     
-    if (sum(m) != 1) stop(paste0("Invalid arg input for '",paste(name),"'. Found: '",arg[n],"'; Must match one of: '",
-                                 paste0(eval(formals(parent)[[name]]), collapse="', '"),"'"), call. = FALSE)
+    if (sum(m) != 1) stop(paste0("Invalid arg input for '",paste(name),"'. Found: '",arg[n],"'; Must match: '",
+                                 paste0(choices, collapse="', '"),"'"), call. = FALSE)
 
     matches <- append(matches, choices[which(m)])
     
@@ -68,27 +72,34 @@
   return(matches)
 }
 
-#--- .validateAssay -----------------------------------------------------------------------------------------
-#' Validates an assay is in the object. Allows partial pattern.
-#' @details Check the assays in an scMethrix object and partial matches 
-#' @param scm scMethrix; the experiment object
+#---- .validateAssay -----------------------------------------------------------------------------------------
+#' Validates an assay is in an [scMethrix()] experiment, using partial pattern matching.
+#' 
+#' This function checks whether an assay is present or absent within an experiment object, and will throw either an error or return a boolean based on results.
+#' @param scm [scMethrix()]; the experiment object
 #' @param assay string; the name of the assay
-#' @param check.absent boolean; Checks if the assay is present
+#' @param is.absent boolean; flag to check if the assay is absent (is.absent=TRUE), instead of present (is.absent=FALSE). Default = FALSE.
+#' @param throws boolean; If validate fails, throw an error (throws=TRUE) or return FALSE (throws=FALSE). Default = TRUE.
 #' @return string or boolean; if \code{check.absent == T}, the name of the matched assay or error if it doesn't exist. If \code{check_assay == F}, the boolean value for if the assay exists in the experiment
 #' @export
-.validateAssay <- function(scm = NULL, assay = NULL, check.absent = F) {
+.validateAssay <- function(scm = NULL, assay = NULL, is.absent = FALSE, throws = TRUE) {
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateType(assay,"string")
-  .validateType(check.absent, "boolean")
+  .validateType(is.absent, "boolean")
   
   #- Function code -----------------------------------------------------------------------------  
-  if (!check.absent) {
+  if (!is.absent) {
     assay <- tryCatch(
       match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm)),
-      error=function(cond) 
-        stop(paste0("Invalid assay. No assay named '",assay,"' found in the experiment"), call. = FALSE)
+      error=function(cond) {
+        if (throws) {
+          stop(paste0("Invalid assay. No assay named '",assay,"' found in the experiment"), call. = FALSE)
+        } else {
+          return (invisible(FALSE))
+        }
+      }
     )
     return(invisible(assay))
   } else {
@@ -96,10 +107,10 @@
   }
 }
 
-#--- .validateType ------------------------------------------------------------------------------------------
+#---- .validateType ------------------------------------------------------------------------------------------
 #' Validates an input type
 #' @param input the variable(s) to check. List structures are accepted and will be parsed. The input must be stored in a variable before passing to the function.
-#' @param type list of string; the types to check for.
+#' @param type [list()] of strings; the types to check for.
 #' @param throws boolean; flag should the function throw an error (throws=TRUE) or return FALSE (throws=FALSE) if the validate fails. Default TRUE.
 #' @param recursive_sub string; This is an internal variable used when recursively looping through lists. Do not modify the value.
 #' @return invisible(TRUE) if validation passes. Error if validation fails (with throws=T) or invisible(FALSE) (with throws=T)
@@ -109,10 +120,14 @@
 #' print(.validateType(testvar,"string"))          # TRUE
 #'
 #' testvar = 5
-#' .validateType(testvar,"string")                 # ERROR
-#'
+#' tryCatch({
+#'   .validateType(testvar,"string")               # ERROR
+#' }, error = function(e) {
+#'   print("Error!")
+#' })
+#' 
 #' testvar = 5
-#' print(.validateType(testvar,"string",throws=F)) # FALSE
+#' print(.validateType(testvar,"string",throws=FALSE)) # FALSE
 #'
 #' testvar = list("test","test2")
 #' print(.validateType(testvar,"string","list"))   # TRUE
@@ -204,14 +219,14 @@
   return(invisible(valid))
 }
 
-#--- .validateExp -------------------------------------------------------------------------------------------
+#---- .validateExp -------------------------------------------------------------------------------------------
 #' Validates to see if object is a proper scMethrix object
-#' @param scm scMethrix; the experiment object to test
+#' @param scm [scMethrix()]; the experiment object to test
 #' @param h5_dir string; the directory of an experiment object
 #' @param throws boolean; whether to throw an error on a missing experiment. Will return FALSE on missing otherwise.
 #' @return invisible(TRUE), if the object is valid. Error or FALSE if not.
 #' @export
-.validateExp <- function(scm = NULL, h5_dir = NULL, throws = T) {
+.validateExp <- function(scm = NULL, h5_dir = NULL, throws = TRUE) {
   
   if (!is.null(h5_dir)) {
     
@@ -238,7 +253,7 @@
   return(invisible(TRUE))
 }
 
-#--- .validateValue -----------------------------------------------------------------------------------------
+#---- .validateValue -----------------------------------------------------------------------------------------
 #' Validates numeric values based on some experession
 #' @param value numeric; the value to test
 #' @param ... string; the expressions to test
@@ -248,7 +263,7 @@
   
   if (!is.null(value) && !is.na(value)) {
     
-    if (!.validateType(value,c("numeric","integer"),throws=F))
+    if (!.validateType(value,c("numeric","integer"),throws = FALSE))
       stop("Invalid value for '",substitute(value),"'. Must be of 'numeric' or 'integer' type.")
     
     conds = c()
@@ -268,7 +283,7 @@
   return(invisible(TRUE))
 }
 
-#--- .validateThreads ---------------------------------------------------------------------------------------
+#---- .validateThreads ---------------------------------------------------------------------------------------
 #' Validates the number of threads for the session. Windows can only support one thread
 #' @param n_threads numeric; the number of threads
 #' @return integer; 1 if windows, or some number of threads between 1 and parallel::detectCores
@@ -277,10 +292,10 @@
   .validateType(n_threads,"integer")
   
   # if (grepl("Windows", Sys.getenv("OS"))) {
-  #   if (n_threads > 1) warning("Invalid threads. Parallel processing is not enabled for non-POSIX system (e.g., Windows). ")
-  #   return(0)
-  # } 
-  
+  #   if (n_threads > 1) warning("Invalid threads. Parallel processing is not enabled for non-POSIX system (e.g., Windows). Defaulting to 1.")
+  #   return(1)
+  # }
+
   return(max(min(parallel::detectCores(),n_threads),1))
 }
 
@@ -288,8 +303,7 @@
 #'
 #' Rails-inspired helper that checks if vector values are "empty", i.e. if it's: \code{NULL}, zero-length, \code{NA}, \code{NaN}, \code{FALSE}, an empty string or \code{0}. Note that unlike its native R \code{is.<something>} sibling functions, \code{is.empty} is vectorised (hence the "values").
 #' 
-#' Take from: Rapporter\\rapportools <https://github.com/Rapporter/rapportools> 
-
+#' @references Take from Rapporter\\rapportools <https://github.com/Rapporter/rapportools> 
 #' @param x an object to check its emptiness
 #' @param trim trim whitespace? (\code{TRUE} by default)
 #' @param ... additional arguments for \code{\link{sapply}}
@@ -332,8 +346,7 @@ is.empty <- function(x, trim = TRUE, ...) {
 #'
 #' Removes leading and/or trailing space(s) from a character vector. By default, it removes both leading and trailing spaces.
 #' 
-#' Take from: Rapporter\\rapportools <https://github.com/Rapporter/rapportools> 
-#' 
+#' @references Take from Rapporter\\rapportools <https://github.com/Rapporter/rapportools> 
 #' @param x a character vector which values need whitespace trimming
 #' @param what which part of the string should be trimmed. Defaults to \code{both} which removes trailing and leading spaces. If \code{none}, no trimming will be performed.
 #' @param space.regex a character value containing a regex that defines a space character
@@ -355,11 +368,11 @@ trim.space <- function(x, what = c('both', 'leading', 'trailing', 'none'), space
 #' Vectorised String Replacement
 #'
 #' A simple wrapper for \code{\link{gsub}} that replaces all patterns from \code{pattern} argument with ones in \code{replacement} over vector provided in argument \code{x}.
+#' @references See original thread for more details \url{http://stackoverflow.com/a/6954308/457898}. Special thanks to user Jean-Robert for this one!
 #' @param pattern see eponymous argument for \code{\link{gsub}} function
 #' @param replacement see eponymous argument for \code{\link{gsub}} function
 #' @param x see eponymous argument for \code{\link{gsub}} function
 #' @param ... additional arguments for \code{\link{gsub}} function
-#' @references See original thread for more details \url{http://stackoverflow.com/a/6954308/457898}. Special thanks to user Jean-Robert for this one!
 #' @return a character vector with string replacements
 vgsub <- function(pattern, replacement, x, ...){
   for(i in 1:length(pattern))
