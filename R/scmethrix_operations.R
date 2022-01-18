@@ -941,7 +941,7 @@ get_coldata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean",
       Sparsity = if (calc_sparsity) cpgs/nrow(scm)
     )
   
-  stats <- round(stats,2)
+  #stats <- round(stats,2)
   
   colnames(stats) <- paste0(colnames(stats),suffix)
   colData <- colData(scm)[,!(colnames(colData(scm)) %in% colnames(stats)), drop=FALSE]
@@ -988,12 +988,12 @@ get_rowdata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean",
       Sparsity = if (calc_sparsity) (cells/ncol(scm))
     )
   
-  stats <- round(stats,2)
+  #stats <- round(stats,2)
   
   # Set SD to zero for rows with only one CpG (as NA rows and rows with one value will give zero SD), and set rows with zero cells to NA
   if (calc_sd) {
-    stats[is.na(get("sd")), ("sd") := 0]
-    stats[cells == 0, ("sd") := NA]
+    stats[is.na(get("SD")), ("SD") := 0]
+    stats[cells == 0, ("SD") := NA]
   }
   
   colnames(stats) <- paste0(colnames(stats),suffix)

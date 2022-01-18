@@ -46,74 +46,80 @@ test_that("save_scMethrix", {
 
 test_that("get_rowdata_stats", {
   
+  fmt <- function(x) round(as.numeric(x),4)
+  
   expect_error(get_rowdata_stats("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
-    expect_error(get_rowdata_stats(scm="not scMethrix"))
+    
     cols <- ncol(rowData(scm))
     s <- get_rowdata_stats(scm)
     expect_equal(dim(rowData(s)),c(n_cpg,cols+4))
     stats <- rowData(s)
     
-    expect_equal(round(rowMeans(score(s),na.rm=TRUE),2),round(stats$mean,2))
-    #expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median_meth[rng])
+    # Check stats
+    expect_equal(fmt(DelayedMatrixStats::rowMeans2(score(s),na.rm=TRUE)),fmt(stats$Mean))
+    expect_equal(fmt(ncol(scm)-DelayedMatrixStats::rowCounts(score(s),val=NA)),fmt(stats$Cells))
+    expect_equal(fmt((ncol(scm)-DelayedMatrixStats::rowCounts(score(s),val=NA))/ncol(scm)),fmt(stats$Sparsity))
     
     exp_sd <- DelayedMatrixStats::rowSds(score(s),na.rm=TRUE)
     exp_sd[is.na(exp_sd)] <- 0 # Since single sample rows will give SD as zero
-    expect_equal(round(exp_sd,2),round(stats$sd,2))
-    expect_equal(ncol(s)-rowCounts(score(s),val=NA),stats$cells)
+    expect_equal(fmt(exp_sd),fmt(stats$SD))
     
     # Check for stat subset
     rd <- rowData(get_rowdata_stats(scm,stats=c("Mean")))
     expect_equal(dim(rd),c(n_cpg,cols+1))
-    expect_true(tolower(colnames(rd))[cols+1] %like% "mean")
+    expect_true(colnames(rd)[cols+1] == "Mean")
     rd <- rowData(get_rowdata_stats(scm,stats=c("SD")))
-    expect_true(tolower(colnames(rd))[cols+1] %like% "sd")
+    expect_true(colnames(rd)[cols+1] == "SD")
     rd <- rowData(get_rowdata_stats(scm,stats=c("Cells")))
-    expect_true(tolower(colnames(rd))[cols+1] %like% "cells")
+    expect_true(colnames(rd)[cols+1] == "Cells")
     rd <- rowData(get_rowdata_stats(scm,stats=c("Sparsity")))
-    expect_true(tolower(colnames(rd))[cols+1] %like% "sparsity")
+    expect_true(colnames(rd)[cols+1] == "Sparsity")
     
     rd <- rowData(get_rowdata_stats(scm,stat=c("Mean","SD")))
     expect_equal(dim(rd),c(n_cpg,cols+2))
-    expect_true(any(tolower(colnames(rd)) %like% "mean"))
-    expect_true(any(tolower(colnames(rd)) %like% "sd"))
+    expect_true(any(colnames(rd) == "Mean"))
+    expect_true(any(colnames(rd) =="SD"))
     
   }))
 })
 
 test_that("get_coldata_stats", {
   
+  fmt <- function(x) round(as.numeric(x),4)
+  
   expect_error(get_coldata_stats("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
-    expect_error(get_coldata_stats(scm="not scMethrix"))
+    
     cols <- ncol(rowData(scm))
     s <- get_coldata_stats(scm)
     expect_equal(dim(colData(s)),c(n_samples,cols+4))
-
     stats <- colData(s)
     
-    expect_equal(round(as.numeric(colMeans(score(s),na.rm=TRUE)),2),round(stats$mean,2))
+    # Check stats
+    expect_equal(fmt(DelayedMatrixStats::colMeans2(score(s),na.rm=TRUE)),fmt(stats$Mean))
     #expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median[rng])
-    expect_equal(round(as.numeric(DelayedMatrixStats::colSds(score(s),na.rm=TRUE)),2),round(stats$sd,2))
-    expect_equal(nrow(s)-colCounts(score(s),val=NA),stats$cpgs)
+    expect_equal(fmt(DelayedMatrixStats::colSds(score(s),na.rm=TRUE)),fmt(stats$SD))
+    expect_equal(fmt(nrow(scm)-DelayedMatrixStats::colCounts(score(s),val=NA)),fmt(stats$CpGs))
+    expect_equal(fmt((nrow(scm)-DelayedMatrixStats::colCounts(score(s),val=NA))/nrow(scm)),fmt(stats$Sparsity))
     
     # Check for stat subset
     cd <- colData(get_coldata_stats(scm,stats=c("Mean")))
     expect_equal(dim(cd),c(n_samples,cols+1))
-    expect_true(tolower(colnames(cd))[cols+1] %like% "mean")
+    expect_true(colnames(cd)[cols+1] == "Mean")
     cd <- colData(get_coldata_stats(scm,stats=c("SD")))
-    expect_true(tolower(colnames(cd))[cols+1] %like% "sd")
+    expect_true(colnames(cd)[cols+1] =="SD")
     cd <- colData(get_coldata_stats(scm,stats=c("CpGs")))
-    expect_true(tolower(colnames(cd))[cols+1] %like% "cpgs")
+    expect_true(colnames(cd)[cols+1] == "CpGs")
     cd <- colData(get_coldata_stats(scm,stats=c("Sparsity")))
-    expect_true(tolower(colnames(cd))[cols+1] %like% "sparsity")
+    expect_true(colnames(cd)[cols+1] == "Sparsity")
     
     cd <- colData(get_coldata_stats(scm,stat=c("Mean","SD")))
     expect_equal(dim(cd),c(n_samples,cols+2))
-    expect_true(any(tolower(colnames(cd)) %like% "mean"))
-    expect_true(any(tolower(colnames(cd)) %like% "sd"))
+    expect_true(any(colnames(cd) == "Mean"))
+    expect_true(any(colnames(cd) == "SD"))
   }))
 })
 
@@ -374,41 +380,53 @@ test_that("get_stats", {
   
   expect_error(get_stats("not scMethrix"),msg.validateExp)
   
+  fmt <- function(x) round(as.numeric(x),4)
+  
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    smp = colnames(scm)[1]
-    chr <- length(seqlengths(rowRanges(scm)))
+    chrs <- length(GenomeInfoDb::seqlengths(rowRanges(scm)))
     
     samples <- nrow(colData(scm))
-    expect_equal(dim(get_stats(scm)),c(chr*samples,6))
+    expect_equal(dim(get_stats(scm)),c(chrs*samples,6))
     expect_equal(dim(get_stats(scm,per_chr = FALSE)),c(samples,5))
     
     stats <- get_stats(scm,per_chr=FALSE)
-    expect_equal(mean(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"mean_meth"]))
-    expect_equal(median(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"median_meth"]))
-    expect_equal(sd(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"sd_meth"]))
+    expect_equal(dim(stats),c(samples,5))
+    expect_equal(fmt(colMeans(score(scm),na.rm=TRUE)), fmt(stats$Mean))
+    expect_equal(fmt(colMedians(score(scm),na.rm=TRUE)), fmt(stats$Median))
+    expect_equal(fmt(colSds(score(scm),na.rm=TRUE)), fmt(stats$SD))
+    expect_equal(nrow(scm)-fmt(colCounts(score(scm),value=NA)), fmt(stats$Count))
     
-    scm <- subset_scMethrix(scm,contigs=levels(seqnames(rowRanges(scm)))[1])
-    stats <- get_stats(scm,per_chr=TRUE)
-    expect_equal(mean(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"mean_meth"]))
-    expect_equal(median(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"median_meth"]))
-    expect_equal(sd(score(scm)[,smp],na.rm=TRUE), as.double(stats[Sample_Name == smp,"sd_meth"]))
+    # Do only first chromosome
+    chr <- levels(GenomeInfoDb::seqnames(rowRanges(scm)))[1]
+    stats <- get_stats(scm, per_chr=TRUE)
+    expect_equal(dim(stats),c(chrs*samples,6))
+    stats <- stats[stats$Chromosome == chr]
+    expect_equal(dim(stats),c(samples,6))
+    scm2 <- subset_scMethrix(scm,contigs = chr) 
     
+    expect_equal(fmt(colMeans(score(scm2),na.rm=TRUE)), fmt(stats$Mean))
+    expect_equal(fmt(colMedians(score(scm2),na.rm=TRUE)), fmt(stats$Median))
+    expect_equal(fmt(colSds(score(scm2),na.rm=TRUE)), fmt(stats$SD))
+    expect_equal(nrow(scm2)-fmt(colCounts(score(scm2),value=NA)), fmt(stats$Count))
+
     # Check for stat subset
     stats <- get_stats(scm,stat="Mean")
-    expect_equal(dim(stats),c(chr*samples,3))
-    expect_true(tolower(colnames(stats)[ncol(stats)]) %like% "mean")
+    expect_equal(dim(stats),c(chrs*samples,3))
+    expect_true(colnames(stats)[ncol(stats)] == "Mean")
+    
     stats <- get_stats(scm,stat="Median")
-    expect_true(tolower(colnames(stats)[ncol(stats)]) %like% "median")
+    expect_true(colnames(stats)[ncol(stats)] == "Median")
+    
     stats <- get_stats(scm,stat="Count")
-    expect_true(tolower(colnames(stats)[ncol(stats)]) %like% "count")
+    expect_true(colnames(stats)[ncol(stats)] == "Count")
+    
     stats <- get_stats(scm,stat="SD")
-    expect_true(tolower(colnames(stats)[ncol(stats)]) %like% "sd")
+    expect_true(colnames(stats)[ncol(stats)] == "SD")
     
     stats <- get_stats(scm,stat=c("Mean","Median"))
-    expect_equal(dim(stats),c(chr*samples,4))
-    expect_true(any(tolower(colnames(stats)) %like% "mean"))
-    expect_true(any(tolower(colnames(stats)) %like% "median"))
-    
+    expect_equal(dim(stats),c(chrs*samples,4))
+    expect_true(any(colnames(stats) == "Mean"))
+    expect_true(any(colnames(stats) == "Median"))
   }))
 })
 
