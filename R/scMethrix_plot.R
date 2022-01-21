@@ -321,10 +321,10 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
   chrs = rowRanges(scm)@seqnames
   end = cumsum(chrs@lengths)
   start = c(1, head(end, -1) + 1)
-  chrs = data.frame(Chr = as.character(chrs@values), Start = start, End = end, Sites = end-start)
+  chrs = data.frame(Chromosome = as.character(chrs@values), Start = start, End = end, Sites = end-start)
   
   stats <- get_stats(scm,per_chr=T,stats="Count")
-  stats <- merge(stats,chrs[,c("Chr","Sites")],by="Chr")
+  stats <- merge(stats,chrs[,c("Chromosome","Sites")],by="Chromosome")
   #stats[,Sparsity := Count/Sites]
   
   if (!is.null(phenotype)) {
@@ -338,7 +338,6 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
     stats[,Phenotype := Sample]
   }
   
-  setnames(stats, "Chr", "Chromosome")
   stats <- stats[, lapply(.SD, as.character), by=.(Count,Sites)]
   x_lab <- "Sample"
   
@@ -475,14 +474,13 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median","count","
   } else {
   
   plot_dat = get_stats(scm, assay = assay, per_chr = per_chr, ignore_chr = ignore_chr, ignore_samples = ignore_samples)
-  plot_dat$Sample_Name <- factor(plot_dat$Sample_Name, levels = sampleNames(scm))
 
   #- Function code -----------------------------------------------------------------------------
   if (per_chr) {
     if (stat == "mean") {
-      plot_dat[, which(grepl("^median|count", colnames(plot_dat))):=NULL]
+      plot_dat[, which(grepl("^Median|Count", colnames(plot_dat))):=NULL]
     } else if (stat == "median"){
-      plot_dat[, which(grepl("^mean|count", colnames(plot_dat))):=NULL]
+      plot_dat[, which(grepl("^Mean|Count", colnames(plot_dat))):=NULL]
     }
 
     colnames(plot_dat) <- c("Chromosome", "Sample", "measurement",
@@ -506,10 +504,11 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median","count","
             axis.text.y = element_text(size = 10, colour = "black")) +
       ylab(y_title)
   } else {
+
     if (stat == "mean") {
-      plot_dat[, which(grepl("^median|count", colnames(plot_dat))):=NULL]
+      plot_dat[, which(grepl("^Median|Count", colnames(plot_dat))):=NULL]
     } else if (stat == "median"){
-      plot_dat[, which(grepl("^mean|count", colnames(plot_dat))):=NULL]
+      plot_dat[, which(grepl("^Mean|Count", colnames(plot_dat))):=NULL]
     } 
 
     colnames(plot_dat) <- c("Sample", "measurement", "sd")

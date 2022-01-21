@@ -84,7 +84,7 @@ graph_test_helper <- function(scm, func, plot, indiv_samples = TRUE, indiv_chr =
   frmat <- function(x) sort(as.character(unique(x)))
   
   expect_error(func("not scMethrix"),msg.validateExp)
-
+  
   if (is.null(pheno)) {
     plot <- func(scm = scm, verbose = FALSE, ...)
   } else {
@@ -92,10 +92,6 @@ graph_test_helper <- function(scm, func, plot, indiv_samples = TRUE, indiv_chr =
   }
   
   expect_true("ggplot" %in% class(plot))
-
-  xlabs <- frmat(ggplot_build(p)$layout$panel_params[[1]]$x$get_labels())
-  ylabs <- frmat(ggplot_build(p)$layout$panel_params[[1]]$y$get_labels())
-  legdlabs <- ggplot_build(p)$plot$scales$scales[[1]]$get_labels()
   
   if (indiv_samples) {
     expect_equivalent(frmat(plot$data$Sample),frmat(colnames(scm)))
@@ -108,23 +104,12 @@ graph_test_helper <- function(scm, func, plot, indiv_samples = TRUE, indiv_chr =
   } else {
     expect_false("Chromosome" %in% colnames(plot$data))
   }
-
+  
   if (!is.null(pheno)) {
     expect_equal(frmat(plot$data$Pheno), frmat(colData(scm)[,pheno]))
   } else {
     if ("Pheno" %in% colnames(plot$data)) expect_equal(frmat(plot$data$Pheno),frmat(plot$data$Sample))
   }
-  
-  if (!is.null(samples)) {
-    expect_equivalent(frmat(plot$data$Sample),frmat(samples))
-  }
-  
-  if (!is.null(groups)) {
-    
-    
-    
-  }
-  
   
   expect_error(print(plot),NA) # Checks if the plot is printable
   
@@ -132,7 +117,7 @@ graph_test_helper <- function(scm, func, plot, indiv_samples = TRUE, indiv_chr =
 }
 
 graph_test_helper2 <- function(plot, expected_x = NULL, expected_y = NULL, expected_group = NULL, ...) {
-
+  
   frmat <- function(x) sort(as.character(unique(x)))
   
   expect_true("ggplot" %in% class(plot))
