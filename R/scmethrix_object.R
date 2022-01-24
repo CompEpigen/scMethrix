@@ -34,7 +34,7 @@ setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 #' @seealso scMethrix-class for object structure and accessors
 scMethrix <- function(assays = list(), colData = S4Vectors::DataFrame(), rowRanges = GenomicRanges::GRanges(), 
                       is_h5 = FALSE, h5_dir = NULL, genome = NULL, metadata = NULL, replace = FALSE, verbose=TRUE) {
-  
+
   # Ensure consistent metadata
   if (is.null(genome) && "genome" %in% names(metadata)) genome <- metadata[["genome"]]
   metadata <- metadata[!names(metadata) == "is_h5"]
@@ -226,22 +226,127 @@ setGeneric("is_h5", function(object) standardGeneric("is_h5"))
 #' @section is_h5():
 #'  This checks the metadata whether the experiment is in HDF5 format. This is found from the metadata attribute \code{is_h5}. A secondary check of all assays also occurs to ensure they are all of appropriate type. An error will be thrown if any assays are the wrong type. This should not occur during normal usage of the package, but may be caused by manual manipulation of assays. If this does occur, [convert_scMethrix()] should be used to restore consistency.
 setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   {
-
-  exp_type = if (object@metadata$is_h5) c("HDF5Matrix","DelayedMatrix") else "matrix"
-  for (name in SummarizedExperiment::assayNames(object)) {
-    if (!any(exp_type %in% class(assay(object,name)))) 
-      stop("Error in scMethrix object. The '",name,"' assay is of type '",
-           paste0(class(assay(object,name)),collapse="', "), "' instead of HDF5Matrix.\nRecommend using convert_scMethrix() to force type of all assays.", call. = FALSE)
-  }
-  
   return (object@metadata$is_h5)
 })
 
+#---- .validDims ---------------------------------------------------------------------------
+#' Determines if a [scMethrix()] object has valid assay dimensions
+#' @param object An [scMethrix()] object
+#' @noRd
+.validDims <- function(object) {
+  # Check the dimensions of assays are correct
+  assay_dim <- lapply(assays(object),dim)
+  exp_dim <- c(nrow(object),ncol(object))
+  match_dim <- sapply(assay_dim, identical, y=exp_dim)
+  if (!all(match_dim)) {
+    assay_names <- names(which(!match_dim))
+    return (paste0("   Wrong dim: Assay",  ifelse(length(assay_names > 1),"s","")," '", paste0(assay_names,collapse="', '"),
+                               "' should have dimensions of (",paste0(exp_dim,collapse=", "),")."))
+  }
+  return (NULL)
+}
+
+#---- .validH5 ---------------------------------------------------------------------------
+#' Make sure \code{is_h5} variable is present
+#' @param object An [scMethrix()] object
+#' @noRd
+.validH5 <- function(object) {
+  if (!"is_h5" %in% names(metadata(object))) {
+    return (paste0("   Missing variable: 'is_h5' is not present in metadata(). Add manually with:\n",
+                               "        metadata(object) <- append(metadata(object),list(is_h5 = [TRUE/FALSE]))"))
+  }
+  return (NULL)
+}
+
+#---- .validSamples ---------------------------------------------------------------------------
+#' Check if all the sample names are consistent
+#' @param object An [scMethrix()] object
+#' @noRd
+.validSamples <- function(object) {
+  assay_cols <- lapply(assays(object),colnames)
+  match_cols <- sapply(assay_cols, identical, y=sampleNames(object))
+  if (!all(match_cols)) {
+    col_names <- names(which(!match_cols))
+    return (paste0("   Wrong colNames: Assay",  ifelse(length(col_names > 1),"s","")," '", paste0(col_names,collapse="', '"),
+                               "' contain column names that do not match colData()."))
+  }
+}
+
+#---- .validAssays ---------------------------------------------------------------------------
+# Check if all assays are either matrix or HDF5matrix-related types
+#' @param object An [scMethrix()] object
+#' @noRd
+.validAssays <- function(object) {
+  exp_type = if (is_h5(object)) c("HDF5Matrix","DelayedMatrix") else "matrix"
+  assay_class <- lapply(assays(object),class)
+  match_class <- lapply(assay_class, function (a) exp_type %in% a)
+  match_class <- sapply(match_class,any)
+  if (!all(match_class)) {
+    assay_names <- names(which(!match_class))
+    return (paste0("   Wrong type: Assay",  ifelse(length(assay_names > 1),"s","")," '", paste0(assay_names,collapse="', '"),
+                               "' are of wrong type. Should be ",paste0(exp_type,collapse=" or "),". Recommend using convert_scMethrix() to force type of all assays."))
+  }  
+  
+  return (NULL)
+}
+
+#---- .validRedDim ---------------------------------------------------------------------------
+# Check if all reduced dim names are consistent
+#' @param object An [scMethrix()] object
+#' @noRd
+.validRedDim <- function(object) {  
+  red_rows <- lapply(reducedDims(object),rownames)
+  if (!is_empty(red_rows)) {
+    match_red <- sapply(red_rows, identical, y=sampleNames(object))
+    if (!all(match_red)) {
+      red_names <- names(which(!match_red))
+      return (paste0("   Wrong rowNames: Reduced dim",  ifelse(length(red_names > 1),"s","")," '", paste0(red_names,collapse="', '"),
+                                 "' contain row names that do not match colData()."))
+    }
+  }
+  return(NULL)
+}
 
 
+#---- .validscMethrix ---------------------------------------------------------------------------
+#' Determines if a [scMethrix()] object is valid.
+#' 
+#' Checks for:
+#' * 'is_h5' is present in \code{metadata()}
+#' * assay dimensions  are consistent with \code{rowData()} and \code{colData()}
+#' * sample names in assays (\code{colnames())} are consistent with \code{colData()}
+#' * sample names in reduced dims (\code{reducedDims(rownames())}) are consistent with \code{colData()}
+#' * assay classes are consistant with \code{is_h5}
+#' @param object A [scMethrix()] object
+#' @noRd
+.validscMethrix <- function(object) {
+
+  message("Validating")
+  
+  errors <- c(
+    .validH5(object),
+    .validDims(object),
+    .validSamples(object),
+    .validAssays(object)
+  )
+
+  # There is an internal check inside reducedDims in SingleCellExperiment that causes an infinite loop
+  #      see: https://github.com/drisso/SingleCellExperiment/blob/master/R/reducedDims.R#L142)
+  #      TODO: Capture these errors properly
+  # .validRedDim(object)
+
+  if (!is.null(errors)) {
+    errors <- c("Error in scMethrix object:",errors)
+    return (errors)
+  }
+  
+  return (TRUE)
+}
+
+S4Vectors::setValidity2("scMethrix", .validscMethrix)
 
 #---- generic_scMethrix_function -----------------------------------------------------------------------------
-#' Function used only for inheritence for Roxygen2 documentation. Lists the common function inputs used in the package
+#' Function used only for inheritance for Roxygen2 documentation. Lists the common function inputs used in the package
 #' @param scm [scMethrix()]; a single cell methylation experiment object
 #' @param assay string; name of an existing assay. Default = "score"
 #' @param new_assay string; name for transformed assay. Default = "new_assay"
