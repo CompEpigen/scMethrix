@@ -307,7 +307,6 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
   return(NULL)
 }
 
-
 #---- .validscMethrix ---------------------------------------------------------------------------
 #' Determines if a [scMethrix()] object is valid.
 #' 
@@ -321,8 +320,6 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 #' @noRd
 .validscMethrix <- function(object) {
 
-  message("Validating")
-  
   errors <- c(
     .validH5(object),
     .validDims(object),
@@ -335,10 +332,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
   #      TODO: Capture these errors properly
   # .validRedDim(object)
 
-  if (!is.null(errors)) {
-    errors <- c("Error in scMethrix object:",errors)
-    return (errors)
-  }
+  if (!is.null(errors)) return (errors)
   
   return (TRUE)
 }

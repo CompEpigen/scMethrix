@@ -135,6 +135,7 @@ test_that("impute_regions", {
         expect_warning(impute_regions(scm,new_assay = "counts",type=method))
         
         impute = impute_regions(scm,new_assay="impute",type=method)
+        expect_true(validObject(impute))
         expect_true("impute" %in% SummarizedExperiment::assayNames(impute))
         
         sco <- get_matrix(impute,assay="score")

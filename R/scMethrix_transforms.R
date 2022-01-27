@@ -781,8 +781,12 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
 
     imputed <- op(as.matrix(get_matrix(scm,assay)))
     if (!setequal(dim(imputed),c(nrow(scm),ncol(scm)))) stop("Error with imputation algorithm. Imputed matrix does not match the dimensions of the input matrix", call. = FALSE)
-    assays(scm)[[new_assay]] <- imputed
-    
+
+    if (is_h5(scm)) {
+      assays(scm)[[new_assay]] <- as(imputed,"HDF5Matrix")
+    } else {
+      assays(scm)[[new_assay]] <- imputed
+    }
   }
   
   if (any(is.na(assay(scm,new_assay)))) warning("NAs are present in ",new_assay," after imputation.")
