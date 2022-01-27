@@ -58,6 +58,7 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
   
   assays(scm)[[new_assay]] <- mtx
   
+  validObject(scm)
   return(scm)
 }
 
@@ -287,6 +288,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = 
   
   m_obj <- sort(m_obj)
   
+  validObject(scm)
   return (m_obj)
 }
 
@@ -582,8 +584,8 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
 
   if (verbose) message("Experiment collapsed into ", nrow(colData)," sample groups in ",stop_time())
   
+  validObject(m_obj)
   return (m_obj)
-  
 }
 
 #--- impute_by_melissa --------------------------------------------------------------------------------------
@@ -793,6 +795,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
    
   if (verbose) message("Imputed in ",stop_time())
   
+  validObject(scm)
   return(scm)
 }
 

@@ -167,7 +167,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome = NULL, bat
   parse_colData <- function(colData, reads, verbose) {
 
     if (verbose) message("Checking colData...")
-    
+
     n_reads <- ncol(reads[[1]])
     n_colData <- nrow(colData)
     cd <- data.frame(row.names = colnames(reads$score))
@@ -203,13 +203,14 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome = NULL, bat
   if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
   ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
   colData <- parse_colData(colData = colData, reads = reads, verbose = verbose)
-  
+
   gc()
 
   m_obj <- scMethrix(assays = reads, rowRanges = ref_cpgs, is_h5 = is_h5, genome = genome, h5_dir = h5_dir,
                      replace = replace, metadata = metadata, colData = colData)
   
   gc()
+
   message("Object built!\n")
   return(m_obj)
 }

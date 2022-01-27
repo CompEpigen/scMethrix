@@ -144,6 +144,8 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
   names(colData)[names(colData) == "Cluster"] <- colname
   
   scm <- append_colData(scm,colData)
+  
+  validObject(scm)
   return(scm)
 }
 
@@ -203,5 +205,6 @@ append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
   cd <- subset(cd, select=-c(Row.names))
   colData(scm) <- cd
   
+  validObject(scm)
   return(scm)
 }

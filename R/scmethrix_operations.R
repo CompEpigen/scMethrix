@@ -20,6 +20,7 @@ add_assay <- function(scm=NULL, new_assay ="new_assay", matrix=NULL) {
   #- Function code -----------------------------------------------------------------------------
   assay(scm, assay) <- matrix
   
+  validObject(scm)
   return(scm)
 }
 
@@ -42,6 +43,7 @@ remove_assay <- function(scm=NULL, assay=NULL) {
   #- Function code -----------------------------------------------------------------------------
   assays(scm) <- SummarizedExperiment::assays(scm)[-which(SummarizedExperiment::assayNames(scm) == assay)]
   
+  validObject(scm)
   return(scm)
 }
 
@@ -206,6 +208,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row
   #   }
   # }
   
+  validObject(scm)
   return(scm)
 }
 
@@ -627,7 +630,7 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
   }
   
   if (verbose) message("Experiment saved in ",stop_time())
-  
+
   return(invisible(scm))
   
 }
@@ -719,6 +722,7 @@ convert_scMethrix <- function(scm = NULL, type = c(NA,"HDF5","memory"), h5_dir =
   
   if (verbose) message("Converted in ", stop_time())
   
+  validObject(scm)
   return(scm)
 }
 
@@ -816,6 +820,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
   
   if (verbose) message("Subset in ",stop_time())
   
+  validObject(scm)
   return(scm)
   
 }
@@ -946,6 +951,8 @@ get_coldata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean",
   colnames(stats) <- paste0(colnames(stats),suffix)
   colData <- colData(scm)[,!(colnames(colData(scm)) %in% colnames(stats)), drop=FALSE]
   colData(scm) <- cbind(colData,stats)
+  
+  validObject(scm)
   return(scm)
 }
 
@@ -1000,6 +1007,7 @@ get_rowdata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean",
   rowData <- rowData(scm)[,!(colnames(rowData(scm)) %in% colnames(stats)), drop=FALSE]
   rowData(scm) <- cbind(rowData,stats)
   
+  validObject(scm)
   return(scm)
 }
 
@@ -1086,6 +1094,7 @@ remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
   
   if (!sum(row_idx) == 0) scm <- scm[!row_idx, ]
   
+  validObject(scm)
   return(scm)
 }
 
@@ -1207,6 +1216,7 @@ mask_scMethrix <- function(scm = NULL, assay="score", threshold = 0, by=c("row",
 
   scm <- mask_by_idx(scm, col_idx, row_idx, verbose = verbose)
   
+  validObject(scm)
   return(scm)
 }
 

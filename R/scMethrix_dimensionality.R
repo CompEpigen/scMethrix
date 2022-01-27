@@ -55,7 +55,10 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "random"), n_c
     message("Removed ",n_cpg - length(ids)," CpGs due to NA")
   }
 
-  return (scm[sort(ids),])
+  scm <- scm[sort(ids),]
+  
+  validObject(scm)
+  return (scm)
 }
 
 #--- dim_red_scMethrix --------------------------------------------------------------------------------------
@@ -137,6 +140,7 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), p
   if (verbose) message("Dimensionality reduction finished in ",stop_time())
   gc(verbose = FALSE)
   
+  validObject(scm)
   return(scm)
 }
 

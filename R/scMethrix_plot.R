@@ -282,7 +282,10 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
 #' Sparsity of sample
 #' inheritParams generic_plot_function
 #' @inheritParams plot_violin
-#' @param type string; Choose between 'box' (boxplot) or 'scatter' (scatterplot).
+#' @param type string; Choose between "Boxplot" or "Scatterplot". Default = "Scatterplot"
+#' @param by string; The variable for x-axis, "Sample" or "Chromosome". If by "Sample", and phenotype is not NULL, phenotype will be taken instead. Default = "Sample"
+#' @param phenotype string; Col name of colData(m). Will be used as a factor to color different groups
+#' @param show_avg boolean; flag to show a dotted line representing the average value.
 #' @return ggplot2 object
 #' @examples
 #' data('scMethrix_data')
