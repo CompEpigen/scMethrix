@@ -60,18 +60,19 @@ imputation_test_helper <- function(func) {
 
 # Checks to see if two experiments are the same, excluding H5 status
 identical.scm <- function(scm1,scm2,exclude_is_h5 = F) {
-
+  
   if (exclude_is_h5) {
-    metadata(scm1) <- within(metadata(scm1), rm(is_h5))
-    metadata(scm2) <- within(metadata(scm2), rm(is_h5))
-  } 
+    h5 <- identical(within(metadata(scm1), rm(is_h5)),within(metadata(scm1), rm(is_h5)))
+  } else {
+    h5 <- identical(metadata(scm1),metadata(scm2))
+  }
   
   match = 
     identical(as.matrix(score(scm1)),as.matrix(score(scm2))) &&
     identical(as.matrix(counts(scm1)),as.matrix(counts(scm2))) &&
     identical(colData(scm1),colData(scm2)) && 
     identical(rowData(scm1),rowData(scm2)) &&
-    identical(metadata(scm1),metadata(scm2))
+    h5
  
   return(match)
 }

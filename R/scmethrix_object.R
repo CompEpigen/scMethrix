@@ -141,6 +141,7 @@ setMethod(f = "featureNames", signature = "scMethrix", definition = function(obj
 
 #---- Coercion --------------------------------------------------------------------------------------------------------
 #' @importClassesFrom minfi GenomicRatioSet
+#' @aliases coerce, GenomicRatioSet,scMethrix
 #' @exportMethod coerce
 setAs("GenomicRatioSet", "scMethrix", function(from) {
   
@@ -251,7 +252,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 #' @param object An [scMethrix()] object
 #' @noRd
 .validH5 <- function(object) {
-  if (!"is_h5" %in% names(metadata(object))) {
+  if (!"is_h5" %in% names(S4Vectors::metadata(object))) {
     return (paste0("   Missing variable: 'is_h5' is not present in metadata(). Add manually with:\n",
                                "        metadata(object) <- append(metadata(object),list(is_h5 = [TRUE/FALSE]))"))
   }
@@ -296,7 +297,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 #' @noRd
 .validRedDim <- function(object) {  
   red_rows <- lapply(reducedDims(object),rownames)
-  if (!is_empty(red_rows)) {
+  if (!is.empty(red_rows)) {
     match_red <- sapply(red_rows, identical, y=sampleNames(object))
     if (!all(match_red)) {
       red_names <- names(which(!match_red))
