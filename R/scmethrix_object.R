@@ -22,6 +22,7 @@
 setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 
 #' [scMethrix()] - fast and easy summarization of methylation data into an integrative experiment object.
+#' 
 #' The object combines multiple data containers representing common data from methylation experiments (e.g., samples, features, assays). It inherits from the SingleCellExperiment class and is used in the same manner, but with additional consistency checks and methylation-specific functionality. 
 #' @inheritParams generic_scMethrix_function
 #' @param assays [list()] of matrices; The assays to include in the experiment
