@@ -195,10 +195,6 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row
     }
   }
   
-  
-  
-  
-  
   #Realize if HDF5
   # if (is_h5(scm)) {
   #   if (verbose) message("Realizing assays to HDF5...")
@@ -212,94 +208,134 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row
   return(scm)
 }
 
-# merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, verbose = TRUE) {
-# 
-#   #- Input Validation --------------------------------------------------------------------------
-#   .validateExp(scm1)
-#   .validateExp(scm2)
-#   .validateType(verbose,"boolean")
-# 
-#   if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.", call. = FALSE)
-#   #TODO: Not sure if above check is needed
-# 
-#   #- Function code -----------------------------------------------------------------------------
-#   names1 = SummarizedExperiment::assayNames(scm1)
-#   names2 = SummarizedExperiment::assayNames(scm2)
-# 
-#   if (verbose) message("Merging experiment metadata")
-# 
-#   if (!all((sort(names1)==sort(names2)))) {
-#     warning("Assay list not identical. All non-identical assays will be dropped from merged object.")
-#     a1 <- intersect(names1, names2)
-#     a2 <- intersect(names2, names1)
-#     SummarizedExperiment::assays(scm1) <- SummarizedExperiment::assays(scm1)[a1]
-#     SummarizedExperiment::assays(scm2) <- SummarizedExperiment::assays(scm2)[a2]
-#   }
-# 
-#   if (verbose) message("Merging assays...")
-# 
-#   browser()
-# 
-#   add.gr.scm1 <- setdiff(rowRanges(scm2),rowRanges(scm1))
-#   mtx <- matrix(nrow=length(add.gr.scm1), ncol = ncol(scm1))
-#   assays = sapply(assayNames(scm1),function(x) mtx,simplify = FALSE,USE.NAMES = TRUE)
-#   scm.temp <- create_scMethrix(assays = assays,rowRanges = add.gr.scm1, colData <- colData(scm1))
-#   scm1 <- rbind(scm1,scm.temp)
-#   scm1 <- sort(scm1)
-# 
-#   add.gr.scm2 <-  setdiff(rowRanges(scm1),rowRanges(scm2))
-#   mtx <- matrix(nrow=length(add.gr.scm2), ncol = ncol(scm2))
-#   assays = sapply(assayNames(scm2),function(x) mtx,simplify = FALSE,USE.NAMES = TRUE)
-#   scm.temp <- create_scMethrix(assays = assays,rowRanges = add.gr.scm2, colData <- colData(scm2))
-#   scm2 <- rbind(scm2,scm.temp)
-#   scm2 <- sort(scm2)
-# 
-#   scm.rowData <- cbind(rowData(scm1),rowData(scm2))
-# 
-#   rowData(scm1) <- scm.rowData
-#   rowData(scm2) <- scm.rowData
-#   #
-#   # # Merge the rest of the experiment metadata
-#   # slots <- c(S4Vectors::metadata,scMethrix::rowData,scMethrix::colData)
-#   #
-#   # for (i in 1:length(slots)) {
-#   #
-#   #
-#   #
-#   #   op <- slots[[i]]
-#   #
-#   #   op1 <- op(scm1)
-#   #   op2 <- op(scm2)
-#   #   n1 <- names(op1)
-#   #   n2 <- names(op2)
-#   #   meta <- c(op1[setdiff(n1, n2)],op2[setdiff(n2, n1)])
-#   #   not_shown = T
-#   #
-#   #   for (n in intersect(n1,n2)) {
-#   #     if (identical(op1[n],op2[n]) || is.null(unlist(op2[n]))) {
-#   #       meta <- append(meta,op1[n])
-#   #     } else if (is.null(unlist(op1[n]))) {
-#   #       meta <- append(meta,op2[n])
-#   #     } else {
-#   #       if(not_shown) {warning("Same metadata columns are present in ",op@generic,
-#   #                              "(). These will be appended with `.1` or `.2`")}
-#   #       meta[[paste0(n,".1")]] <- unname(unlist(op1[n]))
-#   #       meta[[paste0(n,".2")]] <- unname(unlist(op2[n]))
-#   #       not_shown = F
-#   #     }
-#   #   }
-#   #
-#   #   eval(parse(text=eval(expression(paste0(op@generic,"(scm1) <- meta")))))
-#   #   blank <- meta[-(1:length(names(meta)))]
-#   #   eval(parse(text=eval(expression(paste0(op@generic,"(scm2) <- blank")))))
-#   # }
-#   #
-#   # browser()
-# 
-#   scm <- cbind(scm1,scm2)
-# 
-#   return(scm)
-# }
+
+#' Does merege
+#'
+#' @param scm1 first scm
+#' @param scm2 second scm
+#' @param h5_dir dir
+#' @param verbose boolean
+#'
+#' @return
+#' @export
+#'
+#' @examples
+merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by_row_name = FALSE ,verbose = TRUE) {
+  
+  browser()
+  
+  #- Input Validation --------------------------------------------------------------------------
+  .validateExp(scm1)
+  .validateExp(scm2)
+  .validateType(verbose,"boolean")
+  
+  if (is_h5(scm1) != is_h5(scm2)) stop("Both input objects must be either in-memory or HDF5 format.", call. = FALSE)
+  #TODO: Not sure if above check is needed
+  
+  if (any(sampleNames(scm1) %in% sampleNames(scm2))) 
+    stop("Experiments must contain unique set of sample names.", call. = FALSE)
+  
+  #- Function code -----------------------------------------------------------------------------
+  if (verbose) message("Merging assays...")
+  
+  names1 = SummarizedExperiment::assayNames(scm1)
+  names2 = SummarizedExperiment::assayNames(scm2)
+  
+  # Check for dissimilar assay list
+  if (!all((sort(names1)==sort(names2)))) {
+    warning("Assay list not identical. All non-identical assays will be dropped from merged object.")
+    a1 <- intersect(names1, names2)
+    a2 <- intersect(names2, names1)
+    SummarizedExperiment::assays(scm1) <- SummarizedExperiment::assays(scm1)[a1]
+    SummarizedExperiment::assays(scm2) <- SummarizedExperiment::assays(scm2)[a2]
+  }
+  
+  if (by_row_name) {
+    
+    #add.gr.scm1 <- setdiff(names(rowRanges(scm2)),names(rowRanges(scm1)))
+    #add.gr.scm2 <- setdiff(names(rowRanges(scm1)),names(rowRanges(scm2)))
+    add.gr.scm1 <- rowRanges(scm2)[which(!(names(rowRanges(scm2)) %in% names(rowRanges(scm1))))]
+    add.gr.scm2<- rowRanges(scm1)[which(!(names(rowRanges(scm1)) %in% names(rowRanges(scm2))))]
+    
+  } else {
+    
+    # Add in missing rowRanges
+    gr <- c(rowRanges(scm1),rowRanges(scm2))
+    ##add.gr.scm1 <- gr[-S4Vectors::queryHits(findOverlaps(gr, rowRanges(scm1), type="any")),]
+    ##add.gr.scm2 <- gr[-S4Vectors::queryHits(findOverlaps(gr, rowRanges(scm2), type="any")),]
+    add.gr.scm1 <- rowRanges(scm2)[-S4Vectors::queryHits(findOverlaps(rowRanges(scm2), rowRanges(scm1), type="any")),]
+    add.gr.scm2 <- rowRanges(scm1)[-S4Vectors::queryHits(findOverlaps(rowRanges(scm1), rowRanges(scm2), type="any")),]
+  }
+  
+  if (length(add.gr.scm1) > 0) {
+    mtx <- matrix(nrow=length(add.gr.scm1), ncol = ncol(scm1))
+    assays = sapply(assayNames(scm1),function(x) mtx,simplify = FALSE,USE.NAMES = TRUE)
+    scm.temp <- scMethrix(assays = assays,rowRanges = add.gr.scm1, colData <- colData(scm1))
+    scm1 <- rbind(scm1,scm.temp)
+  }
+  
+  if (length(add.gr.scm2) > 0) {
+    mtx <- matrix(nrow=length(add.gr.scm2), ncol = ncol(scm2))
+    assays = sapply(assayNames(scm2),function(x) mtx,simplify = FALSE,USE.NAMES = TRUE)
+    scm.temp <- scMethrix(assays = assays,rowRanges = add.gr.scm2, colData <- colData(scm2))
+    scm2 <- rbind(scm2,scm.temp)
+  }
+  
+  seqlevels(scm2) <- seqlevels(scm1) #TODO: Not sure why this is necessary
+  
+  scm1 <- sort(scm1)
+  scm2 <- sort(scm2)
+
+  browser()
+
+  stopifnot(length(rowRanges(scm1)) == length(rowRanges(scm2)))
+  
+  # Combine all metadata except colData
+  slots <- c(S4Vectors::metadata, SummarizedExperiment::rowData)
+  
+  for (i in 1:length(slots)) {
+    
+    op <- slots[[i]]
+    
+    op1 <- op(scm1)
+    op2 <- op(scm2)
+    n1 <- names(op1)
+    n2 <- names(op2)
+    meta <- c(op1[setdiff(n1, n2)],op2[setdiff(n2, n1)])
+    show_warning = F
+    
+    for (n in intersect(n1,n2)) {
+      if (identical(op1[n],op2[n]) || is.null(unlist(op2[n]))) {
+        meta <- append(meta,op1[n])
+      } else if (is.null(unlist(op1[n]))) {
+        meta <- append(meta,op2[n])
+      } else {
+        show_warning = TRUE
+        meta[[paste0(n,".1")]] <- unname(unlist(op1[n]))
+        meta[[paste0(n,".2")]] <- unname(unlist(op2[n]))
+      }
+    }
+    
+    if(show_warning) {warning("Same metadata columns are present in ",op@generic,
+                              "(). These will be appended with `.1` or `.2`")}    
+    
+    eval(parse(text=eval(expression(paste0(op@generic,"(scm1) <- meta")))))
+    blank <- meta[-(1:length(names(meta)))]
+    eval(parse(text=eval(expression(paste0(op@generic,"(scm2) <- blank")))))
+  }
+  
+  metadata(scm2)$is_h5 <- is_h5(scm1)
+  
+  # Combine rest of metadata
+  colData(scm1)[setdiff(names(colData(scm2)), names(colData(scm1)))] <- NA
+  colData(scm2)[setdiff(names(colData(scm1)), names(colData(scm2)))] <- NA
+  
+  browser()
+  
+  scm <- cbind(scm1,scm2)
+  
+  return(scm)
+}
 
 #--- summarize_regions ----------------------------------------------------------------------------------------
 #' Extracts and summarizes methylation or coverage info by regions of interest
@@ -535,7 +571,7 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
   }
   
   if (order_by_sd) mtx <- mtx[order(sds, decreasing = TRUE), ]
-
+  
   if (n_chunks != 1) {
     if (by == "row") {
       row_idx <- split_vector(1:nrow(mtx),chunks=n_chunks)
@@ -572,7 +608,7 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 #' @return invisible \code{\link{scMethrix}} object, with the assays stored in the h5_dir
 #' @export
 save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FALSE, verbose = TRUE, ...) {
-
+  
   #- Input Validation --------------------------------------------------------------------------
   if (!extends(class(scm),"SummarizedExperiment")) {
     stop("A valid SummarizedExperiment-derived object needs to be supplied.", call. = FALSE)
@@ -583,13 +619,13 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
   .validateType(verbose,"boolean")
   
   #- Function code -----------------------------------------------------------------------------
-
+  
   if (verbose) message("Saving scMethrix object to ",dest, start_time())
-
+  
   if (is_h5(scm)) {
     if (quick) {
-        if (!is.null(dest)) warning("dest is not used when quicksaving experiments. Experiment will be saved in it's original directory")
-        exp <- HDF5Array::quickResaveHDF5SummarizedExperiment(x = scm, verbose=verbose) 
+      if (!is.null(dest)) warning("dest is not used when quicksaving experiments. Experiment will be saved in it's original directory")
+      exp <- HDF5Array::quickResaveHDF5SummarizedExperiment(x = scm, verbose=verbose) 
     } else {
       if (is.null(dest)) {
         dest = tempfile("scm_")
@@ -612,9 +648,9 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
       }
       
       if (verbose) message("Saving HDF5 experiment to disk...",start_time())
-  
+      
       scm <- HDF5Array::saveHDF5SummarizedExperiment(x = scm, dir = dest, replace = replace, 
-                                                chunkdim = c(length(rowRanges(scm)),1), level = 6, verbose = verbose,...)
+                                                     chunkdim = c(length(rowRanges(scm)),1), level = 6, verbose = verbose,...)
     } 
   } else {
     
@@ -630,7 +666,7 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
   }
   
   if (verbose) message("Experiment saved in ",stop_time())
-
+  
   return(invisible(scm))
   
 }
@@ -650,9 +686,9 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
 #' n <- load_scMethrix(dest = dir)
 #' @export
 load_scMethrix <- function(dest = NULL, verbose = TRUE, ...) {
-
+  
   .validateType(verbose,"boolean")
- 
+  
   if (verbose) message("Loading scMethrix object", start_time())
   
   if (.validateType(dest,"file",throws=F)) {
@@ -682,13 +718,13 @@ load_scMethrix <- function(dest = NULL, verbose = TRUE, ...) {
 #' convert_scMethrix(scMethrix_data, h5_dir=paste0(tempdir(),"/h5"))
 #' @export
 convert_scMethrix <- function(scm = NULL, type = c(NA,"HDF5","memory"), h5_dir = NULL, verbose = TRUE) {
-
+  
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   type <- .validateArg(type,convert_scMethrix)
   .validateType(h5_dir,c("string","null"))
   .validateType(verbose,"boolean")
-
+  
   if (is.na(type)) {
     type <- ifelse(is_h5(scm),"memory","HDF5")
   }
@@ -700,7 +736,7 @@ convert_scMethrix <- function(scm = NULL, type = c(NA,"HDF5","memory"), h5_dir =
   #- Function code -----------------------------------------------------------------------------
   
   if (type == "HDF5") {
-  
+    
     if (verbose) message("Converting in-memory scMethrix to HDF5", start_time())
     
     metadata <- metadata(scm)
@@ -1161,7 +1197,7 @@ mask_scMethrix <- function(scm = NULL, assay="score", threshold = 0, by=c("row",
   if (!is_h5(scm) && n_threads != 1) 
     stop("Parallel processing not supported for a non-HDF5 scMethrix object due to probable high memory usage.
          \nNumber of cores (n_threads) needs to be 1.", call. = FALSE)
-
+  
   row_idx <- col_idx <- mtx <- NULL
   
   #- Function code -----------------------------------------------------------------------------
@@ -1174,20 +1210,20 @@ mask_scMethrix <- function(scm = NULL, assay="score", threshold = 0, by=c("row",
     else if (stat == "count") {calc <- function (mtx) {
       ncol(mtx) - DelayedMatrixStats::rowCounts (mtx, na.rm = na.rm, value = as.integer(NA))}
     } else if (stat == "sd")    {calc <- function (mtx) {
-        vals <- DelayedMatrixStats::rowSds(mtx, na.rm = na.rm)
-        vals[which(is.na(vals))] = 0 # Since CpGs rep'd by a single sample return NA instead of 0
-        return(vals)
-      }
+      vals <- DelayedMatrixStats::rowSds(mtx, na.rm = na.rm)
+      vals[which(is.na(vals))] = 0 # Since CpGs rep'd by a single sample return NA instead of 0
+      return(vals)
+    }
     } else if (stat == "variance") {calc <- function (mtx) {
-        vals <- DelayedMatrixStats::rowVars(mtx, na.rm = na.rm)
-        vals[which(is.na(vals))] = 0 # Since CpGs rep'd by a single sample return NA instead of 0
-        return(vals*2) # Since the variance can be at most 0.5 due to beta ratio
-      }
+      vals <- DelayedMatrixStats::rowVars(mtx, na.rm = na.rm)
+      vals[which(is.na(vals))] = 0 # Since CpGs rep'd by a single sample return NA instead of 0
+      return(vals*2) # Since the variance can be at most 0.5 due to beta ratio
+    }
     } else if (stat =="proportion") {calc <- function(mtx) {
-        (ncol(mtx) - DelayedMatrixStats::rowCounts(mtx, na.rm = na.rm, value = as.integer(NA))) / ncol(mtx)
-      }
+      (ncol(mtx) - DelayedMatrixStats::rowCounts(mtx, na.rm = na.rm, value = as.integer(NA))) / ncol(mtx)
+    }
     } else {stop("Unknown calculation. This should not happen", call. = FALSE)}
-
+    
     expr <- call(op,calc(get_matrix(scm = scm, assay=assay)),threshold)
     row_idx <- which(eval(expr))
   } else {
@@ -1200,12 +1236,12 @@ mask_scMethrix <- function(scm = NULL, assay="score", threshold = 0, by=c("row",
       vals <- DelayedMatrixStats::rowSds(mtx, na.rm = na.rm)
       vals[which(is.na(vals))] = 0 # Since CpGs rep'd by a single sample return NA instead of 0
       return(vals)
-      }
+    }
     } else if (stat == "variance") {calc <- function (mtx) {
-        vals <- DelayedMatrixStats::colVars(mtx, na.rm = na.rm)
-        vals[which(is.na(vals))] = 0 # Since CpGs rep'd by a single sample return NA instead of 0
-        return(vals*2) # Since the variance can be at most 0.5 due to beta ratio
-      }
+      vals <- DelayedMatrixStats::colVars(mtx, na.rm = na.rm)
+      vals[which(is.na(vals))] = 0 # Since CpGs rep'd by a single sample return NA instead of 0
+      return(vals*2) # Since the variance can be at most 0.5 due to beta ratio
+    }
     } else if (stat =="proportion") {calc <- function(mtx) {
       (nrow(mtx) - DelayedMatrixStats::colCounts(mtx, na.rm = na.rm, value = as.integer(NA))) / nrow(mtx)}
     } else {stop("Unknown calculation. This should not happen", call. = FALSE)}
@@ -1213,7 +1249,7 @@ mask_scMethrix <- function(scm = NULL, assay="score", threshold = 0, by=c("row",
     expr <- call(op,calc(get_matrix(scm = scm, assay=assay)),threshold)
     col_idx <- which(eval(expr))
   }
-
+  
   scm <- mask_by_idx(scm, col_idx, row_idx, verbose = verbose)
   
   validObject(scm)
@@ -1256,6 +1292,6 @@ mask_by_idx <- function (scm, col_idx = NULL, row_idx = NULL, verbose = TRUE) {
   }
   
   if (verbose) message("Masking completed in ",stop_time())
-
+  
   return(scm)
 }

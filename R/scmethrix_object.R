@@ -159,7 +159,7 @@ setAs("GenomicRatioSet", "scMethrix", function(from) {
   scMethrix(assays = list(score = beta), 
             colData = colData(from), 
             rowRanges = rowRanges(from), 
-            is_h5 = TRUE,
+            is_h5 = FALSE,
             genome = minfi::annotation(from)[["annotation"]])
 })
 
