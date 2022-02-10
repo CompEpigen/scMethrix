@@ -1,4 +1,4 @@
-#--- reduce_scMethrix ----------------------------------------------------------------------------------------
+#---- reduce_scMethrix -------------------------------------------------------------------------------------------------
 #' Reduces a assay to a representative matrix
 #' @details For the purposes of dimensionality reduction, this function selects either random CpGs or those with the highest variability. 
 #' @inheritParams generic_scMethrix_function
@@ -15,7 +15,7 @@
 #' @export
 reduce_scMethrix <- function(scm, assay = "score", var = c("top", "random"), n_cpg = 1000, na.rm = FALSE, verbose = FALSE) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   var <- .validateArg(var,reduce_scMethrix)
@@ -27,8 +27,7 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "random"), n_c
   
   if (verbose) message("Selecting ",n_cpg," ",var," CpGs...",start_time())
   
-  #- Function code -----------------------------------------------------------------------------  
-
+  #---- Function code ------------------------------------------------------
   n_cpg <- min(n_cpg,nrow(scm))
 
   meth <- get_matrix(scm = scm, assay = assay)
@@ -61,7 +60,7 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "random"), n_c
   return (scm)
 }
 
-#--- dim_red_scMethrix --------------------------------------------------------------------------------------
+#---- dim_red_scMethrix ------------------------------------------------------------------------------------------------
 #' Reduces dimensionality (tSNE, UMAP, PCA, or custom)
 #' @details Does reduction stuff
 #' 
@@ -71,17 +70,13 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "random"), n_c
 #' * tSNE: perplexity >= floor(ncol(scm)/3)
 #' * UMAP: n_neighbors >= ncol(scm)
 #' @param plot boolean; Plot after calculating
-#' @param n_components integer; Number of components to use
+#' @param n_components integer; number of components to use
 #' @param n_neighbors integer; number of nearest neighbors for UMAP
+#' @param perplexity integer; perplexity for tSNE
 #' @param type string; the type of imputation "tSNE","UMAP", or "PCA"
 #' @param ... additional arguements for any of the imputation functions
 #' @inheritParams generic_scMethrix_function
-#' @inheritParams Rtsne::Rtsne
-#' @inheritParams umap::umap
-#' @inheritParams stats::prcomp
 #' @return \code{\link{scMethrix}} object with reducedDim assay
-#' @import Rtsne
-#' @import umap
 #' @importFrom stats prcomp
 #' @seealso [plot_dim_red()] for plotting, [Rtsne::Rtsne()] for Rtsne, [umap::umap()] for UMAP, [stats::prcomp()] for PCA
 #' @examples
@@ -91,7 +86,7 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "random"), n_c
 #' @export
 dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), plot = F, perplexity = 30, verbose = FALSE, n_components = 2, n_neighbors = 15, ...) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   type <- .validateArg(type,dim_red_scMethrix)
@@ -103,15 +98,23 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), p
   meth <- get_matrix(scm,assay = assay)
   if (anyNA(get_matrix(scm,assay = assay))) stop("Assay matrix cannot contain NAs. You must impute or otherwise fill these values.",call. = FALSE)
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (verbose) message("Starting dimensionality reduction...",start_time())
 
   if (type == "tSNE") {
+    
+    if (!requireNamespace("Rtsne", quietly = TRUE)) {
+      stop("Package \"Rtsne\" must be installed to use this function.", call. = FALSE)
+    }
     
     meth <- Rtsne::Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), dims = n_components, check_duplicates=F, ...)
     SingleCellExperiment::reducedDim(scm, "tSNE") <- meth$Y
   
   } else if (type == "UMAP") {
+    
+    if (!requireNamespace("umap", quietly = TRUE)) {
+      stop("Package \"umap\" must be installed to use this function.", call. = FALSE)
+    }
     
     umap <- umap::umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)),n_components=n_components, ...)
     SingleCellExperiment::reducedDim(scm, "UMAP") <- umap$layout

@@ -1,17 +1,17 @@
 Package: scMethrix
 Title: Fast and efficient summarization of single cell whole genome bisulfate data
-Version: 0.1.0.0002
+Version: 0.3.0.0000
 Authors@R: 
     person("Lindsay","Andrew", role = c("aut", "cre"), email = "a.lindsay@dkfz.de", comment = c(ORCID = "0000-0001-6607-5812")) 
 Description: This package summarizes single cell bisulfite data as stored in bedgraph files generated from multiple upstream pipelines. Available functions include: subsetting, filtering, imputing, clustering, and binning. Summarized data can be exported in multiple formats.
-License: Apache License (>= 2)
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: false
 Depends: R (>= 3.6), data.table (>= 1.12.4), SingleCellExperiment
 Imports: 
     rtracklayer,
-    DelayedArray,
     HDF5Array,
+    DelayedArray,
     DelayedMatrixStats,
     parallel,
     methods,
@@ -26,15 +26,10 @@ Imports:
     doParallel,
     GenomeInfoDb,
     methrix,
-    umap,
     ggplot2,
     BPRMeth,
     RColorBrewer,
     Melissa,
-    missMDA,
-    Rtsne,
-    missForest,
-    impute,
     SimDesign,
     Metrics,
     bioDist,
@@ -57,7 +52,9 @@ Suggests:
     R.utils,
     mockr,
     usethis,
-    dichromat
+    dichromat,
+    umap,
+    Rtsne
 URL: https://github.com/CompEpigen/scMethrix
 BugReports: https://github.com/CompEpigen/scMethrix/issues
 biocViews: DNAMethylation, Sequencing, Coverage
