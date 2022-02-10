@@ -1,4 +1,4 @@
-#--- transform_assay ----------------------------------------------------------------------------------------
+#---- transform_assay --------------------------------------------------------------------------------------------------
 #' Transforms an assay in an \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. The function is
 #' applied column-wise as to optimize how HDF5 files access sample data. 
@@ -14,7 +14,7 @@
 #' @export
 transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans = NULL, h5_temp = NULL) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   .validateType(new_assay,"string")
@@ -25,7 +25,7 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
     #new_assay %in% SummarizedExperiment::assayNames(scm)) 
     warning("Name already exists in assay. It will be overwritten.", call. = FALSE)
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (is_h5(scm)) {
     
     if (is.null(h5_temp)) {h5_temp <- tempdir()}
@@ -62,7 +62,7 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
   return(scm)
 }
 
-#--- bin_scMethrix ------------------------------------------------------------------------------------------
+#---- bin_scMethrix ----------------------------------------------------------------------------------------------------
 #' Bins the ranges of an \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. Typically, most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be  from \pkg{DelayedMatrixStats}.
 #' 
@@ -87,7 +87,8 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
 bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = c("bp","cpg"), trans = NULL, 
                           overlap_type = c("within", "start", "end", "any", "equal"), h5_dir = NULL, verbose = TRUE, 
                           batch_size = 20, n_threads = 1, fill = F, replace = FALSE) {
-  #- Input Validation --------------------------------------------------------------------------
+  
+  #---- Input validation ---------------------------------------------------
   yid <- . <- NULL
 
   .validateExp(scm)
@@ -105,7 +106,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = 
   if (is.null(trans[["counts"]])) {
     trans <- c(trans, counts = function(x) sum(x,na.rm=T))}
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (verbose) message("Binning experiment...")
 
   if (!is.null(regions)) {
@@ -464,7 +465,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = 
 # }
 # 
 
-#--- collapse_samples ---------------------------------------------------------------------------------------
+#---- collapse_samples -------------------------------------------------------------------------------------------------
 #' Collapses multiple samples into a single sample by group
 #' @details 
 #' Multiple samples can be collapsed into a single meta-sample. Grouping for samples can be defined via colData. The collapse function can accept an arbitrary function for each assay on how to handle the collapsing (typically `mean` for scores, and `sum` for counts).
@@ -487,7 +488,7 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = 
 #' @export
 collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = NULL, batch_size = 100000, n_threads = 1, replace = FALSE, verbose = TRUE) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   Group <- NULL
   
   .validateExp(scm)
@@ -509,7 +510,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   
  # if (any(sapply(trans, function (x) {!is(x, "function")}))) stop("Invalid operation in trans")
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (verbose) message("Starting to collapse experiment...",start_time())
   
   assays <- list()
@@ -588,7 +589,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   return (m_obj)
 }
 
-#--- impute_by_melissa --------------------------------------------------------------------------------------
+#---- impute_by_melissa ------------------------------------------------------------------------------------------------
 #' Imputes the NA values of a \code{\link{scMethrix}} object.
 #' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
 #' @param threshold The value for cutoff in the "score" assay to determine methylated or unmethylated status. 
@@ -602,7 +603,17 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
 #' @references Kapourani CA, Sanguinetti G (2019). 'Melissa: Bayesian clustering and imputation of single cell methylomes.' Genome Biology, 20, 61. doi: 10.1186/s13059-019-1665-8.
 impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay = "impute") {
   
-  #- Input Validation --------------------------------------------------------------------------
+  if (!requireNamespace("Melissa", quietly = TRUE)) {
+    stop("Package \"Melissa\" must be installed to use this function.", call. = FALSE)
+  }
+  
+  if (!requireNamespace("BPRMeth", quietly = TRUE)) {
+    stop("Package \"BPRMeth\" must be installed to use this function.", call. = FALSE)
+  }
+  
+  
+  
+  #---- Input validation ---------------------------------------------------
   . <- NULL
   
   .validateExp(scm)
@@ -617,7 +628,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   
   scm <- transform_assay(scm, assay = assay, new_assay = "binary", trans = binarize)
 
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   # Convert Granges to genomic interval [-1,1]
   chrom_size <- scm@metadata$chrom_size
   chrom_start <- sapply(coverage(scm), function(x) {x@lengths[1]}+1)
@@ -681,7 +692,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
   return(scm)
 }
 
-#--- impute_regions -----------------------------------------------------------------------------------------
+#---- impute_regions ---------------------------------------------------------------------------------------------------
 #' Generic imputation return function
 #' @details Uses the specified imputation operation to evaluation an scMethrix object.
 #' @param regions Granges; the regions to impute. Default is by chromosome.
@@ -703,7 +714,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regions = NULL, n_chunks = 1, 
                                n_threads = 1, overlap_type=c("within", "start", "end", "any", "equal"), type=c("kNN","iPCA","RF"), verbose = TRUE, k=10, n_pc=2,...) {
  
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   .validateType(new_assay,"string")
@@ -727,15 +738,25 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
 
   yid <- NULL
 
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (verbose) message("Starting imputation...",start_time())
   
   if (.validateType(type,"function",throws=F)) {
     op = type
   } else if (type == "kNN") {
+    
+    if (!requireNamespace("impute", quietly = TRUE)) {
+      stop("Package \"impute\" must be installed to use this function.", call. = FALSE)
+    }
+    
     op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
                                            rowmax = 0.999, colmax = 0.999, ...)$data
   } else if (type == "iPCA") {
+    
+    if (!requireNamespace("missMDA", quietly = TRUE)) {
+      stop("Package \"missMDA\" must be installed to use this function.", call. = FALSE)
+    }
+    
     if (length(n_pc) > 1) {
       warning("Caution: n_pc is given as range. This can be very time-intensive.")
       n_pc <- missMDA::estim_ncpPCA(as.matrix(get_matrix(scm,assay = assay)),ncp.min = n_pc[1], ncp.max = n_pc[2], 
@@ -745,6 +766,11 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     
     op <- function(mtx) missMDA::imputePCA(mtx, ncp = n_pc, ...)$completeObs
   } else if (type == "RF") {
+    
+    if (!requireNamespace("missForest", quietly = TRUE)) {
+      stop("Package \"missForest\" must be installed to use this function.", call. = FALSE)
+    }
+    
     op <- function(mtx) missForest::missForest(mtx, ...)$ximp
   } else {
     stop("Error in imputation. No valid algorithm specified. This should never be reached.")

@@ -27,10 +27,7 @@ Imports:
     GenomeInfoDb,
     methrix,
     ggplot2,
-    BPRMeth,
     RColorBrewer,
-    Melissa,
-    SimDesign,
     Metrics,
     bioDist,
     mclust,
@@ -54,7 +51,12 @@ Suggests:
     usethis,
     dichromat,
     umap,
-    Rtsne
+    Rtsne,
+    missMDA,
+    missForest,
+    impute,
+    Melissa,
+    BPRMeth
 URL: https://github.com/CompEpigen/scMethrix
 BugReports: https://github.com/CompEpigen/scMethrix/issues
 biocViews: DNAMethylation, Sequencing, Coverage
