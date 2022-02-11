@@ -146,6 +146,10 @@ setMethod(f = "featureNames", signature = "scMethrix", definition = function(obj
 #' @exportMethod coerce
 setAs("GenomicRatioSet", "scMethrix", function(from) {
   
+  if (!requireNamespace("minfi", quietly = TRUE)) {
+    stop("Package \"minfi\" must be installed to use this function.", call. = FALSE)
+  }
+  
   if (!is.null(colData(from))) {
     colData <- colData(from)
   } else {

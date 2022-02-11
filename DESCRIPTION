@@ -31,12 +31,9 @@ Imports:
     Metrics,
     bioDist,
     mclust,
-    bsseq,
-    Seurat,
     S4Vectors,
     BSgenome,
     Biostrings,
-    minfi,
     ggsci
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
@@ -56,7 +53,10 @@ Suggests:
     missForest,
     impute,
     Melissa,
-    BPRMeth
+    BPRMeth,
+    bsseq,
+    Seurat,
+    minfi
 URL: https://github.com/CompEpigen/scMethrix
 BugReports: https://github.com/CompEpigen/scMethrix/issues
 biocViews: DNAMethylation, Sequencing, Coverage

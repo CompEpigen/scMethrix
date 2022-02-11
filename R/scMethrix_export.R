@@ -84,6 +84,10 @@ export_beds <- function(scm = NULL, path = NULL, suffix = NULL,  include = FALSE
 #' @export
 export_methrix <- function(scm = NULL, h5_dir = NULL) {
   
+  if (!requireNamespace("methrix", quietly = TRUE)) {
+    stop("Package \"methrix\" must be installed to use this function.", call. = FALSE)
+  }
+  
   #- Input Validation --------------------------------------------------------------------------
   chr <- m_obj <- NULL
   
@@ -134,6 +138,11 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
 #' @export
 export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) {
 
+  if (!requireNamespace("bsseq", quietly = TRUE)) {
+    stop("Package \"bsseq\" must be installed to use this function.", call. = FALSE)
+  }
+  
+  
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   if (!has_cov(scm)) stop("BSSeq requires a coverage matrix.", call. = FALSE)
@@ -216,6 +225,10 @@ export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = N
 
 #--- export_seurat -------------------------------------------------------------------------------------------
 export_seurat <- function(scm,assay="score", path = NULL) {
+  
+  if (!requireNamespace("Seurat", quietly = TRUE)) {
+    stop("Package \"Seurat\" must be installed to use this function.", call. = FALSE)
+  }
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
