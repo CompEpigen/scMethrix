@@ -141,7 +141,6 @@ setMethod(f = "featureNames", signature = "scMethrix", definition = function(obj
 )
 
 #---- Coercion --------------------------------------------------------------------------------------------------------
-#' @importClassesFrom minfi GenomicRatioSet
 #' @aliases coerce, GenomicRatioSet,scMethrix
 #' @exportMethod coerce
 setAs("GenomicRatioSet", "scMethrix", function(from) {
@@ -323,6 +322,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 #' * sample names in reduced dims (\code{reducedDims(rownames())}) are consistent with \code{colData()}
 #' * assay classes are consistant with \code{is_h5}
 #' @param object A [scMethrix()] object
+#' @importFrom methods validObject
 #' @noRd
 .validscMethrix <- function(object) {
 

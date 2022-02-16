@@ -6,7 +6,6 @@
 #' @param type string; The type of distance metric to use. Available options are "pearson", "spearman", "tau", "euclidean", "manhattan", "canberra", "binary", "minkowski". An aribitrary distance function can also be used, so long as the input takes just the specified matrix.
 #' @param verbose boolean; flag to output messages or not
 #' @return matrix; the distance matrix
-#' @import bioDist
 #' @seealso <https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/dist>
 #' @seealso <https://www.bioconductor.org/packages//2.7/bioc/html/bioDist.html>
 #' @examples
@@ -21,7 +20,11 @@
 #' @export
 get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman", "kendall", "euclidean", "manhattan", "canberra", "binary", "minkowski"),verbose=TRUE) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  if (!requireNamespace("bioDist", quietly = TRUE)) {
+    stop("Package \"bioDist\" must be installed to use this function.", call. = FALSE)
+  }
+  
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   if (!is.function(type)) type = .validateArg(type,get_distance_matrix)
@@ -33,7 +36,7 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
     warning("Distance matrix cannot be generated for HDF5 data. Data will be cast as matrix for imputation.")
   }
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   mtx <- as.matrix(t(get_matrix(scm,assay=assay)))
   
   if (is.function(type)) { # For the arbitrary case
@@ -57,7 +60,7 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
   return(dist)
 }
 
-#--- cluster_scMethrix ---------------------------------------------------------------------------------------
+#---- cluster_scMethrix ------------------------------------------------------------------------------------------------
 #' Generates a cluster object for an \code{\link{scMethrix}} object
 #' @details Enables multiple methods of clustering to classify samples in an \code{\link{scMethrix}} object. Either an \code{\link{scMethrix}} object or a \code{\link[stats]{dist}} object must be provided for clustering.
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object. If this is specified the distance matrix will be a generic \code{\link[bioDist]{spearman.dist}} distance
@@ -69,9 +72,7 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
 #' @param verbose boolean; flag to output messages or not
 #' @param ... Additional parameters for the clustering functions
 #' @return An \code{\link{scMethrix}} object
-#' @import bioDist
-#' @import mclust
-#' @seealso [get_distance_matrix()] for distance metrics, [hclust()] for heirarchical clustering, [kmeans()] for partition clustering, [Mclust()] for model clustering 
+#' @seealso [get_distance_matrix()] for distance metrics, [hclust()] for heirarchical clustering, [kmeans()] for partition clustering, [mclust::Mclust()] for model clustering 
 #' @examples
 #' data('scMethrix_data')
 #' scMethrix_data <- impute_regions(scMethrix_data)
@@ -91,7 +92,7 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
 cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("hierarchical", "partition", "model"),
                               colname = "Cluster", n_clusters = 1, verbose = TRUE, ...) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   if (typeof(type) != "closure") {
@@ -112,7 +113,7 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
   
   Cluster <- Sample <- NULL
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
 
   if (.validateType(type,"function",throws=F)) {
     
@@ -127,6 +128,11 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
     fit <- stats::kmeans(dist, centers = min(n_clusters,attr(dist,"Size")-1)) # Max clusters = nrow(scm)-1
     colData <- data.frame(Sample = names(fit$cluster), Cluster = fit$cluster)
   } else if (type == "model") {
+    
+    if (!requireNamespace("mclust", quietly = TRUE)) {
+      stop("Package \"mclust\" must be installed to use this function.", call. = FALSE)
+    }
+    
     if (!is.null(n_clusters)) warning("n_clusters is ignored for model-based clustering")
     fit <- mclust::Mclust(as.matrix(t(get_matrix(scm,assay=assay))), ...)
     colData <- data.frame(Sample = names(fit$classification), Cluster = fit$classification)
@@ -149,7 +155,7 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
   return(scm)
 }
 
-#--- append_colData ------------------------------------------------------------------------------------------
+#---- append_colData ---------------------------------------------------------------------------------------------------
 #' Appends colData in an scMethrix object
 #' @details Typically used for clustering. Allows additional information to be added to colData in an scMethrix object after the object creation. It does this via a left join on the original colData. Any samples not included in the colData object will be filled with NAs.
 #' @param scm scMethrix; Input \code{\link{scMethrix}} object
@@ -174,13 +180,13 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
 #' @export
 append_colData <- function(scm = NULL, colData = NULL, name = "Data") {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   #.validateType(colData,c("vector","dataframe","S4")) #TODO: fix this or remove functino totally
   .validateType(name,"string")
   
   Row.names <- NULL
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   # Convert vector to data.frame
   if (is.vector(colData)) {
     colData <- as.data.frame(colData)

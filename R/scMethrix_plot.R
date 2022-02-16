@@ -60,9 +60,12 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #' @param n_row Number of colors
 #' @param col_palette String for RColorBrewer palette name  
 #' @return RColorBrewer palette
-#' @import ggsci
 #' @export
 get_palette <- function(n_row, col_palette = "RdYlGn"){
+  
+  if (!requireNamespace("ggsci", quietly = TRUE)) {
+    stop("Package \"ggsci\" must be installed to use this function.", call. = FALSE)
+  }
   
   #- Input Validation --------------------------------------------------------------------------
   .validateType(n_row,"integer")
@@ -845,12 +848,15 @@ plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL
 #' benchmark_imputation(scMethrix_data, assay="impute", sparse_prop = c(0.1,0.5,0.85))
 #' }
 #' @export
-#' @import Metrics
 benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(0.1, 0.9, 0.1), iterations = 3,
                                  imp_methods = c(iPCA = function(...) impute_regions(type="iPCA",...), 
                                                  RF = function(...) impute_regions(type="RF",...), 
                                                  kNN = function(...) impute_regions(type="kNN",...)),
                                  type = "RMSE") {
+  
+  if (!requireNamespace("Metrics", quietly = TRUE)) {
+    stop("Package \"Metrics\" must be installed to use this function.", call. = FALSE)
+  }
   
   #- Input Validation --------------------------------------------------------------------------
   . <- results <- Sparsity <- NRMSE <- Imputation <- AUC <- NULL

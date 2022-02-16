@@ -7,34 +7,8 @@ Description: This package summarizes single cell bisulfite data as stored in bed
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: false
-Depends: R (>= 3.6), data.table (>= 1.12.4), SingleCellExperiment
-Imports: 
-    rtracklayer,
-    HDF5Array,
-    DelayedArray,
-    DelayedMatrixStats,
-    parallel,
-    methods,
-    matrixStats,
-    tools,
-    graphics,
-    stats,
-    utils,
-    GenomicRanges,
-    IRanges,
-    SummarizedExperiment,
-    doParallel,
-    GenomeInfoDb,
-    methrix,
-    ggplot2,
-    RColorBrewer,
-    Metrics,
-    bioDist,
-    mclust,
-    S4Vectors,
-    BSgenome,
-    Biostrings,
-    ggsci
+Depends: R (>= 3.6), data.table (>= 1.12.4), SingleCellExperiment, SummarizedExperiment
+Imports: methods, tools, graphics, stats, utils, parallel, doParallel, HDF5Array, DelayedArray, DelayedMatrixStats, matrixStats, GenomicRanges, IRanges, GenomeInfoDb, ggplot2, S4Vectors, BSgenome
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Suggests: 
@@ -46,6 +20,7 @@ Suggests:
     R.utils,
     mockr,
     usethis,
+    rtracklayer,
     dichromat,
     umap,
     Rtsne,
@@ -56,7 +31,13 @@ Suggests:
     BPRMeth,
     bsseq,
     Seurat,
-    minfi
+    methrix,
+    minfi,
+    bioDist,
+    mclust,
+    ggsci,
+    Biostrings,
+    Metrics
 URL: https://github.com/CompEpigen/scMethrix
 BugReports: https://github.com/CompEpigen/scMethrix/issues
 biocViews: DNAMethylation, Sequencing, Coverage

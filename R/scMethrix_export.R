@@ -123,9 +123,9 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
 }
 
 #--- export_bsseq --------------------------------------------------------------------------------------------
-#' Convert \code{\link{scMethrix}} to \code{bsseq} object
-#' @details Takes \code{\link{scMethrix}} object and returns a \code{bsseq} object. 
-#' @param scm \code{\link{methrix}} object
+#' Convert `[scMethrix]` to `[bsseq::BSseq]`\code{bsseq} object
+#' @details Takes `[scMethrix]` object and returns a \code{bsseq} object. 
+#' @param scm \code{\link{scMethrix}} object
 #' @param m_assay matrix; the assay containing methylation scores
 #' @param c_assay matrix; the assay containing count scores
 #' @param path string; the path of the export directory
@@ -176,11 +176,14 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) 
 #' export_bigwigs(scm = scMethrix_data, assay = "score", output_dir = tempdir())
 #' }
 #' @return NULL
-#' @importFrom rtracklayer export
 #' @importFrom GenomeInfoDb seqlengths
 #' @export
 export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = NULL){
 
+  if (!requireNamespace("rtracklayer", quietly = TRUE)) {
+    stop("Package \"rtracklayer\" must be installed to use this function.", call. = FALSE)
+  }
+  
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateAssay(scm,assay)

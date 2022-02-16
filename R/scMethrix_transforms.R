@@ -599,7 +599,6 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
 #' @examples
 #' data('scMethrix_data')
 #' @export
-#' @import Melissa
 #' @references Kapourani CA, Sanguinetti G (2019). 'Melissa: Bayesian clustering and imputation of single cell methylomes.' Genome Biology, 20, 61. doi: 10.1186/s13059-019-1665-8.
 impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay = "impute") {
   

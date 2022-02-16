@@ -215,6 +215,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row
 #' @param scm2 second scm
 #' @param h5_dir dir
 #' @param verbose boolean
+#' @param by_row_name boolean; uses row name instead of start position
 #'
 #' @return
 #' @export
@@ -281,7 +282,7 @@ merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by_row_nam
     scm2 <- rbind(scm2,scm.temp)
   }
   
-  seqlevels(scm2) <- seqlevels(scm1) #TODO: Not sure why this is necessary
+  GenomeInfoDb::seqlevels(scm2) <- GenomeInfoDb::seqlevels(scm1) #TODO: Not sure why this is necessary
   
   scm1 <- sort(scm1)
   scm2 <- sort(scm2)
@@ -324,7 +325,7 @@ merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by_row_nam
     eval(parse(text=eval(expression(paste0(op@generic,"(scm2) <- blank")))))
   }
   
-  metadata(scm2)$is_h5 <- is_h5(scm1)
+  S4Vectors::metadata(scm2)$is_h5 <- is_h5(scm1)
   
   # Combine rest of metadata
   colData(scm1)[setdiff(names(colData(scm2)), names(colData(scm1)))] <- NA
@@ -600,6 +601,7 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 #' @param dest string; the destination folder for the scMethrix object
 #' @param ... Parameters to pass to saveHDF5SummarizedExperiment
 #' @importFrom SummarizedExperiment assays
+#' @importFrom methods extends
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
