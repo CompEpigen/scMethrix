@@ -83,16 +83,14 @@ export_beds <- function(scm = NULL, path = NULL, suffix = NULL,  include = FALSE
 #' # convert_to_methrix(scMethrix_data)
 #' @export
 export_methrix <- function(scm = NULL, h5_dir = NULL) {
-  
-  if (!requireNamespace("methrix", quietly = TRUE)) {
-    stop("Package \"methrix\" must be installed to use this function.", call. = FALSE)
-  }
-  
+
   #- Input Validation --------------------------------------------------------------------------
   chr <- m_obj <- NULL
   
   .validateExp(scm)
   .validateType(h5_dir,"string")
+  
+  .validatePackageInstall("methrix")
   
   #- Function code -----------------------------------------------------------------------------
   rrng <- as.data.table(rowRanges(scm))
@@ -138,17 +136,13 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
 #' @export
 export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) {
 
-  if (!requireNamespace("bsseq", quietly = TRUE)) {
-    stop("Package \"bsseq\" must be installed to use this function.", call. = FALSE)
-  }
-  
-  
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   if (!has_cov(scm)) stop("BSSeq requires a coverage matrix.", call. = FALSE)
   .validateAssay(scm,m_assay)
   .validateAssay(scm,c_assay)
   .validateType(path,"string")
+  .validatePackageInstall("bsseq")
   
   # if (anyNA(get_matrix(scm,m_assay)) || anyNA(get_matrix(scm,c_assay)))
   #   warning("NAs present in assay. These will be filled with zero values.")
@@ -180,15 +174,12 @@ export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) 
 #' @export
 export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = NULL){
 
-  if (!requireNamespace("rtracklayer", quietly = TRUE)) {
-    stop("Package \"rtracklayer\" must be installed to use this function.", call. = FALSE)
-  }
-  
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   .validateAssay(scm,assay)
   .validateType(path,"string")
   .validateType(samp_names,"string")
+  .validatePackageInstall("rtracklayer")
   
   if (is.null(path)){
     stop("A valid path needs to be supplied.", call. = FALSE)
@@ -228,17 +219,14 @@ export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = N
 
 #--- export_seurat -------------------------------------------------------------------------------------------
 export_seurat <- function(scm,assay="score", path = NULL) {
-  
-  if (!requireNamespace("Seurat", quietly = TRUE)) {
-    stop("Package \"Seurat\" must be installed to use this function.", call. = FALSE)
-  }
-  
+
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm)
   if (!has_cov(scm)) stop("Seurat requires a coverage matrix.", call. = FALSE)
   .validateAssay(scm,assay)
   .validateType(path,"string")
-  
+  .validatePackageInstall("Seurat")
+    
   #- Function code -----------------------------------------------------------------------------
   cnt <- counts(scm)
   rownames(cnt) <- paste0("CpG",1:nrow(cnt))

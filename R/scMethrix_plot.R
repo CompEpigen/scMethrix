@@ -1,4 +1,4 @@
-#--- prepare_plot_data --------------------------------------------------------------------------------------
+#---- prepare_plot_data ------------------------------------------------------------------------------------------------
 #' Formats an \code{\link{scMethrix}} matrix to long form data for plotting
 #' @inheritParams generic_scMethrix_function
 #' @param n_cpgs integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive. The seed will be set to \code{n_cpgs} for consistency.
@@ -8,7 +8,7 @@
 #' @export
 prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL, verbose = TRUE, na.rm = T){
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   .validateAssay(scm,assay)
   .validateType(n_cpgs,"integer")
@@ -19,7 +19,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
   
   if (n_cpgs > nrow(scm)) n_cpgs = NULL
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (!is.null(n_cpgs)) {
     if(verbose) message("Randomly selecting ", n_cpgs, " sites")
     set.seed(n_cpgs)
@@ -55,7 +55,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
   
 }
 
-#--- get_palette --------------------------------------------------------------------------------------------
+#---- get_palette ------------------------------------------------------------------------------------------------------
 #' Getter for plot palette colors
 #' @param n_row Number of colors
 #' @param col_palette String for RColorBrewer palette name  
@@ -63,13 +63,12 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #' @export
 get_palette <- function(n_row, col_palette = "RdYlGn"){
   
-  if (!requireNamespace("ggsci", quietly = TRUE)) {
-    stop("Package \"ggsci\" must be installed to use this function.", call. = FALSE)
-  }
-  
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateType(n_row,"integer")
   .validateType(col_palette,"string")
+  .validatePackageInstall("ggsci")
+  
+  #---- Function code ------------------------------------------------------
   
   if (n_row == 2) {
     
@@ -853,12 +852,10 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
                                                  RF = function(...) impute_regions(type="RF",...), 
                                                  kNN = function(...) impute_regions(type="kNN",...)),
                                  type = "RMSE") {
-  
-  if (!requireNamespace("Metrics", quietly = TRUE)) {
-    stop("Package \"Metrics\" must be installed to use this function.", call. = FALSE)
-  }
-  
+
   #- Input Validation --------------------------------------------------------------------------
+  .validatePackageInstall("Metrics")
+  
   . <- results <- Sparsity <- NRMSE <- Imputation <- AUC <- NULL
   
   #- Function code -----------------------------------------------------------------------------

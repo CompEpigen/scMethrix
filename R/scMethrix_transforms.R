@@ -601,18 +601,11 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
 #' @export
 #' @references Kapourani CA, Sanguinetti G (2019). 'Melissa: Bayesian clustering and imputation of single cell methylomes.' Genome Biology, 20, 61. doi: 10.1186/s13059-019-1665-8.
 impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay = "impute") {
-  
-  if (!requireNamespace("Melissa", quietly = TRUE)) {
-    stop("Package \"Melissa\" must be installed to use this function.", call. = FALSE)
-  }
-  
-  if (!requireNamespace("BPRMeth", quietly = TRUE)) {
-    stop("Package \"BPRMeth\" must be installed to use this function.", call. = FALSE)
-  }
-  
-  
-  
+
   #---- Input validation ---------------------------------------------------
+  .validatePackageInstall("Melissa")
+  .validatePackageInstall("BPRMeth")
+  
   . <- NULL
   
   .validateExp(scm)
@@ -737,6 +730,10 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
 
   yid <- NULL
 
+  if (type == "kNN") .validatePackageInstall("impute")
+  if (type == "iPCA") .validatePackageInstall("missMDA")
+  if (type == "RF") .validatePackageInstall("missForest")
+  
   #---- Function code ------------------------------------------------------
   if (verbose) message("Starting imputation...",start_time())
   
@@ -744,18 +741,10 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     op = type
   } else if (type == "kNN") {
     
-    if (!requireNamespace("impute", quietly = TRUE)) {
-      stop("Package \"impute\" must be installed to use this function.", call. = FALSE)
-    }
-    
     op <- function(mtx) impute::impute.knn(mtx, k = min(k,ncol(mtx)), 
                                            rowmax = 0.999, colmax = 0.999, ...)$data
   } else if (type == "iPCA") {
-    
-    if (!requireNamespace("missMDA", quietly = TRUE)) {
-      stop("Package \"missMDA\" must be installed to use this function.", call. = FALSE)
-    }
-    
+   
     if (length(n_pc) > 1) {
       warning("Caution: n_pc is given as range. This can be very time-intensive.")
       n_pc <- missMDA::estim_ncpPCA(as.matrix(get_matrix(scm,assay = assay)),ncp.min = n_pc[1], ncp.max = n_pc[2], 
@@ -765,10 +754,6 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
     
     op <- function(mtx) missMDA::imputePCA(mtx, ncp = n_pc, ...)$completeObs
   } else if (type == "RF") {
-    
-    if (!requireNamespace("missForest", quietly = TRUE)) {
-      stop("Package \"missForest\" must be installed to use this function.", call. = FALSE)
-    }
     
     op <- function(mtx) missForest::missForest(mtx, ...)$ximp
   } else {

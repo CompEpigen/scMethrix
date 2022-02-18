@@ -95,6 +95,9 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), p
   .validateType(n_neighbors,"integer")
   .validateType(verbose,"boolean")
   
+  if (type == "tSNE") .validatePackageInstall("Rtsne")
+  if (type == "UMAP") .validatePackageInstall("umap")
+  
   meth <- get_matrix(scm,assay = assay)
   if (anyNA(get_matrix(scm,assay = assay))) stop("Assay matrix cannot contain NAs. You must impute or otherwise fill these values.",call. = FALSE)
   
@@ -103,18 +106,10 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), p
 
   if (type == "tSNE") {
     
-    if (!requireNamespace("Rtsne", quietly = TRUE)) {
-      stop("Package \"Rtsne\" must be installed to use this function.", call. = FALSE)
-    }
-    
     meth <- Rtsne::Rtsne(as.matrix(t(meth)), perplexity = min(perplexity,floor(ncol(meth)/3)), dims = n_components, check_duplicates=F, ...)
     SingleCellExperiment::reducedDim(scm, "tSNE") <- meth$Y
   
   } else if (type == "UMAP") {
-    
-    if (!requireNamespace("umap", quietly = TRUE)) {
-      stop("Package \"umap\" must be installed to use this function.", call. = FALSE)
-    }
     
     umap <- umap::umap(as.matrix(t(meth)),n_neighbors=min(n_neighbors,ncol(scm)),n_components=n_components, ...)
     SingleCellExperiment::reducedDim(scm, "UMAP") <- umap$layout

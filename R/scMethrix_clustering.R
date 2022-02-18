@@ -20,10 +20,8 @@
 #' @export
 get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman", "kendall", "euclidean", "manhattan", "canberra", "binary", "minkowski"),verbose=TRUE) {
   
-  if (!requireNamespace("bioDist", quietly = TRUE)) {
-    stop("Package \"bioDist\" must be installed to use this function.", call. = FALSE)
-  }
-  
+  .validatePackageInstall("bioDist")
+
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
@@ -111,6 +109,8 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
       stop("Invalid distance matrix. Must contain all samples present in the experiment")
   }
   
+  if (type == "model") .validatePackageInstall("mclust")
+  
   Cluster <- Sample <- NULL
   
   #---- Function code ------------------------------------------------------
@@ -128,10 +128,6 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
     fit <- stats::kmeans(dist, centers = min(n_clusters,attr(dist,"Size")-1)) # Max clusters = nrow(scm)-1
     colData <- data.frame(Sample = names(fit$cluster), Cluster = fit$cluster)
   } else if (type == "model") {
-    
-    if (!requireNamespace("mclust", quietly = TRUE)) {
-      stop("Package \"mclust\" must be installed to use this function.", call. = FALSE)
-    }
     
     if (!is.null(n_clusters)) warning("n_clusters is ignored for model-based clustering")
     fit <- mclust::Mclust(as.matrix(t(get_matrix(scm,assay=assay))), ...)

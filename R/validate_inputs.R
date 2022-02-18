@@ -299,6 +299,20 @@
   return(max(min(parallel::detectCores(),n_threads),1))
 }
 
+
+
+#' Validates that a package is installed
+#' @param package string; the name of the package
+#' @return `ERROR` if not installed, `invisible(TRUE)` if installed.
+.validatePackageInstall <- function(package) {
+  if (!requireNamespace(package, quietly = TRUE)) 
+    stop("Package '",package,"' is necessary for this function. Use: install.packages('",
+         package,"')", call. = FALSE)
+  
+  return(invisible(TRUE))
+}
+
+
 #' Empty Value
 #'
 #' Rails-inspired helper that checks if vector values are "empty", i.e. if it's: \code{NULL}, zero-length, \code{NA}, \code{NaN}, \code{FALSE}, an empty string or \code{0}. Note that unlike its native R \code{is.<something>} sibling functions, \code{is.empty} is vectorised (hence the "values").
