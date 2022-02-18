@@ -1,4 +1,4 @@
-#--- liftover_CpGs ---------------------------------------------------------------------------------------------------------
+#---- liftover_CpGs ----------------------------------------------------------------------------------------------------
 #' Converts from one reference to another via rtracklayer::liftOver
 #' @details 
 #' This conversion is one-to-many, so for consistency, only the first element in the target assembly is used.
@@ -14,7 +14,6 @@
 #' @inheritParams generic_scMethrix_function
 #' @param chain string; the file location for the desired chain to use in liftOver
 #' @param target_genome string; the target genome. This will be update the genome field in the output scMethrix object
-#' @importFrom rtracklayer import.chain liftOver
 #' @export
 #' @return a list of data.table containing number of CpG's and contig lengths
 #' @examples
@@ -22,9 +21,9 @@
 #' hg19_cpgs = methrix::extract_CPGs(ref_genome = 'BSgenome.Hsapiens.UCSC.hg19')
 #' }
 liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRUE) {
-  
+
   #- Input Validation --------------------------------------------------------------------------
-  
+  .validatePackageInstall("rtracklayer")
   .validateExp(scm)
   .validateType(target_genome,"string")
   
@@ -52,9 +51,12 @@ liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRU
   return(scm)
 }
 
-#--- extract_CpGs ---------------------------------------------------------------------------------------------------------
+#---- extract_CpGs -----------------------------------------------------------------------------------------------------
 #' Extracts all CpGs from a genome
-#' @param ref_genome BSgenome object or name of the installed BSgenome package. Example: BSgenome.Hsapiens.UCSC.hg19
+#' 
+#' Requires the [Biostrings] and [BSgenome] packages, as well as the package containing the target genome (e.g., [BSgenome.Hsapiens.UCSC.hg19]) if [BSgenome] object is not provided
+#' @inheritParams BSgenome::getBSgenome
+#' @inheritParams generic_scMethrix_function
 #' @importFrom BSgenome installed.genomes getBSgenome seqnames
 #' @export
 #' @return a list of data.table containing number of CpG's and contig lengths
@@ -62,47 +64,36 @@ liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRU
 #'\dontrun{
 #' hg19_cpgs = methrix::extract_CPGs(ref_genome = 'BSgenome.Hsapiens.UCSC.hg19')
 #' }
-extract_CpGs = function(ref_genome = NULL) {
+extract_CpGs = function(genome = NULL, verbose = TRUE) {
+
+  #---- Input validation ---------------------------------------------------
+  ref_genome = genome # causes bug with gnoms_installed[pkgname %in% ref_genome] if not
   
-  #- Input Validation --------------------------------------------------------------------------
+  .validatePackageInstall("Biostrings")
+  .validatePackageInstall("BSgenome")
+  .validateType(ref_genome,c("string","null"))
   
-  .validateType(ref_genome,"string")
   pkgname <- seqlengths <- chr <- NULL
-  
-  gnoms_installed = BSgenome::installed.genomes(splitNameParts = TRUE)
-  data.table::setDT(x = gnoms_installed)
-  
-  if (is.null(ref_genome)) {
-    if (nrow(gnoms_installed) == 0) {
-      stop("Could not find any installed BSgenomes.\nUse BSgenome::available.genomes() for options.")
-    } else {
-      message("Found following BSgenome installations. Use the required 'pkgname'.")
-      print(gnoms_installed)
-      stop()
-      # ref_genome = gnoms_installed[,pkgname][1]
-    }
-  } else {
-    if (nrow(gnoms_installed[pkgname %in% ref_genome]) == 0) {
-      message("Could not find BSgenome ", ref_genome)
-      if (nrow(gnoms_installed) == 0) {
-        stop("Could not find any installed BSgenomes either.\nUse BSgenome::available.genomes() for options.")
-      } else {
-        message("Found following BSgenome installations. Provide the correct 'pkgname'")
-        print(gnoms_installed)
-        stop()
-      }
-    }
+
+  if (!is(ref_genome,"BSgenome")) {
+    gnoms_installed = BSgenome::installed.genomes(splitNameParts = TRUE)
+    data.table::setDT(x = gnoms_installed)
+    
+    if (nrow(gnoms_installed) == 0) 
+      stop("Error in extraction. Could not find any installed BSgenomes.Use BSgenome::available.genomes() for options.")
+    
+    if (is.null(ref_genome) || nrow(gnoms_installed[pkgname %in% ref_genome]) == 0) 
+      stop("Error in extraction. Could not find genome. Found following BSgenome installations: '",
+           paste(gnoms_installed$pkgname,collapse="', '"),"'.")
+    
+    ref_genome = BSgenome::getBSgenome(genome = ref_genome)
   }
-  requireNamespace(ref_genome, quietly = TRUE)
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
+  if (verbose) message("Extracting CpGs from ",slot(gen,"pkgname"),"...",start_time())
   
-  message("Extracting CpGs from ",ref_genome,"...",start_time())
-  
-  ref_genome = BSgenome::getBSgenome(genome = ref_genome)
-  
-  chrs = GenomeInfoDb::standardChromosomes(ref_genome)
   # Code borrowed from from: https://support.bioconductor.org/p/95239/
+  chrs = GenomeInfoDb::standardChromosomes(ref_genome)
   cgs = lapply(chrs, function(x) start(Biostrings::matchPattern("CG", ref_genome[[x]])))
   cpgs = do.call(c, lapply(seq_along(chrs), function(x) GenomicRanges::GRanges(names(ref_genome)[x],
                                                                                IRanges::IRanges(cgs[[x]], width = 2))))
@@ -111,13 +102,13 @@ extract_CpGs = function(ref_genome = NULL) {
   cpgs[, `:=`(chr, as.character(chr))][, `:=`(start, as.numeric(start))]
   cpgs[, `:=`(end, as.numeric(end))][, `:=`(width, as.numeric(width))]
   data.table::setkey(x = cpgs, "chr", "start")
-  message(paste0("Extracted ", format(nrow(cpgs), big.mark = ","), " CpGs from ",
+  if (verbose)  message(paste0("Extracted ", format(nrow(cpgs), big.mark = ","), " CpGs from ",
                  length(chrs), " contigs (",stop_time(),")"))
   
   return(cpgs)
 }
 
-#--- subset_ref_cpgs ---------------------------------------------------------------------------------------------------------
+#---- subset_ref_cpgs --------------------------------------------------------------------------------------------------
 #' Subsets a given list of CpGs by another list of CpGs
 #' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
 #' @param ref_cpgs data.table; A reference set of CpG sites (e.g. Hg19 or mm10) in bedgraph format
@@ -130,7 +121,10 @@ extract_CpGs = function(ref_genome = NULL) {
 #' @export
 subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   
-  #- data.table initialization -----------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
+  #.validateType(ref_cpgs,"data.table")
+  #.validateType(gen_cpgs,"data.table")
+  .validateType(verbose,"boolean")
   id <- NULL
   
   #- Function code -----------------------------------------------------------------------------
@@ -154,7 +148,7 @@ subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   return(sub_cpgs)
 }
 
-#--- bin_granges ---------------------------------------------------------------------------------------------------------
+#---- bin_granges ------------------------------------------------------------------------------------------------------
 #' Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size} 
 #' @details Bins a single region in \code{\link{GRanges}} format into multiple regions with a specified \code{bin_size}. If \code{length(gr) %% bin_size != 0}, then the last GRange will have a length < \code{bin_size}. This is used instead of tile when you need consistently sized bins with the last bin being smaller
 #' @param gr GRanges; The \code{\link{GRanges}} object
@@ -167,17 +161,17 @@ subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
 #' @export
 bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateType(gr,"Granges")
   .validateType(bin_size, "integer")
   .validateValue(bin_size,">0")
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   gr <- GenomicRanges::slidingWindows(gr,width=bin_size,step=bin_size)
   return(unlist(as(gr, "GRangesList")))
 }
 
-#--- cast_granges ---------------------------------------------------------------------------------------------------------
+#---- cast_granges -----------------------------------------------------------------------------------------------------
 #' Casts genomic regions into \code{\link{GRanges}} format
 #' @details Casts the input as a \code{\link{GRanges}} object. Input can be \code{\link{GRanges}} or a 
 #' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input BED format
@@ -196,7 +190,7 @@ cast_granges <- function(regions) {
   return(regions)
 }
 
-#--- cast_datatable ---------------------------------------------------------------------------------------------------------
+#---- cast_datatable ---------------------------------------------------------------------------------------------------
 #' Casts genomic regions into \code{\link{data.table}} format
 #' @details Casts the input as a \code{\link{data.table}} object. Input can be \code{\link{GRanges}} or a 
 #' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input BED format
