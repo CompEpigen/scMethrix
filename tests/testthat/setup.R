@@ -68,11 +68,10 @@ identical.scm <- function(scm1,scm2,exclude_is_h5 = F) {
   
   match = 
     identical(as.matrix(score(scm1)),as.matrix(score(scm2))) &&
-    identical(as.matrix(counts(scm1)),as.matrix(counts(scm2))) &&
     identical(colData(scm1),colData(scm2)) && 
     identical(rowData(scm1),rowData(scm2)) &&
     identical(metadata(scm1),metadata(scm2))
- 
+  
   return(match)
 }
 
