@@ -93,9 +93,14 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
-  if (typeof(type) != "closure") {
+  if (!.validateType(type,"function",throws=F)) {
     .validateType(type,"String")
     type = .validateArg(type,cluster_scMethrix)
+    
+    if (type == "model") {
+      .validatePackageInstall("mclust")
+      if (!is.null(n_clusters)) warning("n_clusters is ignored for model-based clustering")
+    }
   }
   .validateType(n_clusters,"integer")
   .validateType(colname,"string")
@@ -108,16 +113,13 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
     if (attr(dist,"Size") != ncol(scm) || !setequal(labels(dist),sampleNames(scm))) 
       stop("Invalid distance matrix. Must contain all samples present in the experiment")
   }
-  
-  if (type == "model") .validatePackageInstall("mclust")
-  
+
   Cluster <- Sample <- NULL
   
   #---- Function code ------------------------------------------------------
 
   if (.validateType(type,"function",throws=F)) {
-    
-    fit <- type(dist)
+    fit <- type(dist, ...)
     if (!setequal(labels(fit),sampleNames(scm))) stop("Invalid cluster function. Must output a named vector containing all samples in the experiment.")
     colData <- data.frame(Sample = names(fit), Cluster = fit)
   } else if (type=="hierarchical") {
@@ -125,11 +127,9 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
     fit <- stats::cutree(fit, k=n_clusters)
     colData <- data.frame(Sample = names(fit), Cluster = fit)
   } else if (type=="partition") {
-    fit <- stats::kmeans(dist, centers = min(n_clusters,attr(dist,"Size")-1)) # Max clusters = nrow(scm)-1
+    fit <- stats::kmeans(dist, centers = min(n_clusters,attr(dist,"Size")-1), ...) # Max clusters = nrow(scm)-1
     colData <- data.frame(Sample = names(fit$cluster), Cluster = fit$cluster)
   } else if (type == "model") {
-    
-    if (!is.null(n_clusters)) warning("n_clusters is ignored for model-based clustering")
     fit <- mclust::Mclust(as.matrix(t(get_matrix(scm,assay=assay))), ...)
     colData <- data.frame(Sample = names(fit$classification), Cluster = fit$classification)
   }

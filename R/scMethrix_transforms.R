@@ -716,6 +716,9 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
   if (!.validateType(type,"function",throws=F)){ 
     .validateType(type,"String")
     type = .validateArg(type,impute_regions)
+    if (type == "kNN") .validatePackageInstall("impute")
+    if (type == "iPCA") .validatePackageInstall("missMDA")
+    if (type == "RF") .validatePackageInstall("missForest")
   }
   .validateType(verbose,"boolean")
   .validateType(k,"integer")
@@ -730,9 +733,7 @@ impute_regions <- function(scm = NULL, assay="score", new_assay = "impute", regi
 
   yid <- NULL
 
-  if (type == "kNN") .validatePackageInstall("impute")
-  if (type == "iPCA") .validatePackageInstall("missMDA")
-  if (type == "RF") .validatePackageInstall("missForest")
+
   
   #---- Function code ------------------------------------------------------
   if (verbose) message("Starting imputation...",start_time())

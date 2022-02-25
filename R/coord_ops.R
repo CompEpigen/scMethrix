@@ -3,23 +3,21 @@
 #' @details 
 #' This conversion is one-to-many, so for consistency, only the first element in the target assembly is used.
 #' 
-#' LiftOver chains can be found here: \href{https://hgdownload.soe.ucsc.edu/downloads.html}{UCSC}
+#' LiftOver chains can be found at the [UCSC Genome Browser](https://hgdownload.soe.ucsc.edu/downloads.html)
 #' 
-#' Here's links to common chains:
-#' {http://hgdownload.cse.ucsc.edu/goldenpath/hg38/liftOver/hg38ToHg19.over.chain.gz}{hg38 to hg19}
-#' {https://hgdownload.soe.ucsc.edu/gbdb/hg19/liftOver/hg19ToHg38.over.chain.gz}{hg19 to hg38}
+#' Common chain conversions:
+#' * [hg38 to hg19](http://hgdownload.cse.ucsc.edu/goldenpath/hg38/liftOver/hg38ToHg19.over.chain.gz)
+#' * [hg19 to hg38](https://hgdownload.soe.ucsc.edu/gbdb/hg19/liftOver/hg19ToHg38.over.chain.gz)
 #' 
-#' AnnotationHub can also be used to download chains. See an example in the vignettes: 
+#' AnnotationHub can also be used to download chains. See the example in the [vignettes](https://compepigen.github.io/scMethrix/articles/x03_transforms.html).
 #' 
 #' @inheritParams generic_scMethrix_function
-#' @param chain string; the file location for the desired chain to use in liftOver
-#' @param target_genome string; the target genome. This will be update the genome field in the output scMethrix object
+#' @inheritParams rtracklayer::liftOver
+#' @param target_genome string; the target genome. This will be update the genome field in the output [scMethrix] object
 #' @export
-#' @return a list of data.table containing number of CpG's and contig lengths
+#' @return [scMethrix] object with liftOver'd genomic ranges
 #' @examples
-#'\dontrun{
-#' hg19_cpgs = methrix::extract_CPGs(ref_genome = 'BSgenome.Hsapiens.UCSC.hg19')
-#' }
+#' \dontrun{# TODO: add example }
 liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRUE) {
 
   #- Input Validation --------------------------------------------------------------------------
@@ -54,10 +52,9 @@ liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRU
 #---- extract_CpGs -----------------------------------------------------------------------------------------------------
 #' Extracts all CpGs from a genome
 #' 
-#' Requires the [Biostrings] and [BSgenome] packages, as well as the package containing the target genome (e.g., [BSgenome.Hsapiens.UCSC.hg19]) if [BSgenome] object is not provided
+#' Requires the [`Biostrings`](https://bioconductor.org/packages/release/bioc/html/Biostrings.html) and [`BSgenome`](https://bioconductor.org/packages/release/bioc/html/BSgenome.html) packages, as well as the package containing the target genome (e.g., [`BSgenome.Hsapiens.UCSC.hg19`](https://bioconductor.org/packages/release/data/annotation/html/BSgenome.Hsapiens.UCSC.hg19.html)) if the `BSgenome` equivalent object is not provided separately.
 #' @inheritParams BSgenome::getBSgenome
 #' @inheritParams generic_scMethrix_function
-#' @importFrom BSgenome installed.genomes getBSgenome seqnames
 #' @export
 #' @return a list of data.table containing number of CpG's and contig lengths
 #' @examples
@@ -90,7 +87,7 @@ extract_CpGs = function(genome = NULL, verbose = TRUE) {
   }
   
   #---- Function code ------------------------------------------------------
-  if (verbose) message("Extracting CpGs from ",slot(gen,"pkgname"),"...",start_time())
+  if (verbose) message("Extracting CpGs from ",methods::slot(ref_genome,"pkgname"),"...",start_time())
   
   # Code borrowed from from: https://support.bioconductor.org/p/95239/
   chrs = GenomeInfoDb::standardChromosomes(ref_genome)
@@ -111,8 +108,8 @@ extract_CpGs = function(genome = NULL, verbose = TRUE) {
 #---- subset_ref_cpgs --------------------------------------------------------------------------------------------------
 #' Subsets a given list of CpGs by another list of CpGs
 #' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
-#' @param ref_cpgs data.table; A reference set of CpG sites (e.g. Hg19 or mm10) in bedgraph format
-#' @param gen_cpgs data.table; A subset of CpG sites. Usually obtained from \code{\link{read_index}}.
+#' @param ref_cpgs data.table; A reference set of CpG sites (e.g. hg19 or mm10) in bedgraph format
+#' @param gen_cpgs data.table; A subset of CpG sites. Usually obtained from [read_index()].
 #' @param verbose boolean; flag to output messages or not
 #' @return Returns list of CpG sites in bedgraph format
 #' @examples
@@ -149,11 +146,11 @@ subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
 }
 
 #---- bin_granges ------------------------------------------------------------------------------------------------------
-#' Bins each region in a \code{\link{GRanges}} object into bins of specified \code{bin_size} 
-#' @details Bins a single region in \code{\link{GRanges}} format into multiple regions with a specified \code{bin_size}. If \code{length(gr) %% bin_size != 0}, then the last GRange will have a length < \code{bin_size}. This is used instead of tile when you need consistently sized bins with the last bin being smaller
-#' @param gr GRanges; The \code{\link{GRanges}} object
-#' @param bin_size integer; x > 0; The length of region in each bin
-#' @return \code{\link{GRangesList}} containing all the binned \code{\link{GRanges}}
+#' Bins each region in a [GenomicRanges::GRanges] object into bins of specified `bin_size` 
+#' @details Bins a single region in [GenomicRanges::GRanges] format into multiple regions with a specified `bin_size`. If `length(gr) %% bin_size != 0`, then the last GRange will have a length < `bin_size`. This is used instead of tile when you need consistently sized bins with the last bin being smaller
+#' @param gr [GenomicRanges::GRanges]; the genomic loci
+#' @param bin_size integer; the length in base pairs of region in each bin
+#' @return [GenomicRanges::GRanges]; the binned genomic loci
 #' @import GenomicRanges
 #' @examples
 #' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,10000))
@@ -172,12 +169,12 @@ bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
 }
 
 #---- cast_granges -----------------------------------------------------------------------------------------------------
-#' Casts genomic regions into \code{\link{GRanges}} format
-#' @details Casts the input as a \code{\link{GRanges}} object. Input can be \code{\link{GRanges}} or a 
-#' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input BED format
-#'  must be \code{chr-start-end} for \code{\link{data.frame}} objects.
-#' @param regions GRanges or data.frame; The input regions to cast to \code{\link{GRanges}}
-#' @return \code{\link{GRanges}} object with the input regions
+#' Casts genomic regions into [GenomicRanges::GRanges] format
+#' @details Casts the input as a [GenomicRanges::GRanges] object. Input can be [GenomicRanges::GRanges] or a 
+#' `data.frame`-compatible class that can be cast through `as.data.frame()`. Input BED format
+#'  must be `chr-start-end` for `data.frame` objects.
+#' @param regions GRanges or data.frame; The input regions to cast to [GenomicRanges::GRanges]
+#' @return [GenomicRanges::GRanges] object with the input regions
 #' @import GenomicRanges
 #' @examples
 #' regions = data.table(chr = 'chr1', start = 1, end = 100)

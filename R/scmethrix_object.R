@@ -141,7 +141,8 @@ setMethod(f = "featureNames", signature = "scMethrix", definition = function(obj
 )
 
 #---- Coercion --------------------------------------------------------------------------------------------------------
-#' @aliases coerce, GenomicRatioSet,scMethrix
+# @aliases coerce, GenomicRatioSet, scMethrix
+#' @importClassesFrom minfi GenomicRatioSet
 #' @exportMethod coerce
 setAs("GenomicRatioSet", "scMethrix", function(from) {
   

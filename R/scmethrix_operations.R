@@ -221,9 +221,8 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row
 #' @export
 #'
 #' @examples
+#' \dontrun{# TODO: add example }
 merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by_row_name = FALSE ,verbose = TRUE) {
-  
-  browser()
   
   #- Input Validation --------------------------------------------------------------------------
   .validateExp(scm1)
@@ -287,8 +286,6 @@ merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by_row_nam
   scm1 <- sort(scm1)
   scm2 <- sort(scm2)
 
-  browser()
-
   stopifnot(length(rowRanges(scm1)) == length(rowRanges(scm2)))
   
   # Combine all metadata except colData
@@ -330,8 +327,6 @@ merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by_row_nam
   # Combine rest of metadata
   colData(scm1)[setdiff(names(colData(scm2)), names(colData(scm1)))] <- NA
   colData(scm2)[setdiff(names(colData(scm1)), names(colData(scm2)))] <- NA
-  
-  browser()
   
   scm <- cbind(scm1,scm2)
   
