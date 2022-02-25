@@ -1,0 +1,47 @@
+---
+title: "S03: Reading in other file types"
+author: "Andrew Lindsay, Reka Toth"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: true
+toc_depth: 3
+toc_float: true
+self_contained: yes
+highlight: pygments
+vignette: >
+  %\VignetteIndexEntry{SO3: Reading in other file types}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# For convenience, here are some workflows for importing other file types into `scMethrix`.
+
+## Reading `IDAT` files
+
+The `read_idats` function is a simple to use importer for `IDAT` files, the common file format for raw data from methylation arrays. The array is measured in two colors for each sample, with a corresponding file for each, typically with the extensions `_Grn.idat` and `_Red.idat`. This function essentially wraps the
+
+Instead of `BedGraph` data, microarray methylation data stored in `.idat` files can be imported by `scMethrix`. 
+
+
+```{r, eval=F}
+  RGset <- minfi::read.metharray.exp(raw_dir, force=TRUE)
+
+  stopifnot(length(setdiff(colnames(RGset),row.names(colData)))==0)
+  
+  Mset <- preprocessNoob(RGset)
+  Rset <- minfi::ratioConvert(Mset)
+  minfi::annotation(Rset) = c(array = array, annotation = annotation)
+  GRset <-  minfi::mapToGenome(Rset)
+  GRset <- convertArray(GRset, outType = target_array, verbose = verbose)
+
+  browser()
+  
+  colData(GRset) <- cbind(colData(GRset),colData)
+```
+
+
+
+
+
+## Reading `BigWig` files
