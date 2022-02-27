@@ -1,88 +1,151 @@
-#--- export_beds ---------------------------------------------------------------------------------------------
-#' Exports all samples in an \code{\link{scMethrix}} objects into individual bedgraph files
-#' @details The structure of the bedgraph files will be a tab-deliminated structure of:
-#' Chromosome | CpG start site | CpG end site | methylation score | coverage | Additional assays (if include = TRUE)
+#---- exportBed ------------------------------------------------------------------------------------------------------
+#' Exports all samples in an `scMethrix` object into individual BED files.
+#' @details The structure of the BED files will be a tab-deliminated structure of:
+#' Chromosome | CpG start site | CpG end site | assay data (from those specified in `assays`) | colData (if `colData = TRUE`)
 #' 
-#' If additional assays are used, and headers enabled, it is up to the user to ensure that assay names are not protected in any downstream analysis of the bedgraph files
+#' By default, the 4 column structure of the [BedGraph](https://genome.ucsc.edu/goldenPath/help/bedgraph.html) format will be exported (chr-start-end-score).
+#' 
+#' Caution: If headers are enabled, it is up to the user to ensure that assay names or `colData()` columns are not protected in any downstream analysis of the BED files. See [BED format](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) for examples.
 #' @inheritParams generic_scMethrix_function
-#' @param path string; the \code{\link{file.path}} of the directory to save the files
+#' @param path string; the `file.path` of the output directory. Default: [tempdir()]
 #' @param suffix string; optional suffix to add to the exported bed files 
-#' @param include boolean; flag to include the values of non-standard assays in the bedgraph file
-#' @param header boolean; flag to add the header onto each column
+#' @param assays string; list of assays to include in each file. Each assay will be a separate column.
+#' @param colData boolean; include the sample metadata from `colData()`
+#' @param header boolean; flag to add the header onto each column. Some header names are invalid; see caution in details.
 #' @param na.rm boolean; flag to remove the NA values from the output data
+#' @param trackline boolean; flag to add track data to the file (for USCS Genome Browser)
 #' @return nothing
 #' @examples
 #' data('scMethrix_data')
-#' export_beds(scMethrix_data,path=paste0(tempdir(),"/export"))
+#' #exportBed(scMethrix_data,path=paste0(tempdir(),"/export"))
 #' @export
-export_beds <- function(scm = NULL, path = NULL, suffix = NULL,  include = FALSE, na.rm = TRUE, header = FALSE, verbose = TRUE) {
-  
+exportBed <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "score", colData = FALSE, na.rm = TRUE, header = FALSE, trackline = FALSE, verbose = TRUE) {
+
   #- Input Validation --------------------------------------------------------------------------
   meth <- cov <- NULL
-  
+
   .validateExp(scm)
   .validateType(path,c("directory","string"))
   .validateType(suffix,c("string","null"))
-  .validateType(include,"boolean")
+  .validateType(assays,"string")
   .validateType(na.rm,"boolean")
   .validateType(header,"boolean")
   .validateType(verbose,"boolean")
+
+  doneFiles <- NULL
+  
+  # Set track parameters
+  parameters <-c("color" = "255,0,0",
+                 "visibility"="full",
+                 "altColor" = "128,128,128",
+                 "autoScale"="on",
+                 "viewLimits"="0:1",
+                 "windowingFunction"="mean")
+  parameters <- paste0(" ", paste(names(parameters), parameters,
+                                  sep = "=", collapse = " "))
   
   #- Function code -----------------------------------------------------------------------------
   if (verbose) message("Exporting beds to ",path,start_time())
-  
+
   dir.create(path, showWarnings = FALSE)
-  
-  files <- row.names(scm@colData)
+
+  samples <- row.names(scm@colData)
   rrng <- data.table::as.data.table(rowRanges(scm))
   rrng[,c("width","strand"):=NULL]
-  
+
   if (is.null(suffix)) suffix <- "" #TODO: Should switch to some kind of regex input
-  
-  for (i in 1:length(files)) {
-    
-    file = files[i]
-    
-    val <- score(scm)[, file] 
+
+  for (i in 1:length(samples)) {
+
+    samp = samples[i]
+
+    val <- score(scm)[, samp]
     rrng[,meth := val]
-    
+
     if (has_cov(scm)) {
-      val <- counts(scm)[, file] 
+      val <- counts(scm)[, samp]
       rrng[,cov := val]
     }
-    
+
     if (include) {
       assays <- assays(scm)
     }
-    
+
     if (na.rm) {  out <- stats::na.omit(rrng, cols="meth", invert=FALSE)
     } else {      out <- rrng}
+
+    trackdata <- data.table(paste0('track type=bedGraph name="', rownames(colData(m))[i], '"', parameters))
+  
+    filepath <- paste0(path,"/",samp,suffix,".bedgraph")
     
-    data.table::fwrite(out, paste0(path,"/",file,suffix,".bedgraph"), append = FALSE, sep = "\t", row.names = FALSE, 
+    if (trackline) data.table::fwrite(trackdata, filepath, append = FALSE, sep = "\t", 
+                                      row.names = FALSE,col.names = FALSE, quote = FALSE)
+  
+  
+    data.table::fwrite(out, filepath, append = FALSE, sep = "\t", row.names = FALSE,
            col.names = FALSE, quote = FALSE)
+  
+    doneFiles <- c(doneFiles,filepath)
     
-    if (verbose) message("Exported ",i," of ",length(files)," (",split_time(), ")")
+    if (verbose) message("Exported ",i," of ",length(samples)," (",split_time(), ")")
   }
   
-  if (verbose) message("BEDs exported in in ",stop_time())
+  # Check to make sure all files were successfully exported
+  ls <- list.files(path = path, full.names = TRUE)
+  ls <- setdiff(doneFiles,ls)
   
-  invisible()
+  if (!is.empty(ls))
+    stop("Error in export. Expected files are missing after export:\n",paste(ls,collapse=",\n"))
+  
+  if (verbose) message("BEDs exported in in ",stop_time())
 }
 
-#--- export_methrix ------------------------------------------------------------------------------------------
-#' Converts an \code{\link{scMethrix}} object to methrix object
-#' @details Removes extra slot data from an \code{\link{scMethrix}} object and changes structure to match
-#' \code{\link[methrix]{methrix}} format. A 'counts' assay for coverage values must be present. 
-#' Functionality not supported by methrix (e.g. reduced dimensionality)
-#' will be discarded.
-#' @inheritParams generic_scMethrix_function
-#' @param h5_dir Location to save the methrix H5 file
-#' @return a \code{\link[methrix]{methrix}} object
+#---- exportBedgraph --------------------------------------------------------------------------------------------------
+#' Exports all samples in an [scMethrix] object into individual UCSC-compatible bedGraph files.
+#' 
+#' Essentially a wrapper for [exportBed()], but with mandatory format-specific options already selected.
+#' @inheritParams exportBed
+#' @return Nothing
+#' @export
+#' @examples
+#' #do nothing
+exportBedGraph <- function(scm = NULL, path = tempdir(), suffix = NULL, na.rm = TRUE, verbose = TRUE) {
+  export_bed(scm = NULL, path = getwd(), suffix = NULL, assays = "score", colData = FALSE, na.rm = TRUE, 
+             header = FALSE, trackline = TRUE, verbose = TRUE)
+}
+
+
+#---- exportMultiBed --------------------------------------------------------------------------------------------------
+#' Exports all samples in an [scMethrix] objects into single BED file for each assay
+#' @details The structure of the BED files will be a tab-deliminated structure of:
+#' Chromosome | CpG start site | CpG end site | Sample Data
+#' @inheritParams exportBed
+#' @param assays string; the list of assays to export BED files for. Each assay will be a seperate file.
+#' @param header boolean; flag to add the header onto each column. For samples, the `sampleName()` for each will be used.
+#' @return nothing
 #' @examples
 #' data('scMethrix_data')
-#' # convert_to_methrix(scMethrix_data)
+#' #export_beds(scMethrix_data,path=paste0(tempdir(),"/export"))
 #' @export
-export_methrix <- function(scm = NULL, h5_dir = NULL) {
+exportMultiBed <- function(scm, path = tempdir(), suffix = NULL, assays = "score", na.rm = TRUE, header = FALSE, verbose = TRUE) {
+  
+  
+  
+  
+}
+
+
+#---- exportMethrix ----------------------------------------------------------------------------------------------------
+#' Converts an [scMethrix] object to methrix object
+#' @details Removes extra slot data from an [scMethrix] object and changes structure to match
+#' [methrix::methrix] format. A `counts` assay for coverage values must be present. 
+#' Functionality not supported by `methrix` (e.g. reduced dimensionality) will be discarded.
+#' @inheritParams exportBed
+#' @return a [methrix::methrix] object
+#' @examples
+#' \dontrun{#TODO: write example}
+#' @export
+exportMethrix <- function(scm = NULL, path = tempdir()) {
 
   #- Input Validation --------------------------------------------------------------------------
   chr <- m_obj <- NULL
@@ -120,72 +183,59 @@ export_methrix <- function(scm = NULL, h5_dir = NULL) {
   return(m_obj) 
 }
 
-#--- export_bsseq --------------------------------------------------------------------------------------------
-#' Convert `[scMethrix]` to `[bsseq::BSseq]`\code{bsseq} object
-#' @details Takes `[scMethrix]` object and returns a \code{bsseq} object. 
-#' @param scm \code{\link{scMethrix}} object
-#' @param m_assay matrix; the assay containing methylation scores
-#' @param c_assay matrix; the assay containing count scores
-#' @param path string; the path of the export directory
-#' @return An object of class \code{bsseq}
+#---- exportBSseq ------------------------------------------------------------------------------------------------------
+#' Exports an [scMethrix] object as [bsseq::BSseq] object.
+#' @inheritParams exportBed
+#' @param scoreAssay matrix; the assay containing methylation scores
+#' @param countAssay matrix; the assay containing count values
+#' @return A [bsseq::BSseq] object
 #' @examples
-#' \dontrun{
-#' data('scMethrix_data')
-#' export_bsseq(scMethrix_data)
-#' }
+#' \dontrun{#TODO: write example}
 #' @export
-export_bsseq <- function(scm, m_assay = "score", c_assay="counts", path = NULL) {
+exportBSseq <- function(scm, scoreAssay = "score", countAssay = "counts", path = tempdir()) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   if (!has_cov(scm)) stop("BSSeq requires a coverage matrix.", call. = FALSE)
-  .validateAssay(scm,m_assay)
-  .validateAssay(scm,c_assay)
+  .validateAssay(scm,scoreAssay)
+  .validateAssay(scm,countAssay)
   .validateType(path,"string")
   .validatePackageInstall("bsseq")
   
   # if (anyNA(get_matrix(scm,m_assay)) || anyNA(get_matrix(scm,c_assay)))
   #   warning("NAs present in assay. These will be filled with zero values.")
   
-  #- Function code -----------------------------------------------------------------------------
-  M_clean <- get_matrix(scm,m_assay) * get_matrix(scm,c_assay)
-  M_clean[is.na(M_clean)] <- 0
-  C_clean <- get_matrix(scm,c_assay)
-  C_clean[is.na(counts(scm))] <- 0
+  #---- Function code ------------------------------------------------------
+  M <- get_matrix(scm,scoreAssay) * get_matrix(scm,countAssay)
+  M[is.na(M)] <- 0
+  Cov <- get_matrix(scm,countAssay)
+  Cov[is.na(counts(scm))] <- 0
   
-  b <- bsseq::BSseq(M = M_clean, Cov = C_clean, pData = colData(scm),
+  b <- bsseq::BSseq(M = M, Cov = Cov, pData = colData(scm),
                     gr = rowRanges(scm), sampleNames = rownames(colData(scm)))
   return(b)
 }
 
-#--- export_bigwigs ------------------------------------------------------------------------------------------
-#' Exports scMethrix object as bigWigs
-#' @param scm \code{\link{scMethrix}} object
-#' @param assay string; the assay to export. Default is "score"
-#' @param path string; Output directory name where the files should be saved. Default tempdir()
-#' @param samp_names string; List of sample names to export
-#' @examples
-#' \dontrun{
-#' data('scMethrix_data')
-#' export_bigwigs(scm = scMethrix_data, assay = "score", output_dir = tempdir())
-#' }
-#' @return NULL
-#' @importFrom GenomeInfoDb seqlengths
+#---- exportBigWigs ----------------------------------------------------------------------------------------------------
+#' Exports an [scMethrix] object as `bigWig`.
+#' @inheritParams exportBed
+#' @param assay string; the assay to export. Default = "score".
+#' \dontrun{#TODO: write example}
+#' @return Nothing
 #' @export
-export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = NULL){
+exportBigWigs <- function(scm, assay = "score", path = tempdir()){
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   .validateAssay(scm,assay)
   .validateType(path,"string")
-  .validateType(samp_names,"string")
   .validatePackageInstall("rtracklayer")
   
   if (is.null(path)){
     stop("A valid path needs to be supplied.", call. = FALSE)
   }
 
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (!dir.exists(path)) {
     dir.create(path = path, showWarnings = FALSE, recursive = TRUE)
   }
@@ -196,15 +246,9 @@ export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = N
   
   seql = GenomicRanges::width(range(SummarizedExperiment::rowRanges(scm)))
   names(seql) = levels(GenomeInfoDb::seqnames(scm))
-  
-  if(is.null(samp_names)){
-    samp_names = names(mcols(mat_gr))
-  }else{
-    samp_names = intersect(samp_names, names(mcols(mat_gr)))
-    if(length(samp_names) == 0) stop("Incorrect sample names! No matching samples in the experiment")
-  }
-  
-  for(samp in samp_names){
+  samples = names(mcols(mat_gr))
+
+  for(samp in samples){
     op_bw = paste0(path, "/", samp, ".bw")
     message("   Writing ", op_bw)
     samp_gr = mat_gr[,samp]
@@ -217,17 +261,23 @@ export_bigwigs = function(scm, assay = "score", path = tempdir(), samp_names = N
   message("Files generated in ",stop_time())
 }
 
-#--- export_seurat -------------------------------------------------------------------------------------------
-export_seurat <- function(scm,assay="score", path = NULL) {
+#---- exportSeurat -----------------------------------------------------------------------------------------------------
+#' Exports an [scMethrix] object as [Seurat::Seurat]
+#' @inheritParams exportBed
+#' @param assay string; the assay to export. Default = "score".
+#' @return A [Seurat::Seurat] object
+#' @export
+#' @examples
+#' \dontrun{#TODO: write example}
+exportSeurat <- function(scm, assay="score") {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   if (!has_cov(scm)) stop("Seurat requires a coverage matrix.", call. = FALSE)
   .validateAssay(scm,assay)
-  .validateType(path,"string")
   .validatePackageInstall("Seurat")
     
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   cnt <- counts(scm)
   rownames(cnt) <- paste0("CpG",1:nrow(cnt))
   cnt[is.na(cnt)] <- 0

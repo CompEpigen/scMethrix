@@ -96,3 +96,11 @@ setwd("D:/Git/scMethrix")
 pkgdown::build_site()
 
 saveRDS(colData, file = "colData.rds")
+
+#Testing stuff
+scm1 <- load_scMethrix("d:/scm1.rds")
+scm2 <- load_scMethrix("d:/scm2.rds")
+rr1 = rowRanges(scm1); rr2 = rowRanges(scm2)
+scm <- merge_scMethrix2(scm1,scm2,by_row_name = T)
+
+

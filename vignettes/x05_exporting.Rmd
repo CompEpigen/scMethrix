@@ -1,0 +1,78 @@
+---
+title: "05: Exporting Downstream"
+author: "Andrew Lindsay, Reka Toth"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: true
+toc_depth: 3
+toc_float: true
+self_contained: yes
+highlight: pygments
+vignette: >
+  %\VignetteIndexEntry{05: Exporting Downstream}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Outputting to other formats
+
+## [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1)
+
+Default format output is that of [bedGraph](https://genome.ucsc.edu/goldenPath/help/bedgraph.html), but additional columns can be added for assays or sample metadata
+
+```{r eval=FALSE, echo = 4}
+# For standard bedGraph files
+data('scMethrix_data')
+scm <- scMethrix_data
+dir <- paste(tempdir(),"\\BED")
+exportBed(scm, path = dir)
+list.files(path = dir)
+```
+
+## [BedGraph](https://genome.ucsc.edu/goldenPath/help/bedgraph.html)
+
+This is a strict version of `exportBed` for compatibility with the [UCSC Genome Browser](https://genome.ucsc.edu/)
+
+```{r eval=FALSE, echo = 2}
+# For BED files containing score, coverage, and sample data
+dir <- paste(tempdir(),"\\bedgraph"
+exportBedgraph(scm, path = dir, assays = c("score","counts"), colData = TRUE, header = TRUE)
+list.files(path = dir)
+```
+
+## MultiBED
+
+A 'MultiBED' file for each assay where each column represents the data from one sample. Genomic loci coordinates are the same as typical `BED` files. These files are necessary for some downstream tools (e.g., [metilene](https://www.bioinf.uni-leipzig.de/Software/metilene/Manual/#8_input) DMR caller).
+
+```{r eval=FALSE, echo = 2}
+dir <- paste(tempdir(),"\\multibed"
+exportMultibed(scm, path = dir, assays = c("score","counts"))
+list.files(path = dir)
+```
+
+## [methrix](https://bioconductor.org/packages/release/bioc/html/methrix.html)
+
+```{r eval=FALSE, echo = 2}
+exportMethrix(scm, path = dir, assays = c("score","counts"))
+```
+
+## [BSseq](https://bioconductor.org/packages/release/bioc/html/bsseq.html)
+
+```{r eval=FALSE}
+exportBSseq(scm, scoreAssay = "score", countAssay = "count")
+```
+
+## [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html)
+
+```{r eval=FALSE, echo = 2}
+dir <- paste(tempdir(),"\\bigwig"
+exportBigWig(scm, path = dir, assay = "score")
+list.files(path = dir)
+```
+
+## [Seurat](https://satijalab.org/seurat/)
+
+```{r eval=FALSE, echo = 2}
+exportSeurat(scm, assay = "score")
+```
