@@ -7,36 +7,38 @@
 #' 
 #' There is an assumption that the first input file will contain the maximum methylation score. It would be extremely unlikely that this assumption is invalid. 
 #' 
+#' Caution: If `replace == TRUE`, there will be no prompt to delete the directory when saving `HDF5` files. All contents of the specified directory will be erased.
+#' 
 #' @param files list of strings; file.paths of BED files
-#' @param ref_cpgs data.table; list of CpG sites in the tab-delimited format of chr-start-end. Must be zero-based genome.
-#' @param colData data.frame; information about each samples. Default is a blank \code{data.frame} with row.names corresponding to each sample.
-#' @param stranded boolean; Whether in input data is stranded. Default FALSE
-#' @param strand_collapse boolean; whether to collapse the crick strand into watson strand. Default FALSE
-#' @param genome string; Name of genome. Default = NULL
-#' @param batch_size integer; Max number of files to hold in memory at once. Default 20
-#' @param n_threads integer; number of threads to use. Default 1.
+#' @param ref_cpgs data.table; list of CpG sites in the tab-delimited format of `chr-start-end-strand`. Must be zero-based genome.
+#' @param colData data.frame; information about each samples. Default is a blank `data.frame` with row.names corresponding to each sample.
+#' @param stranded boolean; Whether in input data is stranded. Default `FALSE`.
+#' @param strand_collapse boolean; whether to collapse the Crick strand into Watson strand. Default = `FALSE.`
+#' @param genome string; Name of genome. Default = `NULL.`
+#' @param batch_size integer; Max number of files to hold in memory at once. Default = `20.`
+#' @param n_threads integer; number of threads to use. Default = `1`.
 #' Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.
-#' @param is_h5 boolean; Should the coverage and methylation matrices be stored as \code{\link{HDF5Array}}
-#' @param h5_dir string; directory to store H5 based object. This can be NULL and the experiment can be manually saved later
-#' @param h5_temp string; temporary directory to store hdf5
-#' @param metadata named [list()] of strings; list of relevant experiment data. Elements with the name of 'is_h5' and 'genome' will be replaced by the arguments above. Default = NULL.
-#' @param verbose boolean; flag to output messages or not.
-#' @param zero_based boolean; flag for whether the input data is zero-based or not
-#' @param replace boolean; flag for whether to delete the contents of h5_dir before saving
-#' @param fill boolean; flag whether to fill the output matrixes with all CpGs in ref_cpgs. This must be TRUE for HDF5-based experiments. Performance is typically better if fill = TRUE, but may require more memory.
-#' @param pipeline string; Default NULL. Currently supports "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
+#' @param is_h5 boolean; Should the coverage and methylation matrices be stored as [HDF5Array::HDF5Array]. Default = `FALSE.`
+#' @param h5_dir string; directory to store H5 based object. This can be NULL and the experiment can be manually saved later. Default = `NULL.`
+#' @param h5_temp string; temporary directory to store HDF5 files
+#' @param metadata named [list()] of strings; list of relevant experiment data. Elements with the name of `is_h5` and `genome` will be replaced by the arguments above. Default = `NULL.`
+#' @param verbose boolean; flag to output messages or not. Default = `TRUE.`
+#' @param zero_based boolean; flag for whether the input data is zero-based or not. Default = `FALSE`.
+#' @param replace boolean; flag for whether to delete the contents of `h5_dir` before saving. Default = `FALSE`.
+#' @param fill boolean; flag whether to fill the output matrices with all CpGs in `ref_cpgs`. This must be TRUE for HDF5-based experiments. Performance is typically better if fill = TRUE, but may require more memory.
+#' @param pipeline string; Default NULL. Currently supports `Bismark_cov`, `MethylDackel`, `MethylcTools`, `BisSNP`, `BSseeker2_CGmap`
 #' If not known use idx arguments for manual column assignments.
-#' @param chr_idx integer; column index for chromosome in bedgraph files
-#' @param start_idx integer; column index for start position in bedgraph files
-#' @param end_idx integer; column index for end position in bedgraph files
-#' @param beta_idx integer; column index for beta values in bedgraph files
-#' @param M_idx integer; column index for read counts supporting Methylation in bedgraph files
-#' @param U_idx integer; column index for read counts supporting Un-methylation in bedgraph files
-#' @param strand_idx integer; column index for strand information in bedgraph files
-#' @param cov_idx integer; column index for total-coverage in bedgraph files
-#' @param keep_cov boolean; Should the coverage matrix be kept in the final object
+#' @param chr_idx integer; column index for chromosome
+#' @param start_idx integer; column index for start position
+#' @param end_idx integer; column index for end position
+#' @param beta_idx integer; column index for beta values
+#' @param cov_idx integer; column index for read coverage
+#' @param M_idx integer; column index for methylated read count
+#' @param U_idx integer; column index for unmethylated read count
+#' @param strand_idx integer; column index for strand information
+#' @param keep_cov boolean; Should the coverage matrix be kept in the final object. Default = `TRUE`.
 #' @export
-#' @return An object of class \code{\link{scMethrix}}
+#' @return An object of class [scMethrix]
 #' @rawNamespace import(data.table, except = c(shift, first, second))
 #' @import SingleCellExperiment GenomicRanges tools
 #' @examples
@@ -53,8 +55,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome = NULL, bat
                       stranded = FALSE, strand_collapse = FALSE, chr_idx = NULL, start_idx = NULL, end_idx = NULL, beta_idx = NULL,
                       M_idx = NULL, U_idx = NULL, strand_idx = NULL, cov_idx = NULL) {
 
-  #- Input Validation --------------------------------------------------------------------------
-  #sapply(files,function(file) .validateType(file,"string")) #TODO: this doesn't work for some reason...
+  #---- Input validation ---------------------------------------------------
   .validateType(files,"string")
   #.validateType(ref_cpgs)
   #.validateType(colData,"dataframe")
@@ -107,7 +108,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome = NULL, bat
   
   Row.names <- beta <- cov <- NULL
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   # Get the correct indexes of the input beds
   if (pipeline == "Custom") {
     if (verbose) message(paste0("BED column format:  Custom"))
@@ -215,11 +216,11 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome = NULL, bat
   return(m_obj)
 }
 
-#--- read_index ---------------------------------------------------------------------------------------------
+#---- read_index -------------------------------------------------------------------------------------------------------
 #' Parse BED files for unique genomic coordinates
-#' @details Create list of unique genomic regions from input BED files. Populates a list of batch_size+1 with 
-#' the genomic coordinates from BED files, then runs \code{\link{unique}} when the list is full and keeps the running
-#' results in the batch_size+1 position. Also indexes based on 'chr' and 'start' for later searching.
+#' @details Create list of unique genomic regions from input BED files. Populates a list of `batch_size+1` with 
+#' the genomic coordinates from BED files, then runs [unique()] when the list is full and keeps the running
+#' results in the `batch_size+1` position. The data.table is indexed by `chr` and `start` for later searching.
 #' @inheritParams read_beds
 #' @param col_list string; The column index object for the input BED files
 #' @return data.table containing all unique genomic coordinates
@@ -231,7 +232,7 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome = NULL, bat
 #' @export
 read_index <- function(files, col_list, n_threads = 1, zero_based = FALSE, batch_size = 200, verbose = TRUE) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   # .validateType(files,"string")
   # .validateType(col_list)
   # n_threads <- .validateThreads(n_threads)
@@ -239,7 +240,7 @@ read_index <- function(files, col_list, n_threads = 1, zero_based = FALSE, batch
   # .validateType(batch_size,"integer")
   # .validateType(verbose,"boolean")
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   # Parallel functionality
   if (n_threads != 1) {
     
@@ -314,9 +315,9 @@ read_index <- function(files, col_list, n_threads = 1, zero_based = FALSE, batch
   return(rrng)
 }
 
-#--- read_bed_by_index --------------------------------------------------------------------------------------
+#---- read_bed_by_index ------------------------------------------------------------------------------------------------
 #' Parses BED files for methylation values using previously generated index genomic coordinates
-#' @details Creates an NA-based vector populated with methlylation values from the input BED file in the
+#' @details Creates an NA-based vector populated with methylation values from the input BED file in the
 #' respective indexed genomic coordinates
 #' @param file string; file.paths of BED file to parse
 #' @param col_list string; The column index object for the input BED files
@@ -330,7 +331,7 @@ read_index <- function(files, col_list, n_threads = 1, zero_based = FALSE, batch
 
 read_bed_by_index <- function(file, ref_cpgs = NULL, col_list = NULL, zero_based=FALSE, strand_collapse = FALSE, fill = TRUE, verbose = TRUE) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   # .validateType(files,"string")
   # .validateType(ref_cpgs,)
   # .validateType(col_list)
@@ -339,7 +340,7 @@ read_bed_by_index <- function(file, ref_cpgs = NULL, col_list = NULL, zero_based
   # .validateType(fill,"boolean")
   . <- beta <- cov <- M <- U <- chr <- NULL
 
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   start_time()
 
   # if (fill && !is.null(ref_cpgs)) {
@@ -418,7 +419,7 @@ read_bed_by_index <- function(file, ref_cpgs = NULL, col_list = NULL, zero_based
 }
 
 # read_bed_by_index <- function(files, ref_cpgs = NULL, col_list = NULL, zero_based=FALSE, strand_collapse = FALSE, fill = TRUE, verbose = TRUE) {
-#   #- Input Validation --------------------------------------------------------------------------
+#   #---- Input validation ---------------------------------------------------
 #   # .validateType(files,"string")
 #   # .validateType(ref_cpgs,)
 #   # .validateType(col_list)
@@ -427,7 +428,7 @@ read_bed_by_index <- function(file, ref_cpgs = NULL, col_list = NULL, zero_based
 #   # .validateType(fill,"boolean")
 #   . <- meths <- covs <- M <- U <- chr <- NULL
 #   
-#   #- Function code -----------------------------------------------------------------------------
+#   #---- Function code ------------------------------------------------------
 #   start_time()
 #   
 #   if (fill && !is.null(ref_cpgs)) {
@@ -666,7 +667,7 @@ read_bed_by_index <- function(file, ref_cpgs = NULL, col_list = NULL, zero_based
 #   }
 # }
 # 
-#--- read_hdf5_data -----------------------------------------------------------------------------------------
+#---- read_hdf5_data ---------------------------------------------------------------------------------------------------
 #' Writes values from input BED files into an in-disk \code{\link{HDF5Array}}
 #' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.
@@ -683,7 +684,7 @@ read_bed_by_index <- function(file, ref_cpgs = NULL, col_list = NULL, zero_based
 read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 1, h5_temp = NULL,  
                            zero_based = FALSE, strand_collapse = FALSE, verbose = TRUE) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   # .validateType(files,"string")
   # .validateType(ref_cpgs,"boolean")
   # .validateType(col_list,"boolean")
@@ -693,7 +694,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
   # .validateType(zero_based,"boolean")
   # .validateType(verbose,"boolean")
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   start_time()
   
   message("Allocating HDF5 resources...") 
@@ -933,9 +934,9 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
 #   return(reads)
 # }
 
-#--- read_mem_data ------------------------------------------------------------------------------------------
-#' Writes values from input BED files into an in-memory \code{\link{matrix}}
-#' @details Using the generated index for genomic coordinates, creates a NA-based dense matrtix of methylation
+#---- read_mem_data ----------------------------------------------------------------------------------------------------
+#' Writes values from input BED files into an in-memory [matrix]
+#' @details Using the generated index for genomic coordinates, creates a NA-based dense matrix of methylation
 #' values for each BED file/sample. Each column contains the meth. values for a single sample.
 #' @inheritParams read_beds
 #' @param col_list The column index object for the input BED files
@@ -947,7 +948,7 @@ read_hdf5_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads
 #' }
 read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads = 1, zero_based = FALSE,  
                           strand_collapse = FALSE, verbose = TRUE, fill = TRUE) {
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   # .validateType(files,"string")
   # .validateType(ref_cpgs,"boolean")
   # .validateType(col_list,"boolean")
@@ -956,7 +957,7 @@ read_mem_data <- function(files, ref_cpgs, col_list, batch_size = 20, n_threads 
   # .validateType(zero_based,"boolean")
   # .validateType(verbose,"boolean")
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   start_time()
   
   if (verbose) message("Reading in BedGraph files...")

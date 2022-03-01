@@ -63,7 +63,7 @@ scMethrix <- function(assays = list(), colData = S4Vectors::DataFrame(), rowRang
 }
 
 #---- Generic methods -------------------------------------------------------------------------------------------------
-#' @describeIn scMethrix-class Show method for an [scMethrix()] object
+#' @describeIn scMethrix-class Show method for an [scMethrix] object
 setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   
   h5 <- is_h5(object)
@@ -175,7 +175,7 @@ setGeneric("cd", function(object) standardGeneric("cd"))
 
 #---- Metadata functions --------------------------------------------------------------------------
 #---- cd ---------------------------------------------------------------------------------------------------------------
-#' @describeIn scMethrix-class Same as colData(), but shorter syntax, and will output row names if there is no columns
+#' @describeIn scMethrix-class Same as `colData()`, but shorter syntax, and will output row names if there is no columns
 setMethod(f = "cd", signature = "scMethrix", definition = function(object)   {
   d <- colData(object)
   
@@ -196,7 +196,7 @@ setMethod(f = "cd", signature = "scMethrix", definition = function(object)   {
 #---- rd ---------------------------------------------------------------------------------------------------------------
 setGeneric("rd", function(object) standardGeneric("rd"))
 
-#' @describeIn scMethrix-class Same as rowData(), but shorter syntax, and will output row names if there is no columns
+#' @describeIn scMethrix-class Same as `rowData()`, but shorter syntax, and will output row names if there is no columns
 setMethod(f = "rd", signature = "scMethrix", definition = function(object)   {
   
   d <- rowData(object)
@@ -226,7 +226,7 @@ setMethod(f = "md", signature = "scMethrix", definition = function(object)   {
 #---- is_h5 ------------------------------------------------------------------------------------------------------------
 setGeneric("is_h5", function(object) standardGeneric("is_h5"))
 
-#' @describeIn scMethrix-class Checks if \code{\link{scMethrix}} object is an HDF5 object
+#' @describeIn scMethrix-class Checks if [scMethrix] object is an HDF5 object
 #' @section is_h5():
 #'  This checks the metadata whether the experiment is in HDF5 format. This is found from the metadata attribute \code{is_h5}. A secondary check of all assays also occurs to ensure they are all of appropriate type. An error will be thrown if any assays are the wrong type. This should not occur during normal usage of the package, but may be caused by manual manipulation of assays. If this does occur, [convert_scMethrix()] should be used to restore consistency.
 setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   {
@@ -234,8 +234,8 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 })
 
 #---- .validDims ---------------------------------------------------------------------------
-#' Determines if a [scMethrix()] object has valid assay dimensions
-#' @param object An [scMethrix()] object
+#' Determines if a [scMethrix] object has valid assay dimensions
+#' @param object An [scMethrix] object
 #' @noRd
 .validDims <- function(object) {
   # Check the dimensions of assays are correct
@@ -251,8 +251,8 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 }
 
 #---- .validH5 ---------------------------------------------------------------------------
-#' Make sure \code{is_h5} variable is present
-#' @param object An [scMethrix()] object
+#' Make sure `is_h5` variable is present
+#' @param object An [scMethrix] object
 #' @noRd
 .validH5 <- function(object) {
   if (!"is_h5" %in% names(S4Vectors::metadata(object))) {
@@ -264,7 +264,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 
 #---- .validSamples ---------------------------------------------------------------------------
 #' Check if all the sample names are consistent
-#' @param object An [scMethrix()] object
+#' @param object An [scMethrix] object
 #' @noRd
 .validSamples <- function(object) {
   assay_cols <- lapply(assays(object),colnames)
@@ -278,7 +278,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 
 #---- .validAssays ---------------------------------------------------------------------------
 # Check if all assays are either matrix or HDF5matrix-related types
-#' @param object An [scMethrix()] object
+#' @param object An [scMethrix] object
 #' @noRd
 .validAssays <- function(object) {
   exp_type = if (is_h5(object)) c("HDF5Matrix","DelayedMatrix") else "matrix"
@@ -296,7 +296,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 
 #---- .validRedDim ---------------------------------------------------------------------------
 # Check if all reduced dim names are consistent
-#' @param object An [scMethrix()] object
+#' @param object An [scMethrix] object
 #' @noRd
 .validRedDim <- function(object) {  
   red_rows <- lapply(reducedDims(object),rownames)
@@ -312,15 +312,15 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 }
 
 #---- .validscMethrix ---------------------------------------------------------------------------
-#' Determines if a [scMethrix()] object is valid.
+#' Determines if a [scMethrix] object is valid.
 #' 
 #' Checks for:
-#' * 'is_h5' is present in \code{metadata()}
-#' * assay dimensions  are consistent with \code{rowData()} and \code{colData()}
-#' * sample names in assays (\code{colnames())} are consistent with \code{colData()}
-#' * sample names in reduced dims (\code{reducedDims(rownames())}) are consistent with \code{colData()}
-#' * assay classes are consistant with \code{is_h5}
-#' @param object A [scMethrix()] object
+#' * 'is_h5' is present in `metadata()`
+#' * assay dimensions  are consistent with `rowData()` and `colData()`
+#' * sample names in assays (`colnames()`) are consistent with `colData()`
+#' * sample names in reduced dims (`reducedDims(rownames())`) are consistent with `colData()`
+#' * assay classes are consistent with `is_h5`
+#' @param object A [scMethrix] object
 #' @importFrom methods validObject
 #' @noRd
 .validscMethrix <- function(object) {
@@ -346,16 +346,16 @@ S4Vectors::setValidity2("scMethrix", .validscMethrix)
 
 #---- generic_scMethrix_function -----------------------------------------------------------------------------
 #' Function used only for inheritance for Roxygen2 documentation. Lists the common function inputs used in the package
-#' @param scm [scMethrix()]; a single cell methylation experiment object
-#' @param assay string; name of an existing assay. Default = "score"
-#' @param new_assay string; name for transformed assay. Default = "new_assay"
-#' @param trans closure; The transformation function. Default = mean
-#' @param verbose boolean; Flag for outputting function status messages. Default = TRUE 
-#' @param n_chunks integer; Number of chunks to split the \code{\link{scMethrix}} object in case it is very large. Default = 1
-#' @param n_threads integer; Maximum number of parallel instances. Default = 1
+#' @param scm [scMethrix]; a single cell methylation experiment object
+#' @param assay string; name of an existing assay. Default = `score`
+#' @param new_assay string; name for transformed assay. Default = `new_assay`
+#' @param trans closure; The transformation function. Default = `mean`
+#' @param verbose boolean; Flag for outputting function status messages. Default = `TRUE` 
+#' @param n_chunks integer; Number of chunks to split the [scMethrix] object in case it is very large. Default = `1`
+#' @param n_threads integer; Maximum number of parallel instances. Default = `1`
 #' @param batch_size integer; The maximum number of elements to process at once.
-#' @param h5_dir string; The directory to store HDF5 files. Will be created if it does not exist. Default = NULL
-#' @param replace boolean; flag for whether to delete the contents of \code{h5_dir} before saving 
-#' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
+#' @param h5_dir string; The directory to store HDF5 files. Will be created if it does not exist. Default = `NULL`
+#' @param replace boolean; flag for whether to delete the contents of `h5_dir` before saving 
+#' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see [IRanges::findOverlaps].
 #' @param na.rm boolean; flag to remove NA values
 generic_scMethrix_function <- function(scm, assay, new_assay, trans, verbose, n_chunks, n_threads, h5_dir, overlap_type, batch_size, replace, na.rm) {}

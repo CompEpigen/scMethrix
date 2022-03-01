@@ -1,5 +1,5 @@
 #---- liftover_CpGs ----------------------------------------------------------------------------------------------------
-#' Converts from one reference to another via rtracklayer::liftOver
+#' Converts from one reference to another via [rtracklayer::liftOver].
 #' @details 
 #' This conversion is one-to-many, so for consistency, only the first element in the target assembly is used.
 #' 
@@ -20,14 +20,14 @@
 #' \dontrun{# TODO: add example }
 liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRUE) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validatePackageInstall("rtracklayer")
   .validateExp(scm)
   .validateType(target_genome,"string")
   
   if (verbose) message("Applying liftover...")
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   
   n_cpg = nrow(scm)
   rrng.new <- rtracklayer::liftOver(rowRanges(scm),chain)
@@ -124,7 +124,7 @@ subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
   .validateType(verbose,"boolean")
   id <- NULL
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   keys <- rbind(ref_cpgs[,c("chr","start")], gen_cpgs[,c("chr","start")])
   data.table::setDT(keys)[, id := .GRP, by = c("chr","start")]
   

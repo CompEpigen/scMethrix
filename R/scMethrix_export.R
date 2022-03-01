@@ -1,5 +1,5 @@
 #---- exportBed ------------------------------------------------------------------------------------------------------
-#' Exports all samples in an `scMethrix` object into individual BED files.
+#' Exports all samples in an [scMethrix] object into individual BED files.
 #' @details The structure of the BED files will be a tab-deliminated structure of:
 #' Chromosome | CpG start site | CpG end site | assay data (from those specified in `assays`) | colData (if `colData = TRUE`)
 #' 
@@ -7,7 +7,7 @@
 #' 
 #' Caution: If headers are enabled, it is up to the user to ensure that assay names or `colData()` columns are not protected in any downstream analysis of the BED files. See [BED format](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) for examples.
 #' @inheritParams generic_scMethrix_function
-#' @param path string; the `file.path` of the output directory. Default: [tempdir()]
+#' @param path string; the `file.path` of the output directory. Default: `tempdir()`
 #' @param suffix string; optional suffix to add to the exported bed files 
 #' @param assays string; list of assays to include in each file. Each assay will be a separate column.
 #' @param colData boolean; include the sample metadata from `colData()`
@@ -21,7 +21,7 @@
 #' @export
 exportBed <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "score", colData = FALSE, na.rm = TRUE, header = FALSE, trackline = FALSE, verbose = TRUE) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   meth <- cov <- NULL
 
   .validateExp(scm)
@@ -44,7 +44,7 @@ exportBed <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "sco
   parameters <- paste0(" ", paste(names(parameters), parameters,
                                   sep = "=", collapse = " "))
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (verbose) message("Exporting beds to ",path,start_time())
 
   dir.create(path, showWarnings = FALSE)
@@ -110,7 +110,7 @@ exportBed <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "sco
 #' @examples
 #' #do nothing
 exportBedGraph <- function(scm = NULL, path = tempdir(), suffix = NULL, na.rm = TRUE, verbose = TRUE) {
-  export_bed(scm = NULL, path = getwd(), suffix = NULL, assays = "score", colData = FALSE, na.rm = TRUE, 
+  exportBed(scm = NULL, path = getwd(), suffix = NULL, assays = "score", colData = FALSE, na.rm = TRUE, 
              header = FALSE, trackline = TRUE, verbose = TRUE)
 }
 
@@ -127,7 +127,8 @@ exportBedGraph <- function(scm = NULL, path = tempdir(), suffix = NULL, na.rm = 
 #' data('scMethrix_data')
 #' #export_beds(scMethrix_data,path=paste0(tempdir(),"/export"))
 #' @export
-exportMultiBed <- function(scm, path = tempdir(), suffix = NULL, assays = "score", na.rm = TRUE, header = FALSE, verbose = TRUE) {
+exportMultiBed <- function(scm, path = tempdir(), suffix = NULL, assays = "score", na.rm = TRUE, header = FALSE, 
+                           verbose = TRUE) {
   
   
   
@@ -147,7 +148,7 @@ exportMultiBed <- function(scm, path = tempdir(), suffix = NULL, assays = "score
 #' @export
 exportMethrix <- function(scm = NULL, path = tempdir()) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   chr <- m_obj <- NULL
   
   .validateExp(scm)
@@ -155,7 +156,7 @@ exportMethrix <- function(scm = NULL, path = tempdir()) {
   
   .validatePackageInstall("methrix")
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   rrng <- as.data.table(rowRanges(scm))
   rrng[,c("width","end") := NULL]
   names(rrng) <- c("chr","start","strand")

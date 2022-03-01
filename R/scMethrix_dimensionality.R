@@ -3,8 +3,8 @@
 #' @details For the purposes of dimensionality reduction, this function selects either random CpGs or those with the highest variability. 
 #' @inheritParams generic_scMethrix_function
 #' @param n_cpg integer; Number of variable CpGs to reduce to. Default 1000.
-#' @param var string; Choose between random CpG sites ('rand') or most variable CpGs ('top'). Default 'top'. Seed for random sampling = n_cpg.
-#' @param na.rm boolean; flag to remove features with any NA values. Final number of CpGs will likely be less than n_cpg. For 'random', Will iterate up to 10 times trying to find random cpgs.
+#' @param var string; Choose between random CpG sites (`rand`) or most variable CpGs (`top`). Seed for random sampling = `n_cpg`. Default `top.` .
+#' @param na.rm boolean; flag to remove features with any NA values. Final number of CpGs will likely be less than `n_cpg.` For 'random', Will iterate up to 10 times trying to find random cpgs.
 #' @return matrix; the reduced form of the input assay
 #' @importFrom stats complete.cases var
 #' @examples
@@ -61,22 +61,22 @@ reduce_scMethrix <- function(scm, assay = "score", var = c("top", "random"), n_c
 }
 
 #---- dim_red_scMethrix ------------------------------------------------------------------------------------------------
-#' Reduces dimensionality (tSNE, UMAP, PCA, or custom)
+#' Reduces dimensionality via tSNE, UMAP, PCA, or a custom function
 #' @details Does reduction stuff
 #' 
 #' The dimensionality reduction algorithms used do not allow for NA values, so the input matrix will likely need to be imputed or binned, among others. 
 #' 
 #' Certain components have hard-coded minimums for the dimensionality reduction to occur (only a concern from very small sample sets, about 30 or so). These will be automatically enforced:
-#' * tSNE: perplexity >= floor(ncol(scm)/3)
-#' * UMAP: n_neighbors >= ncol(scm)
+#' * tSNE: `perplexity >= floor(ncol(scm)/3)`
+#' * UMAP: `n_neighbors >= ncol(scm)`
 #' @param plot boolean; Plot after calculating
 #' @param n_components integer; number of components to use
-#' @param n_neighbors integer; number of nearest neighbors for UMAP
-#' @param perplexity integer; perplexity for tSNE
-#' @param type string; the type of imputation "tSNE","UMAP", or "PCA"
-#' @param ... additional arguements for any of the imputation functions
+#' @param n_neighbors integer; number of nearest neighbors for `UMAP`
+#' @param perplexity integer; perplexity for `tSNE`
+#' @param type string; the type of imputation `tSNE`, `UMAP`, or `PCA`
+#' @param ... additional arguments for any of the imputation functions
 #' @inheritParams generic_scMethrix_function
-#' @return \code{\link{scMethrix}} object with reducedDim assay
+#' @return [scMethrix] object with reducedDim assay
 #' @importFrom stats prcomp
 #' @seealso [plot_dim_red()] for plotting, [Rtsne::Rtsne()] for Rtsne, [umap::umap()] for UMAP, [stats::prcomp()] for PCA
 #' @examples

@@ -1,9 +1,9 @@
-#--- get_distance_matrix -------------------------------------------------------------------------------------
+#---- get_distance_matrix ----------------------------------------------------------------------------------------------
 #' Get the pair-wise distance matrix for an assay
 #' @details Utilizes mainly the bioDist package to determine various distance metrics to be used for later clustering. 
-#' @param scm scMethrix; Input \code{\link{scMethrix}} object
+#' @param scm scMethrix; Input [scMethrix] object
 #' @param assay string; The assay to use. Default is 'score'
-#' @param type string; The type of distance metric to use. Available options are "pearson", "spearman", "tau", "euclidean", "manhattan", "canberra", "binary", "minkowski". An aribitrary distance function can also be used, so long as the input takes just the specified matrix.
+#' @param type string; The type of distance metric to use. Available options are `pearson`, `spearman`, `tau`, `euclidean`, `manhattan`, `canberra`, `binary`, `minkowski`. An arbitrary distance function can also be used, so long as the input takes just the specified matrix.
 #' @param verbose boolean; flag to output messages or not
 #' @return matrix; the distance matrix
 #' @seealso <https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/dist>
@@ -59,18 +59,17 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
 }
 
 #---- cluster_scMethrix ------------------------------------------------------------------------------------------------
-#' Generates a cluster object for an \code{\link{scMethrix}} object
-#' @details Enables multiple methods of clustering to classify samples in an \code{\link{scMethrix}} object. Either an \code{\link{scMethrix}} object or a \code{\link[stats]{dist}} object must be provided for clustering.
-#' @param scm scMethrix; Input \code{\link{scMethrix}} object. If this is specified the distance matrix will be a generic \code{\link[bioDist]{spearman.dist}} distance
-#' @param dist dist; Optional. A distance matrix generated for an assay. Will use default paramaters for \code{\link{get_distance_matrix}}.
-#' @param assay string; The assay to use. Default is 'score'
-#' @param type string; The type of distance metric to use. Available options are 'hierarchical', 'partition', "model". An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. \code{c(C1=1,C2=1,C3=1,C4=2)}).
+#' Generates a cluster object for an [scMethrix] object
+#' @details Enables multiple methods of clustering to classify samples in an [scMethrix] object. Either an [scMethrix] object or a [stats::dist] object must be provided for clustering.
+#' @inheritParams generic_scMethrix_function
+#' @param dist dist; Optional. A distance matrix generated for an assay. Will otherwise use [get_distance_matrix()] with `type = "pearson"`
+#' @param type string; The type of distance metric to use. Available options are `hierarchical`, `partition`, `model.` An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. `c(C1=1,C2=1,C3=1,C4=2)`).
 #' @param n_clusters integer; the desired number of clusters. This is ignored for model-based clustering
 #' @param colname string; the name of the colData column that contains the cluster information
-#' @param verbose boolean; flag to output messages or not
 #' @param ... Additional parameters for the clustering functions
-#' @return An \code{\link{scMethrix}} object
-#' @seealso [get_distance_matrix()] for distance metrics, [hclust()] for heirarchical clustering, [kmeans()] for partition clustering, [mclust::Mclust()] for model clustering 
+#' @return An [scMethrix] object
+#' @importFrom mclust mclustBIC
+#' @seealso [get_distance_matrix()] for distance metrics, [hclust()] for hierarchical clustering, [kmeans()] for partition clustering, [mclust::Mclust()] for model clustering 
 #' @examples
 #' data('scMethrix_data')
 #' scMethrix_data <- impute_regions(scMethrix_data)
@@ -154,10 +153,10 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
 #---- append_colData ---------------------------------------------------------------------------------------------------
 #' Appends colData in an scMethrix object
 #' @details Typically used for clustering. Allows additional information to be added to colData in an scMethrix object after the object creation. It does this via a left join on the original colData. Any samples not included in the colData object will be filled with NAs.
-#' @param scm scMethrix; Input \code{\link{scMethrix}} object
-#' @param colData dataframe-like or named vector; For a dataframe-like, must contain row names that correspond with the input \code{\link{scMethrix}} object. For a named vector, vector names must correspond to the row names of the input \code{\link{scMethrix}} object
+#' @param scm scMethrix; Input [scMethrix] object
+#' @param colData dataframe-like or named vector; For a dataframe-like, must contain row names that correspond with the input [scMethrix] object. For a named vector, vector names must correspond to the row names of the input [scMethrix] object
 #' @param name string; the name of the column for named vector input. Ignored for matrix input
-#' @return An \code{\link{scMethrix}} object
+#' @return An [scMethrix] object
 #' @examples
 #' 
 #' # For dataframe-like input

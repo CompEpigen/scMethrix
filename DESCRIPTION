@@ -8,14 +8,14 @@ License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: false
 Depends: R (>= 3.6), data.table (>= 1.12.4), SingleCellExperiment, SummarizedExperiment
-Imports: methods, tools, graphics, stats, utils, parallel, doParallel, HDF5Array, DelayedArray, DelayedMatrixStats, matrixStats, GenomicRanges, IRanges, GenomeInfoDb, ggplot2, S4Vectors, BSgenome
+Imports: methods, tools, graphics, stats, utils, parallel, doParallel, HDF5Array, DelayedArray, DelayedMatrixStats, matrixStats, GenomicRanges, IRanges, GenomeInfoDb, ggplot2, S4Vectors, minfi, mclust
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Suggests: 
     rmarkdown,
     testthat,
     knitr,
-    BSgenome.Mmusculus.UCSC.mm10,
+    BSgenome,
     BiocManager,
     R.utils,
     mockr,
@@ -32,9 +32,7 @@ Suggests:
     bsseq,
     Seurat,
     methrix,
-    minfi,
     bioDist,
-    mclust,
     ggsci,
     Biostrings,
     Metrics

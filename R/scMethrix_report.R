@@ -1,3 +1,4 @@
+#---- scMethrix_report -------------------------------------------------------------------------------------------------
 #' Creates a detailed interative html summary report from Methrix object
 #' @description Creates a detailed interative html summary report from Methrix object.
 #' If the directory contains required files (from previous run), it directly proceeds to generate html report.
@@ -16,11 +17,13 @@
 #' @export
 scMethrix_report <- function(scm, output_dir = NULL, prefix=NULL) {
   
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   .validateType(output_dir,"directory")
   .validateType(prefix,"string")
   
   n_covered <- total_CpGs <- n_non_covered <- fract_CpG <- n_CpG <- NULL
+  
   if (!recal_stats) {
     warning("If input methrix is a subsetted version of original methrix object, set recal_stats to TRUE",
             immediate. = TRUE)
@@ -32,6 +35,8 @@ scMethrix_report <- function(scm, output_dir = NULL, prefix=NULL) {
     if (!is.character(prefix))
       stop("The provided prefix is not valid, please provide a string.")
   }
+  
+  #---- Function code ------------------------------------------------------
   
   start_proc_time <- proc.time()
   

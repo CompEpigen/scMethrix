@@ -1,19 +1,19 @@
-#--- get_sample_name ----------------------------------------------------------------------------------------
+#---- get_sample_name --------------------------------------------------------------------------------------------------
 #' Returns sample name derived from the input file name
 #' @details The ideal input for this package is raw *.bedgraph files. As such, the sample names used in the experiment 
 #' simply drop the extension from the input file name:
 #' 
-#' E.g., the input file \code{sample_file.bedgraph} is referred to as \code{sample_file} in the experiment.
+#' E.g., the input file `sample_file.bedgraph` is referred to as `sample_file` in the experiment.
 #' 
-#' As [data.table::fread()] is used for \code{BedGraph} import, compressed \code{.gz} and \code{.bz2} files can also be used. This extension will be automatically dropped:
+#' As [data.table::fread()] is used for `BedGraph` import, compressed `.gz` and `.bz2` files can also be used. This extension will be automatically dropped:
 #' 
-#' E.g., \code{\\sample_file.bedgraph.gz} will still become \code{sample_file}
+#' E.g., `\\sample_file.bedgraph.gz` will still become `sample_file`
 #' 
 #' Hence, it is advisable to strip all non-necessary information from each sample name before input.
 #' 
 #' Files without extensions will just keep their name:
 #' 
-#' E.g., \code{\\sample_file} will become \code{\\sample_file}
+#' E.g., `\\sample_file` will become `\\sample_file`
 #' 
 #' @param filepath string; the file path of the sample
 #' @return string; the derived sample name
@@ -35,9 +35,9 @@ get_sample_name = function(filepath) {
 }
 
 #--- binarize -----------------------------------------------------------------------------------------------
-#' Binarize an input value based on a \code{threshold}
-#' @details Assigns a value of 0 or 1 based on being < or > the \code{thresdhold}, respectively.
-#'  If \code{x} == \code{threshold}, \code{x} = 0. NA values are assigned as \code{rep_na}.
+#' Binarize an input value based on a `threshold`
+#' @details Assigns a value of 0 or 1 based on being < or > the `threshold`, respectively.
+#'  If `x == threshold`, `x` = 0. NA values are assigned as `rep_na`.
 #' @param x numeric; A vector to binarize
 #' @param threshold numeric; The threshold for binarizing. Will default to the center number between max and min.
 #' @param rep_na numeric; The value to replace missing values with. Default NA. 
@@ -59,13 +59,13 @@ binarize = function(x,threshold = NULL, rep_na = NA, verbose = FALSE) {
 }
 
 #--- fill ---------------------------------------------------------------------------------------------------
-#' Fills a vector with a specified \code{fill} value
+#' Fills a vector with a specified `fill` value
 #' @param x vector; A vector in which to fill the NA values
 #' @param val basic data type; Any value from one of R's basic data types (character, numeric, integer, logical, complex)
-#' @return vector; Same values as input vector, but NA values are replaced with \code{fill} if above of below the threshold, or 'rep.na' if NA
+#' @return vector
 #' @examples
-#' vals <- c(0,0.25,0.5,0.75,1,NA)
-#' fill(vals, val=2)
+#' x <- c(0,0.25,0.5,0.75,1,NA)
+#' fill(x, val=2)
 #' @export
 fill = function(x, val = 0) {
   x[is.na(x)] <- val
@@ -85,7 +85,7 @@ fill = function(x, val = 0) {
 #' @param x vector; A vector in which to fill the NA values
 #' @param min numeric; the minimum value to normalize to
 #' @param max numeric; the maximum value to normalize to
-#' @param scale boolean; flag for scaling. If FALSE, the numbers normalize to 0-1. If TRUE, the numbers are normalized to 0-1, then scaled to the \code{min} and \code{max} values
+#' @param scale boolean; flag for scaling. If FALSE, the numbers normalize to 0-1. If TRUE, the numbers are normalized to 0-1, then scaled to the `min` and `max` values
 #' @return vector; the normalized vector
 #' @examples
 #' vals <- c(0,1,2,3.4,5)
@@ -114,7 +114,7 @@ normalize <- function(x, min = NULL, max = NULL, scale = FALSE) {
   return (val)
 }
 
-#--- cbindlist ------------------------------------------------------------------------------------------------
+#---- cbindlist --------------------------------------------------------------------------------------------------------
 #' A faster version of cbind when trying to combine lists of identical length data.tables
 #' @param list A list of data.tables with identical # of rows
 #' @return data.table; the cbinded output 
@@ -125,13 +125,13 @@ cbindlist = function(list) {
   )[]
 }
 
-#--- split_vector -------------------------------------------------------------------------------------------
-#' Splits a vector into list of vectors by \code{chunk} or \code{size}
-#' @details Splits a vector into consistantly sized sub-lists. The sub-list size will always be decreasing based on list order.
+#---- split_vector -----------------------------------------------------------------------------------------------------
+#' Splits a vector into list of vectors by `chunk` or `size`
+#' @details Splits a vector into consistently sized sub-lists. The sub-list size will always be decreasing based on list order.
 #' @param vec vector; The vector to split
-#' @param chunks integer; x > 0; The number of desired sub-lists
-#' @param percent numeric; 100 > x > 0; The maximum percentage of elements each sub-list should hold
-#' @param size integer; x > 0; The maximum size of each sub-list
+#' @param chunks integer; `x > 0`; The number of desired sub-lists
+#' @param percent numeric; `100 > x > 0`; The maximum percentage of elements each sub-list should hold
+#' @param size integer; `x > 0`; The maximum size of each sub-list
 #' @return A list of sub-vectors
 #' @examples
 #' # Split vector into 4 sub vectors
@@ -145,7 +145,7 @@ cbindlist = function(list) {
 #' @export
 split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateType(chunks,c("integer","na"))
   .validateType(size,c("integer","na"))
   .validateType(percent,c("numeric","na"))
@@ -156,14 +156,14 @@ split_vector = function(vec, chunks = NA, percent = NA, size = NA) {
   
   if (sum(is.na(c(chunks,percent,size))) != 2) stop("Invalid input. Must contain 1 of either chunks, percent, or size")
   
-  #- Function code -----------------------------------------------------------------------------  
+  #---- Function code ------------------------------------------------------  
   if (!is.na(percent)) chunks = 100/percent
   if (!is.na(size)) chunks = length(vec)/ceiling(size)
   chunks = max(1,chunks)
   return(unname(split(vec, sort(rep_len(1:ceiling(chunks), length(vec))))))
 }
 
-#--- start_time ---------------------------------------------------------------------------------------------
+#---- start_time -------------------------------------------------------------------------------------------------------
 #' Starts an internal stopwatch
 #' @details Save the current time to later use for split/lap and overall times
 #' @return NULL
@@ -174,11 +174,11 @@ start_time <- function() {
   invisible(NULL)
 }
 
-#--- split_time ---------------------------------------------------------------------------------------------
+#---- split_time -------------------------------------------------------------------------------------------------------
 #' Outputs the split/lap/iteration time
-#' @details Gets the stored elapsed \\code{\link{proc.time}} from either the initial
-#' \code{\link{start_time}} or the previous \code{split_time}
-#' @return Returns formatted elapsed time since \code{\link{start_time}} or last \code{\link{split_time}}
+#' @details Gets the stored elapsed [`proc.time`] from either the initial
+#' [start_time()] or the previous `split_time`
+#' @return Time elapsed since last call
 #' @export
 split_time <- function() {
   time <- get("time.split", envir=timer.env)
@@ -192,11 +192,11 @@ split_time <- function() {
   return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
 }
 
-#--- stop_time ----------------------------------------------------------------------------------------------
+#---- stop_time --------------------------------------------------------------------------------------------------------
 #' Stops an internal stopwatch and outputs overall time
-#' @details Gets the stored elapsed \code{proc.time()} from initial \code{\link{start_time}} to calculate
+#' @details Gets the stored elapsed [proc.time()] from initial [start_time()] to calculate
 #' overall runtime
-#' @return Returns formatted elapsed time since \code{\link{start_time}}
+#' @return Time elapsed since first call
 #' @export
 stop_time <- function() {
   time <- get("time.all", envir=timer.env)
@@ -210,20 +210,20 @@ stop_time <- function() {
   return(paste0(sprintf(time[[1]], fmt = '%#.2f'),"s"))
 }
 
-#--- get_source_idx -----------------------------------------------------------------------------------------
+#---- get_source_idx ---------------------------------------------------------------------------------------------------
 #' Gets bedgraph column indexes from common pipeline output formats
 #' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
-#' @param protocol string; the protocol used for bedgraph output. Options are: "Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap"
+#' @param protocol string; the protocol used for bedgraph output. Options are: `Bismark_cov`, `MethylDackel`, `MethylcTools`, `BisSNP`, `BSseeker2_CGmap`
 #' @return List of column names and indexes
 #' @examples
 #' get_source_idx("MethylDackel")
 #' @export
 get_source_idx = function(protocol = c("Bismark_cov", "MethylDackel", "MethylcTools", "BisSNP", "BSseeker2_CGmap")) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateArg(protocol, get_source_idx)
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (protocol == "MethylcTools") {
     return(list(col_idx = list(character = 1, numeric = 2, numeric = c(6, 7)),
                 col_names = c("chr", "start", "M", "U"),
@@ -246,7 +246,7 @@ get_source_idx = function(protocol = c("Bismark_cov", "MethylDackel", "MethylcTo
   }
 }
 
-#--- parse_source_idx ---------------------------------------------------------------------------------------
+#---- parse_source_idx -------------------------------------------------------------------------------------------------
 #' Generates the column structure for importing bedgraph files
 #' @details Create the column object with instructions on how to generate the non-inputted columns. 
 #' @param chr_idx integer; column of the chromosome
@@ -264,7 +264,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
                             beta_idx = NULL, M_idx = NULL, U_idx = NULL,
                             cov_idx = NULL, verbose = TRUE) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateType(chr_idx,   c("integer","null"))
   .validateType(start_idx, c("integer","null"))
   .validateType(end_idx,   c("integer","null"))
@@ -294,7 +294,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
     stop("Duplicated indices specified for the source bedgraph file.", call. = FALSE)
   }
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   fix_missing = vector()
   if (is.null(strand_idx)) {
     fix_missing = "strand := '*'"
@@ -359,19 +359,19 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 }
 
 
-#--- .generate_random_bedgraph -----------------------------------------------------------------------------
-#' Creates random bedgraph files. Used for testing.
+#---- .generate_random_bedgraph ----------------------------------------------------------------------------------------
+#' Creates random `bedgraph` files. Used for testing.
 #' @param numfiles integer; Number of files to generate
-#' @param numrows integer; Max number of CpG sites in sample
-#' @param chrs integer; Number of chromosomes
-#' @param minsparsity numeric; Minimum sparsity (minrows = numrows*sparsity)
+#' @param numrows integer; Maximum number of CpG sites in a sample
+#' @param chrs integer; Number of chromosomes to create
+#' @param minsparsity numeric; Minimum sparsity (`minrows = numrows*minsparsity`)
 #' @param maxsparsity numeric; Max sparsity
-#' @param rangeFactor numeric; Max range of IRange (1:rangeFactor*numrows)
-#' @param randomize boolean; Randomize the chr and IRange mapping
+#' @param rangeFactor numeric; Max range of [IRanges::IRanges] object `1:rangeFactor*numrows`
+#' @param randomize boolean; Randomize the chr and `IRange` mapping
 #' @param values list of numerics; List of values to choose from
-#' @param dir string; the directory path to store the bedgraph files in
+#' @param dir string; the directory path to store the `bedgraph` files in
 #' @importFrom stats runif
-#' @return NULL, with bedgraph files placed in the specified \code{dir}
+#' @return NULL, with `bedgraph` files placed in the specified `dir`
 .generate_random_bedgraph <- function(numfiles = 1, numrows = 1000000, chrs = 10, minsparsity = 0.5, maxsparsity = 1, rangeFactor = 2, randomize = FALSE, values = c(0,25,50,75,100), dir = NULL) {
   
   start.time <- Sys.time()

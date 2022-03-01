@@ -1,8 +1,8 @@
 #---- prepare_plot_data ------------------------------------------------------------------------------------------------
-#' Formats an \code{\link{scMethrix}} matrix to long form data for plotting
+#' Formats an [scMethrix] matrix to long form data for plotting
 #' @inheritParams generic_scMethrix_function
-#' @param n_cpgs integer; Use these many random CpGs for plotting. Default 25000. Set it to \code{NULL} to use all - which can be memory expensive. The seed will be set to \code{n_cpgs} for consistency.
-#' @param pheno string; Col name of colData(m). Will be used as a factor to color different groups
+#' @param n_cpgs integer; Use these many random CpGs for plotting. Default = `25000`. Set it to `NULL}` to use all - which can be memory expensive. The seed will be set to `n_cpgs` for consistency.
+#' @param pheno string; col name of `colData(scm)`. Will be used as a factor to color different groups
 #' @param na.rm boolean; remove NA values from the output
 #' @return 'Long' matrix for methylation
 #' @export
@@ -88,12 +88,13 @@ get_palette <- function(n_row, col_palette = "RdYlGn"){
   #   stop("Please provide a valid RColorBrewer palettte. Possible values are: ", paste0(row.names(RColorBrewer::brewer.pal.info)), sep=", ")
   # }
   # 
-  # #- Function code -----------------------------------------------------------------------------
+  # #---- Function code ------------------------------------------------------
   # color_pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(RColorBrewer::brewer.pal.info[col_palette,
   #                                                                                                 "maxcolors"], col_palette))(n_row)
   return(color_pal)
 }
-#--- get_shape ----------------------------------------------------------------------------------------------
+
+#---- get_shape --------------------------------------------------------------------------------------------------------
 #' Getter for plot shapes. Shapes selected for optimal distinction and taken from:
 #' @details http://www.sthda.com/english/wiki/r-plot-pch-symbols-the-different-point-shapes-available-in-r
 #' @param n_row Number of shapes. Max of 15.
@@ -106,12 +107,12 @@ get_shape <- function(n_row) {
 }
 
 
-#--- plot_violin --------------------------------------------------------------------------------------------
+#---- plot_violin ------------------------------------------------------------------------------------------------------
 #' Violin Plot for \eqn{\beta}-Values
 #' @inheritParams prepare_plot_data
-#' @param col_palette string; Name of the RColorBrewer palette to use for plotting.
+#' @param col_palette string; Name of the `RColorBrewer` palette to use for plotting.
 #' @param show_legend boolean; Display the legend on the plot
-#' @param ... Additional parameters to feed to scMethrix_theme()
+#' @param ... Additional parameters to feed to [scMethrix_theme()]
 #' @return ggplot2 object
 #' @export
 #' @import ggplot2
@@ -121,7 +122,7 @@ get_shape <- function(n_row) {
 plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
                         col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE,...) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   Sample <- Value <- Pheno <- NULL
   
   .validateExp(scm)
@@ -131,7 +132,7 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
   .validateType(col_palette,"string")
   .validateType(show_legend,"boolean")
 
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   plot.data <- prepare_plot_data(scm=scm, assay = assay, n_cpgs = n_cpgs, pheno = pheno)
   
   col_palette <- get_palette(ncol(scm), col_palette)
@@ -148,7 +149,7 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
   return(p + scMethrix_theme(...))
 }
 
-#--- plot_density -------------------------------------------------------------------------------------------
+#---- plot_density -----------------------------------------------------------------------------------------------------
 #' Density Plot of \eqn{\beta}-Values
 #'
 #' @inheritParams plot_violin
@@ -161,7 +162,7 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
 plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NULL,
                          col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE, na.rm = T,...) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   Value <- Pheno <- NULL
   
   .validateExp(scm)
@@ -171,7 +172,7 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
   .validateType(col_palette,"string")
   .validateType(show_legend,"boolean")
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   plot.data <- prepare_plot_data(scm=scm, assay = assay, n_cpgs = n_cpgs, pheno = pheno)
   col_palette <- get_palette(ncol(scm), col_palette)
 
@@ -192,12 +193,12 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
   return(p + scMethrix_theme(...))
 }
 
-#--- plot_coverage ------------------------------------------------------------------------------------------
+#---- plot_coverage ----------------------------------------------------------------------------------------------------
 #' Coverage QC Plots
 #' @inheritParams plot_violin
 #' @param max_cov integer; Maximum coverage value to be plotted.
-#' @param type string; Choose between 'histogram' (histogram) or 'density' (density plot).
-#' @param obs_lim integer; The maximum number of observations (sites*samples) to use. If the dataset is larger that this,
+#' @param type string; Choose between `histogram` (histogram) or `density` (density plot).
+#' @param obs_lim integer; The maximum number of observations (`sites*samples`) to use. If the dataset is larger that this,
 #' random sites will be selected from the genome.
 #' @return ggplot2 object
 #' @examples
@@ -207,7 +208,7 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
 plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = NULL,
                           max_cov = 100, obs_lim = 1e+06, col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE,...) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   type <- .validateArg(type, plot_coverage)
   .validateType(pheno,c("string","null"))
@@ -220,7 +221,7 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   
   colors_palette <- get_palette(ncol(scm))
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (matrixStats::product(dim(scm)) > obs_lim) {
     message("The dataset is bigger than the size limit. A random subset of the object will be used that contains ~",
             obs_lim, " observations.")
@@ -280,13 +281,13 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   return(p + scMethrix_theme(...))
 }
 
-#--- plot_sparsity ------------------------------------------------------------------------------------------
+#---- plot_sparsity ----------------------------------------------------------------------------------------------------
 #' Sparsity of sample
 #' inheritParams generic_plot_function
 #' @inheritParams plot_violin
-#' @param type string; Choose between "Boxplot" or "Scatterplot". Default = "Scatterplot"
-#' @param by string; The variable for x-axis, "Sample" or "Chromosome". If by "Sample", and phenotype is not NULL, phenotype will be taken instead. Default = "Sample"
-#' @param phenotype string; Col name of colData(m). Will be used as a factor to color different groups
+#' @param type string; Choose between `Boxplot` or `Scatterplot`. Default = `Scatterplot`
+#' @param by string; The variable for x-axis, `Sample` or `Chromosome.` If by `Sample`, and phenotype is not `NULL`, phenotype will be taken instead. Default = `Sample`
+#' @param phenotype string; Col name of `colData(m)`. Will be used as a factor to color different groups
 #' @param show_avg boolean; flag to show a dotted line representing the average value.
 #' @return ggplot2 object
 #' @examples
@@ -295,7 +296,7 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
 #' @export
 plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "Boxplot", "Jitterplot"), by = c("Sample","Chromosome"), phenotype = NULL, show_legend = FALSE, verbose = TRUE, show_avg = TRUE, ...) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   type <- .validateArg(type, plot_sparsity)
   by <- .validateArg(by, plot_sparsity)
@@ -321,7 +322,7 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
   
   Sample <- Phenotype <- Count <- Sites <- Chromosome <- . <- NULL
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   
   chrs = rowRanges(scm)@seqnames
   end = cumsum(chrs@lengths)
@@ -397,15 +398,14 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
   return (p + scMethrix_theme(...))
 }
 
-#--- plot_stats ---------------------------------------------------------------------------------------------
+#---- plot_stats -------------------------------------------------------------------------------------------------------
 #' Plot descriptive statistics
-#' @details plot descriptive statistics results from \code{\link{get_stats}}
+#' @details plot descriptive statistics results from [get_stats()]
 #' @inheritParams plot_violin
-#' @param scm scMethrix; \code{\link{get_stats}} will be run for the specified assay
-#' @param stat string; Can be \code{mean} or \code{median}. Default \code{mean}
-#' @param type string; 
-#' @param ignore_chr string; Chromsomes to ignore. If NULL, all chromosome will be used. Default \code{NULL}
-#' @param ignore_samples list of strings; Samples to ignore.  If NULL, all samples will be used. Default \code{NULL}
+#' @param stat string; Can be `mean` or median. Default = `mean.`
+#' @param type string;Choose between `Boxplot` or `Scatterplot`. Default = `Scatterplot`
+#' @param ignore_chr string; Chromosomes to ignore. If `NULL`, all chromosomes will be used. Default = `NULL`.
+#' @param ignore_samples list of strings; Samples to ignore.  If `NULL`, all samples will be used. Default = `NULL`
 #' @param n_col integer; number of columns. Passed to `facet_wrap`
 #' @param n_row integer; number of rows. Passed to `facet_wrap`
 #' @param per_chr boolean; plot per chromosome
@@ -419,7 +419,7 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
 plot_stats <- function(scm, assay = "score", stat = c("mean", "median","count","fractional count"), type = c("boxplot","scatterplot"), per_chr = FALSE, ignore_chr = NULL, 
                        ignore_samples = NULL, n_col = NULL, n_row = NULL, pheno = NULL, verbose = TRUE, show_legend = FALSE,...) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
   stat <- .validateArg(stat,plot_stats)
@@ -480,7 +480,7 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median","count","
   
   plot_dat = get_stats(scm, assay = assay, per_chr = per_chr, ignore_chr = ignore_chr, ignore_samples = ignore_samples)
 
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (per_chr) {
     if (stat == "mean") {
       plot_dat[, which(grepl("^Median|Count", colnames(plot_dat))):=NULL]
@@ -562,22 +562,22 @@ plot_imap <- function(scm) {
   # 
 }
 
-#--- plot_dim_red -------------------------------------------------------------------------------------------
+#---- plot_dim_red -----------------------------------------------------------------------------------------------------
 #' Plot dimensionality reduction
 #' @inheritParams generic_scMethrix_function
 #' @inheritParams plot_violin
-#' @param dim_red string; name of adimensionality reduction from an scMethrix object. Should be a matrix of two columns representing
-#' the X and Y coordinates of the dim. red., with each row being a seperate sample
+#' @param dim_red string; name of a dimensionality reduction inside an [scMethrix] object. Should be a matrix of two columns representing
+#' the X and Y coordinates of the dim. red., with each row being a separate sample
 #' @param axis_labels list of strings; A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired
-#' @param color_anno string; Column name of colData(m). Default NULL. Will be used as a factor to color different groups. Required \code{methrix} object
-#' @param shape_anno string; Column name of colData(m). Default NULL. Will be used as a factor to shape different groups. Required \code{methrix} object
+#' @param color_anno string; Column name of `colData(scm)`. Default NULL. Will be used as a factor to color different groups.
+#' @param shape_anno string; Column name of `colData(scm)`. Default NULL. Will be used as a factor to shape different groups.
 #' @param show_dp_labels boolean; Flag to show the labels for dots. Default FALSE
 #' @return ggplot2 object
 #' @importFrom graphics par mtext lines axis legend title
 #' @export
 # plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, legend_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
 #   
-#   #- Input Validation --------------------------------------------------------------------------
+#   #---- Input validation ---------------------------------------------------
 #   X <- Y <- Color <- Shape <- color <- shape <- shapes  <- colors <- Sample <- row_names <- NULL
 #   
 #   .validateExp(scm)
@@ -604,7 +604,7 @@ plot_imap <- function(scm) {
 #   dim_red <- as.data.frame(dim_red)
 #   #dim_red[, shape_anno] <- as.factor(dim_red[, shape_anno])
 #   
-#   #- Function code -----------------------------------------------------------------------------
+#   #---- Function code ------------------------------------------------------
 #   
 #   # if (!is.null(color_anno)) {
 #   #   if (color_anno  %in% colnames(colData(scm))) {
@@ -705,7 +705,7 @@ plot_imap <- function(scm) {
 # }
 plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE,...) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   X <- Y <- Color <- Shape <- color <- shape <- shapes  <- colors <- Sample <- row_names <- NULL
 
   .validateExp(scm)
@@ -727,7 +727,7 @@ plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL
   colnames(dim_red) <- c("X", "Y")
   dim_red$Sample = rownames(dim_red)
 
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
 
   if (!is.null(color_anno)) {
     if (color_anno  %in% colnames(colData(scm))) {
@@ -831,13 +831,13 @@ plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL
 #   return(pca_gg)
 # }
 
-#--- benchmark_imputation -----------------------------------------------------------------------------------
+#---- benchmark_imputation ---------------------------------------------------------------------------------------------
 #' Evaluates imputations methods by NRMSE or AUC
 #' @details Does stuff
 #' @param sparse_prop numeric; A sparsity proportion between 0 and 1. E.g. 0.1 replaces 10% of the matrix with NA
 #' @param imp_methods closure; The imputation methods to compare.
 #' @param iterations integer; Number of iterations to test
-#' @param type character; descriptive statistic. Can be either "AUC" or "RMSE". Default "RMSE"
+#' @param type character; descriptive statistic. Can be either `AUC` or `RMSE.` Default `RMSE`
 #' @inheritParams generic_scMethrix_function
 #' @return ggplot; The graph showing the NRMSE for each imputation method at each sparsity
 #' @examples
@@ -853,12 +853,12 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
                                                  kNN = function(...) impute_regions(type="kNN",...)),
                                  type = "RMSE") {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validatePackageInstall("Metrics")
   
   . <- results <- Sparsity <- NRMSE <- Imputation <- AUC <- NULL
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   if (type == "AUC") {
     eq = Metrics::auc
   } else if (type == "RMSE") {
@@ -892,11 +892,11 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
     #scMethrix_theme() 
 }
 
-#--- scMethrix_theme ----------------------------------------------------------------------------------------
+#---- scMethrix_theme --------------------------------------------------------------------------------------------------
 #' Theme for ggplot
 #' @param base_size integer; Size of text
 #' @param base_family string; Family of text
-#' @param ... Additional arguments for ggplot2::theme
+#' @param ... Additional arguments for [ggplot2::theme]
 #' @return ggplot element; data for the ggplot theme
 #' @export
 scMethrix_theme <- function(base_size = 12, base_family = "",...) {

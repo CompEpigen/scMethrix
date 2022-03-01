@@ -23,7 +23,7 @@
 #' @export
 .validateArg <- function(arg, choices = NULL, ignore.case = TRUE, partial.match = TRUE, multiple.match = FALSE) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   #.validateType(ignore.case,"boolean")
   #.validateType(partial.match,"boolean")
   #.validateType(multiple.match,"boolean")
@@ -36,7 +36,7 @@
     choices <- eval(formals(choices)[[name]])
   }
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   
   if (!multiple.match) {
     arg <- head(arg,1)
@@ -84,12 +84,12 @@
 #' @export
 .validateAssay <- function(scm = NULL, assay = NULL, is.absent = FALSE, throws = TRUE) {
   
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   .validateType(assay,"string")
   .validateType(is.absent, "boolean")
   
-  #- Function code -----------------------------------------------------------------------------  
+  #---- Function code ------------------------------------------------------  
   if (!is.absent) {
     assay <- tryCatch(
       match.arg(arg = assay, choices = SummarizedExperiment::assayNames(scm)),
@@ -135,7 +135,7 @@
                                                "List","File","Directory","GRanges","GenomicRanges","Function","Null",
                                                "NA","Dataframe","DF","S4","Distance","Chain","Soft"), throws=T, recursive_sub = NULL) {
 
-  #- Input Validation --------------------------------------------------------------------------
+  #---- Input validation ---------------------------------------------------
   if (length(type) == length(eval(formals(.validateType)[["type"]]))) {
     stop("No valid type specified.")
   }
@@ -144,7 +144,7 @@
   
   if (is.null(recursive_sub)) recursive_sub = gsub('"', "'", deparse(substitute(input)))
   
-  #- Function code -----------------------------------------------------------------------------
+  #---- Function code ------------------------------------------------------
   valid <- F
 
     # Check for list structures

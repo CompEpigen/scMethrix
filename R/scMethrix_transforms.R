@@ -1,13 +1,12 @@
 #---- transform_assay --------------------------------------------------------------------------------------------------
-#' Transforms an assay in an \code{\link{scMethrix}} object.
-#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. The function is
+#' Transforms an assay in an [scMethrix] object.
+#' @details Uses the inputted function to transform an assay in the [scMethrix] object. The function is
 #' applied column-wise as to optimize how HDF5 files access sample data. 
 #' 
-#' If HDF5 objects are used, transform functions need to accept 'DelayedMatrix' (e.g., from \pkg{DelayedMatrixStats}).
-#' Otherwise, 
+#' If assays stored in HDF5-format are used, transform functions need to accept [HDF5Array::DelayedMatrix] (e.g., from [DelayedMatrixStats](https://bioconductor.org/packages/release/bioc/html/DelayedMatrixStats.html).
 #' @inheritParams generic_scMethrix_function
 #' @param h5_temp string; temporary directory to store the temporary HDF5 files
-#' @return An \code{\link{scMethrix}} object
+#' @return An [scMethrix] object
 #' @examples
 #' data('scMethrix_data')
 #' transform_assay(scMethrix_data,assay="score",new_assay="plus1",trans=function(x){x+1})
@@ -63,21 +62,21 @@ transform_assay <- function(scm, assay = "score", new_assay = "new_assay", trans
 }
 
 #---- bin_scMethrix ----------------------------------------------------------------------------------------------------
-#' Bins the ranges of an \code{\link{scMethrix}} object.
-#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object. Typically, most assays will use either mean (for measurements) or sum (for counts). The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be  from \pkg{DelayedMatrixStats}.
+#' Bins the ranges of an [scMethrix] object.
+#' @details Uses the inputted function to transform an assay in the [scMethrix] object. Typically, most assays will use either `mean` (for measurements) or `sum` (for counts). The transform is applied column-wise to optimize how HDF5 files access sample data. If HDF5 objects are used, transform functions should be  from \pkg{DelayedMatrixStats}.
 #' 
-#' In the output object, the number of CpGs in each region is saved in mcol(scm)$n_cpgs.
+#' In the output object, the number of CpGs in each region is saved in `mcol(scm)$n_cpgs`.
 #' 
 #' Reduced dimensionality data will be discarded.
 #' @inheritParams generic_scMethrix_function
 #' @param regions Granges; The regions from which to make the bins.
 #' @param bin_size integer; The size of each bin. First bin will begin at the start position of the first genomic
-#' region on the chromosome. If NULL, there will be one bin per region. Default 100000.
-#' @param bin_by character; can create bins by # of base pairs "bp" or by # of CpG sites "cpg". Default "bp"
-#' @param trans named vector of closures; The transforms for each assay in a named vector. Default NULL, meaning that 
-#' operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is mean(x, na.rm=TRUE)
+#' region on the chromosome. If `NULL`, there will be one bin per region. Default = `100000.`
+#' @param bin_by character; can create bins by # of base pairs `bp` or by # of CpG sites `cpg.` Default = `bp`.
+#' @param trans named vector of closures; The transforms for each assay in a named vector. Default `NULL`, meaning that 
+#' operations for `counts` assay is `sum(x, na.rm=TRUE)`, and for all other assays is `mean(x, na.rm=TRUE)`
 #' @param fill boolean; Should the assay be filled with all input regions
-#' @return An \code{\link{scMethrix}} object
+#' @return An [scMethrix] object
 #' @examples
 #' data('scMethrix_data')
 #' regions <- GRanges(seqnames = c("chr1"), ranges = IRanges(1,200000000)) 
@@ -475,12 +474,11 @@ bin_scMethrix <- function(scm = NULL, regions = NULL, bin_size = NULL, bin_by = 
 #' Reduced dimensionality data will be discarded.
 #' 
 #' @inheritParams generic_scMethrix_function
-#' @param colname string; The colname from \code{colData(scm)} indicating which samples should be collapse together
-#' @param trans named vector of closures; The transforms for each assay in a named vector. Default NULL, meaning that 
-#' operations for "counts" assay is sum(x, na.rm=TRUE), and for all other assays is mean(x, na.rm=TRUE)
+#' @param colname string; The colname from `colData(scm)` indicating which samples should be collapse together
+#' @param trans named vector of closures; The transforms for each assay in a named vector. Default `NULL`, meaning that 
+#' operations for `counts` assay is `sum(x, na.rm=TRUE)`, and for all other assays is `mean(x, na.rm=TRUE)`
 #' @param batch_size The number of CpGs to calculate at once.
-#' \code{\link{IRanges}} package.
-#' @return An \code{\link{scMethrix}} object
+#' @return An [scMethrix] object
 #' @examples
 #' data('scMethrix_data')
 #' colData(scMethrix_data)["Cluster"] = c("X","X","Y","Y")
@@ -590,12 +588,12 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
 }
 
 #---- impute_by_melissa ------------------------------------------------------------------------------------------------
-#' Imputes the NA values of a \code{\link{scMethrix}} object.
-#' @details Uses the inputted function to transform an assay in the \code{\link{scMethrix}} object
+#' Imputes the NA values of a [scMethrix] object.
+#' @details Uses the inputted function to transform an assay in the [scMethrix] object
 #' @param threshold The value for cutoff in the "score" assay to determine methylated or unmethylated status. 
 #' Default = 50
 #' @inheritParams generic_scMethrix_function
-#' @return An \code{\link{scMethrix}} object
+#' @return An [scMethrix] object
 #' @examples
 #' data('scMethrix_data')
 #' @export
@@ -687,14 +685,14 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 #---- impute_regions ---------------------------------------------------------------------------------------------------
 #' Generic imputation return function
 #' @details Uses the specified imputation operation to evaluation an scMethrix object.
-#' @param regions Granges; the regions to impute. Default is by chromosome.
-#' @param type string/closure; the imputation to perform "kNN","iPCA",or "RF". Otherwise, a closure can be specified that returns the imputed matrix. Default = "kNN"
-#' @param n_pc the range of principal components to check when using iPCA. Caution: this can be very time-intensive
+#' @param regions [GenomicRanges::Granges]; the regions to impute. Default is by chromosome.
+#' @param type string/closure; the imputation to perform `kNN`,`iPCA`,or `RF`. Otherwise, a closure can be specified that returns the imputed matrix. Default = `kNN`
+#' @param n_pc the range of principal components to check when using `iPCA`. Caution: this can be very time-intensive
 #' @inheritParams generic_scMethrix_function
 #' @inheritParams impute::impute.knn
 #' @inheritParams missForest::missForest
 #' @inheritParams missMDA::imputePCA
-#' @return list; two \code{\link{scMethrix}} objects names 'training' and 'test'
+#' @return list; two [scMethrix] objects names 'training' and 'test'
 #' @examples
 #' data('scMethrix_data')
 #' impute_regions(scMethrix_data)
