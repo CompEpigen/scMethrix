@@ -2,22 +2,46 @@
 title: "01: Reading in BedGraph data"
 author: "Andrew Lindsay, Reka Toth"
 date: "`r Sys.Date()`"
-output: 
-  html_document:
-  toc: true
-toc_depth: 3
-toc_float: true
-self_contained: yes
-highlight: pygments
 vignette: >
   %\VignetteIndexEntry{01: Reading in BedGraph data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, knitr-setup, include=FALSE}
+library(knitr)
+
+knitr::opts_chunk$set(echo = TRUE, 
+                      collapse = TRUE,
+                      results= "hold",
+                      eval=FALSE,
+                      comment = "#>")
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+   lines <- options$output.lines
+   if (is.null(lines)) {
+     return(hook_output(x, options))  # pass to default hook
+   }
+   x <- unlist(strsplit(x, "\n"))
+   more <- "..."
+   if (length(lines)==1) {        # first n lines
+     if (length(x) > lines) {
+       # truncate the output, but add ....
+       x <- c(head(x, lines), more)
+     }
+   } else {
+     x <- c(more, x[lines], more)
+   }
+   # paste these lines together
+   x <- paste(c(x, ""), collapse = "\n")
+   hook_output(x, options)
+ })
+```
+
 # Load the library
 
-```{r message=FALSE, warning=FALSE, eval=F}
+```{r, echo=T, results='hide'}
 #Load library
 library(scMethrix)
 ```
@@ -32,19 +56,19 @@ In this dataset, mouse embryonic stem cells (ESCs) have been grown in either ser
 
 The data can be directly downloaded from GEO, using the `GEOquery` package. The files will be downloaded into the working directory.
 
-```{r message=FALSE, warning=FALSE, eval=F}
+```{r, echo=T, results='hide'}
 if(!requireNamespace("GEOquery")) {
   BiocManager::install("GEOquery")
 }
 library(GEOquery)  
 ```
 
-```{r message=FALSE, warning=FALSE, eval=F}
+```{r, message=FALSE, warning=FALSE}
 data_dir = paste0("D:/Git/sampleData/Vignette.GSE56879/")
 dir.create(path = data_dir, showWarnings = FALSE, recursive = TRUE)
 ```
 
-```{r eval=F}
+```{r import-data, cache=TRUE, include=FALSE}
 # Download the dataset
 gsm_list <- c(paste0("GSM",1370535+0:11),  paste0("GSM",1370555+0:19))
 
@@ -58,11 +82,11 @@ file.rename(bed_files,gsub("(.*GSM.*?)_.*","\\1.bedgraph.gz",bed_files))
 bed_files <- list.files(path = data_dir,  full.names = TRUE, pattern = ".*.bedgraph.gz")
 ```
 
-```{r eval=F}
-print(head(basename(bed_files)))
+```{r}
+head(basename(bed_files))
 ```
 
-Please note: The sample name in the `scMethrix` object is generated from the input file name minus the extension (e.g., `GSM1370535.bedgraph` becomes `GSM1370535`. As [`data.table::fread`](https://www.rdocumentation.org/packages/data.table/versions/1.14.2/topics/fread) is used, the `.gz` and `.bz2` extension will be dropped automatically as well (e.g., `GSM1370535.bedgraph.gz` becomes `GSM1370535`). See [`get_sample_name()`](https://compepigen.github.io/scMethrix/reference/get_sample_name.html) for additional explanation.
+Please note: The sample name in the `scMethrix` object is generated from the input file name minus the extension (e.g., `GSM1370535.bedgraph` becomes `GSM1370535`. As [`data.table::fread`](https://www.rdocumentation.org/packages/data.table/versions/1.14.2/topics/fread) is used, the `.gz` and `.bz2` extension will be dropped automatically as well (e.g., `GSM1370535.bedgraph.gz` becomes `GSM1370535`). See `get_sample_name()` for additional explanation.
 
 ------------------------------------------------------------------------
 
@@ -72,7 +96,7 @@ Please note: The sample name in the `scMethrix` object is generated from the inp
 
 As a first step, we need a list of CpG sites in the respective genome. The CpG can be found in the respective [`BSgenome`](https://bioconductor.org/packages/release/bioc/html/BSgenome.html) annotation package. If the reference CpGs (`ref_cpgs`) are not supplied, the `read_beds()` function is able to extract CpG sites from the raw input data. This is significantly more efficient for experiments where few CpGs are read (e.g., [RRBS](https://pubmed.ncbi.nlm.nih.gov/16224102/)), but there will be no automatic filtering of erroneous CpG sites. The user can also manually filter the `ref_cpgs` before usage to improve performance.
 
-```{r message=FALSE, warning=FALSE, eval=F}
+```{r, include = FALSE}
 #Genome of your preference to work with
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
@@ -83,8 +107,8 @@ if(!requireNamespace("BSgenome.Mmusculus.UCSC.mm10")) {
 library(BSgenome.Mmusculus.UCSC.mm10) 
 ```
 
-```{r, ref_data, eval=F}
-mm10_cpgs <- suppressWarnings(scMethrix::extract_CpGs(ref_genome = "BSgenome.Mmusculus.UCSC.mm10"))
+```{r, ref-cpgs, cache=TRUE}
+mm10_cpgs <- suppressWarnings(scMethrix::extract_CpGs(genome = "BSgenome.Mmusculus.UCSC.mm10"))
 head(mm10_cpgs)
 ```
 
@@ -96,7 +120,7 @@ For inputted colData, the row name must match the corresponding sample name. See
 
 For this example, the desired colData can be easily extracted from the experiment's [SOFT file in GEO](https://ftp.ncbi.nlm.nih.gov/geo/series/GSE56nnn/GSE56879/soft/).
 
-```{r, colData, eval=F}
+```{r, colData, cache=TRUE, echo=T, results='hide'}
 soft <- GEOquery::getGEOfile("GSE56879")
 soft <- GEOquery::getGEO(filename=soft)
 
@@ -105,33 +129,33 @@ sample_data <- sapply(names(soft@gsms), function(gsm) {
 })
 
 sample_data <- gsub("_.*","",sample_data)
-sample_data <- sample_data[which(names(soft@gsms) %in% gsm_list)]
+#sample_data <- sample_data[which(names(soft@gsms) %in% gsm_list)]
 sample_data <- data.frame(row.names = names(sample_data), Medium = sample_data)
 ```
 
-```{r, eval=F}
+```{r}
 head(sample_data)
 table(sample_data)
 ```
 
 ## Reading `BedGraph` files
 
-The `read_beds` function is a versatile file reader intended to import `BedGraph` files generated virtually by any sort of methylation calling program. It requires user to provide indices for chromosome names, start position and other required fields. There are also presets available to import `BedGraph` files from most common methylation callers such as `Bismark`, `MethylDackel`, and `MethylcTools`. In this case, there is no need to define `chr_idx`, `start_idx`, or other `idx` arguments as the function will automatically assign them.
+The `read_beds()` function is a versatile file reader intended to import `BedGraph` files generated virtually by any sort of methylation calling program. It requires user to provide indices for chromosome names, start position and other required fields. There are also presets available to import `BedGraph` files from most common methylation callers such as `Bismark`, `MethylDackel`, and `MethylcTools`. In this case, there is no need to define `chr_idx`, `start_idx`, or other `idx` arguments as the function will automatically assign them.
 
 To know the exact parameters of our input dataset, it might worth to take a look at one of the files, to see the column order.
 
-```{r, eval=F}
+```{r}
 res <- data.table::fread(bed_files[1])
 head(res)
 ```
 
 Either given by the data source, or from looking at the values, it is obvious the respective columns are for chromosome (`chr`), start position (`start`), end position (`end`), beta value (`beta`), \# of methylated sites (`M`), and \# of unmethylated sites (`U`). The column index for each will be specified as arguments in `read_beds()`.
 
-The `read_beds` function will aggregate and process the inputted data files. Once the process is complete, it returns an object of class `scMethrix`, which extends `SingleCellExperiment` class. `scMethrix` objects contain methylation and (optionally) coverage data as either in-memory matrices or as on-disk HDF5 arrays, as well as our phenotype data and other basic metadata. This object can be passed to all downstream functions for various analysis. For further details on the data structure, see the [`SingleCellExperiment`](https://bioconductor.org/packages/release/bioc/html/SingleCellExperiment.html) package:
+The `read_beds()` function will aggregate and process the inputted data files. Once the process is complete, it returns an object of class `scMethrix()`, which extends the `SingleCellExperiment()` class. `scMethrix()` objects contain methylation and (optionally) coverage data as either in-memory matrices or as on-disk HDF5 arrays, as well as our phenotype data and other basic metadata. This object can be passed to all downstream functions for various analysis. For further details on the data structure, see the `SingleCellExperiment()` package:
 
 A more detailed description of the `read_beds()` function and potential pitfalls in usage can be found [here](x07_read_beds.html)
 
-```{r, read_beds, eval=F}
+```{r, read_beds}
 scm <- scMethrix::read_beds(
   files = bed_files,
   ref_cpgs = mm10_cpgs,
@@ -149,7 +173,11 @@ scm <- scMethrix::read_beds(
 )
 ```
 
-For reading other file types (e.g. `IDAT` or `BigWig`), see [other input formats](x08_read_other.html)
+```{r}
+scm
+```
+
+For reading other file types (e.g. `IDAT` or `bigWig`), see [other input formats](x08_read_other.html)
 
 # Experiment data
 
@@ -157,19 +185,19 @@ For reading other file types (e.g. `IDAT` or `BigWig`), see [other input formats
 
 After the experiment is created, an assay matrix can be generated. The methylation and coverage matrices can be directly obtained with the functions `score()` and `counts()`, respectively, while any matrix can be accessed via `get_matrix(scm, assay="ASSAY_NAME")`.
 
-```{r eval=F}
+```{r}
 mtx <- score(scm)
-head(mtx)
+mtx[10,6]
 ```
 
-```{r eval=F}
+```{r}
 mtx <- get_matrix(scm, assay="score")
-head(mtx)
+mtx[10,6]
 ```
 
 Genomic loci can also be added (`add_loci`), be formatted as a `GenomicRanges` object, and ordered by variance (`order_by_sd`), if desired.
 
-```{r eval=F}
+```{r}
 # Add genomic loci, put in a GRanges object, and order by SD
 mtx <- get_matrix(scm, assay="score", add_loci = TRUE, in_granges=TRUE, order_by_sd = TRUE)
 head(mtx)
@@ -181,20 +209,23 @@ head(mtx)
 
 1.  **Experiment-wide metadata:** General information is stored in `metadata()` as a named `list`. This can be information like genome accession, GEO IDs, or authors.
 
-```{r eval=F, indent = "     "}
+```{r indent = "     "}
 metadata(scm)
 ```
 
 2.  **Range metadata:** Information about ranges is stored as a `data.frame` within the `rowRanges()` sub-object inside the `scMethrix` object, and can be accessed by `rowData()`. This can include gene names, region IDs, count numbers (if binned). In this example, a random ID is generate for each CpG site.
 
-```{r eval=F, indent = "     "}
+```{r, indent = "     "}
 head(rowData(scm))
 ```
 
 3.  **Sample metadata:** Information about samples is stored as a `data.frame` in `colData()`. This can include alternate samples IDs, run IDs, tissue types, or anything associated with individual samples. In this example, only the medium used for growing each sample is stored.
 
-```{r eval=F, indent = "     "}
+```{r, indent = "     "}
 head(colData(scm))
 ```
 
 Certain operations will cause metadata to be destroyed. For range metadata, `bin_scMethrix()` will discard row metadata (except for CpG count), as will `collapse_samples()` for sample metadata (except for sample names). It is advised to extract this data from `rowData()` and `colData()`, respectively, and store it within `metadata()` instead, or aggregate and store the data for each respective region in their respective container.
+
+
+[scMethrix]: https://compepigen.github.io/scMethrix/reference/scMethrix.html "`scMethrix`"
