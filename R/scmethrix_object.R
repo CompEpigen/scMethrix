@@ -276,6 +276,20 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
   }
 }
 
+#---- .validFeatures ---------------------------------------------------------------------------
+#' Check if all the feature names are consistent with assay data rownames
+#' @param object An [scMethrix] object
+#' @noRd
+.validFeatures <- function(object) {
+  assay_rows <- lapply(assays(object),rownames)
+  match_rows <- sapply(assay_rows, identical, y=featureNames(object))
+  if (!all(match_rows)) {
+    row_names <- names(which(!match_rows))
+    return (paste0("   Wrong rowNames: Assay",  ifelse(length(row_names > 1),"s","")," '", paste0(row_names,collapse="', '"),
+                   "' contain row names that do not match rowData()."))
+  }
+}
+
 #---- .validAssays ---------------------------------------------------------------------------
 # Check if all assays are either matrix or HDF5matrix-related types
 #' @param object An [scMethrix] object
@@ -318,6 +332,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 #' * 'is_h5' is present in `metadata()`
 #' * assay dimensions  are consistent with `rowData()` and `colData()`
 #' * sample names in assays (`colnames()`) are consistent with `colData()`
+#' * feature names in assays (`rownames()`) are consistent with `rowData()`
 #' * sample names in reduced dims (`reducedDims(rownames())`) are consistent with `colData()`
 #' * assay classes are consistent with `is_h5`
 #' @param object A [scMethrix] object
@@ -329,6 +344,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
     .validH5(object),
     .validDims(object),
     .validSamples(object),
+    .validFeatures(object),
     .validAssays(object)
   )
 
