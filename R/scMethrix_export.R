@@ -1,37 +1,80 @@
 #---- exportBed ------------------------------------------------------------------------------------------------------
 #' Exports all samples in an [scMethrix] object into individual BED files.
-#' @details The structure of the BED files will be a tab-deliminated structure of:
-#' Chromosome | CpG start site | CpG end site | assay data (from those specified in `assays`) | colData (if `colData = TRUE`)
-#' 
-#' By default, the 4 column structure of the [BedGraph](https://genome.ucsc.edu/goldenPath/help/bedgraph.html) format will be exported (chr-start-end-score).
-#' 
-#' Caution: If headers are enabled, it is up to the user to ensure that assay names or `colData()` columns are not protected in any downstream analysis of the BED files. See [BED format](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) for examples.
-#' @inheritParams generic_scMethrix_function
-#' @param path string; the `file.path` of the output directory. Default: `tempdir()`
-#' @param suffix string; optional suffix to add to the exported bed files 
-#' @param assays string; list of assays to include in each file. Each assay will be a separate column.
-#' @param colData boolean; include the sample metadata from `colData()`
-#' @param header boolean; flag to add the header onto each column. Some header names are invalid; see caution in details.
-#' @param na.rm boolean; flag to remove the NA values from the output data
-#' @param trackline boolean; flag to add track data to the file (for USCS Genome Browser)
+#' @details The output BED files will be a tab-deliminated structure of:
+#' `chr` | `start` | `end` | `assay` (from those specified in `assays`) | `rowData` (if `rowData = TRUE`)
+#'
+#' Caution: If `colNames = TRUE`, it is up to the user to ensure that assay names or `colData()` columns are not protected in any downstream analysis of the BED files. See [BED format](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) for examples.
+#' @inheritParams .exportBedLike
 #' @return nothing
 #' @examples
 #' data('scMethrix_data')
 #' #exportBed(scMethrix_data,path=paste0(tempdir(),"/export"))
 #' @export
-exportBed <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "score", colData = FALSE, na.rm = TRUE, header = FALSE, trackline = FALSE, verbose = TRUE) {
+exportBed <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "score", na.rm = TRUE, 
+                      trackName = NULL, rowNames = FALSE, colNames = FALSE, rowData = FALSE, verbose = TRUE) {
+  .exportBedLike(scm = scm, path = path, suffix = suffix, assays = assays, na.rm = na.rm, trackline = trackline, 
+                 rowNames = FALSE, colNames = FALSE, rowData = FALSE, verbose = verbose)
+}
 
+#---- exportBedgraph --------------------------------------------------------------------------------------------------
+#' Exports all samples in an [scMethrix] object into individual UCSC-compatible bedGraph files.
+#' 
+#' @details As per [UCSC](https://genome.ucsc.edu/goldenPath/help/bedgraph.html), the output bedGraph files will be a tab-deliminated structure of:
+#' 
+#' `chr` | `start` | `end` | `score` 
+#' 
+#' The chromosome positions should be [zero-based](https://genome.ucsc.edu/FAQ/FAQtracks.html#tracks1).
+#' @inheritParams .exportBedLike
+#' @param assay string; the assay to export
+#' @return Nothing
+#' @export
+#' @examples
+#' #do nothing
+exportBedGraph <- function(scm = NULL, path = tempdir(), assay = "score", suffix = NULL, na.rm = TRUE, verbose = TRUE) {
+  
+  #---- Input validation ---------------------------------------------------
+  assay <- .validateAssay(scm, assay)
+  if (length(assay) != 1) stop("Invalid assay. Only 1 assay can be specified.")
+  
+  #---- Function code ------------------------------------------------------
+  .exportBedLike(scm = scm, path = path, suffix = suffix, assays = assay, rowNames = FALSE, colNames = FALSE, 
+                 rowData = FALSE, na.rm = na.rm, trackName = "bedGraph", verbose = verbose)
+}
+
+#' Helper function for `exportBed()` and `exportBedGraph()`
+#' @inheritParams generic_scMethrix_function
+#' @param path string; the `file.path` of the output directory. Default: `tempdir()`
+#' @param suffix string; optional suffix to add to the exported bed files 
+#' @param assays string; list of assays to include in each file. Each assay will be a separate column.
+# @param rowData string; include the sample metadata from `colData()`
+#' @param header boolean; flag to add the header onto each column. Some header names are invalid; see caution in details.
+#' @param na.rm boolean; flag to remove the NA values from the output data
+#' @param trackName string; value for `track name=` in the header line. If NULL, the header line will be excluded.
+#' @param rowNames boolean; add row names to output
+#' @param colNames boolean; add column names to output
+#' @param rowData boolean; add columns for `rowData()`
+#' @return Nothing
+#' @export
+#'
+#' @examples
+.exportBedLike <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "score", na.rm = TRUE, 
+                           trackName = NULL, rowNames = FALSE, colNames = TRUE, rowData = FALSE, verbose = TRUE) {
+  
   #---- Input validation ---------------------------------------------------
   meth <- cov <- NULL
-
+  
   .validateExp(scm)
   .validateType(path,c("directory","string"))
   .validateType(suffix,c("string","null"))
   .validateType(assays,"string")
+  assays <- sapply(assays,function(assay) .validateAssay(scm,assay))
   .validateType(na.rm,"boolean")
-  .validateType(header,"boolean")
+  .validateType(trackline,c("string","null"))
+  .validateType(rowNames,"boolean")
+  .validateType(colNames,"boolean")
+  .validateType(rowData,"boolean")
   .validateType(verbose,"boolean")
-
+  
   doneFiles <- NULL
   
   # Set track parameters
@@ -45,49 +88,46 @@ exportBed <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "sco
                                   sep = "=", collapse = " "))
   
   #---- Function code ------------------------------------------------------
-  if (verbose) message("Exporting beds to ",path,start_time())
-
+  if (verbose) {
+    export <- ifelse(!is.null(trackline), paste(trackline,"s "), "")
+    message("Exporting ",export,"to ",path,start_time())
+  }
+  
   dir.create(path, showWarnings = FALSE)
-
-  samples <- row.names(scm@colData)
-  rrng <- data.table::as.data.table(rowRanges(scm))
-  rrng[,c("width","strand"):=NULL]
-
+  
+  samples <- sampleNames(scm)
+  mtx <- data.table::as.data.table(granges(rowRanges(scm), use.mcols=rowData))
+  mtx[,c("width","strand") := NULL]
+  setnames(mtx, "seqnames", "chr")
+  
   if (is.null(suffix)) suffix <- "" #TODO: Should switch to some kind of regex input
-
+  
   for (i in 1:length(samples)) {
-
-    samp = samples[i]
-
-    val <- score(scm)[, samp]
-    rrng[,meth := val]
-
-    if (has_cov(scm)) {
-      val <- counts(scm)[, samp]
-      rrng[,cov := val]
-    }
-
-    if (include) {
-      assays <- assays(scm)
-    }
-
-    if (na.rm) {  out <- stats::na.omit(rrng, cols="meth", invert=FALSE)
-    } else {      out <- rrng}
-
-    trackdata <- data.table(paste0('track type=bedGraph name="', rownames(colData(m))[i], '"', parameters))
-  
-    filepath <- paste0(path,"/",samp,suffix,".bedgraph")
     
-    if (trackline) data.table::fwrite(trackdata, filepath, append = FALSE, sep = "\t", 
-                                      row.names = FALSE,col.names = FALSE, quote = FALSE)
-  
-  
-    data.table::fwrite(out, filepath, append = FALSE, sep = "\t", row.names = FALSE,
-           col.names = FALSE, quote = FALSE)
-  
+    samp = samples[i]
+    filepath <- paste0(path,"/",samp,suffix,".bed")
+    
+    for (assay in assays) {
+      mtx[,(assay) := get_matrix(scm, assay)[, samp]]
+    }
+
+    if (na.rm) out <- stats::na.omit(mtx, cols=assays, invert=FALSE)
+    
+    appnd <- FALSE
+    
+    if (!is.null(trackName)) {
+      trackName <- data.table(paste0('track type=',trackName,' name="', sampleNames(scm)[i], '"', parameters))
+      data.table::fwrite(trackName, filepath, append = FALSE, sep = "\t", 
+                                      row.names = FALSE, col.names = FALSE, quote = FALSE)
+      appnd <- TRUE
+    }
+    
+    data.table::fwrite(out, filepath, append = appnd, sep = "\t", row.names = rowNames,
+                       col.names = colNames, quote = FALSE, na = NA)
+    
     doneFiles <- c(doneFiles,filepath)
     
-    if (verbose) message("Exported ",i," of ",length(samples)," (",split_time(), ")")
+    if (verbose) message("Exported sample ",get_sample_name(samp), " (",i," of ",length(samples),"; ",split_time(), ")")
   }
   
   # Check to make sure all files were successfully exported
@@ -98,22 +138,8 @@ exportBed <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "sco
     stop("Error in export. Expected files are missing after export:\n",paste(ls,collapse=",\n"))
   
   if (verbose) message("BEDs exported in in ",stop_time())
-}
 
-#---- exportBedgraph --------------------------------------------------------------------------------------------------
-#' Exports all samples in an [scMethrix] object into individual UCSC-compatible bedGraph files.
-#' 
-#' Essentially a wrapper for [exportBed()], but with mandatory format-specific options already selected.
-#' @inheritParams exportBed
-#' @return Nothing
-#' @export
-#' @examples
-#' #do nothing
-exportBedGraph <- function(scm = NULL, path = tempdir(), suffix = NULL, na.rm = TRUE, verbose = TRUE) {
-  exportBed(scm = NULL, path = getwd(), suffix = NULL, assays = "score", colData = FALSE, na.rm = TRUE, 
-             header = FALSE, trackline = TRUE, verbose = TRUE)
 }
-
 
 #---- exportMultiBed --------------------------------------------------------------------------------------------------
 #' Exports all samples in an [scMethrix] objects into single BED file for each assay
@@ -127,12 +153,44 @@ exportBedGraph <- function(scm = NULL, path = tempdir(), suffix = NULL, na.rm = 
 #' data('scMethrix_data')
 #' #export_beds(scMethrix_data,path=paste0(tempdir(),"/export"))
 #' @export
-exportMultiBed <- function(scm, path = tempdir(), suffix = NULL, assays = "score", na.rm = TRUE, header = FALSE, 
-                           verbose = TRUE) {
+exportMultiBed <- function(scm, path = tempdir(), suffix = NULL, assays = "score", na.rm = TRUE, rowNames = FALSE, colNames = TRUE, verbose = TRUE) {
   
+  #---- Input validation ---------------------------------------------------
+  meth <- cov <- NULL
   
+  .validateExp(scm)
+  .validateType(path,c("directory","string"))
+  .validateType(suffix,c("string","null"))
+  assays <- sapply(assays,function(assay) .validateAssay(scm,assay))
+  .validateType(assays,"string")
+  .validateType(na.rm,"boolean")
+  .validateType(verbose,"boolean")
+  .validateType(rowNames,"boolean")
+  .validateType(colNames,"boolean")
   
+  doneFiles <- NULL
+
+  #---- Function code ------------------------------------------------------
+  if (verbose) message("Exporting beds to ",path,start_time())
   
+  dir.create(path, showWarnings = FALSE)
+  
+  if (is.null(suffix)) suffix <- "" #TODO: Should switch to some kind of regex input
+
+  assayNames <- assays # to avoid confusion with assays()
+  
+  for (i in 1:length(assayNames)) {
+
+    mtx <- get_matrix(scm,assayNames[i])
+    name <- names(assays(scm))[[i]]
+    
+    filepath <- paste0(path,"/",name,suffix,".bed")
+    
+    data.table::fwrite(mtx, filepath, append = FALSE, sep = "\t", row.names = rowNames,
+                       col.names = colNames, quote = FALSE, na = NA)
+    
+    if (verbose) message("Exported assay ",assayNames[i], " (",i," of ",length(samples),"; ",split_time(), ")")
+  }
 }
 
 
