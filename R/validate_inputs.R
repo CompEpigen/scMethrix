@@ -158,6 +158,8 @@
         valid <- is.data.frame(input)
       } else if (type == "Distance") {
         valid <- is(input,"dist")
+      } else if (type == "Chain") {
+        valid <- is(input,"Chain")
       }
     }
     if (valid) return(invisible(TRUE))
@@ -196,7 +198,7 @@
       } else if (type == "Distance") {
         valid <- is(input,"dist")
       } else if (type == "Chain") {
-        valid <- (class(input) == "Chain")
+          valid <- is(input,"Chain")
       } else if (type == "Soft") {
         valid <- (class(input) == "GSE")
       } else {

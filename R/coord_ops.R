@@ -14,6 +14,7 @@
 #' @inheritParams generic_scMethrix_function
 #' @inheritParams rtracklayer::liftOver
 #' @param target_genome string; the target genome. This will be update the genome field in the output [scMethrix] object
+#' @param chain [rtracklayer::Chain-class]; A `Chain` object representing the loci for liftOver conversion, usually imported by [rtracklayer::import.chain].
 #' @export
 #' @return [scMethrix] object with liftOver'd genomic ranges
 #' @examples
@@ -24,6 +25,7 @@ liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRU
   .validatePackageInstall("rtracklayer")
   .validateExp(scm)
   .validateType(target_genome,"string")
+  .validateType(chain,"chain")
   
   if (verbose) message("Applying liftover...")
   
