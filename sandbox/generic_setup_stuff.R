@@ -87,12 +87,12 @@ setwd("D:/Documents/School/Thesis/methrix/methrix_data_generation")
 scm.methrix <- read_beds(files=files,h5=FALSE, chr_idx=1, start_idx=2, M_idx=3, U_idx=4)
 
 # Useful functions
+setwd("D:/Git/scMethrix")
 devtools::test()
 devtools::install()
 devtools::run_examples()
 devtools::load_all(".")
-
-setwd("D:/Git/scMethrix")
+devtools::document()
 pkgdown::build_site()
 
 saveRDS(colData, file = "colData.rds")

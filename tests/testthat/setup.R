@@ -9,13 +9,13 @@ files <- c("D:/Git/scMethrix/inst/extdata/C1.bedgraph","D:/Git/scMethrix/inst/ex
            "D:/Git/scMethrix/inst/extdata/C3.bedgraph","D:/Git/scMethrix/inst/extdata/C4.bedgraph")
 
 h5_dir <- tempfile("scm_h5_", tmpdir = tempdir())
-
 colData <- DataFrame(row.names = get_sample_name(files), Group = rep(1:2,2))
+refGenome <- "hg19"
 
 col_list <- parse_source_idx(chr_idx = 1, start_idx = 2, end_idx = 3, beta_idx = 4, cov_idx = 5)
-scm.h5  <- read_beds(files, is_h5 = TRUE,h5_dir = h5_dir, replace = TRUE, genome = "hg19",
+scm.h5  <- read_beds(files, is_h5 = TRUE,h5_dir = h5_dir, replace = TRUE, genome = refGenome,
                      chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5, colData = colData)
-scm.mem <- read_beds(files, is_h5=FALSE, genome = "hg19",                     
+scm.mem <- read_beds(files, is_h5=FALSE, genome = refGenome,                     
                      chr_idx=1, start_idx=2, end_idx=3, beta_idx=4, cov_idx=5, colData = colData)
 
 mcols(scm.h5)$CpG <- mcols(scm.mem)$CpG <- 1:nrow(scm.mem)

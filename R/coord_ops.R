@@ -44,7 +44,7 @@ liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRU
   if (verbose) message("Lost ", n_cpg - nrow(scm), " CpGs during liftOver." )
   
   rowRanges(scm) <- unlist(rrng.new)
-  scm@metadata$genome <- target_genome
+  GenomeInfoDb::genome(scm) <- target_genome
   
   return(scm)
 }

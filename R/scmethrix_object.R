@@ -1,18 +1,13 @@
-#' Accessors methods and slot descriptions for [scMethrix()]
+#' Class definition, slot descriptions, and accessor methods for [scMethrix]
 #' @name scMethrix-class
 #' @description S4 class scMethrix
 #' @docType class
-#' @slot assays [list()]; assays containing methylation or coverage information
-#' @slot colData data.frame; metadata corresponding to samples
-#' @slot metadata [list()]; metadata pertaining to the experiment
-#' @slot rowRanges [GenomicRanges::GRanges()]; the genomic coordinates of CpG sites and associated metadata
+#' @slot assays [list()]; assays containing methylation or coverage information. Valid formats are either [matrix] or [HDF5Array] Accessed via [assays()].
+#' @slot colData [data.frame]; metadata corresponding to samples. Accessed via [colData()]
+#' @slot metadata [list()]; metadata pertaining to the experiment. Accessed via [metadata()]
+#' @slot rowRanges [GenomicRanges::GRanges()]; the genomic coordinates of CpG sites and associated metadata. Accessed via [rowRanges()], with row metadata accessed via [rowData()] or [mcols()]
 #' @exportClass scMethrix
-#' @param object,x An [scMethrix()] object
-#' @aliases 
-#' coerce,GRset,scMethrix-method,scMethrix-method coerce
-#' coerce,SingleCellExperiment,scMethrix-method,scMethrix-method coerce
-#' @section Coercion:
-#' An scMethrix object can be coerced from a [minfi::GenomicRatioSet()] or [SingleCellExperiment::SingleCellExperiment()] using the [methods::as()] function. However, due to limitations of [minfi::GenomicRatioSet()], coverage information cannot be recovered from a [minfi::GenomicRatioSet()]. As well, the output [scMethrix()] object will be in HDF5 format by default.
+#' @seealso [scMethrix()] for additional details and the constructor function for the object
 #' \preformatted{(x, "scMethrix")}
 #' @importFrom stats median quantile sd density
 #' @importFrom utils data head write.table menu browseURL
@@ -21,7 +16,7 @@
 #' @seealso scMethrix
 setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 
-#' [scMethrix()] - fast and easy summarization of methylation data into an integrative experiment object.
+#' Constructor for the [scMethrix] class
 #' 
 #' The object combines multiple data containers representing common data from methylation experiments (e.g., samples, features, assays). It inherits from the SingleCellExperiment class and is used in the same manner, but with additional consistency checks and methylation-specific functionality. 
 #' @inheritParams generic_scMethrix_function
@@ -29,17 +24,16 @@ setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 #' @param colData data.frame; The metadata corresponding to each sample
 #' @param rowRanges [GenomicRanges::GRanges()]; The genomic loci corresponding to the assays
 #' @param is_h5 boolean; Should assays be saved as HDF5 format?
-#' @param genome string; The name of the genome build used. This will overwrite an element of the same name in \code{metadata}, if present. Default = NULL.
 #' @param metadata named [list()] of strings; list of relevant experiment data. Elements with the name of 'is_h5' and 'genome' will be replaced by the arguments above. Default = NULL.
 #' @export scMethrix
 #' @seealso scMethrix-class for object structure and accessors
 scMethrix <- function(assays = list(), colData = S4Vectors::DataFrame(), rowRanges = GenomicRanges::GRanges(), 
-                      is_h5 = FALSE, h5_dir = NULL, genome = NULL, metadata = NULL, replace = FALSE, verbose=TRUE) {
+                      is_h5 = FALSE, h5_dir = NULL, metadata = NULL, replace = FALSE, verbose = TRUE) {
 
   # Ensure consistent metadata
-  if (is.null(genome) && "genome" %in% names(metadata)) genome <- metadata[["genome"]]
+  #if (is.null(genome) && "genome" %in% names(metadata)) genome <- metadata[["genome"]]
   metadata <- metadata[!names(metadata) == "is_h5"]
-  metadata <- c(list(is_h5 = is_h5, genome = genome), metadata)
+  metadata <- c(list(is_h5 = is_h5), metadata)
   
   # Save the experiment into memory or HDF5 format
   if (is_h5) {
@@ -67,15 +61,22 @@ scMethrix <- function(assays = list(), colData = S4Vectors::DataFrame(), rowRang
 setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   
   h5 <- is_h5(object)
-  if (h5) h5 <- path(score(object))
+  if (h5) {
+    h5 <- path(score(object))
+    size <- format(structure(file.size(h5), class="object_size"), units="auto")
+    h5 <- paste0(h5," (",size,")")
+  }
+  
+  refGenome <- unique(genome(object))
+  if (is.empty(refGenome)) refGenome <- "unspecified"
   
   cat(paste0("An object of class ", class(object), "\n"))
   cat(paste0("   CpGs: ", format(nrow(object), big.mark = ","),"\n"))
   cat(paste0("   Samples: ", ncol(object),"\n"))
   cat(paste0("   Assays: ", (paste(SummarizedExperiment::assayNames(object),collapse=", ")),"\n"))
-  cat(paste0("   Reduced dims: ", (paste(SingleCellExperiment::reducedDimNames(object),collapse=", ")),"\n"))
+  cat(paste0("   Red.Dims: ", (paste(SingleCellExperiment::reducedDimNames(object),collapse=", ")),"\n"))
+  cat(paste0("   Ref.Genome: ", refGenome, "\n"))
   cat(paste0("   HDF5: ", h5, "\n"))
-  cat(paste0("   Ref.Genome: ", S4Vectors::metadata(object)$genome, "\n"))
   cat(paste0("   Memory size: ", format(utils::object.size(object), units = "auto"), "\n"))
 })
 
@@ -96,15 +97,22 @@ setMethod(f = "showMore", signature = "scMethrix", definition = function(object)
   }
   
   h5 <- is_h5(object)
-  if (h5) h5 = path(score(object))
-  
+  if (h5) {
+    h5 <- path(score(object))
+    size <- format(structure(file.size(h5), class="object_size"), units="auto")
+    h5 <- paste0(h5," (",size,")")
+  }
+
+  refGenome <- unique(genome(object))
+  if (is.empty(refGenome)) refGenome <- "unspecified"
+
   cat(paste0("An object of class ", class(object), "\n"))
   cat(paste0("   CpGs: ", format(nrow(object), big.mark = ","),feature.names,"\n"))
   cat(paste0("   Samples: ", ncol(object),sample.names,"\n"))
   cat(paste0("   Assays: ", (paste(SummarizedExperiment::assayNames(object),collapse=", ")),"\n"))
-  cat(paste0("   Reduced dims: ", (paste(SingleCellExperiment::reducedDimNames(object),collapse=", ")),"\n"))
+  cat(paste0("   Red.Dims: ", (paste(SingleCellExperiment::reducedDimNames(object),collapse=", ")),"\n"))
+  cat(paste0("   Ref.Genome: ", refGenome, "\n"))
   cat(paste0("   HDF5: ", h5, "\n"))
-  cat(paste0("   Ref.Genome: ", S4Vectors::metadata(object)$genome, "\n"))
   cat(paste0("   Memory size: ", format(utils::object.size(object), units = "auto"), "\n"))
 })
 
@@ -140,8 +148,11 @@ setMethod(f = "featureNames", signature = "scMethrix", definition = function(obj
   row.names(rowData(object))}
 )
 
-#---- Coercion --------------------------------------------------------------------------------------------------------
-# @aliases coerce, GenomicRatioSet, scMethrix
+#---- Coercion -------------------------------------------------------------------------------------------------------
+#' @aliases 
+#' coerce,GRset,scMethrix-method,scMethrix-method coerce
+#' @section Coercion:
+#' An scMethrix object can be coerced from a [minfi::GenomicRatioSet()] or [SingleCellExperiment::SingleCellExperiment()] using the [methods::as()] function. However, due to limitations of [minfi::GenomicRatioSet()], coverage information cannot be recovered from a [minfi::GenomicRatioSet()]. As well, the output [scMethrix()] object will be in HDF5 format by default.
 #' @importClassesFrom minfi GenomicRatioSet
 #' @exportMethod coerce
 setAs("GenomicRatioSet", "scMethrix", function(from) {
@@ -157,14 +168,16 @@ setAs("GenomicRatioSet", "scMethrix", function(from) {
   beta <- minfi::getBeta(from)
   ord <- match(colnames(beta),row.names(colData)) #Ensure colData order consistency
   colData <- colData[ord,,drop=FALSE]
+  rowRanges <- rowRanges(from)
+  genome(rowRanges) <- minfi::annotation(from)[["annotation"]]
   
   scMethrix(assays = list(score = beta), 
             colData = colData(from), 
             rowRanges = rowRanges(from), 
-            is_h5 = FALSE,
-            genome = minfi::annotation(from)[["annotation"]])
+            is_h5 = FALSE)
 })
-
+#' @aliases 
+#' coerce,SingleCellExperiment,scMethrix-method,scMethrix-method coerce
 #' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
 #' @exportMethod coerce
 setAs("SingleCellExperiment", "scMethrix", function(from) {
@@ -234,7 +247,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 })
 
 #---- .validDims ---------------------------------------------------------------------------
-#' Determines if a [scMethrix] object has valid assay dimensions
+#' Determines if a [scMethrix] object has valid assay dimensions by comparing against number of features and samples
 #' @param object An [scMethrix] object
 #' @noRd
 .validDims <- function(object) {
@@ -263,7 +276,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 }
 
 #---- .validSamples ---------------------------------------------------------------------------
-#' Check if all the sample names are consistent
+#' Check if all the sample names are consistent with assay data colnames
 #' @param object An [scMethrix] object
 #' @noRd
 .validSamples <- function(object) {
@@ -309,7 +322,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 }
 
 #---- .validRedDim ---------------------------------------------------------------------------
-# Check if all reduced dim names are consistent
+# Check if all reduced dim names are consistent with sampleNames
 #' @param object An [scMethrix] object
 #' @noRd
 .validRedDim <- function(object) {  
@@ -361,17 +374,17 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 S4Vectors::setValidity2("scMethrix", .validscMethrix)
 
 #---- generic_scMethrix_function -----------------------------------------------------------------------------
-#' Function used only for inheritance for Roxygen2 documentation. Lists the common function inputs used in the package
-#' @param scm [scMethrix]; a single cell methylation experiment object
+#' Function used only for inheritance for Roxygen2 documentation. Lists the common function inputs used in the package that should have consistent documentation
+#' @param scm [`scMethrix`]; a single cell methylation experiment object
 #' @param assay string; name of an existing assay. Default = `score`
 #' @param new_assay string; name for transformed assay. Default = `new_assay`
 #' @param trans closure; The transformation function. Default = `mean`
 #' @param verbose boolean; Flag for outputting function status messages. Default = `TRUE` 
-#' @param n_chunks integer; Number of chunks to split the [scMethrix] object in case it is very large. Default = `1`
+#' @param n_chunks integer; Number of chunks to split the [`scMethrix`] object in case it is very large. Default = `1`
 #' @param n_threads integer; Maximum number of parallel instances. Default = `1`
 #' @param batch_size integer; The maximum number of elements to process at once.
 #' @param h5_dir string; The directory to store HDF5 files. Will be created if it does not exist. Default = `NULL`
 #' @param replace boolean; flag for whether to delete the contents of `h5_dir` before saving 
-#' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see [IRanges::findOverlaps].
+#' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see [IRanges::findOverlaps()].
 #' @param na.rm boolean; flag to remove NA values
 generic_scMethrix_function <- function(scm, assay, new_assay, trans, verbose, n_chunks, n_threads, h5_dir, overlap_type, batch_size, replace, na.rm) {}

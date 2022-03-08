@@ -130,14 +130,11 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome = NULL, bat
 
   if (!keep_cov) col_list$has_cov = F
   
-  #Check the reference cpgs
+  # Check or generate the reference CpGs
   if (is.null(ref_cpgs)) {
-    #Generate references from input files
     ref_cpgs <- read_index(files = files, col_list = col_list, n_threads = n_threads,
                            batch_size = batch_size, zero_based = zero_based)
   } else {
-    
-    # Check stranding of reference genome and add - strand if nec.
     if (stranded) {
       if (verbose) message("Generating stranded ref_cpgs...")
       ref_plus <- data.table::copy(ref_cpgs)
@@ -159,36 +156,11 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome = NULL, bat
   }
 
   # This makes an assumption that the first file will have the max value
-  
   suppressMessages(bed <- read_bed_by_index(file = files[1], col_list = col_list))
   col_list$max_value = max(bed$beta,na.rm = TRUE)
   col_list$min_value = min(bed$beta,na.rm = TRUE)
   
-  # Get colData
-  parse_colData <- function(colData, reads, verbose) {
-
-    if (verbose) message("Checking colData...")
-
-    n_reads <- ncol(reads[[1]])
-    n_colData <- nrow(colData)
-    cd <- data.frame(row.names = colnames(reads$score))
-    
-    if(!is.null(colData)) {
-      cd <- merge(cd,colData,by="row.names",all.x=T)
-      rownames(cd) <- cd[,'Row.names']
-      cd <- subset(cd,select=-c(Row.names))
-    } 
-    
-    if (verbose) {
-      read2col <- setdiff(colnames(reads$score), row.names(colData))
-      col2read <- setdiff(row.names(colData), colnames(reads$score))
-      if (length(read2col) != 0) message("   Samples not present in colData: ", paste(read2col,collapse=", "))
-      if (length(col2read) != 0) message("   ColData with no corresponding reads: ", paste(col2read,collapse=", "))
-    }
-    
-    return(cd)
-  }
-
+  # Read the files
   if (is_h5) {
     reads <- read_hdf5_data(files = files, ref_cpgs = ref_cpgs, col_list = col_list, 
                                                 n_threads = n_threads, h5_temp = h5_temp, batch_size = batch_size,
@@ -200,14 +172,36 @@ read_beds <- function(files, ref_cpgs = NULL, colData = NULL, genome = NULL, bat
   
   ref_cpgs <- ref_cpgs[, `:=` (end,start+1)]
   
-  message("Building scMethrix object")
+  if (verbose) message("Building scMethrix object")
+  
+  # Make genomic loci into GRanges
   if (strand_collapse) ref_cpgs <- ref_cpgs[strand == "+",][,c("strand") := NULL]
   ref_cpgs <- GenomicRanges::makeGRangesFromDataFrame(ref_cpgs)
-  colData <- parse_colData(colData = colData, reads = reads, verbose = verbose)
+  GenomeInfoDb::seqlengths(ref_cpgs) <- stats::setNames(end(range(ref_cpgs)), GenomeInfoDb::seqlevels(ref_cpgs))
+  if (!is.null(genome)) GenomeInfoDb::genome(ref_cpgs) <- genome
 
+  # Check the colData for consistency
+  cd <- data.frame(row.names = colnames(reads$score))
+  
+  if(!is.null(colData)) {
+    cd <- merge(cd,colData,by="row.names",all.x=T)
+    rownames(cd) <- cd[,'Row.names']
+    cd <- subset(cd,select=-c(Row.names))
+  } 
+  
+  if (verbose) {
+    read2col <- setdiff(colnames(reads$score), row.names(colData))
+    col2read <- setdiff(row.names(colData), colnames(reads$score))
+    if (length(read2col) != 0) message("   Samples not present in colData: ", paste(read2col,collapse=", "))
+    if (length(col2read) != 0) message("   ColData with no corresponding reads: ", paste(col2read,collapse=", "))
+  }
+  
+  colData <- cd
+  
+  # Build the object 
   gc()
 
-  m_obj <- scMethrix(assays = reads, rowRanges = ref_cpgs, is_h5 = is_h5, genome = genome, h5_dir = h5_dir,
+  m_obj <- scMethrix(assays = reads, rowRanges = ref_cpgs, is_h5 = is_h5, h5_dir = h5_dir,
                      replace = replace, metadata = metadata, colData = colData)
   
   gc()
