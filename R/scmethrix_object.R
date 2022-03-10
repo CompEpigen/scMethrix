@@ -1,9 +1,9 @@
-#' Class definition, slot descriptions, and accessor methods for [scMethrix]
+#' Class definition, slot descriptions, and accessor methods for [`scMethrix`]
 #' @name scMethrix-class
 #' @description S4 class scMethrix
 #' @docType class
 #' @slot assays [list()]; assays containing methylation or coverage information. Valid formats are either [matrix] or [HDF5Array] Accessed via [assays()].
-#' @slot colData [data.frame]; metadata corresponding to samples. Accessed via [colData()]
+#' @slot colData [data.frame()]; metadata corresponding to samples. Accessed via [colData()]
 #' @slot metadata [list()]; metadata pertaining to the experiment. Accessed via [metadata()]
 #' @slot rowRanges [GenomicRanges::GRanges()]; the genomic coordinates of CpG sites and associated metadata. Accessed via [rowRanges()], with row metadata accessed via [rowData()] or [mcols()]
 #' @exportClass scMethrix
@@ -13,12 +13,11 @@
 #' @importFrom utils data head write.table menu browseURL
 #' @importFrom methods is as new
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
-#' @seealso scMethrix
 setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 
-#' Constructor for the [scMethrix] class
+#' Constructor for the [`scMethrix`] class
 #' 
-#' The object combines multiple data containers representing common data from methylation experiments (e.g., samples, features, assays). It inherits from the SingleCellExperiment class and is used in the same manner, but with additional consistency checks and methylation-specific functionality. 
+#' The [`scMethrix-class`] object combines multiple data containers representing common data from methylation experiments (e.g., samples, features, assays). It inherits from the SingleCellExperiment class and is used in the same manner, but with additional consistency checks and methylation-specific functionality. 
 #' @inheritParams generic_scMethrix_function
 #' @param assays [list()] of matrices; The assays to include in the experiment
 #' @param colData data.frame; The metadata corresponding to each sample
@@ -26,7 +25,8 @@ setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 #' @param is_h5 boolean; Should assays be saved as HDF5 format?
 #' @param metadata named [list()] of strings; list of relevant experiment data. Elements with the name of 'is_h5' and 'genome' will be replaced by the arguments above. Default = NULL.
 #' @export scMethrix
-#' @seealso scMethrix-class for object structure and accessors
+
+#' @seealso [`scMethrix-class`] for object structure and accessors
 scMethrix <- function(assays = list(), colData = S4Vectors::DataFrame(), rowRanges = GenomicRanges::GRanges(), 
                       is_h5 = FALSE, h5_dir = NULL, metadata = NULL, replace = FALSE, verbose = TRUE) {
 
@@ -57,7 +57,7 @@ scMethrix <- function(assays = list(), colData = S4Vectors::DataFrame(), rowRang
 }
 
 #---- Generic methods -------------------------------------------------------------------------------------------------
-#' @describeIn scMethrix-class Show method for an [scMethrix] object
+#' @describeIn scMethrix-class Show method for an [`scMethrix`] object
 setMethod(f = "show", signature = "scMethrix", definition = function(object) {
   
   h5 <- is_h5(object)
@@ -67,7 +67,7 @@ setMethod(f = "show", signature = "scMethrix", definition = function(object) {
     h5 <- paste0(h5," (",size,")")
   }
   
-  refGenome <- unique(genome(object))
+  refGenome <- unique(GenomeInfoDb::genome(object))
   if (is.empty(refGenome)) refGenome <- "unspecified"
   
   cat(paste0("An object of class ", class(object), "\n"))
@@ -103,7 +103,7 @@ setMethod(f = "showMore", signature = "scMethrix", definition = function(object)
     h5 <- paste0(h5," (",size,")")
   }
 
-  refGenome <- unique(genome(object))
+  refGenome <- unique(GenomeInfoDb::genome(object))
   if (is.empty(refGenome)) refGenome <- "unspecified"
 
   cat(paste0("An object of class ", class(object), "\n"))
@@ -149,12 +149,19 @@ setMethod(f = "featureNames", signature = "scMethrix", definition = function(obj
 )
 
 #---- Coercion -------------------------------------------------------------------------------------------------------
+#' @rdname scMethrix-class
+#' @name coerce-scMethrix
 #' @aliases 
-#' coerce,GRset,scMethrix-method,scMethrix-method coerce
+#' coerce,GenomicRatioSet,scMethrix-method
+#' coerce,SingleCellExperiment,scMethrix-method
+#' 
+# @param from [minfi::GenomicRatioSet()]; an experiment object
 #' @section Coercion:
-#' An scMethrix object can be coerced from a [minfi::GenomicRatioSet()] or [SingleCellExperiment::SingleCellExperiment()] using the [methods::as()] function. However, due to limitations of [minfi::GenomicRatioSet()], coverage information cannot be recovered from a [minfi::GenomicRatioSet()]. As well, the output [scMethrix()] object will be in HDF5 format by default.
+#' An scMethrix object can be coerced from a [minfi::GenomicRatioSet()] or [SingleCellExperiment::SingleCellExperiment()] using the [methods::as()] function. However, due to limitations of [minfi::GenomicRatioSet()], coverage information cannot be recovered from a [minfi::GenomicRatioSet()]. As well, the output [`scMethrix`] object will be in HDF5 format by default.
+#' 
+#' @md
 #' @importClassesFrom minfi GenomicRatioSet
-#' @exportMethod coerce
+#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
 setAs("GenomicRatioSet", "scMethrix", function(from) {
   
   .validatePackageInstall("minfi")
@@ -169,25 +176,24 @@ setAs("GenomicRatioSet", "scMethrix", function(from) {
   ord <- match(colnames(beta),row.names(colData)) #Ensure colData order consistency
   colData <- colData[ord,,drop=FALSE]
   rowRanges <- rowRanges(from)
-  genome(rowRanges) <- minfi::annotation(from)[["annotation"]]
+  GenomeInfoDb::genome(rowRanges) <- minfi::annotation(from)[["annotation"]]
   
   scMethrix(assays = list(score = beta), 
             colData = colData(from), 
             rowRanges = rowRanges(from), 
             is_h5 = FALSE)
 })
-#' @aliases 
-#' coerce,SingleCellExperiment,scMethrix-method,scMethrix-method coerce
-#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
-#' @exportMethod coerce
+
 setAs("SingleCellExperiment", "scMethrix", function(from) {
   new("scMethrix", as(from, "SingleCellExperiment"))
 })
 
-setGeneric("cd", function(object) standardGeneric("cd"))
+
 
 #---- Metadata functions --------------------------------------------------------------------------
 #---- cd ---------------------------------------------------------------------------------------------------------------
+setGeneric("cd", function(object) standardGeneric("cd"))
+
 #' @describeIn scMethrix-class Same as `colData()`, but shorter syntax, and will output row names if there is no columns
 setMethod(f = "cd", signature = "scMethrix", definition = function(object)   {
   d <- colData(object)
@@ -239,9 +245,7 @@ setMethod(f = "md", signature = "scMethrix", definition = function(object)   {
 #---- is_h5 ------------------------------------------------------------------------------------------------------------
 setGeneric("is_h5", function(object) standardGeneric("is_h5"))
 
-#' @describeIn scMethrix-class Checks if [scMethrix] object is an HDF5 object
-#' @section is_h5():
-#'  This checks the metadata whether the experiment is in HDF5 format. This is found from the metadata attribute \code{is_h5}. A secondary check of all assays also occurs to ensure they are all of appropriate type. An error will be thrown if any assays are the wrong type. This should not occur during normal usage of the package, but may be caused by manual manipulation of assays. If this does occur, [convert_scMethrix()] should be used to restore consistency.
+#' @describeIn scMethrix-class Checks if an [`scMethrix`] object is using HDF5
 setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   {
   return (object@metadata$is_h5)
 })
@@ -265,7 +269,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 
 #---- .validH5 ---------------------------------------------------------------------------
 #' Make sure `is_h5` variable is present
-#' @param object An [scMethrix] object
+#' @param object An [`scMethrix`] object
 #' @noRd
 .validH5 <- function(object) {
   if (!"is_h5" %in% names(S4Vectors::metadata(object))) {
@@ -277,7 +281,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 
 #---- .validSamples ---------------------------------------------------------------------------
 #' Check if all the sample names are consistent with assay data colnames
-#' @param object An [scMethrix] object
+#' @param object An [`scMethrix`] object
 #' @noRd
 .validSamples <- function(object) {
   assay_cols <- lapply(assays(object),colnames)
@@ -291,7 +295,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 
 #---- .validFeatures ---------------------------------------------------------------------------
 #' Check if all the feature names are consistent with assay data rownames
-#' @param object An [scMethrix] object
+#' @param object An [`scMethrix`] object
 #' @noRd
 .validFeatures <- function(object) {
   assay_rows <- lapply(assays(object),rownames)
@@ -305,7 +309,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 
 #---- .validAssays ---------------------------------------------------------------------------
 # Check if all assays are either matrix or HDF5matrix-related types
-#' @param object An [scMethrix] object
+#' @param object An [`scMethrix`] object
 #' @noRd
 .validAssays <- function(object) {
   exp_type = if (is_h5(object)) c("HDF5Matrix","DelayedMatrix") else "matrix"
@@ -323,7 +327,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 
 #---- .validRedDim ---------------------------------------------------------------------------
 # Check if all reduced dim names are consistent with sampleNames
-#' @param object An [scMethrix] object
+#' @param object An [`scMethrix`] object
 #' @noRd
 .validRedDim <- function(object) {  
   red_rows <- lapply(reducedDims(object),rownames)
@@ -339,7 +343,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 }
 
 #---- .validscMethrix ---------------------------------------------------------------------------
-#' Determines if a [scMethrix] object is valid.
+#' Determines if a [`scMethrix`] object is valid.
 #' 
 #' Checks for:
 #' * 'is_h5' is present in `metadata()`
@@ -348,7 +352,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 #' * feature names in assays (`rownames()`) are consistent with `rowData()`
 #' * sample names in reduced dims (`reducedDims(rownames())`) are consistent with `colData()`
 #' * assay classes are consistent with `is_h5`
-#' @param object A [scMethrix] object
+#' @param object A [`scMethrix`] object
 #' @importFrom methods validObject
 #' @noRd
 .validscMethrix <- function(object) {
