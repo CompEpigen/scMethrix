@@ -29,7 +29,7 @@ Default format output is that of [bedGraph](https://genome.ucsc.edu/goldenPath/h
 # For standard bedGraph files
 data('scMethrix_data')
 scm <- scMethrix_data
-dir <- paste(tempdir(),"\\BED")
+dir <- paste0(tempdir(),"\\BED")
 exportBed(scm, path = dir)
 list.files(path = dir)
 ```
@@ -40,8 +40,8 @@ This is a strict version of `exportBed` for compatibility with the [UCSC Genome 
 
 ```{r, echo = 2}
 # For BED files containing score, coverage, and sample data
-dir <- paste(tempdir(),"\\bedgraph")
-exportBedgraph(scm, path = dir, assay = "score")
+dir <- paste0(tempdir(),"\\bedgraph")
+exportBedGraph(scm, path = dir, assay = "score")
 list.files(path = dir)
 ```
 
@@ -50,8 +50,8 @@ list.files(path = dir)
 A 'MultiBED' file for each assay where each column represents the data from one sample. Genomic loci coordinates are the same as typical `BED` files. These files are necessary for some downstream tools (e.g., [metilene](https://www.bioinf.uni-leipzig.de/Software/metilene/Manual/#8_input) DMR caller).
 
 ```{r, echo = 2}
-dir <- paste(tempdir(),"\\multibed")
-exportMultibed(scm, path = dir, assays = c("score","counts"))
+dir <- paste0(tempdir(),"\\multibed")
+exportMultiBed(scm, path = dir, assays = c("score","counts"))
 list.files(path = dir)
 ```
 
@@ -70,12 +70,14 @@ exportBSseq(scm, scoreAssay = "score", countAssay = "count")
 ## [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html)
 
 ```{r, echo = 2}
-dir <- paste(tempdir(),"\\bigwig")
+dir <- paste0(tempdir(),"\\bigwig")
 exportBigWig(scm, path = dir, assay = "score")
 list.files(path = dir)
 ```
 
 ## [Seurat](https://satijalab.org/seurat/)
+
+While the formats are compatible, some analysis tools in `Seurat` are not compatible with methylation data. The structure of  methylation data is similar enough that visualization and summarization tools will likely work, but any type of mapping, ontology, or feature analysis will likely give incorrect results.
 
 ```{r, echo = 2}
 exportSeurat(scm, assay = "score")
