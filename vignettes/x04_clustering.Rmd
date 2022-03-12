@@ -2,53 +2,57 @@
 title: "04: Dimensionality reduction and clustering"
 author: "Andrew Lindsay, Reka Toth"
 date: "`r Sys.Date()`"
-output: 
-  html_document:
-  toc: true
-toc_depth: 3
-toc_float: true
-self_contained: yes
-highlight: pygments
 vignette: >
   %\VignetteIndexEntry{04: Dimensionality reduction and clustering}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, knitr-setup, include=FALSE}
+library(knitr)
+
+knitr::opts_chunk$set(echo = TRUE, 
+                      collapse = TRUE,
+                      results= "hold",
+                      eval=FALSE,
+                      comment = "#>")
+
+```
+
 ## Dimensionality reduction 
 
 `scMethrix` offers principal component analysis (PCA), uniform manifold approximation and projection (UMAP), and t-distributed stochastic neighbor embedding (tSNE) to conduct and visualize dimensionality reduction. The resulting reduction is stored in the scMethrix object, and can be accessed via reducedDim(). Typically, the number of CpG sites are reduced via `reduce_scMethrix` to ensure the calculations remain feasible. 
 
-```{r fig.height=3, fig.width=4, eval=FALSE}
+```{r fig.height=3, fig.width=4}
 scm.red <- reduce_scMethrix(scm, var = "top", n_cpg = 1000)
 scm <- scMethrix::dim_red_scMethrix(scm,type="PCA", top_var = 1000, n_components = 20)
 scMethrix::plot_dim_red(scm,type="PCA")
 ```
 
-```{r fig.height=3, fig.width=4, eval=FALSE}
+```{r fig.height=3, fig.width=4}
 scm <- scMethrix::dim_red_scMethrix(scm,type="UMAP",top_var = 1000, n_neighbors = 3)
 scMethrix::plot_dim_red(scm,type="UMAP")
 ```
 
-```{r fig.height=3, fig.width=4, eval=FALSE}
+```{r fig.height=3, fig.width=4}
 scm <- scMethrix::dim_red_scMethrix(scm,type="tSNE",top_var = 1000, n_components = 20)
 scMethrix::plot_dim_red(scm,type="tSNE")
 ```
 
 At visualization, we can provide the `scMethrix` object to allow color or shape annotation of groups or samples.  
 
-```{r fig.height=3, fig.width=4, eval=FALSE}
+```{r fig.height=3, fig.width=4}
 scMethrix::plot_pca(scm, col_anno = "Day", shape_anno = "Replicate")
 ```
 
 `scMethrix` offers the possibility of region based filtering. With this option, selected regions (e.g. promoters) can be visualized. We will use the `AnnotationHub` package to assess basic annotation categories. 
 
-```{r message=FALSE, warning=FALSE, eval=FALSE}
+```{r message=FALSE, warning=FALSE}
 if(!requireNamespace("AnnotationHub")) 
   BiocManager::install("AnnotationHub", update = F)
 ```
 
-```{r message=FALSE, warning=FALSE, eval=FALSE}
+```{r message=FALSE, warning=FALSE}
 library("AnnotationHub")
 ah = AnnotationHub()
 qhs = query(ah, c("RefSeq", "Mus musculus", "mm10"))
@@ -56,7 +60,7 @@ genes = qhs[[1]]
 promotors = promoters(genes)
 ```
 
-```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE, eval=FALSE}
+```{r fig.height=3, fig.width=4, message=FALSE, warning=FALSE}
 meth.subset <- subset_methrix(meth,regions = promotors)
 meth <- scMethrix::dim_red_scMethrix(meth.subset,type="PCA",top_var = 10000, n_components = 20)
 plot_dim_red(meth,type="PCA")

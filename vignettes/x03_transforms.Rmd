@@ -2,23 +2,34 @@
 title: "03: Transformations and Imputations"
 author: "Andrew Lindsay, Reka Toth"
 date: "`r Sys.Date()`"
-output: 
-  html_document:
-  toc: true
-toc_depth: 3
-toc_float: true
-self_contained: yes
-highlight: pygments
 vignette: >
   %\VignetteIndexEntry{03: Transformations and Imputations}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, knitr-setup, include=FALSE}
+library(knitr)
+
+knitr::opts_chunk$set(echo = TRUE, 
+                      collapse = TRUE,
+                      results= "hold",
+                      eval=FALSE,
+                      comment = "#>")
+
+```
+
+# Changing genome assemblies
+During sequencing, the reads will be aligned to some reference genome. For humans, this is typically either [hg19](https://www.ncbi.nlm.nih.gov/assembly/GCF_000001405.13/) or [hg38](https://www.ncbi.nlm.nih.gov/assembly/GCF_000001405.39). Experiments will different assemblies cannot be combined, and must be converted first. Via `[rtracklayer::liftOver](https://rdrr.io/bioc/rtracklayer/man/liftOver.html)`, `scMethrix` experiments can be easily converted.
+
+```{r}
+
+```
+
 # Transforming assays
 Methylation beta values are presented in different ways based on the upstream pipeline. Scores are commonly reported with ranges such as [-1..1], [0..1], or [0..100]. Depending on your downstream analysis, it may be necessary to transform these values to another range. The `transform_assay` function allows and arbitrary function input to transform each element in the dataset. 
 
-```{r, eval=F}
+```{r}
 #To convert [0..1] scores to [0..100] scores
 fun <- function(x) round(x*100)
 scm <- scMethrix::transform_assay(scm, assay = "score" , new_assay = "score.100", trans = fun)
@@ -26,28 +37,28 @@ scm <- scMethrix::transform_assay(scm, assay = "score" , new_assay = "score.100"
 
 There is an accessible `binarize` function to transform data into the beta ratio of [0..1] used by this package. The function will automatically generate a threshold cutoff based on the mean beta value. This is often useful after imputation.
 
-```{r, eval=F}
+```{r}
 scm <- scMethrix::transform_assay(scm, assay = "score.100" ,new_assay = "binarize", trans = binarize)
 ```
 
 # Binning
 CpG-level precision may not be necessary for downstream analysis, so binning can be used to drastically reduce the number of calculations necessary for computation. There are multiple options in which to determine binning. The `bin_size` can be specified for either base pairs (`bp`) or by the number of CpGs (`cpg`) per bin. By default, entire chromosomes are used for binning.
 
-```{r, eval=F}
+```{r}
 #Divide the whole genome into 100kbp bins
 scm.bin <- scMethrix::bin_scMethrix(scm, bin_size = 100000, bin_by = "bp")
 ```
 
 All assays in the `scMethrix` object will be binned. By default, the `count` assay will be summed during binning while the `score` assay and all other assays will use their mean values. It is possible to specify other operations, if desired.
 
-```{r, eval=F}
+```{r}
 #Divides genome into groups of 1000 CpGs, but use the median value for the score assay
 scm.bin <- scMethrix::bin_scMethrix(scm, bin_size = 1000, bin_by = "cpg", trans = c(score= function(x) median(x,na.rm=TRUE)))
 ```
 
 If whole chromosome binning is not desired, a `GRanges` `region` list can be provided to bin individual regions of the genome (e.g., promoters), and then re-assemble them into combined object. Typically, one bin will contain one region, but these regions can be further subdivided by `bp` or `cpg` sites, as shown before.
 
-```{r, eval=F}
+```{r}
 # Binning each promoter
 if(!requireNamespace("AnnotationHub")) 
   BiocManager::install("AnnotationHub", update = F)
@@ -63,7 +74,7 @@ scm.bin <- scMethrix::bin_scMethrix(scm, regions=proms)
 
 To improve binning speed, it may be advisable to convert to an in-memory `scMethrix` objects. First, subset to the target region (this is done internally within `bin_scMethrix` anyways), convert to in-memory, then perform the binning.
 
-```{r, eval=F}
+```{r}
 scm.bin <- scMethrix::subset_scMethrix(scm, regions = proms)
 scm.bin <- scMethrix::convert_scMethrix(scm.bin, type = "memory")
 scm.bin <- scMethrix::bin_scMethrix(scm, regions = proms)
@@ -72,7 +83,7 @@ scm.bin <- scMethrix::bin_scMethrix(scm, regions = proms)
 # Collapse samples
 It may be desirable to collapse multiple samples into a single meta-sample. Using simple grouping, samples can be collapsed via any arbitrary function. The `colname` used will become the new sample name, and the samples in each group will be listed in the `Samples` column of colData().
 
-```{r, eval=F}
+```{r}
 # Collapse into simulated cluster_scMethrix() output
 scm.collapse <- scMethrix::collapse_samples(scm.collapse, colname = "Cell")
 colData(scm.collapse)
@@ -80,7 +91,7 @@ colData(scm.collapse)
 
 As well, the transformation for collapsing is user customizeable.
 
-```{r, eval=F}
+```{r}
 # Collapse the samples while using a median operation for the score assay
 colData(scm)["Cluster"] = rep_len(c("Grp1","Grp2"),nrow(colData(scm)))
 scm <- scMethrix::collapse_samples(scm, colname, colname = "Cluster", trans = c(score=median))
@@ -91,7 +102,7 @@ colData(scm)
 # Imputation
 As single cell bisulfite sequencing is typically very sparse, it is usually necessary to perform some imputation to fill NA elements, as most clustering and dimensionality reduction algorithms cannot handle large numbers of NA values. Imputation algorithms available here are k-nearest neighbour (`kNN`), iterative PCA (`iPCA`),or random forest (`RF`). 
 
-```{r, eval=F}
+```{r}
 #Impute the whole genome via kNN
 scm.impute <- scMethrix::impute_regions(scm, assay = "score", new_assay = "impute", type = "RF")
 head(score(scm))
@@ -99,14 +110,14 @@ head(score(scm))
 
 By default, the entire chromosome is used for the imputation, but this is incredibly memory-intensive. A `GRanges` `region` list can be provided to subset the assay, impute each region individually, then combine them back together. However, there is an assumption for quasi-independence of each region by doing this.
 
-```{r, eval=F}
+```{r}
 #Impute promoter regions via random forest
 scm.impute <- scMethrix::impute_regions(scm, assay = "score", new_assay = "impute", type = "kNN", regions = proms)
 ```
 
 For using imputation methods not included in this package, an arbitrary imputation function can be specified. However, the return value must be the imputed matrix with the same dimensions as the input matrix, and in the same column order. 
 
-```{r, eval=F}
+```{r}
 #Impute via an arbitrary imputation function.
 fun <- function(mtx) missForest::missForest(mtx, ...)$ximp
 scm.impute <- scMethrix::impute_regions(scm, assay = "score", new_assay = "impute", type = fun)
@@ -115,14 +126,14 @@ scm.impute <- scMethrix::impute_regions(scm, assay = "score", new_assay = "imput
 ## Generating test sets
 To judge the accuracy of imputation, it may be helpful to generate a test and training set. This is easily done with `generate_training_set`. A specified proportion of CpG sites will be subsetted into two `scMethrix` objects. 
 
-```{r, eval=F}
+```{r}
 #Generate a training set that contains 20% of the total CpG sites.
 scm <- scMethrix::generate_training_set(scm, training_prop = 0.2)
 ```
 
 For small-scale testing purposes, a randomized miniature scMethrix object may be useful
 
-```{r, eval=F}
+```{r}
 #Generate a training set that contains 10000 random CpGs
 scm <- scMethrix::generate_random_subset(scm, n_cpgs = 10000)
 ```
@@ -130,13 +141,13 @@ scm <- scMethrix::generate_random_subset(scm, n_cpgs = 10000)
 # Merging experiment objects
 During analysis, it might be beneficial to split an experiment into smaller subset experiments, perform operations, and re-assemble the subset experiments back together. Merging can be done by either `row` or `col`. Metadata will be retained, but overlapping list entries will be appended with a `.1` or `.2`, based on their order in the function input. Reduced dimensionality data will be discarded.
 
-```{r, eval=F}
+```{r}
 m1 <- subset_scMethrix(meth, contigs = "chr1")
 m2 <- subset_scMethrix(meth, contigs = "chr2")
 meth <- scMethrix::merge_scMethrix(scm1 = m1, scm2 = m2, by="row")
 ```
 
-```{r, eval=F}
+```{r}
 m1 <- subset_scMethrix(meth, samples = "GSM2553093")
 m2 <- subset_scMethrix(meth, samples = "GSM2553095")
 meth <- scMethrix::merge_scMethrix(scm1 = m1, scm2 = m2, by="col")

@@ -4,6 +4,7 @@
 .RData
 .Rbuildignore
 .Ruserdata
+/docs
 /sampleData
 /data_gen/*.bedGraph
 /tests/testthat/*.pdf

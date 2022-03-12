@@ -2,18 +2,22 @@
 title: "S03: Reading in other file types"
 author: "Andrew Lindsay, Reka Toth"
 date: "`r Sys.Date()`"
-output: 
-  html_document:
-  toc: true
-toc_depth: 3
-toc_float: true
-self_contained: yes
-highlight: pygments
 vignette: >
   %\VignetteIndexEntry{SO3: Reading in other file types}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+```{r, knitr-setup, include=FALSE}
+library(knitr)
+
+knitr::opts_chunk$set(echo = TRUE, 
+                      collapse = TRUE,
+                      results= "hold",
+                      eval=FALSE,
+                      comment = "#>")
+
+```
 
 # For convenience, here are some workflows for importing other file types into `scMethrix`.
 
@@ -24,7 +28,7 @@ The `read_idats` function is a simple to use importer for `IDAT` files, the comm
 Instead of `BedGraph` data, microarray methylation data stored in `.idat` files can be imported by `scMethrix`. 
 
 
-```{r, eval=F}
+```{r}
   RGset <- minfi::read.metharray.exp(raw_dir, force=TRUE)
 
   stopifnot(length(setdiff(colnames(RGset),row.names(colData)))==0)

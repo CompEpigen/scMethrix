@@ -86,7 +86,7 @@ bed_files <- list.files(path = data_dir,  full.names = TRUE, pattern = ".*.bedgr
 head(basename(bed_files))
 ```
 
-Please note: The sample name in the `scMethrix` object is generated from the input file name minus the extension (e.g., `GSM1370535.bedgraph` becomes `GSM1370535`. As [`data.table::fread`](https://www.rdocumentation.org/packages/data.table/versions/1.14.2/topics/fread) is used, the `.gz` and `.bz2` extension will be dropped automatically as well (e.g., `GSM1370535.bedgraph.gz` becomes `GSM1370535`). See `get_sample_name()` for additional explanation.
+Please note: The sample name in the [scMethrix] object is generated from the input file name minus the extension (e.g., `GSM1370535.bedgraph` becomes `GSM1370535`. As [`data.table::fread`](https://www.rdocumentation.org/packages/data.table/versions/1.14.2/topics/fread) is used, the `.gz` and `.bz2` extension will be dropped automatically as well (e.g., `GSM1370535.bedgraph.gz` becomes `GSM1370535`). See `get_sample_name()` for additional explanation.
 
 ------------------------------------------------------------------------
 
@@ -114,7 +114,7 @@ head(mm10_cpgs)
 
 ## Sample annotation
 
-An annotation table for sample data is also necessary to perform some analyses. The data will be added to the `scMethrix` object in the `colData` slot. Each row of the table represents a single sample. Sample names are taken from the input file names, and stored as row.names. Subsequent information about each sample (e.g., cell type, alternate IDs, sample source, etc) can be stored as columns within this `data.frame`. To access this data, see [Saving experiment metadata].
+An annotation table for sample data is also necessary to perform some analyses. The data will be added to the [scMethrix] object in the `colData` slot. Each row of the table represents a single sample. Sample names are taken from the input file names, and stored as row.names. Subsequent information about each sample (e.g., cell type, alternate IDs, sample source, etc) can be stored as columns within this `data.frame`. To access this data, see [Saving experiment metadata].
 
 For inputted colData, the row name must match the corresponding sample name. See [Download the data](#download) for how sample names are generated. The row order of the inputted colData is not important as it will be added as a left join (`merge(all.x=T)`) to the sample names. Hence, the inputted colData can contain samples that are not present in the inputted files, and their respective colData will not be included in the experiment.
 
@@ -151,7 +151,7 @@ head(res)
 
 Either given by the data source, or from looking at the values, it is obvious the respective columns are for chromosome (`chr`), start position (`start`), end position (`end`), beta value (`beta`), \# of methylated sites (`M`), and \# of unmethylated sites (`U`). The column index for each will be specified as arguments in `read_beds()`.
 
-The `read_beds()` function will aggregate and process the inputted data files. Once the process is complete, it returns an object of class `scMethrix()`, which extends the `SingleCellExperiment()` class. `scMethrix()` objects contain methylation and (optionally) coverage data as either in-memory matrices or as on-disk HDF5 arrays, as well as our phenotype data and other basic metadata. This object can be passed to all downstream functions for various analysis. For further details on the data structure, see the `SingleCellExperiment()` package:
+The `read_beds()` function will aggregate and process the inputted data files. Once the process is complete, it returns an object of class [scMethrix], which extends the `SingleCellExperiment()` class. [scMethrix] objects contain methylation and (optionally) coverage data as either in-memory matrices or as on-disk HDF5 arrays, as well as our phenotype data and other basic metadata. This object can be passed to all downstream functions for various analysis. For further details on the data structure, see the `SingleCellExperiment()` package:
 
 A more detailed description of the `read_beds()` function and potential pitfalls in usage can be found [here](x07_read_beds.html)
 
@@ -205,7 +205,7 @@ head(mtx)
 
 ## Metadata
 
-`scMethrix` also stores experiment metadata. Depending on the type of data, it is stored in different places:
+[scMethrix] also stores experiment metadata. Depending on the type of data, it is stored in different places:
 
 1.  **Experiment-wide metadata:** General information is stored in `metadata()` as a named `list`. This can be information like genome accession, GEO IDs, or authors.
 
@@ -213,7 +213,7 @@ head(mtx)
 metadata(scm)
 ```
 
-2.  **Range metadata:** Information about ranges is stored as a `data.frame` within the `rowRanges()` sub-object inside the `scMethrix` object, and can be accessed by `rowData()`. This can include gene names, region IDs, count numbers (if binned). In this example, a random ID is generate for each CpG site.
+2.  **Range metadata:** Information about ranges is stored as a `data.frame` within the `rowRanges()` sub-object inside the [scMethrix] object, and can be accessed by `rowData()`. This can include gene names, region IDs, count numbers (if binned). In this example, a random ID is generate for each CpG site.
 
 ```{r, indent = "     "}
 head(rowData(scm))
@@ -228,4 +228,4 @@ head(colData(scm))
 Certain operations will cause metadata to be destroyed. For range metadata, `bin_scMethrix()` will discard row metadata (except for CpG count), as will `collapse_samples()` for sample metadata (except for sample names). It is advised to extract this data from `rowData()` and `colData()`, respectively, and store it within `metadata()` instead, or aggregate and store the data for each respective region in their respective container.
 
 
-[scMethrix]: https://compepigen.github.io/scMethrix/reference/scMethrix.html "`scMethrix`"
+[scMethrix]: https://compepigen.github.io/scMethrix/reference/scMethrix-class.html "`scMethrix`"
