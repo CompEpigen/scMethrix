@@ -31,6 +31,7 @@ Suggests:
     BPRMeth,
     bsseq,
     Seurat,
+    SeuratObject,
     methrix,
     bioDist,
     ggsci,

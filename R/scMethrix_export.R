@@ -1,9 +1,10 @@
 #---- exportBed ------------------------------------------------------------------------------------------------------
-#' Exports all samples in an [scMethrix] object into individual BED files.
-#' @details The output BED files will be a tab-deliminated structure of:
+#' Exports all samples in an [`scMethrix`] object into individual `BED` files.
+#' @details The output `BED` files will be a tab-deliminated structure of:
+#' 
 #' `chr` | `start` | `end` | `assay` (from those specified in `assays`) | `rowData` (if `rowData = TRUE`)
 #'
-#' Caution: If `colNames = TRUE`, it is up to the user to ensure that assay names or `colData()` columns are not protected in any downstream analysis of the BED files. See [BED format](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) for examples.
+#' Caution: If `colNames = TRUE`, it is up to the user to ensure that assay names or `colData()` columns are not protected in any downstream analysis of the `BED` files. See [BED format](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) for examples.
 #' @inheritParams .exportBedLike
 #' @return nothing
 #' @examples
@@ -12,20 +13,19 @@
 #' @export
 exportBed <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "score", na.rm = TRUE, 
                       trackName = NULL, rowNames = FALSE, colNames = FALSE, rowData = FALSE, verbose = TRUE) {
-  .exportBedLike(scm = scm, path = path, suffix = suffix, assays = assays, na.rm = na.rm, trackline = trackline, 
-                 rowNames = FALSE, colNames = FALSE, rowData = FALSE, verbose = verbose)
+  .exportBedLike(scm = scm, path = path, suffix = suffix, assays = assays, na.rm = na.rm, trackName = trackName, 
+                 extension = "bed", rowNames = FALSE, colNames = FALSE, rowData = FALSE, verbose = verbose)
 }
 
 #---- exportBedgraph --------------------------------------------------------------------------------------------------
-#' Exports all samples in an [scMethrix] object into individual UCSC-compatible bedGraph files.
+#' Exports all samples in an [`scMethrix`] object into individual UCSC-compatible `bedGraph` files.
 #' 
-#' @details As per [UCSC](https://genome.ucsc.edu/goldenPath/help/bedgraph.html), the output bedGraph files will be a tab-deliminated structure of:
+#' @details As per [UCSC](https://genome.ucsc.edu/goldenPath/help/bedgraph.html), the output `bedGraph` files will be a tab-deliminated structure of:
 #' 
-#' `chr` | `start` | `end` | `score` 
+#' `chr` | `start` | `end` | `score` (or other specified assay)
 #' 
 #' The chromosome positions should be [zero-based](https://genome.ucsc.edu/FAQ/FAQtracks.html#tracks1).
 #' @inheritParams .exportBedLike
-#' @param assay string; the assay to export
 #' @return Nothing
 #' @export
 #' @examples
@@ -38,27 +38,28 @@ exportBedGraph <- function(scm = NULL, path = tempdir(), assay = "score", suffix
   
   #---- Function code ------------------------------------------------------
   .exportBedLike(scm = scm, path = path, suffix = suffix, assays = assay, rowNames = FALSE, colNames = FALSE, 
-                 rowData = FALSE, na.rm = na.rm, trackName = "bedGraph", verbose = verbose)
+                 rowData = FALSE, na.rm = na.rm, trackName = "bedGraph", extension = "bedgraph", verbose = verbose)
 }
 
+#---- .exportBedLike ---------------------------------------------------------------------------------------------------
 #' Helper function for `exportBed()` and `exportBedGraph()`
 #' @inheritParams generic_scMethrix_function
-#' @param path string; the `file.path` of the output directory. Default: `tempdir()`
-#' @param suffix string; optional suffix to add to the exported bed files 
-#' @param assays string; list of assays to include in each file. Each assay will be a separate column.
+#' @param path `string`; the `file.path` of the output directory. Default = `tempdir()`
+#' @param suffix `string`; optional suffix to add to the exported bed files. Default = `NULL`
+#' @param assays `string`; list of assays to include in each file. Each assay will be a separate column. Default = `"score"`
 # @param rowData string; include the sample metadata from `colData()`
-#' @param header boolean; flag to add the header onto each column. Some header names are invalid; see caution in details.
-#' @param na.rm boolean; flag to remove the NA values from the output data
-#' @param trackName string; value for `track name=` in the header line. If NULL, the header line will be excluded.
-#' @param rowNames boolean; add row names to output
-#' @param colNames boolean; add column names to output
-#' @param rowData boolean; add columns for `rowData()`
+#' @param na.rm `boolean`; flag to remove the NA values from the output data. Default = `TRUE`
+#' @param trackName `string`; value for `track name=` in the header line. If NULL, the header line will be excluded. Default = `NULL`
+#' @param extension `string`; the extension to put on the file. Default = `"bed"`.
+#' @param rowNames `boolean`; add row names to output. Default = `FALSE`.
+#' @param colNames `boolean`; add column names to output. Default = `TRUE`.
+#' @param rowData `boolean`; add columns for `rowData()`. Default = `FALSE`
 #' @return Nothing
 #' @export
 #'
 #' @examples
 .exportBedLike <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "score", na.rm = TRUE, 
-                           trackName = NULL, rowNames = FALSE, colNames = TRUE, rowData = FALSE, verbose = TRUE) {
+                           trackName = NULL, extension = "bed", rowNames = FALSE, colNames = TRUE, rowData = FALSE, verbose = TRUE) {
   
   #---- Input validation ---------------------------------------------------
   meth <- cov <- NULL
@@ -69,7 +70,7 @@ exportBedGraph <- function(scm = NULL, path = tempdir(), assay = "score", suffix
   .validateType(assays,"string")
   assays <- sapply(assays,function(assay) .validateAssay(scm,assay))
   .validateType(na.rm,"boolean")
-  .validateType(trackline,c("string","null"))
+  .validateType(trackName,c("string","null"))
   .validateType(rowNames,"boolean")
   .validateType(colNames,"boolean")
   .validateType(rowData,"boolean")
@@ -89,7 +90,7 @@ exportBedGraph <- function(scm = NULL, path = tempdir(), assay = "score", suffix
   
   #---- Function code ------------------------------------------------------
   if (verbose) {
-    export <- ifelse(!is.null(trackline), paste(trackline,"s "), "")
+    export <- ifelse(!is.null(trackName), paste0(trackName,"s "), "")
     message("Exporting ",export,"to ",path,start_time())
   }
   
@@ -104,14 +105,16 @@ exportBedGraph <- function(scm = NULL, path = tempdir(), assay = "score", suffix
   
   for (i in 1:length(samples)) {
     
+    out <- mtx
+    
     samp = samples[i]
-    filepath <- paste0(path,"/",samp,suffix,".bed")
+    filepath <- paste0(path,"/",samp,suffix,".",extension)
     
     for (assay in assays) {
-      mtx[,(assay) := get_matrix(scm, assay)[, samp]]
+      out[,(assay) := get_matrix(scm, assay)[, samp]]
     }
 
-    if (na.rm) out <- stats::na.omit(mtx, cols=assays, invert=FALSE)
+    if (na.rm) out <- out[complete.cases(out), , ]
     
     appnd <- FALSE
     
@@ -142,12 +145,11 @@ exportBedGraph <- function(scm = NULL, path = tempdir(), assay = "score", suffix
 }
 
 #---- exportMultiBed --------------------------------------------------------------------------------------------------
-#' Exports all samples in an [scMethrix] objects into single BED file for each assay
-#' @details The structure of the BED files will be a tab-deliminated structure of:
-#' Chromosome | CpG start site | CpG end site | Sample Data
-#' @inheritParams exportBed
-#' @param assays string; the list of assays to export BED files for. Each assay will be a seperate file.
-#' @param header boolean; flag to add the header onto each column. For samples, the `sampleName()` for each will be used.
+#' Exports all samples in an [`scMethrix`] objects into single `BED` file for each assay
+#' @details The structure of the `MultiBED` files will be a tab-deliminated structure of:
+#' `chr` | `start` | `end` | `assay`
+#' @inheritParams .exportBedLike
+#' @param assays `string`; the list of assays to export `BED` files for. Each assay will be a separate file.
 #' @return nothing
 #' @examples
 #' data('scMethrix_data')
@@ -182,25 +184,28 @@ exportMultiBed <- function(scm, path = tempdir(), suffix = NULL, assays = "score
   for (i in 1:length(assayNames)) {
 
     mtx <- get_matrix(scm,assayNames[i])
+    mtx <- as.data.table(mtx)
     name <- names(assays(scm))[[i]]
     
     filepath <- paste0(path,"/",name,suffix,".bed")
     
+    if (na.rm) mtx <- mtx[complete.cases(mtx), , ]
+    
     data.table::fwrite(mtx, filepath, append = FALSE, sep = "\t", row.names = rowNames,
                        col.names = colNames, quote = FALSE, na = NA)
     
-    if (verbose) message("Exported assay ",assayNames[i], " (",i," of ",length(samples),"; ",split_time(), ")")
+    if (verbose) message("Exported assay '",assayNames[i], "' (",i," of ",length(assayNames),"; ",split_time(), ")")
   }
 }
 
 
 #---- exportMethrix ----------------------------------------------------------------------------------------------------
-#' Converts an [scMethrix] object to methrix object
-#' @details Removes extra slot data from an [scMethrix] object and changes structure to match
-#' [methrix::methrix] format. A `counts` assay for coverage values must be present. 
-#' Functionality not supported by `methrix` (e.g. reduced dimensionality) will be discarded.
+#' Converts an [`scMethrix`] object to a [`methrix`][methrix::methrix-class] object
+#' @details Removes extra slot data from an [`scMethrix`] object and changes structure to match
+#' [`methrix`][methrix::methrix-class] format. A `counts` assay for coverage values must be present. 
+#' Functionality not supported by [`methrix`][methrix::methrix-class] (e.g. reduced dimensionality) will be discarded.
 #' @inheritParams exportBed
-#' @return a [methrix::methrix] object
+#' @return a [`methrix::methrix-class`] object
 #' @examples
 #' \dontrun{#TODO: write example}
 #' @export
@@ -210,7 +215,7 @@ exportMethrix <- function(scm = NULL, path = tempdir()) {
   chr <- m_obj <- NULL
   
   .validateExp(scm)
-  .validateType(h5_dir,"string")
+  .validateType(path,"string")
   
   .validatePackageInstall("methrix")
   
@@ -243,10 +248,10 @@ exportMethrix <- function(scm = NULL, path = tempdir()) {
 }
 
 #---- exportBSseq ------------------------------------------------------------------------------------------------------
-#' Exports an [scMethrix] object as [bsseq::BSseq] object.
+#' Exports an [`scMethrix-class`] object as [`bsseq::BSseq`] object.
 #' @inheritParams exportBed
-#' @param scoreAssay matrix; the assay containing methylation scores
-#' @param countAssay matrix; the assay containing count values
+#' @param scoreAssay `matrix`; the assay containing methylation scores
+#' @param countAssay `matrix`; the assay containing count values
 #' @return A [bsseq::BSseq] object
 #' @examples
 #' \dontrun{#TODO: write example}
@@ -261,8 +266,8 @@ exportBSseq <- function(scm, scoreAssay = "score", countAssay = "counts", path =
   .validateType(path,"string")
   .validatePackageInstall("bsseq")
   
-  # if (anyNA(get_matrix(scm,m_assay)) || anyNA(get_matrix(scm,c_assay)))
-  #   warning("NAs present in assay. These will be filled with zero values.")
+   if (anyNA(get_matrix(scm,scoreAssay)) || anyNA(get_matrix(scm,countAssay)))
+     warning("NAs present in assay. These will be filled with zero values.")
   
   #---- Function code ------------------------------------------------------
   M <- get_matrix(scm,scoreAssay) * get_matrix(scm,countAssay)
@@ -275,14 +280,14 @@ exportBSseq <- function(scm, scoreAssay = "score", countAssay = "counts", path =
   return(b)
 }
 
-#---- exportBigWigs ----------------------------------------------------------------------------------------------------
-#' Exports an [scMethrix] object as `bigWig`.
+#---- exportBigWig ----------------------------------------------------------------------------------------------------
+#' Exports an [`scMethrix`] object as `bigWig`.
 #' @inheritParams exportBed
-#' @param assay string; the assay to export. Default = "score".
-#' \dontrun{#TODO: write example}
 #' @return Nothing
+#' @example 
+#' \dontrun{#TODO: write example}
 #' @export
-exportBigWigs <- function(scm, assay = "score", path = tempdir()){
+exportBigWig <- function(scm, assay = "score", path = tempdir()){
 
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
@@ -321,9 +326,8 @@ exportBigWigs <- function(scm, assay = "score", path = tempdir()){
 }
 
 #---- exportSeurat -----------------------------------------------------------------------------------------------------
-#' Exports an [scMethrix] object as [Seurat::Seurat]
-#' @inheritParams exportBed
-#' @param assay string; the assay to export. Default = "score".
+#' Exports an [`scMethrix`] object as [Seurat::Seurat]
+#' @inheritParams .exportBedLike
 #' @return A [Seurat::Seurat] object
 #' @export
 #' @examples
@@ -335,6 +339,7 @@ exportSeurat <- function(scm, assay="score") {
   if (!has_cov(scm)) stop("Seurat requires a coverage matrix.", call. = FALSE)
   .validateAssay(scm,assay)
   .validatePackageInstall("Seurat")
+  .validatePackageInstall("SeuratObject")
     
   #---- Function code ------------------------------------------------------
   cnt <- counts(scm)
@@ -347,6 +352,7 @@ exportSeurat <- function(scm, assay="score") {
   
   seur <- Seurat::CreateSeuratObject(counts = cnt, meta.data = as.data.frame(colData(scm)))
   seur <- Seurat::SetAssayData(object = seur, slot = "data", new.data = scr)
+  seur <- SeuratObject::RenameAssays(seur, RNA = "Methylation")
   
   # seur <- NormalizeData(object = seur)
   # seur <- FindVariableFeatures(object = seur)

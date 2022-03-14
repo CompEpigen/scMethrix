@@ -176,7 +176,7 @@ start_time <- function() {
 
 #---- split_time -------------------------------------------------------------------------------------------------------
 #' Outputs the split/lap/iteration time
-#' @details Gets the stored elapsed [`proc.time`] from either the initial
+#' @details Gets the stored elapsed [`proc.time()`] from either the initial
 #' [start_time()] or the previous `split_time`
 #' @return Time elapsed since last call
 #' @export
@@ -366,7 +366,7 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' @param chrs integer; Number of chromosomes to create
 #' @param minsparsity numeric; Minimum sparsity (`minrows = numrows*minsparsity`)
 #' @param maxsparsity numeric; Max sparsity
-#' @param rangeFactor numeric; Max range of [IRanges::IRanges] object `1:rangeFactor*numrows`
+#' @param rangeFactor numeric; Max range of [`IRanges`][IRanges::IRanges-class] object `1:rangeFactor*numrows`
 #' @param randomize boolean; Randomize the chr and `IRange` mapping
 #' @param values list of numerics; List of values to choose from
 #' @param dir string; the directory path to store the `bedgraph` files in

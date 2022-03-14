@@ -1,9 +1,9 @@
 #---- prepare_plot_data ------------------------------------------------------------------------------------------------
-#' Formats an [scMethrix] matrix to long form data for plotting
+#' Formats an [`scMethrix`] matrix to long form data for plotting
 #' @inheritParams generic_scMethrix_function
-#' @param n_cpgs integer; Use these many random CpGs for plotting. Default = `25000`. Set it to `NULL}` to use all - which can be memory expensive. The seed will be set to `n_cpgs` for consistency.
-#' @param pheno string; col name of `colData(scm)`. Will be used as a factor to color different groups
-#' @param na.rm boolean; remove NA values from the output
+#' @param n_cpgs `integer`; Use these many random CpGs for plotting. Default = `25000`. Set it to `NULL` to use all - which can be memory expensive. The seed will be set to `n_cpgs` for consistency.
+#' @param pheno `string`; col name of `colData(scm)`. Will be used as a factor to color different groups
+#' @param na.rm `boolean`; remove NA values from the output
 #' @return 'Long' matrix for methylation
 #' @export
 prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL, verbose = TRUE, na.rm = T){
@@ -57,27 +57,22 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 
 #---- get_palette ------------------------------------------------------------------------------------------------------
 #' Getter for plot palette colors
-#' @param n_row Number of colors
-#' @param col_palette String for RColorBrewer palette name  
+#' @param nColors `integer`; Number of colors
 #' @return RColorBrewer palette
 #' @export
-get_palette <- function(n_row, col_palette = "RdYlGn"){
+get_palette <- function(nColors){
   
   #---- Input validation ---------------------------------------------------
-  .validateType(n_row,"integer")
+  .validateType(nColors,"integer")
   .validateType(col_palette,"string")
   .validatePackageInstall("ggsci")
   
   #---- Function code ------------------------------------------------------
   
-  if (n_row == 2) {
-    
+  if (nColors == 2) {
    color_pal <- c("#FFA900","#0056FF")
-    
   } else {
-  
-      color_pal <- grDevices::colorRampPalette(ggsci::pal_locuszoom()(7))(n_row)
-  
+      color_pal <- grDevices::colorRampPalette(ggsci::pal_locuszoom()(7))(nColors)
   }
   
     # if (n_row == 0) {
@@ -96,24 +91,25 @@ get_palette <- function(n_row, col_palette = "RdYlGn"){
 
 #---- get_shape --------------------------------------------------------------------------------------------------------
 #' Getter for plot shapes. Shapes selected for optimal distinction and taken from:
-#' @details http://www.sthda.com/english/wiki/r-plot-pch-symbols-the-different-point-shapes-available-in-r
-#' @param n_row Number of shapes. Max of 15.
+#' @details <http://www.sthda.com/english/wiki/r-plot-pch-symbols-the-different-point-shapes-available-in-r>
+#' @param nShapes `integer`; Number of shapes. Max of 15.
 #' @return list of shapes (by integer)
 #' @export
-get_shape <- function(n_row) {
-  .validateType(n_row,"integer")
+get_shape <- function(nShapes) {
+  .validateType(nShapes,"integer")
   shapes <- c(15:25,3,4,7:14)
-  return(shapes[1:n_row])
+  return(shapes[1:nShapes])
 }
 
 
 #---- plot_violin ------------------------------------------------------------------------------------------------------
-#' Violin Plot for \eqn{\beta}-Values
+#' Violin Plot for `\beta`-Values
 #' @inheritParams prepare_plot_data
-#' @param col_palette string; Name of the `RColorBrewer` palette to use for plotting.
-#' @param show_legend boolean; Display the legend on the plot
+#' @param n_cpgs `integer`; The number of CpGs to for plotting. Default = `25000`.
+#' @param col_palette `string`; Name of the `RColorBrewer` palette to use for plotting.
+#' @param show_legend `boolean`; Display the legend on the plot
 #' @param ... Additional parameters to feed to [scMethrix_theme()]
-#' @return ggplot2 object
+#' @return [`ggplot2::ggplot2`] object
 #' @export
 #' @import ggplot2
 #' @examples
@@ -150,11 +146,11 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
 }
 
 #---- plot_density -----------------------------------------------------------------------------------------------------
-#' Density Plot of \eqn{\beta}-Values
+#' Density Plot of `\beta`-Values
 #'
 #' @inheritParams plot_violin
-#' @param na.rm boolean; Remove NA values from the plot
-#' @return ggplot2 object
+#' @param na.rm `boolean`; Remove NA values from the plot
+#' @return [`ggplot2::ggplot2`] object
 #' @export
 #' @examples
 #' data('scMethrix_data')
@@ -196,11 +192,10 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
 #---- plot_coverage ----------------------------------------------------------------------------------------------------
 #' Coverage QC Plots
 #' @inheritParams plot_violin
-#' @param max_cov integer; Maximum coverage value to be plotted.
-#' @param type string; Choose between `histogram` (histogram) or `density` (density plot).
-#' @param obs_lim integer; The maximum number of observations (`sites*samples`) to use. If the dataset is larger that this,
-#' random sites will be selected from the genome.
-#' @return ggplot2 object
+#' @param max_cov `integer`; Maximum coverage value to be plotted.
+#' @param type `string`; Choose between `histogram` or `density` plot.
+#' @param obs_lim `integer`; The maximum number of observations (`sites*samples`) to use. If the dataset is larger that this, random sites will be selected from the genome.
+#' @return [`ggplot2::ggplot2`] object
 #' @examples
 #' data('scMethrix_data')
 #' plot_coverage(scm = scMethrix_data)
@@ -283,13 +278,12 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
 
 #---- plot_sparsity ----------------------------------------------------------------------------------------------------
 #' Sparsity of sample
-#' inheritParams generic_plot_function
 #' @inheritParams plot_violin
-#' @param type string; Choose between `Boxplot` or `Scatterplot`. Default = `Scatterplot`
-#' @param by string; The variable for x-axis, `Sample` or `Chromosome.` If by `Sample`, and phenotype is not `NULL`, phenotype will be taken instead. Default = `Sample`
-#' @param phenotype string; Col name of `colData(m)`. Will be used as a factor to color different groups
-#' @param show_avg boolean; flag to show a dotted line representing the average value.
-#' @return ggplot2 object
+#' @param type `string`; Choose between `Boxplot` or `Scatterplot`. Default = `Scatterplot`
+#' @param by `string`; The variable for x-axis, `Sample` or `Chromosome.` If by `Sample`, and phenotype is not `NULL`, phenotype will be taken instead. Default = `Sample`
+#' @param phenotype `string`; Col name of `colData(m)`. Will be used as a factor to color different groups
+#' @param show_avg `boolean`; flag to show a dotted line representing the average value.
+#' @return [`ggplot2::ggplot2`] object
 #' @examples
 #' data('scMethrix_data')
 #' plot_sparsity(scm = scMethrix_data)
@@ -402,14 +396,14 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
 #' Plot descriptive statistics
 #' @details plot descriptive statistics results from [get_stats()]
 #' @inheritParams plot_violin
-#' @param stat string; Can be `mean` or median. Default = `mean.`
-#' @param type string;Choose between `Boxplot` or `Scatterplot`. Default = `Scatterplot`
-#' @param ignore_chr string; Chromosomes to ignore. If `NULL`, all chromosomes will be used. Default = `NULL`.
-#' @param ignore_samples list of strings; Samples to ignore.  If `NULL`, all samples will be used. Default = `NULL`
-#' @param n_col integer; number of columns. Passed to `facet_wrap`
-#' @param n_row integer; number of rows. Passed to `facet_wrap`
-#' @param per_chr boolean; plot per chromosome
-#' @return ggplot2 object
+#' @param stat `string`; Can be `mean` or median. Default = `mean.`
+#' @param type `string`; Choose between `Boxplot` or `Scatterplot`. Default = `Scatterplot`
+#' @param ignore_chr `string`; Chromosomes to ignore. If `NULL`, all chromosomes will be used. Default = `NULL`.
+#' @param ignore_samples `list(string)`; Samples to ignore.  If `NULL`, all samples will be used. Default = `NULL`
+#' @param n_col `integer`; number of columns. Passed to `facet_wrap`
+#' @param n_row `integer`; number of rows. Passed to `facet_wrap`
+#' @param per_chr `boolean`; plot per chromosome
+#' @return [`ggplot2::ggplot2`] object
 #' @seealso \code{\link{get_stats}}
 #' @examples
 #' data('scMethrix_data')
@@ -566,13 +560,13 @@ plot_imap <- function(scm) {
 #' Plot dimensionality reduction
 #' @inheritParams generic_scMethrix_function
 #' @inheritParams plot_violin
-#' @param dim_red string; name of a dimensionality reduction inside an [scMethrix] object. Should be a matrix of two columns representing
+#' @param dim_red `string`; name of a dimensionality reduction inside an [`scMethrix`] object. Should be a matrix of two columns representing
 #' the X and Y coordinates of the dim. red., with each row being a separate sample
-#' @param axis_labels list of strings; A list of 'X' and 'Y' strings for labels, or NULL if no labels are desired
-#' @param color_anno string; Column name of `colData(scm)`. Default NULL. Will be used as a factor to color different groups.
-#' @param shape_anno string; Column name of `colData(scm)`. Default NULL. Will be used as a factor to shape different groups.
-#' @param show_dp_labels boolean; Flag to show the labels for dots. Default FALSE
-#' @return ggplot2 object
+#' @param axis_labels `list(string)`; A named list of `X` and `Y` strings for labels, or `NULL` if no labels are desired
+#' @param color_anno `string`; Column name of `colData(scm)`. Default = `NULL.` Will be used as a factor to color different groups.
+#' @param shape_anno string; Column name of `colData(scm)`. Default = `NULL.` Will be used as a factor to shape different groups.
+#' @param show_dp_labels boolean; Flag to show the labels for dots. Default = `FALSE`
+#' @return [`ggplot2::ggplot2`] object
 #' @importFrom graphics par mtext lines axis legend title
 #' @export
 # plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, legend_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
@@ -834,12 +828,12 @@ plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL
 #---- benchmark_imputation ---------------------------------------------------------------------------------------------
 #' Evaluates imputations methods by NRMSE or AUC
 #' @details Does stuff
-#' @param sparse_prop numeric; A sparsity proportion between 0 and 1. E.g. 0.1 replaces 10% of the matrix with NA
-#' @param imp_methods closure; The imputation methods to compare.
-#' @param iterations integer; Number of iterations to test
-#' @param type character; descriptive statistic. Can be either `AUC` or `RMSE.` Default `RMSE`
+#' @param sparse_prop `numeric`; A sparsity proportion between 0 and 1. E.g. 0.1 replaces 10% of the matrix with NA
+#' @param imp_methods `closure`; The imputation methods to compare.
+#' @param iterations `integer`; Number of iterations to test
+#' @param type `character`; descriptive statistic. Can be either `AUC` or `RMSE.` Default `RMSE`
 #' @inheritParams generic_scMethrix_function
-#' @return ggplot; The graph showing the NRMSE for each imputation method at each sparsity
+#' @return [`ggplot2::ggplot2`]; The graph showing the NRMSE for each imputation method at each sparsity
 #' @examples
 #' data('scMethrix_data')
 #' \dontrun{
@@ -894,10 +888,10 @@ benchmark_imputation <- function(scm = NULL, assay = "score", sparse_prop = seq(
 
 #---- scMethrix_theme --------------------------------------------------------------------------------------------------
 #' Theme for ggplot
-#' @param base_size integer; Size of text
-#' @param base_family string; Family of text
-#' @param ... Additional arguments for [ggplot2::theme]
-#' @return ggplot element; data for the ggplot theme
+#' @param base_size `integer`; Size of text
+#' @param base_family `string`; Family of text
+#' @param ... Additional arguments for [ggplot2::theme()]
+#' @return [`ggplot2::ggplot2`] element; data for the ggplot theme
 #' @export
 scMethrix_theme <- function(base_size = 12, base_family = "",...) {
 

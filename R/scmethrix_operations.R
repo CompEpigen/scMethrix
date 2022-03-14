@@ -1,11 +1,10 @@
 
 #---- add_assay -------------------------------------------------------------------------------------------
-#' Adds an assay from an [scMethrix] object
-#' @details Simple 
-#' Fulfills the same function as `assay(scm, assay) <- matrix`, but with additional checks.
+#' Adds an assay from an [`scMethrix`] object
+#' @description Fulfills the same function as `assay(scm, assay) <- matrix`, but with additional checks.
 #' @inheritParams generic_scMethrix_function
-#' @param matrix mtx; the input matrix
-#' @return An [scMethrix] object
+#' @param matrix `matrix`; the input matrix
+#' @return An [`scMethrix`] object
 #' @examples
 #' data('scMethrix_data')
 #' @export
@@ -25,10 +24,10 @@ add_assay <- function(scm=NULL, new_assay ="new_assay", matrix=NULL) {
 }
 
 #---- remove_assay -------------------------------------------------------------------------------------------
-#' Removes an assay from an [scMethrix] object
-#' @details This will remove an assay from the experiment object. All transformed assays may be removed, as well as the coverage assay (since it is less useful when compared to normal WGBS data), but the score assay cannot be removed. Reduced dimensionality data will be retained even if the parent assay is removed.
+#' Removes an assay from an [`scMethrix`] object
+#' @description This will remove an assay from the experiment object. All transformed assays may be removed, as well as the coverage assay (since it is less useful when compared to normal WGBS data), but the score assay cannot be removed. Reduced dimensionality data will be retained even if the parent assay is removed.
 #' @inheritParams generic_scMethrix_function
-#' @return An [scMethrix] object
+#' @return An [`scMethrix`] object
 #' @examples
 #' data('scMethrix_data')
 #' remove_assay(scMethrix_data,assay="counts")
@@ -48,8 +47,8 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 }
 
 #---- merge_scMethrix --------------------------------------------------------------------------------------------------
-#' Merges two [scMethrix] objects by `row` or `col`
-#' @details Merges the assay data from two [scMethrix] objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.
+#' Merges two [`scMethrix-class`] objects by `row` or `col`
+#' @details Merges the assay data from two [`scMethrix-class`] objects. Assays not shared between assays will be dropped, as well as all reduced dimensionality data.
 #' 
 #' Requirements for merging
 #'    - If merging by rows, all CpG sites must be unique and samples must be identical
@@ -69,10 +68,10 @@ remove_assay <- function(scm=NULL, assay=NULL) {
 #'  
 #'    Custom experiment metadata can manually be added via `metadata() <-`, or to rowRanges via `mcols() <-`.
 #' @inheritParams generic_scMethrix_function
-#' @param scm1 [scMethrix]; A single cell methylation experiment
-#' @param scm2 [scMethrix]; A single cell methylation experiment
-#' @param by string; Merge by 'columns' or 'rows'
-#' @return A merged [scMethrix] object
+#' @param scm1 [`scMethrix-class`]; A single cell methylation experiment
+#' @param scm2 [`scMethrix-class`]; A single cell methylation experiment
+#' @param by `string`; Merge by 'columns' or 'rows'
+#' @return A merged [`scMethrix-class`] object
 #' @examples
 #' data('scMethrix_data')
 #' merge_scMethrix(scMethrix_data[1:5],scMethrix_data[6:10],by="row")
@@ -333,13 +332,12 @@ merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by_row_nam
   return(scm)
 }
 
-#---- summarize_regions ------------------------------------------------------------------------------------------------
+#---- get_region_summary -----------------------------------------------------------------------------------------------
 #' Extracts and summarizes methylation or coverage info by regions of interest
 #' @details Summarizes regions and/or groups for descriptive statistics.
 #' @inheritParams generic_scMethrix_function
-#' @param regions GRanges;  genomic regions to be summarized. Could be a data.table with 3 columns (chr, start, end) or a [GenomicRanges::GRanges] object
-#' @param by closure; mathematical function by which regions should be summarized. Can be one of the following: mean, sum, max, min. Default = `
-#' @param group a column name from sample annotation that defines groups. In this case, the number of min_samples will be tested group-wise.
+#' @param by `function`; mathematical function by which regions should be summarized. Can be one of the following: `mean`, `median`, `maximum`, `minimum`, `sum`, or `sd`. Default = `mean`
+#' @param group `string`; a column name from sample annotation that defines groups. In this case, the number of `min_samples` will be tested group-wise.
 #' @importFrom methods setClass
 #' @return table of summary statistic for the given region
 #' @examples
@@ -492,15 +490,15 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
 }
 
 
-#--- get_matrix -----------------------------------------------------------------------------------------------------------
-#' Extract assays from an [scMethrix] object
-#' @details Takes [scMethrix] object and returns the `methylation` matrix. This will return in the format used by the object (matrix or HDF5matrix).
+#---- get_matrix -------------------------------------------------------------------------------------------------------
+#' Extract assays from an [`scMethrix-class`] object
+#' @details Takes [`scMethrix-class`] object and returns a specified matrix in the format used by the object (`matrix` or `HDF5matrix`).
 #' @inheritParams generic_scMethrix_function
-#' @param add_loci boolean; Adds genomic loci to the output. Default = `FALSE`. If `TRUE`, it adds CpG position info to the matrix and returns as a data.table
-#' @param in_granges Do you want the outcome in [GenomicRanges::GRanges] format?
-#' @param order_by_sd Order output matrix by standard deviation
-#' @param by string; split the matrix by "row" or "col" if n_chunks != 1
-#' @return If `add_loci == TRUE`, `data.frame`. If `in_granges = TRUE`, [GenomicRanges::GRanges]. Otherwise, `HDF5Matrix` or `matrix`. 
+#' @param add_loci `boolean`; Adds genomic loci to the output. Default = `FALSE`. If `TRUE`, it adds CpG position info to the matrix and returns as a [`data.table`][data.table::data.table-class]
+#' @param in_granges `boolean`; Do you want the outcome in [`GRanges`][GenomicRanges::GRanges()] format?
+#' @param order_by_sd `boolean`; Order output matrix by standard deviation
+#' @param by `string`; split the matrix by `row` or `col` if `n_chunks != 1`.
+#' @return If `add_loci == TRUE`, `data.frame`. If `in_granges = TRUE`, [`GRanges`][GenomicRanges::GRanges()]. Otherwise, `HDF5Matrix` or `matrix`. 
 #' @import SummarizedExperiment
 #' @examples
 #' data('scMethrix_data')
@@ -582,8 +580,8 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 }
 
 #--- save_scMethrix --------------------------------------------------------------------------------------------------
-#' Saves an [scMethrix] object
-#' @details HDF5 and in-memory [scMethrix] objects are stored differently:
+#' Saves an [`scMethrix-class`] object
+#' @details HDF5 and in-memory [`scMethrix-class`] objects are stored differently:
 #' * HDF5 objects have two files: `assays.h5` and `se.rds`. These files are hardcoded in the [HDF5Array::saveHDF5SummarizedExperiment] function and cannot be changed, as the load functions will only look for these files. To use these, you must specify the directory they will be stored in. That function is somewhat dangerously coded as well, as it will delete everything else in the directory when you save something. Here, a menu prompt has been added to warn the user.
 #' * In-memory objects are simply stored in a `.rds` container. There is no requirement for file name or such, but will still prompt if the file already exists
 #' Using the flag `replace = TRUE` will override the menus, but care must be taken to not delete important files (this happened numerous times to the authors!). 
@@ -591,10 +589,10 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 #' If `quick = TRUE` for HDF5 experiments, any operations done on assay matrices will not be realized. In other words, the assay information on the hard disk will not be changed. Non-matrix information will be updated (e.g., metadata) as well as any pending matrix operations. To use this, the experiment must have previously been saved using `quick = FALSE`.
 #' 
 #' @inheritParams generic_scMethrix_function
-#' @param replace Should it overwrite the pre-existing data? FALSE by default.
-#' @param quick boolean; Flag to skip realizing of matrix operations
-#' @param dest string; the destination folder for the scMethrix object
-#' @param ... Parameters to pass to saveHDF5SummarizedExperiment
+#' @param replace `boolean`; Should it overwrite the pre-existing data? Default = `FALSE`.
+#' @param quick `boolean`; Flag to skip realizing of matrix operations
+#' @param dest `string`; the destination folder for the scMethrix object
+#' @param ... Parameters to pass to `saveHDF5SummarizedExperiment`
 #' @importFrom SummarizedExperiment assays
 #' @importFrom methods extends
 #' @examples
@@ -602,7 +600,7 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
 #' dir <- paste0(tempdir(),"/h5")
 #' scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
 #' save_scMethrix(scm, dest = dir, replace = TRUE)
-#' @return invisible [scMethrix] object, with the assays stored in the h5_dir
+#' @return invisible [`scMethrix`] object, with the assays stored in the h5_dir
 #' @export
 save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FALSE, verbose = TRUE, ...) {
   
@@ -669,12 +667,12 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
 }
 
 #---- load_scMethrix ---------------------------------------------------------------------------------------------------
-#' Loads HDF5 [scMethrix] object
-#' @details Takes directory with a previously saved HDF5Array format [scMethrix] object and loads it
+#' Loads HDF5 [`scMethrix-class`] object
+#' @details Takes directory with a previously saved HDF5Array format [`scMethrix-class`] object and loads it
 #' @inheritParams generic_scMethrix_function
-#' @param dest The directory or file to read in from
+#' @param dest `string`; The `directory` or `file` to read in from
 #' @param ... Parameters to pass to [HDF5Array::loadHDF5SummarizedExperiment]
-#' @return An object of class [scMethrix]
+#' @return An [`scMethrix-class`] object
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
@@ -703,12 +701,12 @@ load_scMethrix <- function(dest = NULL, verbose = TRUE, ...) {
 }
 
 #--- convert_scMethrix ----------------------------------------------------------------------------------------------------
-#' Converts an in-memory [scMethrix] to an HDF5 [scMethrix]
-#' @details Takes a [scMethrix] object and returns with the same object with delayed array assay slots
+#' Converts an in-memory [`scMethrix-class`] to an HDF5 [`scMethrix-class`]
+#' @details Takes a [`scMethrix-class`] object and returns with the same object with delayed array assay slots
 #' with HDF5 backend. Might take long time!
 #' @inheritParams generic_scMethrix_function
-#' @param type string; what type of scMethrix to convert to. If `NULL`, this will convert to the opposite type, otherwise, will convert (if necessary) to the type specified
-#' @return An object of class [scMethrix], HDF5 format
+#' @param type `string`; what type of scMethrix to convert to. If `NULL`, this will convert to the opposite type, otherwise, will convert (if necessary) to the type specified
+#' @return An [`scMethrix-class`] object in HDF5 format
 #' @importFrom SummarizedExperiment assays
 #' @examples
 #' data('scMethrix_data')
@@ -760,14 +758,13 @@ convert_scMethrix <- function(scm = NULL, type = c(NA,"HDF5","memory"), h5_dir =
 }
 
 #--- subset_scMethrix -----------------------------------------------------------------------------------------------------
-#' Subsets an [scMethrix] object based on `regions`, `contigs` and/or `samples`.
-#' @details Takes [scMethrix] object and filters CpGs based on region, contig and/or sample. Can 
+#' Subsets an [`scMethrix-class`] object based on `regions`, `contigs` and/or `samples`.
+#' @description Takes [`scMethrix-class`] object and filters CpGs based on region, contig and/or sample. Can 
 #' either subset (`include`) to or filter (`exclude`) the specified parameters.
 #' @inheritParams generic_scMethrix_function
-#' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a `GenomicRanges` object
-#' @param contigs string; array of chromosome names to subset by
-#' @param samples string; array of sample names to subset by
-#' @param by string to decide whether to `include` or `exclude` the given criteria from the subset. Default = `include`.
+#' @param contigs `string`; array of chromosome names to subset by
+#' @param samples `string`; array of sample names to subset by
+#' @param by `string`; Subset to `include` or `exclude` the given criteria from the subset. Default = `include`.
 #' @importFrom IRanges subsetByOverlaps
 #' @examples
 #' data('scMethrix_data')
@@ -787,7 +784,7 @@ convert_scMethrix <- function(scm = NULL, type = c(NA,"HDF5","memory"), h5_dir =
 #' 
 #' #Subset to exclude region "chr1:1-5"
 #' subset_scMethrix(scMethrix_data, regions = regions, by = "exclude")
-#' @return An object of class [scMethrix]
+#' @return An object of class [`scMethrix`]
 #' @export
 subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples = NULL, by=c("include","exclude"), overlap_type=c("within", "start", "end", "any", "equal"),verbose=TRUE) {
   
@@ -861,10 +858,10 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' Estimate descriptive statistics for each sample
 #' @details Calculate descriptive statistics (`mean`, `median`, `SD`) either by sample or `per_chr`
 #' @inheritParams generic_scMethrix_function
-#' @param per_chr boolean; Estimate stats per chromosome. Default = `TRUE`
-#' @param ignore_chr string; list of chromosomes to ignore
-#' @param ignore_samples string; list of samples to ignore
-#' @param stats list of strings; the stats to include. Default is `Mean`, `Median`, `SD`, and `Count`.
+#' @param per_chr `boolean`; Estimate stats per chromosome. Default = `TRUE`
+#' @param ignore_chr `string`; chromosomes to ignore
+#' @param ignore_samples `string`; samples to ignore
+#' @param stats `string`; the stats to include. Default is `c("Mean","Median","SD","Count")`).
 #' @examples
 #' data('scMethrix_data')
 #' 
@@ -939,15 +936,15 @@ get_stats <- function(scm = NULL, assay="score", per_chr = TRUE, verbose = TRUE,
 }
 
 #---- get_coldata_stats -------------------------------------------------------------------------------------
-#' Adds descriptive statistics to colData columns in an [scMethrix] object.
-#' @details Adds the mean, SD, and sample count for each sample in an [scMethrix] object. This can be accessed using `colData()`. Columns with the names of `mean`, `sd`, and `cpg` will be automatically overwritten, but `suffix` can be used to keep multiple stats columns.
+#' Adds descriptive statistics to colData columns in an [`scMethrix-class`] object.
+#' @details Adds the mean, SD, and sample count for each sample in an [`scMethrix-class`] object. This can be accessed using `colData()`. Columns with the names of `mean`, `sd`, and `cpg` will be automatically overwritten, but `suffix` can be used to keep multiple stats columns.
 #' 
 #' This data will not be updated automatically for any subset, merge, bin, etc functions.
 #' 
 #' @inheritParams generic_scMethrix_function
-#' @param suffix string; a suffix to add to the string
-#' @param stats list of strings; the stats to include. Default is `Mean`, `SD`, `CpGs`, and `Sparsity`.
-#' @return An [scMethrix] object
+#' @param suffix `string`; a suffix to add to the string
+#' @param stats `list(string)`; the stats to include. Default = `c("Mean","SD","CpGs","Sparsity")`.
+#' @return An [`scMethrix-class`] object
 #' @examples
 #' data('scMethrix_data')
 #' get_coldata_stats(scMethrix_data)
@@ -989,15 +986,15 @@ get_coldata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean",
 }
 
 #--- get_rowdata_stats -------------------------------------------------------------------------------------
-#' Adds descriptive statistics to metadata columns in an [scMethrix] object.
-#' @details Adds the mean, median, SD, and sample count and coverage (if present) for the `GenomicRanges` in an [scMethrix] object. This can be accessed using `mcols()`.
+#' Adds descriptive statistics to metadata columns in an [`scMethrix-class`] object.
+#' @details Adds the mean, median, SD, and sample count and coverage (if present) for the `rowData()` in an [`scMethrix-class`] object. This can be accessed using `mcols()`.
 #' 
 #' This data will not be updated automatically for any subset, merge, bin, etc functions.
 #' 
 #' @inheritParams generic_scMethrix_function
 #' @inheritParams get_coldata_stats
-#' @param stats list of strings; the stats to include. Default is `Mean`, `SD`, `CpGs`, and `Sparsity`..
-#' @return An [scMethrix] object
+#' @param stats list of strings; the stats to include. Default is `c("Mean","SD","Cells","Sparsity")`
+#' @return An [`scMethrix-class`] object
 #' @examples
 #' data('scMethrix_data')
 #' get_rowdata_stats(scMethrix_data)
@@ -1044,14 +1041,14 @@ get_rowdata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean",
 }
 
 # #--- expand_scMethrix -----------------------------------------------------------------------------------------------------
-# #' Expands an [scMethrix] object to match input \code{regions}.
-# #' @details Takes [scMethrix] object and adds CpGs to the object
+# #' Expands an [`scMethrix`] object to match input \code{regions}.
+# #' @details Takes [`scMethrix`] object and adds CpGs to the object
 # #' @inheritParams generic_scMethrix_function
 # #' @param regions genomic regions to subset by. Could be a data.table with 3 columns (chr, start, end) or a \code{GenomicRanges} object
 # #' @param overlap_type string; defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see the \code{findOverlaps} function of the \code{\link{IRanges}} package.
 # #' @examples
 # #' data('scMethrix_data')
-# #' @return An object of class [scMethrix]
+# #' @return An object of class [`scMethrix`]
 # #' @export
 # expand_scMethrix <- function(scm = NULL, regions = NULL, overlap_type=c("within", "start", "end", "any", "equal"),verbose=TRUE) {
 # 
@@ -1078,9 +1075,9 @@ get_rowdata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean",
 
 #--- remove_uncovered ---------------------------------------------------------------------------------------
 #' Remove loci that are uncovered across all samples
-#' @details Takes [scMethrix] object and removes loci that are uncovered across all samples
+#' @details Takes [`scMethrix-class`] object and removes loci that are uncovered across all samples
 #' @inheritParams generic_scMethrix_function
-#' @return An object of class [scMethrix]
+#' @return An object of class [`scMethrix-class`]
 #' @examples
 #' data('scMethrix_data')
 #' # Remove uncovered CpGs after subsetting to a single sample
@@ -1132,7 +1129,7 @@ remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
 
 #--- mask_scMethrix -------------------------------------------------------------------------------------
 #' Masks rows or columns based on some descriptive statistic
-#' @details Takes [scMethrix] object and masks CpG sites based on row statistics. The sites will remain in the object and all assays will be masked. These sites can later be removed with [remove_uncovered()]. 
+#' @details Takes [`scMethrix-class`] object and masks CpG sites based on row statistics. The sites will remain in the object and all assays will be masked. These sites can later be removed with [remove_uncovered()]. 
 #'  
 #'  
 #'  ## Types of functions
@@ -1142,8 +1139,8 @@ remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
 #'  * Remove low variance CpG sites
 #'  
 #'  ## Notes
-#'  * For `stat = "variance"`, a CpG that is either hypo- or hyper-methylated in all samples will have a variability of 0, whereas a CpG that is exactly half of each will have a value of 1. 
-#'  * For `stat = "variance"` and `stat = "sd"`, CpGs present in only one sample will automatically have a variance/SD of 0
+#'  * For `stat = "variance"`, a CpG that is either hypo- or hyper-methylated in all samples will have a variability of `0`, whereas a CpG that is exactly half of each will have a value of `1`. 
+#'  * For `stat = "variance"` and `stat = "sd"`, CpGs present in only one sample will automatically have a `variance`/`SD` of `0`
 #'  @family masking
 #' @family quality control
 #' @inheritParams generic_scMethrix_function
@@ -1151,7 +1148,7 @@ remove_uncovered <- function(scm = NULL, n_threads = 1, verbose = TRUE) {
 #' @param by string; Calculate over rows or columns
 #' @param stat string; The calculation to perform on each row
 #' @param op string; The operator to compare the calculation to the threshold
-#' @return An object of class [scMethrix]
+#' @return An object of class [`scMethrix-class`]
 #' @importFrom SummarizedExperiment assays assays<-
 #' @seealso [mask_by_idx()], the actual masking function
 #' @examples
@@ -1253,13 +1250,13 @@ mask_scMethrix <- function(scm = NULL, assay="score", threshold = 0, by=c("row",
 }
 
 #' Specified rows and columns are masked with NA values
-#' @details This iterates through all assays in the inputted [scMethrix] object and replaces all rows in row_idx and cols in col_idx. 
+#' @details This iterates through all assays in the inputted [`scMethrix-class`] object and replaces all rows in row_idx and cols in col_idx. 
 #' @family masking
 #' @family quality control
 #' @inheritParams generic_scMethrix_function
 #' @param col_idx numeric; A vector of column indexes to replace all values with NA
 #' @param row_idx numeric; A vector of row indexes to replace all values with NA
-#' @return An object of class [scMethrix]
+#' @return An object of class [`scMethrix-class`]
 #' @importFrom SummarizedExperiment assays assays<-
 #' @seealso [mask_scMethrix()] wraps this function and generates idxs by statistics, [remove_uncovered()] to remove the masked sites
 #' @export

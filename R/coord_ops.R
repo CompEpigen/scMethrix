@@ -13,10 +13,10 @@
 #' 
 #' @inheritParams generic_scMethrix_function
 #' @inheritParams rtracklayer::liftOver
-#' @param target_genome string; the target genome. This will be update the genome field in the output [scMethrix] object
-#' @param chain [rtracklayer::Chain-class]; A `Chain` object representing the loci for liftOver conversion, usually imported by [rtracklayer::import.chain].
+#' @param target_genome string; the target genome. This will be update the genome field in the output [`scMethrix-class`] object
+#' @param chain [`rtracklayer::Chain-class`]; A `Chain` object representing the loci for liftOver conversion, usually imported by [rtracklayer::import.chain()].
 #' @export
-#' @return [scMethrix] object with liftOver'd genomic ranges
+#' @return [`scMethrix-class`] object with liftOver'd genomic ranges
 #' @examples
 #' \dontrun{# TODO: add example }
 liftover_CpGs <- function(scm, chain = NULL, target_genome = NULL, verbose = TRUE) {
@@ -110,8 +110,8 @@ extract_CpGs = function(genome = NULL, verbose = TRUE) {
 #---- subset_ref_cpgs --------------------------------------------------------------------------------------------------
 #' Subsets a given list of CpGs by another list of CpGs
 #' @details Typically used to reduce the number of potential CpG sites to include only those present  in the input files so as to maximize performance and minimize resources. Can also be used for quality control to see if there is excessive number of CpG sites that are not present in the reference genome.
-#' @param ref_cpgs data.table; A reference set of CpG sites (e.g. hg19 or mm10) in bedgraph format
-#' @param gen_cpgs data.table; A subset of CpG sites. Usually obtained from [read_index()].
+#' @param ref_cpgs [`data.table`][data.table::data.table-class]; A reference set of CpG sites (e.g. `hg19` or `mm10`) in bedgraph format
+#' @param gen_cpgs [`data.table`][data.table::data.table-class]; A subset of CpG sites. Usually obtained from [read_index()].
 #' @param verbose boolean; flag to output messages or not
 #' @return Returns list of CpG sites in bedgraph format
 #' @examples
@@ -148,11 +148,11 @@ subset_ref_cpgs <- function(ref_cpgs, gen_cpgs, verbose = TRUE) {
 }
 
 #---- bin_granges ------------------------------------------------------------------------------------------------------
-#' Bins each region in a [GenomicRanges::GRanges] object into bins of specified `bin_size` 
-#' @details Bins a single region in [GenomicRanges::GRanges] format into multiple regions with a specified `bin_size`. If `length(gr) %% bin_size != 0`, then the last GRange will have a length < `bin_size`. This is used instead of tile when you need consistently sized bins with the last bin being smaller
-#' @param gr [GenomicRanges::GRanges]; the genomic loci
+#' Bins each region in a [`GRanges`][GenomicRanges::GRanges()] object into bins of specified `bin_size` 
+#' @details Bins a single region in [GenomicRanges::GRanges()] format into multiple regions with a specified `bin_size`. If `length(gr) %% bin_size != 0`, then the last GRange will have a length < `bin_size`. This is used instead of tile when you need consistently sized bins with the last bin being smaller
+#' @param gr [`GRanges`][GenomicRanges::GRanges()]; the genomic loci
 #' @param bin_size integer; the length in base pairs of region in each bin
-#' @return [GenomicRanges::GRanges]; the binned genomic loci
+#' @return [`GRanges`][GenomicRanges::GRanges()]; the binned genomic loci
 #' @import GenomicRanges
 #' @examples
 #' regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,10000))
@@ -171,12 +171,12 @@ bin_granges <- function(gr, bin_size = 100000) {#, enforce_size = FALSE) {
 }
 
 #---- cast_granges -----------------------------------------------------------------------------------------------------
-#' Casts genomic regions into [GenomicRanges::GRanges] format
-#' @details Casts the input as a [GenomicRanges::GRanges] object. Input can be [GenomicRanges::GRanges] or a 
+#' Casts genomic regions into [`GRanges`][GenomicRanges::GRanges()] format
+#' @details Casts the input as a [GenomicRanges::GRanges()] object. Input can be [`GRanges`][GenomicRanges::GRanges()] or a 
 #' `data.frame`-compatible class that can be cast through `as.data.frame()`. Input BED format
 #'  must be `chr-start-end` for `data.frame` objects.
-#' @param regions GRanges or data.frame; The input regions to cast to [GenomicRanges::GRanges]
-#' @return [GenomicRanges::GRanges] object with the input regions
+#' @param regions GRanges or data.frame; The input regions to cast to [`GRanges`][GenomicRanges::GRanges()]
+#' @return [`GRanges`][GenomicRanges::GRanges()] object with the input regions
 #' @import GenomicRanges
 #' @examples
 #' regions = data.table(chr = 'chr1', start = 1, end = 100)
@@ -190,12 +190,12 @@ cast_granges <- function(regions) {
 }
 
 #---- cast_datatable ---------------------------------------------------------------------------------------------------
-#' Casts genomic regions into \code{\link{data.table}} format
-#' @details Casts the input as a \code{\link{data.table}} object. Input can be \code{\link{GRanges}} or a 
-#' \code{\link{data.frame}}-compatible class that can be cast through \code{as.data.frame()}. Input BED format
-#'  must be \code{chr-start-end} for \code{\link{data.frame}} objects.
-#' @param regions GRanges or data.frame; The input regions to cast to \code{\link{GRanges}}
-#' @return \code{\link{data.table}} object with the input regions
+#' Casts genomic regions into [`data.table`][data.table::data.table-class] format
+#' @description Casts the input as a [`data.table::data.table-class`] object. Input can be [`GenomicRanges::GRanges()`] or a 
+#' `data.frame`-compatible class that can be cast through [as.data.frame()]. Input BED format
+#'  must be `chr-start-end` for `data.frame` objects.
+#' @param regions [`GRanges`][GenomicRanges::GRanges()] or `data.frame`; The input regions to cast into [`GRanges`][GenomicRanges::GRanges()] format
+#' @return [`data.table`][data.table::data.table-class] object with the input regions
 #' @import GenomicRanges
 #' @examples
 #' regions = data.table(chr = 'chr1', start = 1, end = 100)

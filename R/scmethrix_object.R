@@ -1,11 +1,12 @@
 #' Class definition, slot descriptions, and accessor methods for [`scMethrix`]
+#' 
+#' #' @description For the constructor description, see the [`here`][scMethrix()].
 #' @name scMethrix-class
-#' @description S4 class scMethrix
 #' @docType class
 #' @slot assays [list()]; assays containing methylation or coverage information. Valid formats are either [matrix] or [HDF5Array] Accessed via [assays()].
 #' @slot colData [data.frame()]; metadata corresponding to samples. Accessed via [colData()]
 #' @slot metadata [list()]; metadata pertaining to the experiment. Accessed via [metadata()]
-#' @slot rowRanges [GenomicRanges::GRanges()]; the genomic coordinates of CpG sites and associated metadata. Accessed via [rowRanges()], with row metadata accessed via [rowData()] or [mcols()]
+#' @slot rowRanges [`GRanges`][GenomicRanges::GRanges()]; the genomic coordinates of CpG sites and associated metadata. Accessed via [rowRanges()], with row metadata accessed via [rowData()] or [mcols()]
 #' @exportClass scMethrix
 #' @seealso [scMethrix()] for additional details and the constructor function for the object
 #' \preformatted{(x, "scMethrix")}
@@ -17,11 +18,13 @@ setClass(Class = "scMethrix", contains = "SingleCellExperiment")
 
 #' Constructor for the [`scMethrix`] class
 #' 
-#' The [`scMethrix-class`] object combines multiple data containers representing common data from methylation experiments (e.g., samples, features, assays). It inherits from the SingleCellExperiment class and is used in the same manner, but with additional consistency checks and methylation-specific functionality. 
+#' @description The [`scMethrix-class`] object combines multiple data containers representing common data from methylation experiments (e.g., samples, features, assays). It inherits from the SingleCellExperiment class and is used in the same manner, but with additional consistency checks and methylation-specific functionality. 
+#' 
+#' For the class description, see the [`here`][scMethrix-class].
 #' @inheritParams generic_scMethrix_function
 #' @param assays [list()] of matrices; The assays to include in the experiment
 #' @param colData data.frame; The metadata corresponding to each sample
-#' @param rowRanges [GenomicRanges::GRanges()]; The genomic loci corresponding to the assays
+#' @param rowRanges [`GRanges`][GenomicRanges::GRanges()]; The genomic loci corresponding to the assays
 #' @param is_h5 boolean; Should assays be saved as HDF5 format?
 #' @param metadata named [list()] of strings; list of relevant experiment data. Elements with the name of 'is_h5' and 'genome' will be replaced by the arguments above. Default = NULL.
 #' @export scMethrix
@@ -251,8 +254,8 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 })
 
 #---- .validDims ---------------------------------------------------------------------------
-#' Determines if a [scMethrix] object has valid assay dimensions by comparing against number of features and samples
-#' @param object An [scMethrix] object
+#' Determines if a [`scMethrix`] object has valid assay dimensions by comparing against number of features and samples
+#' @param object An [`scMethrix`] object
 #' @noRd
 .validDims <- function(object) {
   # Check the dimensions of assays are correct
@@ -379,16 +382,17 @@ S4Vectors::setValidity2("scMethrix", .validscMethrix)
 
 #---- generic_scMethrix_function -----------------------------------------------------------------------------
 #' Function used only for inheritance for Roxygen2 documentation. Lists the common function inputs used in the package that should have consistent documentation
-#' @param scm [`scMethrix`]; a single cell methylation experiment object
-#' @param assay string; name of an existing assay. Default = `score`
-#' @param new_assay string; name for transformed assay. Default = `new_assay`
-#' @param trans closure; The transformation function. Default = `mean`
-#' @param verbose boolean; Flag for outputting function status messages. Default = `TRUE` 
-#' @param n_chunks integer; Number of chunks to split the [`scMethrix`] object in case it is very large. Default = `1`
-#' @param n_threads integer; Maximum number of parallel instances. Default = `1`
-#' @param batch_size integer; The maximum number of elements to process at once.
-#' @param h5_dir string; The directory to store HDF5 files. Will be created if it does not exist. Default = `NULL`
-#' @param replace boolean; flag for whether to delete the contents of `h5_dir` before saving 
-#' @param overlap_type defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see [IRanges::findOverlaps()].
-#' @param na.rm boolean; flag to remove NA values
+#' @param scm [`scMethrix-class`]; a single cell methylation experiment object
+#' @param assay `string`; name of an existing assay. Default = `score`
+#' @param new_assay `string`; name for transformed assay. Default = `new_assay`
+#' @param trans `function`; The transformation function. Default = `mean`
+#' @param verbose `boolean`; Flag for outputting function status messages. Default = `TRUE` 
+#' @param n_chunks `integer`; Number of chunks to split the [`scMethrix-class`] object in case it is very large. Default = `1`
+#' @param n_threads `integer`; Maximum number of parallel instances. Default = `1`
+#' @param batch_size `integer`; The maximum number of elements to process at once.
+#' @param h5_dir `string`; The directory to store HDF5 files. Will be created if it does not exist. Default = `NULL`
+#' @param replace `boolean`; flag for whether to delete the contents of `h5_dir` before saving 
+#' @param overlap_type `string`; defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see [IRanges::findOverlaps()].
+#' @param na.rm `boolean`; flag to remove `NA` values
+#' @param regions [`GRanges`][GenomicRanges::GRanges()]; genomic regions to be summarized. Can also be a [`data.table`][data.table::data.table-class] that follows [this][cast_datatable()] format.
 generic_scMethrix_function <- function(scm, assay, new_assay, trans, verbose, n_chunks, n_threads, h5_dir, overlap_type, batch_size, replace, na.rm) {}

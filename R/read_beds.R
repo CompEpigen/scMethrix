@@ -9,7 +9,7 @@
 #' 
 #' Caution: If `replace == TRUE`, there will be no prompt to delete the directory when saving `HDF5` files. All contents of the specified directory will be erased.
 #' 
-#' @param files list of strings; file.paths of BED files
+#' @param files `list(string)`; file.paths of BED files
 #' @param ref_cpgs data.table; list of CpG sites in the tab-delimited format of `chr-start-end-strand`. Must be zero-based genome.
 #' @param colData data.frame; information about each samples. Default is a blank `data.frame` with row.names corresponding to each sample.
 #' @param stranded boolean; Whether in input data is stranded. Default `FALSE`.
@@ -18,7 +18,7 @@
 #' @param batch_size integer; Max number of files to hold in memory at once. Default = `20.`
 #' @param n_threads integer; number of threads to use. Default = `1`.
 #' Be-careful - there is a linear increase in memory usage with number of threads. This option is does not work with Windows OS.
-#' @param is_h5 boolean; Should the coverage and methylation matrices be stored as [HDF5Array::HDF5Array]. Default = `FALSE.`
+#' @param is_h5 boolean; Should the coverage and methylation matrices be stored as [HDF5Array::HDF5Array()]. Default = `FALSE.`
 #' @param h5_dir string; directory to store H5 based object. This can be NULL and the experiment can be manually saved later. Default = `NULL.`
 #' @param h5_temp string; temporary directory to store HDF5 files
 #' @param metadata named [list()] of strings; list of relevant experiment data. Elements with the name of `is_h5` and `genome` will be replaced by the arguments above. Default = `NULL.`
@@ -38,7 +38,7 @@
 #' @param strand_idx integer; column index for strand information
 #' @param keep_cov boolean; Should the coverage matrix be kept in the final object. Default = `TRUE`.
 #' @export
-#' @return An object of class [scMethrix]
+#' @return An object of class [`scMethrix`]
 #' @rawNamespace import(data.table, except = c(shift, first, second))
 #' @import SingleCellExperiment GenomicRanges tools
 #' @examples

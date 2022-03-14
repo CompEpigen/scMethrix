@@ -1,11 +1,9 @@
 #---- get_distance_matrix ----------------------------------------------------------------------------------------------
 #' Get the pair-wise distance matrix for an assay
-#' @details Utilizes mainly the bioDist package to determine various distance metrics to be used for later clustering. 
-#' @param scm scMethrix; Input [scMethrix] object
-#' @param assay string; The assay to use. Default is 'score'
-#' @param type string; The type of distance metric to use. Available options are `pearson`, `spearman`, `tau`, `euclidean`, `manhattan`, `canberra`, `binary`, `minkowski`. An arbitrary distance function can also be used, so long as the input takes just the specified matrix.
-#' @param verbose boolean; flag to output messages or not
-#' @return matrix; the distance matrix
+#' @details Utilizes mainly the [`bioDist`](https://www.bioconductor.org/packages//2.7/bioc/html/bioDist.html) package to determine various distance metrics to be used for later clustering. 
+#' @inheritParams generic_scMethrix_function
+#' @param type `string`; The type of distance metric to use. Available options are `pearson`, `spearman`, `tau`, `euclidean`, `manhattan`, `canberra`, `binary`, `minkowski`. An arbitrary distance function can also be used, so long as the input takes just the specified matrix.
+#' @return [`stats::dist`]; the distance matrix
 #' @seealso <https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/dist>
 #' @seealso <https://www.bioconductor.org/packages//2.7/bioc/html/bioDist.html>
 #' @examples
@@ -59,17 +57,17 @@ get_distance_matrix <- function(scm, assay="score",type=c("pearson", "spearman",
 }
 
 #---- cluster_scMethrix ------------------------------------------------------------------------------------------------
-#' Generates a cluster object for an [scMethrix] object
-#' @details Enables multiple methods of clustering to classify samples in an [scMethrix] object. Either an [scMethrix] object or a [stats::dist] object must be provided for clustering.
+#' Generates a cluster object for an [`scMethrix-class`] object
+#' @details Enables multiple methods of clustering to classify samples in an [`scMethrix-class`] object. Either an [`scMethrix-class`] object or a [`stats::dist`] object must be provided for clustering.
 #' @inheritParams generic_scMethrix_function
-#' @param dist dist; Optional. A distance matrix generated for an assay. Will otherwise use [get_distance_matrix()] with `type = "pearson"`
-#' @param type string; The type of distance metric to use. Available options are `hierarchical`, `partition`, `model.` An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. `c(C1=1,C2=1,C3=1,C4=2)`).
-#' @param n_clusters integer; the desired number of clusters. This is ignored for model-based clustering
-#' @param colname string; the name of the colData column that contains the cluster information
+#' @param dist `dist`; Optional. A distance matrix generated for an assay. Will otherwise use [get_distance_matrix()] with `type = "pearson"`
+#' @param type `string`; The type of distance metric to use. Available options are `hierarchical`, `partition`, `model.` An arbitrary cluster function can be used, and must return a named vector containing integers representing the cluster membership (e.g. `c(C1=1,C2=1,C3=1,C4=2)`).
+#' @param n_clusters `integer`; the desired number of clusters. This is ignored for model-based clustering
+#' @param colname `string`; the name of the colData column that contains the cluster information
 #' @param ... Additional parameters for the clustering functions
-#' @return An [scMethrix] object
+#' @return An [`scMethrix-class`] object
 #' @importFrom mclust mclustBIC
-#' @seealso [get_distance_matrix()] for distance metrics, [hclust()] for hierarchical clustering, [kmeans()] for partition clustering, [mclust::Mclust()] for model clustering 
+#' @seealso [get_distance_matrix()] for distance metrics, [hclust()] for hierarchical clustering, [kmeans()] for partition clustering, [`Mclust()`][mclust::Mclust()] for model clustering 
 #' @examples
 #' data('scMethrix_data')
 #' scMethrix_data <- impute_regions(scMethrix_data)
@@ -151,12 +149,12 @@ cluster_scMethrix <- function(scm = NULL, dist = NULL,  assay="score", type=c("h
 }
 
 #---- append_colData ---------------------------------------------------------------------------------------------------
-#' Appends colData in an scMethrix object
-#' @details Typically used for clustering. Allows additional information to be added to colData in an scMethrix object after the object creation. It does this via a left join on the original colData. Any samples not included in the colData object will be filled with NAs.
-#' @param scm scMethrix; Input [scMethrix] object
-#' @param colData dataframe-like or named vector; For a dataframe-like, must contain row names that correspond with the input [scMethrix] object. For a named vector, vector names must correspond to the row names of the input [scMethrix] object
-#' @param name string; the name of the column for named vector input. Ignored for matrix input
-#' @return An [scMethrix] object
+#' Appends `colData` in an [`scMethrix-class`] object
+#' @details Typically used for clustering. Allows additional information to be added to `colData` in an [`scMethrix-class`] object after the object creation. It does this via a left join on the original `colData.` Any samples not included in the `colData` object will be filled with `NA`s.
+#' @inheritParams generic_scMethrix_function
+#' @param colData dataframe-like or named vector; For a dataframe-like, must contain row names that correspond with the input [`scMethrix`] object. For a named vector, vector names must correspond to the row names of the input [`scMethrix-class`] object
+#' @param name `string`; the name of the column for named vector input. Ignored for matrix input
+#' @return An [`scMethrix-class`] object
 #' @examples
 #' 
 #' # For dataframe-like input
