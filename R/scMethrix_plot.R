@@ -55,58 +55,92 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
   
 }
 
-#---- get_palette ------------------------------------------------------------------------------------------------------
-#' Getter for plot palette colors
-#' @param nColors `integer`; Number of colors
-#' @return RColorBrewer palette
-#' @export
-get_palette <- function(nColors){
+#---- .getPalette ------------------------------------------------------------------------------------------------------
+#' Generates a palette of RGB colors via [`colorspace`](https://colorspace.r-forge.r-project.org//index.html).
+#' @description 
+#' This function wraps the color generation functions from [`colorspace`](https://cran.r-project.org/web/packages/colorspace/index.html): [`sequential_hcl()`][colorspace::sequential_hcl()], [`diverging_hcl()`][colorspace::diverging_hcl()], and [`qualitative_hcl()`][colorspace::qualitative_hcl()]. As the palette IDs are unique, this function will automatically select the appropriate function to generate the palettes.
+#' @details
+#' All [`colorspace`](https://colorspace.r-forge.r-project.org//index.html) palettes can be visualized with:
+#' ```
+#' library("colorspace")
+#' hcl_palettes(plot = TRUE)
+#' ```
+#' 
+#' Custom palettes can also be [added](https://colorspace.r-forge.r-project.org/articles/hcl_palettes.html#registering-your-own-palettes-1)
+#' 
+#' To easily visualize the colors, use `scales::show_col(.getPalette()))`
+#' 
+#' @param nColors `integer`; Number of colors. Default = `10`.
+#' @param palette `string`; the ID of the [`colorspace`](https://colorspace.r-forge.r-project.org//index.html) palette. Default = `"Dark Mint"`
+#' @param ... Additional arguments for palette generation
+#' @return vector of HEX colors
+#' @noRd
+.getPalette <- function(nColors = 10, palette = "Dark Mint", ...){
   
   #---- Input validation ---------------------------------------------------
-  .validateType(nColors,"integer")
-  .validateType(col_palette,"string")
-  .validatePackageInstall("ggsci")
+  .validatePackageInstall("colorspace")
   
-  #---- Function code ------------------------------------------------------
-  
-  if (nColors == 2) {
-   color_pal <- c("#FFA900","#0056FF")
-  } else {
-      color_pal <- grDevices::colorRampPalette(ggsci::pal_locuszoom()(7))(nColors)
+  .validateType(palette,"string")
+  .validateType(nColors,c("integer"))
+  .validateValue(nColors,"> 1")
+
+  validPalettes <- row.names(colorspace::hcl_palettes())
+  if (!(palette %in% validPalettes)) {
+    stop("Invalid palette. Must be one of: '", paste(validPalettes,collapse = "', '"),"'.")
   }
   
-    # if (n_row == 0) {
-  #   stop("Zero colors present in the palette")
-  # }
-  # 
-  # if (!col_palette %in% row.names(RColorBrewer::brewer.pal.info)){
-  #   stop("Please provide a valid RColorBrewer palettte. Possible values are: ", paste0(row.names(RColorBrewer::brewer.pal.info)), sep=", ")
-  # }
-  # 
-  # #---- Function code ------------------------------------------------------
-  # color_pal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(RColorBrewer::brewer.pal.info[col_palette,
-  #                                                                                                 "maxcolors"], col_palette))(n_row)
-  return(color_pal)
+  #---- Function code ------------------------------------------------------
+  hcl <- colorspace::hcl_palettes(palette = palette)
+  hcl <- as.character(hcl$type)
+  hcl <- gsub( " .*$", "", hcl )
+  
+  if (hcl == "Sequential")        palette <- colorspace::sequential_hcl (nColors, palette = palette, ...) 
+  else if (hcl == "Diverging")    palette <- colorspace::diverging_hcl  (nColors, palette = palette, ...) 
+  else if (hcl == "Qualitative")  palette <- colorspace::qualitative_hcl(nColors, palette = palette, ...) 
+  
+  return(palette)
 }
 
-#---- get_shape --------------------------------------------------------------------------------------------------------
-#' Getter for plot shapes. Shapes selected for optimal distinction and taken from:
-#' @details <http://www.sthda.com/english/wiki/r-plot-pch-symbols-the-different-point-shapes-available-in-r>
-#' @param nShapes `integer`; Number of shapes. Max of 15.
-#' @return list of shapes (by integer)
-#' @export
-get_shape <- function(nShapes) {
-  .validateType(nShapes,"integer")
-  shapes <- c(15:25,3,4,7:14)
+#---- .getShapes -------------------------------------------------------------------------------------------------------
+#' Generates list of optimally distinct pre-selected shapes.
+#' @description For general list of shapes, see [here](http://sape.inf.usi.ch/quick-reference/ggplot2/shape).
+#' @details
+#' The order of the shapes (left-right, top-bottom):
+#' ```
+#' shapes <- .getShapes()
+#' d <- data.frame(p = shapes, i = 1:length(shapes)-1)
+#' ggplot() +
+#'  scale_y_continuous(name="") +
+#'  scale_x_continuous(name="") +
+#'  scale_y_reverse() +
+#'  scale_shape_identity() +
+#'  geom_point(data=d, mapping=aes(x=i%%16, y=i%/%16, shape=p), size=5, fill="red") +
+#'  geom_text(data=d, mapping=aes(x=i%%16, y=i%/%16+0.25, label=p), size=3) +
+#'  theme_void()
+#'```
+#' @param nShapes `integer`; Number of shapes. Max of 57.
+#' @return `list(integer)`; the specified number of shapes. If nShapes = `NULL`, returns all possible shapes.
+#' @noRd
+.getShapes <- function(nShapes = NULL) {
+  
+  #---- Input validation ---------------------------------------------------
+  .validateType(nShapes,c("integer","null"))
+  
+  #---- Function code ------------------------------------------------------
+  shapes <- c(15:25,3,4,7:14,97:122,48:57)
+  
+  if (is.null(nShapes)) return (shapes)
+  
+  if (length(nShapes) > length(shapes)) stop("Invalid shapes. Max of ",length(shapes)," shapes possible", call. = FALSE)
+  
   return(shapes[1:nShapes])
 }
-
 
 #---- plot_violin ------------------------------------------------------------------------------------------------------
 #' Violin Plot for `\beta`-Values
 #' @inheritParams prepare_plot_data
 #' @param n_cpgs `integer`; The number of CpGs to for plotting. Default = `25000`.
-#' @param col_palette `string`; Name of the `RColorBrewer` palette to use for plotting.
+#' @param palette `string`; Name of the `RColorBrewer` palette to use for plotting.
 #' @param show_legend `boolean`; Display the legend on the plot
 #' @param ... Additional parameters to feed to [scMethrix_theme()]
 #' @return [`ggplot2::ggplot2`] object
@@ -116,7 +150,7 @@ get_shape <- function(nShapes) {
 #' data('scMethrix_data')
 #' plot_violin(scm = scMethrix_data)
 plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
-                        col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE,...) {
+                        palette = "Dark Mint", show_legend = FALSE, verbose = TRUE,...) {
   
   #---- Input validation ---------------------------------------------------
   Sample <- Value <- Pheno <- NULL
@@ -125,18 +159,18 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
   .validateAssay(scm,assay)
   .validateType(n_cpgs,"integer")
   .validateType(pheno,c("string","null"))
-  .validateType(col_palette,"string")
+  .validateType(palette,"string")
   .validateType(show_legend,"boolean")
 
   #---- Function code ------------------------------------------------------
   plot.data <- prepare_plot_data(scm=scm, assay = assay, n_cpgs = n_cpgs, pheno = pheno)
   
-  col_palette <- get_palette(ncol(scm), col_palette)
+  palette <- .getPalette(ncol(scm), palette)
   # generate the violin plot
   
   p <- ggplot2::ggplot(plot.data, ggplot2::aes(x = Sample, y = Value, fill = Pheno)) + 
     ggplot2::geom_violin(alpha = 0.8, show.legend = show_legend) + ggplot2::theme_classic(base_size = 14) +
-    ggplot2::scale_fill_manual(values = col_palette) +
+    ggplot2::scale_fill_manual(values = palette) +
     ggplot2::xlab(pheno) + ggplot2::ylab(expression(beta * "-Value")) +
     theme(axis.title.x = element_blank(), axis.text.x = element_text(size = 12,
                                                                      colour = "black"), axis.text.y = element_text(size = 12, colour = "black"),
@@ -156,7 +190,7 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
 #' data('scMethrix_data')
 #' plot_density(scm = scMethrix_data)
 plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NULL,
-                         col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE, na.rm = T,...) {
+                         palette = "Dark Mint", show_legend = FALSE, verbose = TRUE, na.rm = T,...) {
   
   #---- Input validation ---------------------------------------------------
   Value <- Pheno <- NULL
@@ -165,23 +199,23 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
   .validateAssay(scm,assay)
   .validateType(n_cpgs,"integer")
   .validateType(pheno,c("string","null"))
-  .validateType(col_palette,"string")
+  .validateType(palette,"string")
   .validateType(show_legend,"boolean")
   
   #---- Function code ------------------------------------------------------
   plot.data <- prepare_plot_data(scm=scm, assay = assay, n_cpgs = n_cpgs, pheno = pheno)
-  col_palette <- get_palette(ncol(scm), col_palette)
+  palette <- .getPalette(ncol(scm), palette)
 
     # generate the density plot
 
   p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, color = Pheno)) + geom_density(lwd = 1, position = "identity", show.legend = show_legend,kernel="cosine",na.rm = na.rm) + ggplot2::theme_classic() +
     ggplot2::xlab("Methylation") + ggplot2::ylab("Density") + ggplot2::theme_classic(base_size = 14) +
-    ggplot2::scale_color_manual(values = col_palette) +
+    ggplot2::scale_color_manual(values = palette) +
     ggplot2::xlab("β-Value") + theme(axis.title.x = element_blank(), 
                                      axis.text.x = element_text(size = 12, colour = "black"), 
                                      axis.text.y = element_text(size = 12, colour = "black"), 
                                      axis.title.y = element_blank(), legend.title = element_blank())+
-                                     ggplot2::scale_color_manual(values = get_palette(length(levels(plot.data$Pheno))))
+                                     ggplot2::scale_color_manual(values = .getPalette(length(levels(plot.data$Pheno))))
     
   
   gc(verbose = FALSE)
@@ -201,7 +235,7 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
 #' plot_coverage(scm = scMethrix_data)
 #' @export
 plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = NULL,
-                          max_cov = 100, obs_lim = 1e+06, col_palette = "RdYlGn", show_legend = FALSE, verbose = TRUE,...) {
+                          max_cov = 100, obs_lim = 1e+06, palette = "Dark Mint", show_legend = FALSE, verbose = TRUE,...) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
@@ -209,12 +243,12 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   .validateType(pheno,c("string","null"))
   .validateType(max_cov,"integer")
   .validateType(obs_lim,"integer")
-  .validateType(col_palette,"string")
+  .validateType(palette,"string")
   .validateType(show_legend,"boolean")
   
   Value <- Sample <- Pheno <- NULL
   
-  colors_palette <- get_palette(ncol(scm))
+  colors_palette <- .getPalette(ncol(scm))
   
   #---- Function code ------------------------------------------------------
   if (matrixStats::product(dim(scm)) > obs_lim) {
@@ -299,7 +333,7 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
   
   Sparsity <- variable <- NULL
   
-  colors_palette <- get_palette(ncol(scm))
+  colors_palette <- .getPalette(ncol(scm))
   
   if (!is.null(phenotype) && type == "Scatterplot" && by == "Chromosome") {
     warning("Phenotype given for scatterplot when graphing by chromosome. Phenotype will be ignored.")
@@ -373,7 +407,7 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
   }
 
   p <- gg_data + gg_elem + 
-    ggplot2::scale_color_manual(values = get_palette(ncol(scm))) + #,name = legend_lab) + 
+    ggplot2::scale_color_manual(values = .getPalette(ncol(scm))) + #,name = legend_lab) + 
     ylab("Sparsity (%)")# + xlab(x_lab) 
   
   if (show_avg) {
@@ -430,7 +464,7 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median","count","
   
   y_title = tools::toTitleCase(paste(stat,assay))
   
-  colors_palette <- get_palette(ncol(scm))
+  colors_palette <- .getPalette(ncol(scm))
 
   if (stat == "count") {
     
@@ -569,7 +603,7 @@ plot_imap <- function(scm) {
 #' @return [`ggplot2::ggplot2`] object
 #' @importFrom graphics par mtext lines axis legend title
 #' @export
-# plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, legend_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
+# plot_dim_red <- function(scm, dim_red, palette = "Paired", color_anno = NULL, shape_anno = NULL, legend_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE) {
 #   
 #   #---- Input validation ---------------------------------------------------
 #   X <- Y <- Color <- Shape <- color <- shape <- shapes  <- colors <- Sample <- row_names <- NULL
@@ -603,7 +637,7 @@ plot_imap <- function(scm) {
 #   # if (!is.null(color_anno)) {
 #   #   if (color_anno  %in% colnames(colData(scm))) {
 #   #     dim_red$Color <- as.factor(unlist(as.data.table(colData(scm))[,color_anno, with=FALSE]))
-#   #     colors <- scale_color_manual(values= get_palette(length(unique(dim_red$Color)),col_palette = col_palette))
+#   #     colors <- scale_color_manual(values= .getPalette(length(unique(dim_red$Color)),palette = palette))
 #   #   } else {
 #   #     stop(paste0(color_anno, " not found in provided scMethrix object"))
 #   #   }
@@ -612,7 +646,7 @@ plot_imap <- function(scm) {
 #   # if (!is.null(shape_anno)) {
 #   #   if (shape_anno %in% colnames(colData(scm))) {
 #   #     dim_red$Shape <- as.factor(unlist(as.data.table(colData(scm))[,shape_anno, with=FALSE])) 
-#   #     shapes <- scale_shape_manual(values = get_shape(length(unique(dim_red$Shape))))
+#   #     shapes <- scale_shape_manual(values = .getShapes(length(unique(dim_red$Shape))))
 #   #   } else {
 #   #     stop(paste0(shape_anno, " not found in provided scMethrix object"))
 #   #   }
@@ -697,7 +731,7 @@ plot_imap <- function(scm) {
 #   return(dimred_gg)
 #   
 # }
-plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE,...) {
+plot_dim_red <- function(scm, dim_red, palette = "Dark Mint", color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE,...) {
 
   #---- Input validation ---------------------------------------------------
   X <- Y <- Color <- Shape <- color <- shape <- shapes  <- colors <- Sample <- row_names <- NULL
@@ -726,7 +760,7 @@ plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL
   if (!is.null(color_anno)) {
     if (color_anno  %in% colnames(colData(scm))) {
       dim_red$Color <- as.factor(unlist(as.data.table(colData(scm))[,color_anno, with=FALSE]))
-      colors <- scale_color_manual(values= get_palette(length(unique(dim_red$Color)),col_palette = col_palette))
+      colors <- scale_color_manual(values= .getPalette(length(unique(dim_red$Color)),palette = palette))
     } else {
       stop(paste0(color_anno, " not found in provided scMethrix object"))
     }
@@ -735,7 +769,7 @@ plot_dim_red <- function(scm, dim_red, col_palette = "Paired", color_anno = NULL
   if (!is.null(shape_anno)) {
     if (shape_anno %in% colnames(colData(scm))) {
       dim_red$Shape <- as.factor(unlist(as.data.table(colData(scm))[,shape_anno, with=FALSE]))
-      shapes <- scale_shape_manual(values = get_shape(length(unique(dim_red$Shape))))
+      shapes <- scale_shape_manual(values = .getShapes(length(unique(dim_red$Shape))))
     } else {
       stop(paste0(shape_anno, " not found in provided scMethrix object"))
     }

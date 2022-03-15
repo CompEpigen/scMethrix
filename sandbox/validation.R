@@ -72,7 +72,7 @@ row.names(colData(scm)) <- paste0("C",1:ncol(scm))
 colData(scm)$Sample <- row.names(colData(scm))
 
 # Plots for initial quality checks (Figure 4.) --------------------------
-density <- plot_density(scm,base_size = 20,col_palette="Blues")
+density <- plot_density(scm,base_size = 20,palette="Blues")
 coverage <- plot_coverage(scm,base_size=20,type="density",max_cov=10)
 sparsity <- plot_sparsity(scm,base_size=20,type="scatter",pheno="Sample")
 stat <- plot_stats(scm, per_chr = T, stat = "count", base_size=20)
@@ -129,7 +129,7 @@ scm <- convert_HDF5_scMethrix(scm)
 
 scm.bin <- scm
 
-density <- plot_density(scm.b,base_size = 20,col_palette="Blues",show_legend = T)
+density <- plot_density(scm.b,base_size = 20,palette="Blues",show_legend = T)
 coverage <- plot_coverage(scm,base_size=20,type="density",max_cov=10)
 sparsity <- plot_sparsity(scm,base_size=20,type="scatter",pheno="Sample")
 
@@ -182,8 +182,8 @@ dimred <- plot_dim_red(scm,"tSNE",color_anno = anno,axis_labels=list(X="UMAP1",Y
                        legend.text=element_text(size=20))
 dimred
 
-density.bin <- plot_density(scm.bin,base_size = 20,col_palette="Blues")
-density.top <- plot_density(scm,base_size = 20,col_palette="Blues")
+density.bin <- plot_density(scm.bin,base_size = 20,palette="Blues")
+density.top <- plot_density(scm,base_size = 20,palette="Blues")
 
 Cairo(file="stats3.png",
       type="png",
