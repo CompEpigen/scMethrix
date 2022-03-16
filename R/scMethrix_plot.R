@@ -171,7 +171,7 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
   p <- ggplot2::ggplot(plot.data, ggplot2::aes(x = Sample, y = Value, fill = Pheno)) + 
     ggplot2::geom_violin(alpha = 0.8, show.legend = show_legend) + ggplot2::theme_classic(base_size = 14) +
     ggplot2::scale_fill_manual(values = palette) +
-    ggplot2::xlab(pheno) + ggplot2::ylab(expression(beta * "-Value")) +
+    ggplot2::xlab(pheno) + ggplot2::ylab(expression(beta * "-value")) +
     theme(axis.title.x = element_blank(), axis.text.x = element_text(size = 12,
                                                                      colour = "black"), axis.text.y = element_text(size = 12, colour = "black"),
           axis.title.y = element_blank(), legend.title = element_blank())
@@ -211,7 +211,7 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
   p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, color = Pheno)) + geom_density(lwd = 1, position = "identity", show.legend = show_legend,kernel="cosine",na.rm = na.rm) + ggplot2::theme_classic() +
     ggplot2::xlab("Methylation") + ggplot2::ylab("Density") + ggplot2::theme_classic(base_size = 14) +
     ggplot2::scale_color_manual(values = palette) +
-    ggplot2::xlab("β-Value") + theme(axis.title.x = element_blank(), 
+    ggplot2::xlab(expression(beta * "-value")) + theme(axis.title.x = element_blank(), 
                                      axis.text.x = element_text(size = 12, colour = "black"), 
                                      axis.text.y = element_text(size = 12, colour = "black"), 
                                      axis.title.y = element_blank(), legend.title = element_blank())+
@@ -482,7 +482,11 @@ plot_stats <- function(scm, assay = "score", stat = c("mean", "median","count","
     avg.count <- mean(plot_dat$measurement)
     sd.count <- sd(plot_dat$measurement)
 
-    if (verbose) message("Mean: ", round(avg.count,2), " ± ", round(sd.count,2))
+    if (verbose) {
+      msg <- paste("Mean:", round(avg.count,2),"\u00b1", round(sd.count,2))
+      Encoding(msg)<-"UTF-8"
+      message(msg)
+    }
     
     plot_dat_gg <- ggplot(data = plot_dat, aes(x = Chromosome, y = measurement, fill = Chromosome)) +
      ggplot2::geom_boxplot(col = "black", show.legend = show_legend) + 
