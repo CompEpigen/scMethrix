@@ -30,6 +30,7 @@
   #.validateType(partial.match,"boolean")
   #.validateType(multiple.match,"boolean")
 
+  #---- Function code ------------------------------------------------------
   if (is.null(choices)) {
     choices <- deparse(sys.calls()[[sys.nframe()-1]])
     choices <- unlist(strsplit(choices, "[(]"))[[1]]
@@ -38,40 +39,21 @@
     choices <- eval(formals(choices)[[name]])
   }
   
-  #---- Function code ------------------------------------------------------
-  
   if (!multiple.match) {
     arg <- head(arg,1)
-  } 
-
-  if (any(sapply(choices, is.na)) && is.na(arg)) return (NA)
-
-  matches <- NULL
+  }
   
-  for (n in 1:length(arg)) {
   
-    if (partial.match) {
-      if (ignore.case) {
-        m <- grepl(tolower(arg[n]), tolower(choices), fixed = TRUE)
-      } else {
-        m <- grepl(arg[n], choices, fixed = TRUE)
-      }
-    } else {
-      if (ignore.case) {
-        m <- choices %in% arg[n]
-      } else {
-        m <- tolower(choices) %in% tolower(arg[n])
-      }
-    }
-    
-    if (sum(m) != 1) stop(paste0("Invalid arg input for '",paste(name),"'. Found: '",arg[n],"'; Must match: '",
-                                 paste0(choices, collapse="', '"),"'"), call. = FALSE)
-
-    matches <- append(matches, choices[which(m)])
+  m <- sapply(arg, .matchArg, choices = choices, ignore.case = ignore.case, partial.match = partial.match)
+  
+  if (any(sapply(m, is.null))) {
+    idx <- which(is.null(m))
+    stop(paste0("Invalid arg input for '",paste(name),"'. Found: '",paste0(arg[idx], collapse="', '"),
+                "'; Must match one of: '", paste0(choices, collapse="', '"),"'"), call. = FALSE)
     
   }
-    
-  return(matches)
+  
+  return(m)
 }
 
 #---- .validateAssay -----------------------------------------------------------------------------------------
@@ -316,7 +298,7 @@
   return(invisible(TRUE))
 }
 
-
+#---- is.empty ---------------------------------------------------------------------------------------------------------
 #' Empty Value
 #'
 #' Rails-inspired helper that checks if vector values are "empty", i.e. if it's: `NULL`, zero-length, `NA`, `NaN`, `FALSE`, an empty string or `0`. Note that unlike its native R `is.<something>` sibling functions, `is.empty` is vectorised (hence the "values").
@@ -360,6 +342,7 @@ is.empty <- function(x, trim = TRUE, ...) {
     sapply(x, is.empty, trim = trim, ...)
 }
 
+#---- trim.space -------------------------------------------------------------------------------------------------------
 #' Trim Spaces
 #'
 #' Removes leading and/or trailing space(s) from a character vector. By default, it removes both leading and trailing spaces.
@@ -383,6 +366,7 @@ trim.space <- function(x, what = c('both', 'leading', 'trailing', 'none'), space
   vgsub(re, '', x, ...)
 }
 
+#---- vgsub ------------------------------------------------------------------------------------------------------------
 #' Vectorised String Replacement
 #'
 #' A simple wrapper for [gsub()] that replaces all patterns from `pattern` argument with ones in `replacement` over vector provided in argument `x`.
@@ -397,3 +381,41 @@ vgsub <- function(pattern, replacement, x, ...){
     x <- gsub(pattern[i], replacement[i], x, ...)
   x
 }
+
+
+
+#---- .matchArg --------------------------------------------------------------------------------------------------------
+#' Matches a argument to a list
+#'
+#' @param arg the value to check for. If a list, only first will be taken.
+#' @param choices the possible choices
+#' @param partial.match boolean; partial (\code{TRUE}) or strict (\code{FALSE}) matching
+#' @param ignore.case boolean; ignore the case of the \code{arg} and \code{choices}
+#'
+#' @return If matched, the appropriate value from choices. If not matched, \code{FALSE}
+#' @export
+#'
+#' @examples
+.matchArg <- function(arg, choices, partial.match = TRUE, ignore.case = TRUE) {
+
+  if (any(sapply(choices, is.na)) && is.na(arg)) return (NA)
+  
+  if (ignore.case) {
+    val <- tolower(arg)
+    opts <- tolower(choices)
+  } else {
+    val <- arg
+    opts <- choices
+  }
+
+  # Check for exact case
+  m <- opts %in% val
+  if (sum(m) == 1) return (unique(choices[which(m)]))
+  if (!partial.match) return(NULL)
+  
+  #Check for partial case
+  m <- grepl(val, opts, fixed = TRUE)
+  if (sum(m) == 1) return (unique(choices[which(m)]))
+  return(NULL)
+}
+

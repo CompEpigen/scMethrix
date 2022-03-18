@@ -30,27 +30,22 @@ test_that(".validateArg",{
   expect_equivalent(.validateArg(var,func),"banana")   
   
   var = "ban"
-  expect_equivalent(.validateArg(var,func,partial.match = F), "ban")  
-  expect_error(.validateArg(var,func), msg.validateArg)  
+  expect_equivalent(.validateArg(var,func), "ban")  
   
   var = "bad input"
   expect_error(.validateArg(var,func), msg.validateArg) 
   
   var = c("banana","banjo")
-  expect_equivalent(.validateArg(var,func,multiple.match = T),c("banana","banjo"), )   
+  expect_equivalent(.validateArg(var,func,multiple.match = T),c("banana","banjo"))   
   
   var = c("bana","banjo")
-  expect_equivalent(.validateArg(var,func,multiple.match = T),c("banana","banjo"), )   
+  expect_equivalent(.validateArg(var,func,multiple.match = T),c("banana","banjo"))   
   
   var = c("bad input","banjo")
   expect_error(.validateArg(var,func,multiple.match = T), msg.validateArg)   
   
   var = c("banjo","bad input")
   expect_error(.validateArg(var,func,multiple.match = T), msg.validateArg)   
-  
-  var = c("banana","ban")
-  expect_error(.validateArg(var,func,multiple.match = T), msg.validateArg)  
-  
 })
 
 test_that(".validateType",{
