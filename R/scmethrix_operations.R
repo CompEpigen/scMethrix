@@ -856,11 +856,12 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 
 #---- get_stats ------------------------------------------------------------------------------------------------------------
 #' Estimate descriptive statistics for each sample
-#' @details Calculate descriptive statistics (`mean`, `median`, `SD`) either by sample or `per_chr`
+#' @details Calculate descriptive statistics (`Mean`, `Median`, `SD`, `Count`) either by sample or `per_chr`
 #' @inheritParams generic_scMethrix_function
+#' @param per_sample `boolean`; Estimate stats per sample Default = `TRUE`
 #' @param per_chr `boolean`; Estimate stats per chromosome. Default = `TRUE`
 #' @param ignore_chr `string`; chromosomes to ignore
-#' @param ignore_samples `string`; samples to ignore
+#' @param ignore_sample `string`; samples to ignore
 #' @param stats `string`; the stats to include. Default is `c("Mean","Median","SD","Count")`).
 #' @examples
 #' data('scMethrix_data')
@@ -872,7 +873,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' get_stats(scMethrix_data,per_chr = FALSE)
 #' @return data.table of summary stats
 #' @export
-get_stats <- function(scm = NULL, assay="score", per_chr = TRUE, verbose = TRUE, ignore_chr = NULL, ignore_samples = NULL, stats = c("Mean","Median","SD","Count")) {
+get_stats <- function(scm = NULL, assay="score", per_sample = TRUE, per_chr = TRUE, verbose = TRUE, ignore_chr = NULL, ignore_sample = NULL, stats = c("Mean","Median","SD","Count")) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)  
@@ -880,7 +881,7 @@ get_stats <- function(scm = NULL, assay="score", per_chr = TRUE, verbose = TRUE,
   .validateType(per_chr,"boolean")
   .validateType(verbose,"boolean")
   .validateType(ignore_chr,c("string","null"))
-  .validateType(ignore_samples,c("string","null"))
+  .validateType(ignore_sample,c("string","null"))
   stats <- .validateArg(stats, get_stats, multiple.match=T)
   
   Chromosome <- Sample <- x <- NULL
@@ -889,45 +890,91 @@ get_stats <- function(scm = NULL, assay="score", per_chr = TRUE, verbose = TRUE,
   calc_median <- "Median" %in% stats
   calc_SD <- "SD" %in% stats
   calc_count <- "Count" %in% stats
+  cols <- as.character(stats)
   
   #---- Function code ------------------------------------------------------
   if (verbose) message("Getting descriptive statistics...",start_time())
   
-  chrs = rowRanges(scm)@seqnames
-  ends = cumsum(chrs@lengths)
-  starts = c(1, head(ends, -1) + 1)
-  # 
-  # ends <- len <- GenomeInfoDb::seqnames(scm)@lengths
-  # for (i in 1:length(ends)) ends[i] <- sum(as.vector(len[1:i]))
-  # starts <- head(c(1, ends + 1), -1)
+  mtx <- get_matrix(scm, assay = assay)
+  chrs <- .getGRchrIndicies(rowRanges(scm))
   
-  if (per_chr) {
-    stats <- lapply(1:length(starts), function(x) {
-      data.table::data.table(
-        Chromosome = levels(seqnames(scm))[x],
-        Sample = colnames(scm),
-        Mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
-        Median = if (calc_median) DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE),
-        Count = if (calc_count) length(starts[x]:ends[x]) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], value=NA),
-        SD = if (calc_SD) DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), rows = starts[x]:ends[x], na.rm = TRUE)
-      )
-    })
+  stats <- lapply(1:nrow(chrs), function(x) {
+    rows <- chrs$Start.idx[x]:chrs$End.idx[x]
+    mtx <- get_matrix(scm,assay=assay)
     
-    stats <- data.table::rbindlist(l = stats, use.names = TRUE)
-    
-  } else {
-    stats <- data.table::data.table(
+    data.table::data.table(
       Sample = colnames(scm),
-      Mean = if (calc_mean) DelayedMatrixStats::colMeans2(get_matrix(scm,assay=assay), na.rm = TRUE),
-      Median = if (calc_median) DelayedMatrixStats::colMedians(get_matrix(scm,assay=assay), na.rm = TRUE),
-      Count =  if (calc_count) nrow(scm) - DelayedMatrixStats::colCounts(get_matrix(scm,assay=assay), value=NA),
-      SD = if (calc_SD) DelayedMatrixStats::colSds(get_matrix(scm,assay=assay), na.rm = TRUE)
+      Chromosome = chrs$Chromosome[x],
+      Mean =   if (calc_mean)   DelayedMatrixStats::colMeans2(mtx, rows = rows, na.rm = TRUE),
+      SD =     if (calc_SD)     DelayedMatrixStats::colSds(mtx, rows = rows, na.rm = TRUE),
+      Median = if (calc_median) DelayedMatrixStats::colMedians(mtx, rows = rows, na.rm = TRUE),
+      Count =  length(rows) - DelayedMatrixStats::colCounts(mtx, rows = rows, value=NA)
+    )
+  })
+  
+  stats <- data.table::rbindlist(l = stats, use.names = TRUE)
+  
+  if (!is.null(ignore_chr)) stats <- stats[!(Chromosome %in% ignore_chr)] # TODO: These should apply before the stats calcs
+  if (!is.null(ignore_sample)) stats <- stats[!(Sample %in% ignore_sample)]
+  
+  if (!per_chr) {
+    
+    count = unlist(stats[, .(Count = lapply(.(Count),sum)), by=.(Sample)]$Count)
+    
+    if (calc_mean)   {
+      stats[, Mean := Mean*Count]
+      mean = unlist(stats[, .(Mean = lapply(.(Mean),sum)), by=.(Sample)]$Mean)/count
+    }
+    
+    if (calc_SD)    {
+      stats[, SD := (SD*SD)*(Count)]
+      sd = (unlist(stats[, .(SD = lapply(.(SD),sum)), by=.(Sample)]$SD)/count)^.5
+    }
+    
+    if (calc_median) {
+      median = stats[, .SD[which.max(Count)], by=Sample]$Median
+    }
+      
+    stats <- data.table::data.table(
+      Sample = levels(factor(stats$Sample)),
+      Chromosome = "All",
+      Mean =   if (calc_mean)   mean,
+      SD =     if (calc_SD)     sd,
+      Median = if (calc_median) median,
+      Count =  count
     )
   }
   
-  if (per_chr) stats <- stats[!(Chromosome %in% ignore_chr)]
-  
-  stats <- stats[!(Sample %in% ignore_samples)]
+  if (!per_sample) {
+    
+    count = unlist(stats[, .(Count = lapply(.(Count),sum)), by=.(Chromosome)]$Count)
+    
+    if (calc_mean)   {
+      stats[, Mean := Mean*Count]
+      mean = unlist(stats[, .(Mean = lapply(.(Mean),sum)), by=.(Chromosome)]$Mean)/count
+    }
+    
+    if (calc_SD)    {
+      stats[, SD := (SD*SD)*(Count)]
+      sd = (unlist(stats[, .(SD = lapply(.(SD),sum)), by=.(Chromosome)]$SD)/count)^.5
+    }
+    
+    if (calc_median) {
+      median = stats[, .SD[which.max(Count)], by=Chromosome]$Median
+    }
+    
+    stats <- data.table::data.table(
+      Sample = "All",
+      Chromosome = levels(factor(stats$Chromosome)),
+      Mean =   if (calc_mean)   mean,
+      SD =     if (calc_SD)     sd,
+      Median = if (calc_median) median,
+      Count =  count
+    )
+  }
+
+  cols <- c("Sample","Chromosome",cols)
+  stats <- stats[, ..cols]
   
   gc()
   if (verbose) message("Finished in ", stop_time())

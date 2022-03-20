@@ -21,7 +21,7 @@ test_that("save_scMethrix", {
     local_mock(menu = function(choices,title=NULL) 1)
     
     test_that("save_scMethrix | Replace: Yes", {
-      bad.file = paste0(temp_dir,"/delete_me.txt")
+      bad.file = paste0(temp_dir,"/bad_file.txt")
       file.create(bad.file)
       expect_true(file.exists(bad.file))
       scm.repl <- save_scMethrix(scm.h5,dest = temp_dir)
@@ -30,7 +30,7 @@ test_that("save_scMethrix", {
     })
   })
   
-  bad.file = paste0(temp_dir,"/delete_me.txt")
+  bad.file = paste0(temp_dir,"/bad_file.txt")
   file.create(bad.file)
   expect_true(file.exists(bad.file))
   scm.saved <- save_scMethrix(scm.h5,dest = temp_dir,replace=TRUE)
@@ -383,50 +383,86 @@ test_that("get_stats", {
   fmt <- function(x) round(as.numeric(x),4)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    chrs <- length(GenomeInfoDb::seqlengths(rowRanges(scm)))
+    chrs <- seqlevels(scm)
+    nChrs <- length(GenomeInfoDb::seqlengths(rowRanges(scm)))
+    samples <- sampleNames(scm)
+    nSamples <- nrow(colData(scm))
+    mtx <- score(scm)
     
-    samples <- nrow(colData(scm))
-    expect_equal(dim(get_stats(scm)),c(chrs*samples,6))
-    expect_equal(dim(get_stats(scm,per_chr = FALSE)),c(samples,5))
+    # Check all
+    stats <- get_stats(scm, per_sample = FALSE, per_chr = FALSE)
+    expect_equal(dim(stats),c(1,6))
+    expect_equal(fmt(mean(mtx, na.rm=TRUE)), fmt(stats$Mean))
+    expect_equal(fmt(median(mtx,na.rm=TRUE)), fmt(stats$Median))
+    expect_equal(fmt(sd(mtx,na.rm=TRUE)), fmt(stats$SD), tolerance=1e-1)
+    expect_equal(sum(!is.na(mtx)), fmt(stats$Count))
     
-    stats <- get_stats(scm,per_chr=FALSE)
-    expect_equal(dim(stats),c(samples,5))
-    expect_equal(fmt(colMeans(score(scm),na.rm=TRUE)), fmt(stats$Mean))
-    expect_equal(fmt(colMedians(score(scm),na.rm=TRUE)), fmt(stats$Median))
-    expect_equal(fmt(colSds(score(scm),na.rm=TRUE)), fmt(stats$SD))
-    expect_equal(nrow(scm)-fmt(colCounts(score(scm),value=NA)), fmt(stats$Count))
+    # Check per sample
+    stats <- get_stats(scm, per_sample = TRUE, per_chr = FALSE)
+    expect_equal(dim(stats),c(nSamples,6))
+    expect_true(all(stats$Sample %in% samples))
     
-    # Do only first chromosome
-    chr <- levels(GenomeInfoDb::seqnames(rowRanges(scm)))[1]
-    stats <- get_stats(scm, per_chr=TRUE)
-    expect_equal(dim(stats),c(chrs*samples,6))
-    stats <- stats[stats$Chromosome == chr]
-    expect_equal(dim(stats),c(samples,6))
-    scm2 <- subset_scMethrix(scm,contigs = chr) 
+    expect_equal(fmt(colMeans(mtx,na.rm=TRUE)), fmt(stats$Mean))
+    expect_equal(fmt(colMedians(mtx,na.rm=TRUE)), fmt(stats$Median))
+    expect_equal(fmt(colSds(mtx,na.rm=TRUE)), fmt(stats$SD), tolerance=1e-1)
+    expect_equal(nrow(mtx)-fmt(colCounts(mtx,value=NA)), fmt(stats$Count))
     
-    expect_equal(fmt(colMeans(score(scm2),na.rm=TRUE)), fmt(stats$Mean))
-    expect_equal(fmt(colMedians(score(scm2),na.rm=TRUE)), fmt(stats$Median))
-    expect_equal(fmt(colSds(score(scm2),na.rm=TRUE)), fmt(stats$SD))
-    expect_equal(nrow(scm2)-fmt(colCounts(score(scm2),value=NA)), fmt(stats$Count))
-
+    # Check per chr
+    stats <- get_stats(scm, per_sample = FALSE, per_chr = TRUE)
+    expect_equal(dim(stats),c(nChrs,6))
+    expect_true(all(stats$Chromosome %in% chrs))
+    
+    chr <- stats$Chromosome[[1]]
+    stats <- stats[1,]
+    mtx <- score(subset_scMethrix(scm,contigs = chr))
+    expect_equal(fmt(mean(mtx, na.rm=TRUE)), fmt(stats$Mean))
+    expect_equal(fmt(median(mtx,na.rm=TRUE)), fmt(stats$Median))
+    expect_equal(fmt(sd(mtx,na.rm=TRUE)), fmt(stats$SD), tolerance=1e-1)
+    expect_equal(sum(!is.na(mtx)), fmt(stats$Count))
+    
+    # Check per sample, per chr
+    stats <- get_stats(scm, per_sample = TRUE, per_chr = TRUE)
+    expect_equal(dim(stats),c(nChrs*nSamples,6))
+    expect_true(all(stats$Sample %in% samples))
+    expect_true(all(stats$Chromosome %in% chrs))
+    
+    sample <- stats$Sample[[1]]
+    chr <- stats$Chromosome[[1]]
+    stats <- stats[1,]
+    mtx <- score(subset_scMethrix(scm,contigs = chr, sample = sample))
+    expect_equal(fmt(mean(mtx, na.rm=TRUE)), fmt(stats$Mean))
+    expect_equal(fmt(median(mtx,na.rm=TRUE)), fmt(stats$Median))
+    expect_equal(fmt(sd(mtx,na.rm=TRUE)), fmt(stats$SD), tolerance=1e-1)
+    expect_equal(sum(!is.na(mtx)), fmt(stats$Count))
+    
     # Check for stat subset
     stats <- get_stats(scm,stat="Mean")
-    expect_equal(dim(stats),c(chrs*samples,3))
+    expect_equal(dim(stats),c(nChrs*nSamples,3))
     expect_true(colnames(stats)[ncol(stats)] == "Mean")
     
     stats <- get_stats(scm,stat="Median")
+    expect_equal(dim(stats),c(nChrs*nSamples,3))
     expect_true(colnames(stats)[ncol(stats)] == "Median")
     
     stats <- get_stats(scm,stat="Count")
+    expect_equal(dim(stats),c(nChrs*nSamples,3))
     expect_true(colnames(stats)[ncol(stats)] == "Count")
     
     stats <- get_stats(scm,stat="SD")
+    expect_equal(dim(stats),c(nChrs*nSamples,3))
     expect_true(colnames(stats)[ncol(stats)] == "SD")
     
     stats <- get_stats(scm,stat=c("Mean","Median"))
-    expect_equal(dim(stats),c(chrs*samples,4))
+    expect_equal(dim(stats),c(nChrs*nSamples,4))
     expect_true(any(colnames(stats) == "Mean"))
     expect_true(any(colnames(stats) == "Median"))
+    
+    # Check ignores
+    stats <- get_stats(scm, per_chr = FALSE, ignore_sample = samples[-(1)])
+    expect_equal(stats$Sample,samples[1])
+    
+    stats <- get_stats(scm, per_sample = FALSE, ignore_chr = chrs[-(1)])
+    expect_equal(stats$Chromosome,chrs[1])
   }))
 })
 
