@@ -24,6 +24,19 @@ test_that("get_sample_name", {
   expect_equal("file.name",get_sample_name("c:/dir/dir.dir/file.name.extension.bz2"))
 })
 
+test_that(".pasteList", {
+
+  vals = c("string1")
+  expect_equal(.pasteList(vals),"'string1'")
+
+  vals = c("string1","string2")
+  expect_equal(.pasteList(vals),"'string1' and 'string2'")
+
+  vals = c("string1","string2","string3")
+  expect_equal(.pasteList(vals),"'string1', 'string2', and 'string3'")
+})
+
+
 test_that("binarize", {
   expect_error(binarize("not numbers"),"non-numeric argument to binary operator")
   expect_equal(binarize(c(0,0,100,100,75,NA)),c(0,0,1,1,1,NA))

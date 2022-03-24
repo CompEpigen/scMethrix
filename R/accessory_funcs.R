@@ -34,6 +34,33 @@ get_sample_name = function(filepath) {
   return(tools::file_path_sans_ext(basename(filepath)))
 }
 
+
+#' Helper function to nicely display a list of strings
+#' @description Will convert a list of string to a format of: `'string', 'string', and 'string'`. Similar effect to using `paste0("'",paste(vals, collapse = "', '"),"'")`, but will add an 'and' just before the end of the list.
+#' @param vals `list(string)`; the strings to format. Non-string values will be coerced to string, if possible.
+#' @return `string` a nicely formatted string
+#' @export
+#' @examples 
+#' vals = c("string1")
+#' .pasteList(vals)
+#' 
+#' vals = c("string1","string2")
+#' .pasteList(vals)
+#' 
+#' vals = c("string1","string2","string3")
+#' .pasteList(vals)
+.pasteList <- function(vals) {
+  txt <- paste0("'",vals[length(vals)],"'")
+  
+  if (length(vals) == 2)
+    txt <- paste0("'",vals[1],"' and ",txt)
+  
+  if (length(vals) > 2)
+    txt <- paste0("'",paste(head(vals,length(vals)-1),collapse="', '"),"', and ",txt)
+    
+  return (txt)
+}
+
 #--- binarize -----------------------------------------------------------------------------------------------
 #' Binarize an input value based on a `threshold`
 #' @details Assigns a value of 0 or 1 based on being < or > the `threshold`, respectively.
