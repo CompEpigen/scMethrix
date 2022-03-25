@@ -53,6 +53,7 @@
     
   }
   
+  names(m) <- NULL
   return(m)
 }
 
@@ -396,6 +397,7 @@ vgsub <- function(pattern, replacement, x, ...){
 #' @export
 #'
 #' @examples
+#' \dontrun{# TODO: add example }
 .matchArg <- function(arg, choices, partial.match = TRUE, ignore.case = TRUE) {
 
   if (any(sapply(choices, is.na)) && is.na(arg)) return (NA)

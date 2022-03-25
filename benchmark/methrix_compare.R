@@ -101,9 +101,9 @@ microbenchmark(
 
 ### Get stats
 microbenchmark(
-  scm.perchr <- get_stats(scm),
+  scm.perchr <- getStats(scm),
   m.perchr <- methrix::get_stats(m),
-  scm.all <- get_stats(scm),
+  scm.all <- getStats(scm),
   m.all <- methrix::get_stats(m),
   times = 1,
   check = chk_equal

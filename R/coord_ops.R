@@ -211,3 +211,23 @@ cast_datatable <- function(regions) {
     stop("Invalid input class for regions. Must be a GRanges or data.frame-like")}
   return(regions)
 }
+
+#---- .getGRchrStats ------------------------------------------------------------------------------------------------
+#' Gets loci positions and list indices for chromosomes in a [`GRanges`][GenomicRanges::GRanges()]
+#' @description A helper function to easily determine loci start/end sites and their respective indices. Also show the number of sites within a chromosome as well as the chromosome width
+#' @param gr [`GRanges`][GenomicRanges::GRanges()]
+#' @return `data.frame()` 
+#' @examples
+#' data(scMethrix_data)
+#' .getGRchrStats(rowRanges(scMethrix_data))
+.getGRchrStats <- function(gr) {
+  chrs = gr@seqnames
+  end.idx = cumsum(chrs@lengths)
+  start.idx = c(1, head(end.idx, -1) + 1)
+  start.loci = start(range(gr))
+  end.loci = end(range(gr))
+  chrs = data.frame(Chromosome = as.character(chrs@values), Sites = seqnames(gr)@lengths, Start.loci = start.loci, Start.idx = start.idx, End.loci = end.loci, End.idx = end.idx, Width = end.loci-start.loci) 
+  return(chrs)
+}
+
+

@@ -492,7 +492,7 @@ get_region_summary = function (scm = NULL, assay="score", regions = NULL, group 
 
 #---- get_matrix -------------------------------------------------------------------------------------------------------
 #' Extract assays from an [`scMethrix-class`] object
-#' @details Takes [`scMethrix-class`] object and returns a specified matrix in the format used by the object (`matrix` or `HDF5matrix`).
+#' @description Takes an [`scMethrix-class`] object and returns an assay in a specified matrix in the format used by the object (`matrix` or `HDF5matrix`). 
 #' @inheritParams generic_scMethrix_function
 #' @param add_loci `boolean`; Adds genomic loci to the output. Default = `FALSE`. If `TRUE`, it adds CpG position info to the matrix and returns as a [`data.table`][data.table::data.table-class]
 #' @param in_granges `boolean`; Do you want the outcome in [`GRanges`][GenomicRanges::GRanges()] format?
@@ -579,28 +579,30 @@ get_matrix <- function(scm = NULL, assay = "score", add_loci = FALSE, in_granges
   return (mtx)
 }
 
-#--- save_scMethrix --------------------------------------------------------------------------------------------------
-#' Saves an [`scMethrix-class`] object
+#---- save_scMethrix ---------------------------------------------------------------------------------------------------
+#' Saves an [`scMethrix-class`] object to disk
+#' @description Saves an [`scMethrix-class`] object either to an `.rds` file (in-memory experiments), or into `.h5` and `.rds` files (HDF5 experiments), for assay data and experiment data, respectively. The experiments can be loaded via [load_scMethrix()].
 #' @details HDF5 and in-memory [`scMethrix-class`] objects are stored differently:
 #' * HDF5 objects have two files: `assays.h5` and `se.rds`. These files are hardcoded in the [HDF5Array::saveHDF5SummarizedExperiment] function and cannot be changed, as the load functions will only look for these files. To use these, you must specify the directory they will be stored in. That function is somewhat dangerously coded as well, as it will delete everything else in the directory when you save something. Here, a menu prompt has been added to warn the user.
 #' * In-memory objects are simply stored in a `.rds` container. There is no requirement for file name or such, but will still prompt if the file already exists
-#' Using the flag `replace = TRUE` will override the menus, but care must be taken to not delete important files (this happened numerous times to the authors!). 
+#' Using the flag `replace = TRUE` will override the menus, but care must be taken to not delete important files (this happened numerous times to the authors!).
 #' 
 #' If `quick = TRUE` for HDF5 experiments, any operations done on assay matrices will not be realized. In other words, the assay information on the hard disk will not be changed. Non-matrix information will be updated (e.g., metadata) as well as any pending matrix operations. To use this, the experiment must have previously been saved using `quick = FALSE`.
 #' 
 #' @inheritParams generic_scMethrix_function
 #' @param replace `boolean`; Should it overwrite the pre-existing data? Default = `FALSE`.
 #' @param quick `boolean`; Flag to skip realizing of matrix operations
-#' @param dest `string`; the destination folder for the scMethrix object
-#' @param ... Parameters to pass to `saveHDF5SummarizedExperiment`
+#' @param dest `string`; the destination folder for the output files
+#' @param ... Additional parameters to pass to [HDF5Array::saveHDF5SummarizedExperiment()].
 #' @importFrom SummarizedExperiment assays
 #' @importFrom methods extends
+#' @seealso [load_scMethrix()]
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
 #' scm <- convert_scMethrix(scMethrix_data, h5_dir=dir)
 #' save_scMethrix(scm, dest = dir, replace = TRUE)
-#' @return invisible [`scMethrix`] object, with the assays stored in the h5_dir
+#' @return invisible [`scMethrix`] object, with the assay data stored in the `dest` (if HDF5 format)
 #' @export
 save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FALSE, verbose = TRUE, ...) {
   
@@ -668,11 +670,12 @@ save_scMethrix <- function(scm = NULL, dest = NULL, replace = FALSE, quick = FAL
 
 #---- load_scMethrix ---------------------------------------------------------------------------------------------------
 #' Loads HDF5 [`scMethrix-class`] object
-#' @details Takes directory with a previously saved HDF5Array format [`scMethrix-class`] object and loads it
+#' @description Loads an [`scMethrix-class`] object from the hard disk. Experiments can be saved via [save_scMethrix()]
 #' @inheritParams generic_scMethrix_function
 #' @param dest `string`; The `directory` or `file` to read in from
 #' @param ... Parameters to pass to [HDF5Array::loadHDF5SummarizedExperiment]
 #' @return An [`scMethrix-class`] object
+#' @seealso [save_scMethrix()]
 #' @examples
 #' data('scMethrix_data')
 #' dir <- paste0(tempdir(),"/h5")
@@ -854,37 +857,38 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
   
 }
 
-#---- get_stats ------------------------------------------------------------------------------------------------------------
+#---- getStats ------------------------------------------------------------------------------------------------------------
 #' Estimate descriptive statistics for each sample
-#' @details Calculate descriptive statistics (`Mean`, `Median`, `SD`, `Count`) either by sample or `per_chr`
+#' @details Calculate descriptive statistics (`Mean`, `Median`, `SD`, `Count`) for samples or chromosomes.
 #' @inheritParams generic_scMethrix_function
-#' @param per_sample `boolean`; Estimate stats per sample Default = `TRUE`
-#' @param per_chr `boolean`; Estimate stats per chromosome. Default = `TRUE`
-#' @param ignore_chr `string`; chromosomes to ignore
-#' @param ignore_sample `string`; samples to ignore
+#' @param perSample `boolean`; Estimate stats per sample Default = `TRUE`
+#' @param perChr `boolean`; Estimate stats per chromosome. Default = `TRUE`
+#' @param ignoreChrs list(`string`); chromosomes to ignore
+#' @param ignoreSamples list(`string`); samples to ignore
 #' @param stats `string`; the stats to include. Default is `c("Mean","Median","SD","Count")`).
 #' @examples
 #' data('scMethrix_data')
 #' 
 #' #Get stats for each sample and chromosome
-#' get_stats(scMethrix_data)
+#' getStats(scMethrix_data)
 #' 
 #' #Get stats for each sample
-#' get_stats(scMethrix_data,per_chr = FALSE)
+#' getStats(scMethrix_data, perChr = FALSE)
 #' @return data.table of summary stats
 #' @export
-get_stats <- function(scm = NULL, assay="score", per_sample = TRUE, per_chr = TRUE, verbose = TRUE, ignore_chr = NULL, ignore_sample = NULL, stats = c("Mean","Median","SD","Count")) {
+getStats <- function(scm = NULL, assay="score", stats = c("Mean","Median","SD","Count"), perSample = TRUE, perChr = TRUE, ignoreChrs = NULL, ignoreSamples = NULL, verbose = TRUE) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)  
   assay <- .validateAssay(scm,assay)
-  .validateType(per_chr,"boolean")
+  .validateType(perSample,"boolean")
+  .validateType(perChr,"boolean")
   .validateType(verbose,"boolean")
-  .validateType(ignore_chr,c("string","null"))
-  .validateType(ignore_sample,c("string","null"))
-  stats <- .validateArg(stats, get_stats, multiple.match=T)
+  .validateType(ignoreChrs,c("string","null"))
+  .validateType(ignoreSamples,c("string","null"))
+  stats <- .validateArg(stats, getStats, multiple.match=T)
   
-  Chromosome <- Sample <- x <- NULL
+  Chromosome <- Sample <- Count <- Mean <- SD <- ..cols <- x <- . <- NULL
   
   calc_mean <- "Mean" %in% stats
   calc_median <- "Median" %in% stats
@@ -895,8 +899,11 @@ get_stats <- function(scm = NULL, assay="score", per_sample = TRUE, per_chr = TR
   #---- Function code ------------------------------------------------------
   if (verbose) message("Getting descriptive statistics...",start_time())
   
+  if (!is.null(ignoreSamples)) scm <- subset_scMethrix(scm,samples = ignoreSamples, by = "exclude")
+  if (!is.null(ignoreChrs)) scm <- subset_scMethrix(scm,contigs = ignoreChrs, by = "exclude")
+  
   mtx <- get_matrix(scm, assay = assay)
-  chrs <- .getGRchrIndicies(rowRanges(scm))
+  chrs <- .getGRchrStats(rowRanges(scm))
   
   stats <- lapply(1:nrow(chrs), function(x) {
     rows <- chrs$Start.idx[x]:chrs$End.idx[x]
@@ -913,11 +920,8 @@ get_stats <- function(scm = NULL, assay="score", per_sample = TRUE, per_chr = TR
   })
   
   stats <- data.table::rbindlist(l = stats, use.names = TRUE)
-  
-  if (!is.null(ignore_chr)) stats <- stats[!(Chromosome %in% ignore_chr)] # TODO: These should apply before the stats calcs
-  if (!is.null(ignore_sample)) stats <- stats[!(Sample %in% ignore_sample)]
-  
-  if (!per_chr) {
+
+  if (!perChr) {
     
     count = unlist(stats[, .(Count = lapply(.(Count),sum)), by=.(Sample)]$Count)
     
@@ -945,7 +949,7 @@ get_stats <- function(scm = NULL, assay="score", per_sample = TRUE, per_chr = TR
     )
   }
   
-  if (!per_sample) {
+  if (!perSample) {
     
     count = unlist(stats[, .(Count = lapply(.(Count),sum)), by=.(Chromosome)]$Count)
     
@@ -972,10 +976,10 @@ get_stats <- function(scm = NULL, assay="score", per_sample = TRUE, per_chr = TR
       Count =  count
     )
   }
-
-  cols <- c("Sample","Chromosome",cols)
-  stats <- stats[, ..cols]
   
+  cols <- c("Sample","Chromosome",cols)
+  stats <- stats[, cols, with = FALSE]
+
   gc()
   if (verbose) message("Finished in ", stop_time())
   

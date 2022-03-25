@@ -21,3 +21,34 @@ test_that("subset_ref_cpgs",{
   expect_equal(ref_cpgs[1:3,],sub_cpgs)
   
 })
+
+test_that(".getGRchrStats",{
+  scm <- scm.mem
+  gr <- rowRanges(scm)
+  idx <- .getGRchrStats(gr)
+  setDT(idx)
+
+  expect_equal(dim(idx),c(length(GenomeInfoDb::seqlevels(gr)),7))
+  
+  chr1 <- rowRanges(subset_scMethrix(scm,contigs = "chr1"))
+  chr2 <- rowRanges(subset_scMethrix(scm,contigs = "chr2"))
+  
+  expect_equal(idx[Chromosome == "chr1",Sites],length(chr1))
+  expect_equal(idx[Chromosome == "chr2",Sites],length(chr2))
+  
+  expect_equal(idx[Chromosome == "chr1",Start.loci],start(range(chr1)))
+  expect_equal(idx[Chromosome == "chr2",Start.loci],start(range(chr2)))
+  
+  expect_equal(idx[Chromosome == "chr1",End.loci],end(range(chr1)))
+  expect_equal(idx[Chromosome == "chr2",End.loci],end(range(chr2)))
+  
+  expect_equal(idx[Chromosome == "chr1",Start.idx],1)
+  expect_equal(idx[Chromosome == "chr2",Start.idx],length(chr1)+1)
+  
+  expect_equal(idx[Chromosome == "chr1",End.idx],length(chr1))
+  expect_equal(idx[Chromosome == "chr2",End.idx],length(chr1)+length(chr2))
+  
+  expect_equal(idx[Chromosome == "chr1",Width],end(range(chr1))-start(range(chr1)))
+  expect_equal(idx[Chromosome == "chr2",Width],end(range(chr2))-start(range(chr2)))
+})
+

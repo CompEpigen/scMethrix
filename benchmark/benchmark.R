@@ -31,7 +31,7 @@ bench <- microbenchmark(
   "get_matrix"={get_matrix(scm)},
   "convert_scMethrix"={convert_scMethrix(scm,h5_dir=paste0(tempdir(),"/out"))},
   "subset_scMethrix"={subset_scMethrix(scm,regions=rowRanges(scm)[1:floor(nrow(scm)/2),])},
-  "get_stats"={get_stats(scm)},
+  "getStats"={getStats(scm)},
   "remove_uncovered"={remove_uncovered(scm)},
   "mask_by_coverage"={mask_by_coverage(scm,low_threshold=2,avg_threshold = 1)},
   "mask_by_sample"={mask_by_sample(scm,low_threshold=2)},

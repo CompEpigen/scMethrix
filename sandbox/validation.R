@@ -66,7 +66,7 @@ colData(scm)$Sample <- row.names(colData(scm))
 setwd("D:/Documents/School/Thesis/Report/Validation")
 # Mean score ------------------------------------------------------------------------------------------------------
 
-#stats <- plot_stats(scm,base_size = 20)
+#stats <- plotStats(scm,base_size = 20)
 
 row.names(colData(scm)) <- paste0("C",1:ncol(scm))
 colData(scm)$Sample <- row.names(colData(scm))
@@ -75,7 +75,7 @@ colData(scm)$Sample <- row.names(colData(scm))
 density <- plot_density(scm,base_size = 20,palette="Blues")
 coverage <- plot_coverage(scm,base_size=20,type="density",max_cov=10)
 sparsity <- plot_sparsity(scm,base_size=20,type="scatter",pheno="Sample")
-stat <- plot_stats(scm, per_chr = T, stat = "count", base_size=20)
+stat <- plotStats(scm, per_chr = T, stat = "count", base_size=20)
 
 Cairo(file="stats.png",
       type="png",
@@ -102,7 +102,7 @@ egg::ggarrange(stat, coverage, ncol = 2, widths = c(700,300),labels = c("  C", "
 dev.off()
 # -----------------------------------------------------------------------------------------------------------------
 
-get_stats(scm,per_chr=FALSE)
+getStats(scm,per_chr=FALSE)
 
 mask_scMethrix(scm, assay="score", threshold=1, by = "row", stat="count", op="<=")
 mask_scMethrix(scm, assay="score", threshold=0.05, by = "row", stat="sd", op="<")
