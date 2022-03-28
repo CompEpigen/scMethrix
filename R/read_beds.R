@@ -275,7 +275,9 @@ read_index <- function(files, col_list, n_threads = 1, zero_based = FALSE, batch
   for (i in 1:length(files)) {
     if (verbose) message("   Parsing: ",get_sample_name(files[i]),appendLF=FALSE)
     
-    data <- data.table::fread(files[i], select = unname(col_list$col_idx[c("chr","start")]))
+    trackLine <- readLines(files[i], n = 1)
+    trackLine <- as.integer(grepl("track",trackLine, fixed = TRUE))
+    data <- data.table::fread(files[i], select = unname(col_list$col_idx[c("chr","start")]), skip = trackLine)
     
     # Concat the batch list if last element, otherwise save and iterate
     if (i%%batch_size == 0) {
@@ -343,8 +345,10 @@ read_bed_by_index <- function(file, ref_cpgs = NULL, col_list = NULL, zero_based
   #   suppressWarnings(covs <- ref_cpgs[,c("end","strand","width"):=NULL])
   # }
 
-  bed <- suppressWarnings(data.table::fread(file, select = unname(col_list$col_idx),
-                           col.names = names(col_list$col_idx)))
+  trackLine <- readLines(file, n = 1)
+  trackLine <- as.integer(grepl("track",trackLine, fixed = TRUE))
+  bed <- data.table::fread(file, select = unname(col_list$col_idx),
+                           col.names = names(col_list$col_idx), skip = trackLine)
 
   #Add chr if not present
   if (!grepl("chr", bed[1,chr], fixed = TRUE)) bed[,chr := paste0("chr",chr)]
