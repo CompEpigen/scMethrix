@@ -86,69 +86,79 @@ invisible(lapply(list(scm.mem,scm.h5), function(scm) {
       dim_red_graph_test_helper(scm.dimred, plot_dim_red, dim_red=type, color_anno="Group", shape_anno="Group")
     }))
   })
-  
-  test_that(".getPalette", {
-    
-    expect_error(.getPalette(),NA)
-    expect_error(.getPalette(nColors = 5, palette = "not a palette"),"Invalid palette")
-    expect_error(.getPalette(nColors = "not an number"),msg.validateType)
-    expect_error(.getPalette(nColors = -1),msg.validateValue)
-    
-    # Simple case
-    nColors <- 5
-    colors <- .getPalette(nColors = nColors)
-    expect_equal(length(colors),nColors)
-    expect_error(col2rgb(colors, NA))
-    
-    # Large case
-    nColors <- 500
-    colors <- .getPalette(nColors = nColors)
-    expect_equal(length(colors),nColors)
-    expect_error(col2rgb(colors, NA))
-    
-    # Qualitative
-    nColors <- 5
-    palette <- "Pastel 1"
-    colors <- .getPalette(nColors = nColors, palette = palette)
-    expect_equal(length(colors),nColors)
-    expect_error(col2rgb(colors, NA))
-    expect_equal(colors, colorspace::qualitative_hcl (nColors, palette = palette))
-    
-    # Sequential
-    palette <- "Grays"
-    colors <- .getPalette(nColors = nColors, palette = palette)
-    expect_equal(length(colors),nColors)
-    expect_error(col2rgb(colors, NA))
-    expect_equal(colors, colorspace::sequential_hcl (nColors, palette = palette))
-    
-    # Diverging
-    palette <- "Blue-Red"
-    colors <- .getPalette(nColors = nColors, palette = palette)
-    expect_equal(length(colors),nColors)
-    expect_error(col2rgb(colors, NA))
-    expect_equal(colors, colorspace::diverging_hcl (nColors, palette = palette))
-  })
-  
-  test_that(".getShapes", {
-    
-    expect_error(.getShapes(),NA)
-    
-    nShapes = 10
-    shapes = .getShapes(nShapes)
-    expect_true(.validateType(shapes,"integer"))
-    expect_equal(length(shapes), nShapes)
-    
-    shapes <- .getShapes()
-    d <- data.frame(p=shapes,i = 1:length(shapes)-1)
-    plot <- ggplot() +
-     scale_y_continuous(name="") +
-     scale_x_continuous(name="") +
-     scale_y_reverse() +
-     scale_shape_identity() +
-     geom_point(data=d, mapping=aes(x=i%%16, y=i%/%16, shape=p), size=5, fill="red") +
-     geom_text(data=d, mapping=aes(x=i%%16, y=i%/%16+0.25, label=p), size=3) +
-     theme_void()
-    
-    expect_error(print(plot),NA)
-  })
 }))
+
+test_that(".getPalette", {
+  
+  expect_error(.getPalette(),NA)
+  expect_error(.getPalette(nColors = 5, palette = "not a palette"),"Invalid palette")
+  expect_error(.getPalette(nColors = "not an number"),msg.validateType)
+  expect_error(.getPalette(nColors = -1),msg.validateValue)
+  
+  # Simple case
+  nColors <- 5
+  colors <- .getPalette(nColors = nColors)
+  expect_equal(length(colors),nColors)
+  expect_error(col2rgb(colors, NA))
+  
+  # Large case
+  nColors <- 500
+  colors <- .getPalette(nColors = nColors)
+  expect_equal(length(colors),nColors)
+  expect_error(col2rgb(colors, NA))
+  
+  # Qualitative
+  nColors <- 5
+  palette <- "Pastel 1"
+  colors <- .getPalette(nColors = nColors, palette = palette)
+  expect_equal(length(colors),nColors)
+  expect_error(col2rgb(colors, NA))
+  expect_equal(colors, colorspace::qualitative_hcl (nColors, palette = palette))
+  
+  # Sequential
+  palette <- "Grays"
+  colors <- .getPalette(nColors = nColors, palette = palette)
+  expect_equal(length(colors),nColors)
+  expect_error(col2rgb(colors, NA))
+  expect_equal(colors, colorspace::sequential_hcl (nColors, palette = palette))
+  
+  # Diverging
+  palette <- "Blue-Red"
+  colors <- .getPalette(nColors = nColors, palette = palette)
+  expect_equal(length(colors),nColors)
+  expect_error(col2rgb(colors, NA))
+  expect_equal(colors, colorspace::diverging_hcl (nColors, palette = palette))
+})
+
+test_that(".getShapes", {
+  
+  expect_error(.getShapes(),NA)
+  
+  nShapes = 10
+  shapes = .getShapes(nShapes)
+  expect_true(.validateType(shapes,"integer"))
+  expect_equal(length(shapes), nShapes)
+  
+  shapes <- .getShapes()
+  d <- data.frame(p=shapes,i = 1:length(shapes)-1)
+  plot <- ggplot() +
+    scale_y_continuous(name="") +
+    scale_x_continuous(name="") +
+    scale_y_reverse() +
+    scale_shape_identity() +
+    geom_point(data=d, mapping=aes(x=i%%16, y=i%/%16, shape=p), size=5, fill="red") +
+    geom_text(data=d, mapping=aes(x=i%%16, y=i%/%16+0.25, label=p), size=3) +
+    theme_void()
+  
+  expect_error(print(plot),NA)
+})
+
+test_that(".calcJitter", {
+  expect_equal(.calcJitter(-5),0)
+  expect_equal(.calcJitter(100, max = 0.8),0.8)
+  expect_equal(.calcJitter(5),0.5,tolerance = 0.5)
+  expect_equal(.calcJitter(5,-10),0)
+  expect_equal(.calcJitter(100,10),1)
+})
+
+

@@ -58,7 +58,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #---- .getPalette ------------------------------------------------------------------------------------------------------
 #' Generates a palette of RGB colors via [`colorspace`](https://colorspace.r-forge.r-project.org//index.html).
 #' @description 
-#' This function wraps the color generation functions from [`colorspace`](https://cran.r-project.org/web/packages/colorspace/index.html): [`sequential_hcl()`][colorspace::sequential_hcl()], [`diverging_hcl()`][colorspace::diverging_hcl()], and [`qualitative_hcl()`][colorspace::qualitative_hcl()]. As the palette IDs are unique, this function will automatically select the appropriate function to generate the palettes.
+#' This function wraps the color generation functions from [`colorspace`](https://cran.r-project.org/web/packages/colorspace/index.html): [`sequential_hcl()`][colorspace::sequential_hcl()], [`diverging_hcl()`][colorspace::diverging_hcl()], and [`qualitative_hcl()`][colorspace::qualitative_hcl()]. For simplicity, as the palette IDs are unique, this function will automatically select the appropriate function to generate the palettes.
 #' @details
 #' All [`colorspace`](https://colorspace.r-forge.r-project.org//index.html) palettes can be visualized with:
 #' ```
@@ -66,37 +66,45 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #' hcl_palettes(plot = TRUE)
 #' ```
 #' 
-#' Custom palettes can also be [added](https://colorspace.r-forge.r-project.org/articles/hcl_palettes.html#registering-your-own-palettes-1)
+#' Custom palettes can also be [added](https://colorspace.r-forge.r-project.org/articles/hcl_palettes.html#registering-your-own-palettes-1).
 #' 
-#' To easily visualize the colors, use `scales::show_col(.getPalette()))`
+#' To easily visualize the colors, use `scales::show_col(.getPalette())`
 #' 
 #' @param nColors `integer`; Number of colors. Default = `10`.
-#' @param palette `string`; the ID of the [`colorspace`](https://colorspace.r-forge.r-project.org//index.html) palette. Default = `"Dark Mint"`
-#' @param ... Additional arguments for palette generation
+#' @param paletteID `string`; the ID of the [`colorspace`](https://colorspace.r-forge.r-project.org//index.html) palette. Default = `"Dark Mint"`.
+#' @param ... Additional arguments for palette generation.
 #' @return vector of HEX colors
+#' @examples 
+#' palette <- .getPalette(nColors = 3, paletteID = "Plasma")
+#' scales::show_col(palette)#' 
+#' df <- mtcars[, c("mpg", "cyl", "wt")]
+#' df$cyl <- as.factor(df$cyl)
+#' 
+#' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point()
+#' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point(aes(color=cyl)) + scale_color_manual(values= palette)
 #' @noRd
-.getPalette <- function(nColors = 10, palette = "Dark Mint", ...){
+.getPalette <- function(nColors = 10, paletteID = "Dark Mint", ...){
   
   #---- Input validation ---------------------------------------------------
   .validatePackageInstall("colorspace")
   
-  .validateType(palette,"string")
+  .validateType(paletteID,"string")
   .validateType(nColors,c("integer"))
   .validateValue(nColors,"> 1")
 
   validPalettes <- row.names(colorspace::hcl_palettes())
-  if (!(palette %in% validPalettes)) {
+  if (!(paletteID %in% validPalettes)) {
     stop("Invalid palette. Must be one of: '", paste(validPalettes,collapse = "', '"),"'.")
   }
   
   #---- Function code ------------------------------------------------------
-  hcl <- colorspace::hcl_palettes(palette = palette)
+  hcl <- colorspace::hcl_palettes(palette = paletteID)
   hcl <- as.character(hcl$type)
   hcl <- gsub( " .*$", "", hcl )
   
-  if (hcl == "Sequential")        palette <- colorspace::sequential_hcl (nColors, palette = palette, ...) 
-  else if (hcl == "Diverging")    palette <- colorspace::diverging_hcl  (nColors, palette = palette, ...) 
-  else if (hcl == "Qualitative")  palette <- colorspace::qualitative_hcl(nColors, palette = palette, ...) 
+  if (hcl == "Sequential")        palette <- colorspace::sequential_hcl (nColors, palette = paletteID, ...) 
+  else if (hcl == "Diverging")    palette <- colorspace::diverging_hcl  (nColors, palette = paletteID, ...) 
+  else if (hcl == "Qualitative")  palette <- colorspace::qualitative_hcl(nColors, palette = paletteID, ...) 
   
   return(palette)
 }
@@ -120,6 +128,13 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #'```
 #' @param nShapes `integer`; Number of shapes. Max of 57.
 #' @return `list(integer)`; the specified number of shapes. If nShapes = `NULL`, returns all possible shapes.
+#' @examples 
+#' shapes <- .getShapes(3) 
+#' df <- mtcars[, c("mpg", "cyl", "wt")]
+#' df$cyl <- as.factor(df$cyl)
+#' 
+#' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point()
+#' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point(aes(shape=cyl)) + scale_shape_manual(values= shapes)
 #' @noRd
 .getShapes <- function(nShapes = NULL) {
   
@@ -963,4 +978,20 @@ scMethrix_theme <- function(base_size = 12, base_family = "",...) {
       legend.key =        element_rect(colour = '#DADADA'),...,
       complete = TRUE
     )
+}
+
+
+#---- .calcJitter ------------------------------------------------------------------------------------------------------
+#' Calculates jitter based on number of data points
+#' @description Jittering of few points can look bad, depending on the RNG, as some groups will have points on terminal edges of the space, while others will be nearly in line. This limits the spread of the jitter to improve visualization.
+#' @param n integer; Number of data points
+#' @param max numeric; Maximum jitter
+#'
+#' @return a number between 0 and 1
+#' @nord
+#' @examples
+#' .calcJitter(5)
+.calcJitter <- function(n, max = 0.8) {
+  max <- max(min(1,max),0)
+  return(max(min(max,n*0.05),0))
 }
