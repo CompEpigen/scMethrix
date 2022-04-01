@@ -14,7 +14,7 @@ test_that("read_bed_by_index", {
   C1 <- data.table::fread(file = file, sep = '\t', header = FALSE)
   bed <- read_bed_by_index(file,index,col_list=col_list)[[1]]
   expect_equal(dim(bed),c(nrow(index),1))
-  expect_equal(dim(na.omit(bed)),c(nrow(C1),1))
+  expect_equal(dim(bed),c(nrow(C1),1))
 
 })
 

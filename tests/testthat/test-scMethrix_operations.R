@@ -63,7 +63,7 @@ test_that("get_rowdata_stats", {
     expect_equal(fmt((ncol(scm)-DelayedMatrixStats::rowCounts(score(s),val=NA))/ncol(scm)),fmt(stats$Sparsity))
     
     exp_sd <- DelayedMatrixStats::rowSds(score(s),na.rm=TRUE)
-    exp_sd[is.na(exp_sd)] <- 0 # Since single sample rows will give SD as zero
+    exp_sd[which(DelayedMatrixStats::rowCounts(score(s),val=NA) == (n_samples-1))] <- 0 # Since single sample rows will give SD as zero
     expect_equal(fmt(exp_sd),fmt(stats$SD))
     
     # Check for stat subset
@@ -285,7 +285,7 @@ test_that("subset_scMethrix", {
     
     samples <- colnames(scm)[c(1,3)] # Should be "C1" and "C3"
     contigs <- levels(seqnames(scm))[1] # Should be "chr1"
-    regions <- GRanges(seqnames = levels(seqnames(scm))[1:2], ranges = IRanges(1,100000000)) 
+    regions <- GRanges(seqnames = seqlevels(scm)[1:2], ranges = IRanges(1,1000000000))# Should be c("chr1","chr2")
     
     # Subset by include
     s <- subset_scMethrix(scm, samples = samples, by="include")
@@ -297,11 +297,11 @@ test_that("subset_scMethrix", {
     expect_equal(contigs,as.character(seqnames(s)@values))
     
     s <- subset_scMethrix(scm, regions = regions, by="include")
-    expect_equal(dim(s),c(134,n_samples))
+    expect_equal(dim(s),c(sum("seqnames"(scm)@lengths[1:2]),n_samples))
     expect_equal(length(findOverlaps(regions,rowRanges(s))),length(rowRanges(s)))
       
     s <- subset_scMethrix(scm, samples = samples, contigs = contigs, regions = regions, by="include")
-    expect_equal(dim(s),c(67,length(samples)))
+    expect_equal(dim(s),c("seqnames"(scm[,c(1,3)])@lengths[1],length(samples)))
     
     # Subset by exclude
     s <- subset_scMethrix(scm, samples = samples, by = "exclude")
@@ -313,11 +313,11 @@ test_that("subset_scMethrix", {
     expect_equal(length(intersect(contigs,as.character(seqnames(s)@values))),0)
     
     s <- subset_scMethrix(scm, regions = regions, by = "exclude")
-    expect_equal(dim(s),c(152,n_samples))
+    expect_equal(dim(s),c(sum("seqnames"(scm)@lengths[c(-1,-2)]),n_samples))
     expect_equal(length(findOverlaps(regions,rowRanges(s))),0)
     
     s <- subset_scMethrix(scm, samples = samples, contigs = contigs, regions = regions, by = "exclude")
-    expect_equal(dim(s),c(72,length(samples)))
+    expect_equal(dim(s),c(sum("seqnames"(scm[,c(-1,-3)])@lengths[c(-1,-2)]),length(samples)))
     
   }))
 })
