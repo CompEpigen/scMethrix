@@ -155,7 +155,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #' Violin Plot for `\beta`-Values
 #' @inheritParams prepare_plot_data
 #' @param n_cpgs `integer`; The number of CpGs to for plotting. Default = `25000`.
-#' @param palette `string`; Name of the `RColorBrewer` palette to use for plotting.
+#' @param paletteID `string`; Name of the `colorspace` palette to use for plotting.
 #' @param show_legend `boolean`; Display the legend on the plot
 #' @param ... Additional parameters to feed to [scMethrix_theme()]
 #' @return [`ggplot2::ggplot2`] object
@@ -165,7 +165,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #' data('scMethrix_data')
 #' plot_violin(scm = scMethrix_data)
 plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
-                        palette = "Dark Mint", show_legend = FALSE, verbose = TRUE,...) {
+                        paletteID = "Dark Mint", show_legend = FALSE, verbose = TRUE,...) {
   
   #---- Input validation ---------------------------------------------------
   Sample <- Value <- Pheno <- NULL
@@ -174,13 +174,13 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
   .validateAssay(scm,assay)
   .validateType(n_cpgs,"integer")
   .validateType(pheno,c("string","null"))
-  .validateType(palette,"string")
+  .validateType(paletteID,"string")
   .validateType(show_legend,"boolean")
 
   #---- Function code ------------------------------------------------------
   plot.data <- prepare_plot_data(scm=scm, assay = assay, n_cpgs = n_cpgs, pheno = pheno)
   
-  palette <- .getPalette(ncol(scm), palette)
+  palette <- .getPalette(ncol(scm), paletteID)
   # generate the violin plot
   
   p <- ggplot2::ggplot(plot.data, ggplot2::aes(x = Sample, y = Value, fill = Pheno)) + 
@@ -205,7 +205,7 @@ plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
 #' data('scMethrix_data')
 #' plot_density(scm = scMethrix_data)
 plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NULL,
-                         palette = "Dark Mint", show_legend = FALSE, verbose = TRUE, na.rm = T,...) {
+                         paletteID = "Dark Mint", show_legend = FALSE, verbose = TRUE, na.rm = T,...) {
   
   #---- Input validation ---------------------------------------------------
   Value <- Pheno <- NULL
@@ -214,12 +214,12 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
   .validateAssay(scm,assay)
   .validateType(n_cpgs,"integer")
   .validateType(pheno,c("string","null"))
-  .validateType(palette,"string")
+  .validateType(paletteID,"string")
   .validateType(show_legend,"boolean")
   
   #---- Function code ------------------------------------------------------
   plot.data <- prepare_plot_data(scm=scm, assay = assay, n_cpgs = n_cpgs, pheno = pheno)
-  palette <- .getPalette(ncol(scm), palette)
+  palette <- .getPalette(ncol(scm), paletteID)
 
     # generate the density plot
 
@@ -230,7 +230,7 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
                                      axis.text.x = element_text(size = 12, colour = "black"), 
                                      axis.text.y = element_text(size = 12, colour = "black"), 
                                      axis.title.y = element_blank(), legend.title = element_blank())+
-                                     ggplot2::scale_color_manual(values = .getPalette(length(levels(plot.data$Pheno))))
+                                     ggplot2::scale_color_manual(values = .getPalette(length(levels(plot.data$Pheno)),paletteID = paletteID))
     
   
   gc(verbose = FALSE)
@@ -250,7 +250,7 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
 #' plot_coverage(scm = scMethrix_data)
 #' @export
 plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = NULL,
-                          max_cov = 100, obs_lim = 1e+06, palette = "Dark Mint", show_legend = FALSE, verbose = TRUE,...) {
+                          max_cov = 100, obs_lim = 1e+06, paletteID = "Dark Mint", show_legend = FALSE, verbose = TRUE,...) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
@@ -258,12 +258,12 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   .validateType(pheno,c("string","null"))
   .validateType(max_cov,"integer")
   .validateType(obs_lim,"integer")
-  .validateType(palette,"string")
+  .validateType(paletteID,"string")
   .validateType(show_legend,"boolean")
   
   Value <- Sample <- Pheno <- NULL
   
-  colors_palette <- .getPalette(ncol(scm))
+  colors_palette <- .getPalette(ncol(scm), paletteID = paletteID)
   
   #---- Function code ------------------------------------------------------
   if (matrixStats::product(dim(scm)) > obs_lim) {
@@ -337,7 +337,7 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
 #' data('scMethrix_data')
 #' plot_sparsity(scm = scMethrix_data)
 #' @export
-plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "Boxplot", "Jitterplot"), by = c("Sample","Chromosome"), phenotype = NULL, show_legend = FALSE, verbose = TRUE, show_avg = TRUE, ...) {
+plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "Boxplot", "Jitterplot"), by = c("Sample","Chromosome"), phenotype = NULL, show_legend = FALSE, verbose = TRUE, show_avg = TRUE, paletteID = "Dark Mint",...) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
@@ -348,7 +348,7 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
   
   Sparsity <- variable <- NULL
   
-  colors_palette <- .getPalette(ncol(scm))
+  colors_palette <- .getPalette(ncol(scm), paletteID = paletteID)
   
   if (!is.null(phenotype) && type == "Scatterplot" && by == "Chromosome") {
     warning("Phenotype given for scatterplot when graphing by chromosome. Phenotype will be ignored.")
@@ -366,13 +366,12 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
   Sample <- Phenotype <- Count <- Sites <- Chromosome <- . <- NULL
   
   #---- Function code ------------------------------------------------------
-  
   chrs = rowRanges(scm)@seqnames
   end = cumsum(chrs@lengths)
   start = c(1, head(end, -1) + 1)
   chrs = data.frame(Chromosome = as.character(chrs@values), Start = start, End = end, Sites = end-start)
   
-  stats <- get_stats(scm,per_chr=T,stats="Count")
+  stats <- getStats(scm,perChr=TRUE, perSample = F, phenotype = phenotype, stats="Count")
   stats <- merge(stats,chrs[,c("Chromosome","Sites")],by="Chromosome")
   #stats[,Sparsity := Count/Sites]
   
@@ -441,172 +440,133 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
   return (p + scMethrix_theme(...))
 }
 
-#---- plot_stats -------------------------------------------------------------------------------------------------------
-#' Plot descriptive statistics
-#' @details plot descriptive statistics results from [get_stats()]
+# plotChrStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", "Proportion"), perSample = FALSE, 
+#                          phenotype = NULL, ignoreChrs = NULL, ignoreSamples = NULL, verbose = TRUE, show_legend = FALSE,...) {
+#   
+#   getStat <- if(stat == "Mean" || stat == "Median") c(stat,"SD") else stat
+#   plotData <- getStats(scm, assay = assay, stats = getStat, perSample = perSample, perChr = TRUE, 
+#                        ignoreChrs = ignoreChrs, ignoreSamples = ignoreSamples)
+#   
+#   .plotStats(plotData = plotData, by = "Chromosome", collapsed = !perSample)
+#   
+# }
+# 
+# plotSampleStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", "Proportion"), perChr = FALSE, 
+#                             phenotype = NULL, ignoreChrs = NULL, ignoreSamples = NULL, verbose = TRUE, show_legend = FALSE,...) {
+#   
+#   getStat <- if(stat == "Mean" || stat == "Median") c(stat,"SD") else stat
+#   plotData <- getStats(scm, assay = assay, stats = getStat, perSample = TRUE, perChr = perChr, 
+#                        ignoreChrs = ignoreChrs, ignoreSamples = ignoreSamples)
+#   
+#   .plotStats(plotData = plotData, by = "Sample", collapsed = !perChr)
+# }
+
+
+#---- plotStats -------------------------------------------------------------------------------------------------------
+#' Plot descriptive statistics results from [getStats()]
+#' @details Plot descriptive statistics
 #' @inheritParams plot_violin
-#' @param stat `string`; Can be `mean` or median. Default = `mean.`
-#' @param type `string`; Choose between `Boxplot` or `Scatterplot`. Default = `Scatterplot`
-#' @param ignore_chr `string`; Chromosomes to ignore. If `NULL`, all chromosomes will be used. Default = `NULL`.
-#' @param ignore_samples `list(string)`; Samples to ignore.  If `NULL`, all samples will be used. Default = `NULL`
-#' @param n_col `integer`; number of columns. Passed to `facet_wrap`
-#' @param n_row `integer`; number of rows. Passed to `facet_wrap`
-#' @param per_chr `boolean`; plot per chromosome
+#' @param stat `string`; Can plot `Mean`, `Median`, `Count`, or `Proportion`. `Count` is number of non-NA assay values, whereas `Proportion` is the proportion of non-NA assay values. Default = `Mean`.
+#' @param type `string`; Choose between `Boxplot` or `Scatterplot`. Only applies when `collapse = FALSE`. Default = `Scatterplot`.
+#' @param by `string`; Can plot via `Sample` or `Chromosome`. Default = `Sample`.
+#' @param collapse `boolean`; Collapse by sample or chromosome. Will collapse by the opposite of `by` value. Default = `TRUE`.
+#' @param phenotype `string`; Group samples by `phenotype`. The `phenotype` must have a corresponding column in `colData()`. Default = `NULL`.
+#' @param ignoreChrs `list(string)`; Chromosomes to ignore. Default = `NULL`.
+#' @param ignoreSamples `list(string)`; Samples to ignore. Default = `NULL`.
+#' @param nCol `integer`; Number of columns. Passed to [ggplot2::facet_wrap()].
+#' @param nRow `integer`; Number of rows. Passed to [ggplot2::facet_wrap()].
 #' @return [`ggplot2::ggplot2`] object
-#' @seealso \code{\link{get_stats}}
+#' @seealso [getStats()]
 #' @examples
 #' data('scMethrix_data')
-#' plot_stats(scMethrix_data)
+#' plotStats(scMethrix_data)
 #' @export
 #'
-plot_stats <- function(scm, assay = "score", stat = c("mean", "median","count","fractional count"), type = c("boxplot","scatterplot"), per_chr = FALSE, ignore_chr = NULL, 
-                       ignore_samples = NULL, n_col = NULL, n_row = NULL, pheno = NULL, verbose = TRUE, show_legend = FALSE,...) {
+plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", "Proportion"), 
+                      type = c("Scatterplot", "Boxplot"), by = c("Sample", "Chromosome"), collapse = TRUE, 
+                      phenotype = NULL, ignoreChrs = NULL, ignoreSamples = NULL, nCol = NULL, nRow = NULL, 
+                      verbose = TRUE, show_legend = FALSE, paletteID = "Dark Mint",...) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   assay <- .validateAssay(scm,assay)
-  stat <- .validateArg(stat,plot_stats)
-  .validateType(per_chr,"boolean")
-  .validateType(ignore_chr,c("string","null"))
-  .validateType(ignore_samples,c("string","null"))
-  .validateType(n_col,c("integer","null"))
-  .validateType(n_row,c("integer","null"))
+  stat <- .validateArg(stat,plotStats)
+  type <- .validateArg(type,plotStats)
+  by <- .validateArg(by,plotStats)
+  .validateType(phenotype,c("string","null"))
+  .validateType(ignoreChrs,c("string","null"))
+  .validateType(ignoreSamples,c("string","null"))
+  .validateType(nCol,c("integer","null"))
+  .validateType(nRow,c("integer","null"))
+  .validateType(verbose,"boolean")
   
-  Chromosome <- . <- Sample <- mean_meth <- sd_meth <- median_meth <- mean_cov <- sd_cov <- NULL
-  median_cov <- measurement <- sd_low <- sd_high <- NULL
+  if (!is.null(phenotype) && !phenotype %in% colnames(colData(scm))) 
+    stop("Error in plotting. No column named '",phenotype,"' is present in colData(). Must be one of: ",
+         .pasteList(colnames(colData(scm))))
+
+  if (any(!ignoreSamples %in% sampleNames(scm)))
+    warning("Ignored samples are not present in the data: ",
+            .pasteList(ignoreSamples[!ignoreSamples %in% sampleNames(scm)]))
+  
+  if (any(!ignoreChrs %in% levels(seqnames(scm))))
+    warning("Ignored chromosomes are not present in the data: ",
+            .pasteList(ignoreChrs[!ignoreChrs %in% levels(seqnames(scm))]))
+  
+  Chromosome <- . <- Sample <- Proportion <- SD <- SDlow <- SDhigh <- Value <- NULL
 
   #- Function code --------------------------------------------------------------------------
   
-  y_title = tools::toTitleCase(paste(stat,assay))
+  yTitle <- tools::toTitleCase(stat)
   
-  colors_palette <- .getPalette(ncol(scm))
-
-  if (stat == "count") {
-    
-    plot_dat = get_stats(scm, assay = assay, per_chr = TRUE, ignore_chr = ignore_chr, ignore_samples = ignore_samples)
-    plot_dat$Sample_Name <- factor(plot_dat$Sample_Name, levels = sampleNames(scm))
-    plot_dat$Chr <- gsub("^.{0,3}", "", plot_dat$Chr)
-    
-    plot_dat$Chr <- factor(plot_dat$Chr, levels = unique(plot_dat$Chr))
-
-    plot_dat[, which(grepl("^mean|median", colnames(plot_dat))):=NULL]
-    
-    colnames(plot_dat) <- c("Chromosome", "Sample", "measurement",
-                            "sd")
-    
-    avg.count <- mean(plot_dat$measurement)
-    sd.count <- sd(plot_dat$measurement)
-
-    if (verbose) {
-      msg <- paste("Mean:", round(avg.count,2),"\u00b1", round(sd.count,2))
-      Encoding(msg)<-"UTF-8"
-      message(msg)
-    }
-    
-    plot_dat_gg <- ggplot(data = plot_dat, aes(x = Chromosome, y = measurement, fill = Chromosome)) +
-     ggplot2::geom_boxplot(col = "black", show.legend = show_legend) + 
-      #ggplot2::geom_jitter(size = 0.6) + 
-      ggplot2::theme_minimal(base_size = 12) + 
-      ggplot2::theme(axis.title.x = element_blank(), 
-                     axis.title.y = element_blank(),
-                     axis.text.x = element_text(hjust = 1, size = 10, colour = "black"),
-                     axis.text.y = element_text(size = 10, colour = "black")) +
-      ylab("Coverage")   +           geom_hline(yintercept=avg.count, linetype="dashed", 
-                                                 color = "black", size=1)+  scale_y_continuous(
-        sec.axis = dup_axis(
-          breaks = avg.count,
-          labels = parse(text="bar(x)"),
-          name = NULL
-        ) ,labels = function(l) {
-          trans = l / 1000;
-          paste0(trans, "K")
-        })
-      
-    
-  } else {
+  colorPalette <- .getPalette(ncol(scm), paletteID = paletteID)
   
-  plot_dat = get_stats(scm, assay = assay, per_chr = per_chr, ignore_chr = ignore_chr, ignore_samples = ignore_samples)
-
-  #---- Function code ------------------------------------------------------
-  if (per_chr) {
-    if (stat == "mean") {
-      plot_dat[, which(grepl("^Median|Count", colnames(plot_dat))):=NULL]
-    } else if (stat == "median"){
-      plot_dat[, which(grepl("^Mean|Count", colnames(plot_dat))):=NULL]
-    }
-
-    colnames(plot_dat) <- c("Chromosome", "Sample", "measurement",
-                            "sd")
-
-    plot_dat[, `:=`(measurement, as.numeric(as.character(measurement)))]
-    plot_dat[, `:=`(sd, as.numeric(as.character(sd)))]
-    plot_dat[, `:=`(sd_low, measurement - sd)]
-    plot_dat[, `:=`(sd_high, measurement + sd)]
-    plot_dat$sd_low <- ifelse(test = plot_dat$sd_low < 0, yes = 0,
-                              no = plot_dat$sd_low)
-    
-    plot_dat_gg <- ggplot(data = plot_dat, aes(x = Chromosome, y = measurement)) +
-      ggplot2::geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray25") +
-      ggplot2::geom_point(col = "maroon") + 
-      ggplot2::facet_wrap(~Sample, nrow = n_row, ncol = n_col) + 
-      ggplot2::theme_minimal(base_size = 12) + 
-      ggplot2::theme(axis.title.x = element_blank(), 
-                     axis.title.y = element_blank(),
-            axis.text.x = element_text(hjust = 1, size = 10, colour = "black"),
-            axis.text.y = element_text(size = 10, colour = "black")) +
-      ylab(y_title)
-  } else {
-
-    if (stat == "mean") {
-      plot_dat[, which(grepl("^Median|Count", colnames(plot_dat))):=NULL]
-    } else if (stat == "median"){
-      plot_dat[, which(grepl("^Mean|Count", colnames(plot_dat))):=NULL]
-    } 
-
-    colnames(plot_dat) <- c("Sample", "measurement", "sd")
-    plot_dat[, `:=`(measurement, as.numeric(as.character(measurement)))]
-    plot_dat[, `:=`(sd, as.numeric(as.character(sd)))]
-    plot_dat[, `:=`(sd_low, measurement - sd)]
-    plot_dat[, `:=`(sd_high, measurement + sd)]
-    plot_dat$sd_low <- ifelse(test = plot_dat$sd_low < 0, yes = 0,
-                              no = plot_dat$sd_low)
-    plot_dat$sd_high <- ifelse(test = plot_dat$sd_high > 1, yes = 1,
-                              no = plot_dat$sd_high)
-
-    plot_dat_gg <- ggplot2::ggplot(data = plot_dat, aes(x = Sample, y = measurement)) +
-      ggplot2::geom_point(col = "maroon", size = 2) + 
-      ggplot2::geom_errorbar(aes(ymin = sd_low, ymax = sd_high), col = "gray25") + 
-      ggplot2::geom_point(col = "maroon",size = 5) + theme_minimal(base_size = 16) + 
-      ggplot2::theme(axis.title.x = element_blank(),
-            axis.text.x = element_text(angle = 45, hjust = 1, size = 12, colour = "black"), 
-            axis.text.y = element_text(size = 12, colour = "black"), 
-            axis.title.y = element_blank()) +
-      ylab(y_title)
-      #ggplot2::ggtitle(label = plot_title)
+  getStat <- if (stat == "Mean" || stat == "Median") c(stat,"SD") else "Count"
+  perChr <- if (by == "Chromosome") TRUE else !collapse
+  perSample <- if (by == "Sample") TRUE else !collapse
+  group <- if (by == "Chromosome") "Sample" else "Chromosome" 
+  
+  plotData <- getStats(scm, assay = assay, stats = getStat, perSample = perSample, perChr = perChr, 
+                       ignoreChrs = ignoreChrs, ignoreSamples = ignoreSamples)
+  setDT(plotData)
+ 
+  if (stat == "Proportion") {
+    setnames(plotData, "Count", "Proportion")
+    plotData[, `:=`(Proportion, Proportion/nrow(scm))]
   }
+
+  # plot_dat$Chr <- gsub("^.{0,3}", "", plot_dat$Chr)
+  # plot_dat$Chr <- factor(plot_dat$Chr, levels = unique(plot_dat$Chr))
+   
+  setnames(plotData, stat, "Value")
+
+  figure <- ggplot(data = plotData, aes_string(x = by, y = "Value", label = group)) +
+    ggplot2::ylab(stat) + 
+    ggplot2::xlab(by) +
+    ggplot2::theme_minimal(base_size = 12) + 
+    ggplot2::theme(axis.text.x = element_text(hjust = 1, size = 10, colour = "black"),
+                   axis.text.y = element_text(size = 10, colour = "black")) +
+   scMethrix_theme()
+
+  if (collapse) {
+    figure <- figure + geom_point()
+    if (stat == "Mean") {
+      plotData[, `:=`(SD, as.numeric(as.character(SD)))]
+      plotData[, `:=`(SDlow,  max(Value - SD,0))]
+      plotData[, `:=`(SDhigh, Value + SD)]
+      figure <- figure + ggplot2::geom_errorbar(aes(ymin = SDlow, ymax = SDhigh), col = "gray25")
+    }
+  } else {
+    nPoints <- length(unique(plotData[[group]])) #TODO: this should check the variable with fewest groups
+    if (nPoints >= 5 && type == "Boxplot") {
+      figure <- figure + ggplot2::geom_boxplot()
+    } else {
+      figure <- figure + ggplot2::geom_jitter(width = .calcJitter(nPoints))
+    }
   }
+    
+  #plotly::ggplotly(p = figure)
   
-  return(plot_dat_gg  + scMethrix_theme(...))
-}
-
-plot_melissa <- function() {
-  
-  
-  
-}
-
-plot_imap <- function(scm) {
-  # 
-  # x <- y <- NULL
-  # 
-  # umap <- get_matrix(scm,assay="umap")
-  # 
-  # df <- data.frame(x = scm$layout[,1],
-  #                  y = scm$layout[,2])
-  # 
-  # ggplot(df, aes(x, y)) +
-  #   geom_point()
-  # 
+  return(figure  + scMethrix_theme(...))
 }
 
 #---- plot_dim_red -----------------------------------------------------------------------------------------------------
@@ -750,7 +710,7 @@ plot_imap <- function(scm) {
 #   return(dimred_gg)
 #   
 # }
-plot_dim_red <- function(scm, dim_red, palette = "Dark Mint", color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE,...) {
+plot_dim_red <- function(scm, dim_red, paletteID = "Dark Mint", color_anno = NULL, shape_anno = NULL, axis_labels = NULL, show_dp_labels = FALSE, verbose = TRUE,...) {
 
   #---- Input validation ---------------------------------------------------
   X <- Y <- Color <- Shape <- color <- shape <- shapes  <- colors <- Sample <- row_names <- NULL
@@ -779,7 +739,7 @@ plot_dim_red <- function(scm, dim_red, palette = "Dark Mint", color_anno = NULL,
   if (!is.null(color_anno)) {
     if (color_anno  %in% colnames(colData(scm))) {
       dim_red$Color <- as.factor(unlist(as.data.table(colData(scm))[,color_anno, with=FALSE]))
-      colors <- scale_color_manual(values= .getPalette(length(unique(dim_red$Color)),palette = palette))
+      colors <- scale_color_manual(values= .getPalette(length(unique(dim_red$Color)),paletteID = paletteID))
     } else {
       stop(paste0(color_anno, " not found in provided scMethrix object"))
     }

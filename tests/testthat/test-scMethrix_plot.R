@@ -1,3 +1,4 @@
+#---- prepare_plot_data ------------------------------------------------------------------------------------------------
 test_that("prepare_plot_data", {
   expect_error(get_region_summary("not scMethrix"),msg.validateExp)
   
@@ -28,10 +29,13 @@ test_that("prepare_plot_data", {
 
 invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   
+#---- plot_violin ------------------------------------------------------------------------------------------------------
   test_that("plot_violin", {graph_test_helper(scm,plot_violin)})
 
+#---- plot_density -----------------------------------------------------------------------------------------------------
   test_that("plot_density", {graph_test_helper(scm,plot_density)})
 
+#---- plot_coverage ----------------------------------------------------------------------------------------------------
   test_that("plot_coverage", {
     graph_test_helper(scm, plot_coverage, type="histogram")
     graph_test_helper(scm, plot_coverage, type="density")
@@ -39,6 +43,7 @@ invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     graph_test_helper(scm, plot_coverage, type="density",   pheno="Group")
   })
   
+#---- plot_sparsity ----------------------------------------------------------------------------------------------------
   test_that("plot_sparsity", {
 
       samp <- sampleNames(scm)
@@ -71,11 +76,30 @@ invisible(lapply(list(scm.mem,scm.h5), function(scm) {
       
   })
   
-  test_that("plot_stats", {
-    graph_test_helper(scm, plot_stats, per_chr = F, indiv_chr = F)
-    graph_test_helper(scm, plot_stats, per_chr = T, indiv_chr = T)
+  #---- plotStats --------------------------------------------------------------------------------------------------------
+  test_that("plotStats", {
+    
+    chrNames <- levels(seqnames(scm))
+    sampNames <- sampleNames(scm)
+    
+    graph_test_helper2(plotStats(scm, by = "Sample", collapse = FALSE), 
+                       expected_x = sampNames, 
+                       expected_label = chrNames)
+                       
+    graph_test_helper2(plotStats(scm, by = "Sample", collapse = TRUE), 
+                       expected_x = sampNames, 
+                       expected_label = "All")                  
+                       
+    graph_test_helper2(plotStats(scm, by = "Chromosome", collapse = FALSE), 
+                       expected_x = chrNames, 
+                       expected_label = sampNames)
+    
+    graph_test_helper2(plotStats(scm, by = "Chromosome", collapse = TRUE), 
+                       expected_x = chrNames, 
+                       expected_label = "All")                            
   })
   
+  #---- plot_dim_red -----------------------------------------------------------------------------------------------------
   test_that("plot_dim_red", {
     invisible(lapply(list("PCA","tSNE","UMAP"), function(type) {
     
@@ -88,6 +112,7 @@ invisible(lapply(list(scm.mem,scm.h5), function(scm) {
   })
 }))
 
+#---- .getPalette ------------------------------------------------------------------------------------------------------
 test_that(".getPalette", {
   
   expect_error(.getPalette(),NA)
@@ -130,6 +155,7 @@ test_that(".getPalette", {
   expect_equal(colors, colorspace::diverging_hcl (nColors, palette = palette))
 })
 
+#---- .getShapes -------------------------------------------------------------------------------------------------------
 test_that(".getShapes", {
   
   expect_error(.getShapes(),NA)
@@ -153,6 +179,7 @@ test_that(".getShapes", {
   expect_error(print(plot),NA)
 })
 
+#---- .calcJitter ------------------------------------------------------------------------------------------------------
 test_that(".calcJitter", {
   expect_equal(.calcJitter(-5),0)
   expect_equal(.calcJitter(100, max = 0.8),0.8)

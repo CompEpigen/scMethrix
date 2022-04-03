@@ -113,7 +113,7 @@ graph_test_helper <- function(scm, func, plot, indiv_samples = TRUE, indiv_chr =
   return(invisible(plot))
 }
 
-graph_test_helper2 <- function(plot, expected_x = NULL, expected_y = NULL, expected_group = NULL, ...) {
+graph_test_helper2 <- function(plot, expected_x = NULL, expected_y = NULL, expected_label = NULL) {
   
   frmat <- function(x) sort(as.character(unique(x)))
   
@@ -121,11 +121,11 @@ graph_test_helper2 <- function(plot, expected_x = NULL, expected_y = NULL, expec
   
   x_labs <- frmat(ggplot_build(plot)$layout$panel_params[[1]]$x$get_labels())
   y_labs <- frmat(ggplot_build(plot)$layout$panel_params[[1]]$y$get_labels())
-  grp_labs <- ggplot_build(plot)$plot$scales$scales[[1]]$get_labels()
+  grp_labs <- frmat(ggplot_build(plot)$data[[1]]$label)
   
   if (!is.null(expected_x)) expect_equivalent(frmat(x_labs),frmat(expected_x))
   if (!is.null(expected_y)) expect_equivalent(frmat(y_labs),frmat(expected_y))
-  if (!is.null(expected_group)) expect_equivalent(frmat(grp_labs),frmat(expected_group))
+  if (!is.null(expected_label)) expect_equivalent(frmat(grp_labs),frmat(expected_label))
   
   expect_error(print(plot),NA) # Checks if the plot is printable
   
