@@ -287,7 +287,7 @@
 }
 
 
-
+#---- .validatePackageInstall ------------------------------------------------------------------------------------------
 #' Validates that a package is installed
 #' @param package `string`; the name of the package
 #' @return `ERROR` if not installed, `invisible(TRUE)` if installed.
@@ -297,6 +297,33 @@
          package,"')", call. = FALSE)
   
   return(invisible(TRUE))
+}
+
+#---- .validateColData -------------------------------------------------------------------------------------------------
+#' Validates whether a column is present in `colData`
+#' @details Would typically use this like (e.g., for phenotype lookup): `.validateColData(scm, phenotype = phenotype)`
+#' @param scm [`scMethrix-class`]; the experiment object to test
+#' @param ... `string`; the column to check for. Will only accept the first argument.
+#' @return `ERROR` if invalid column, `invisible(...)` if present.
+.validateColData <- function(scm, ...) {
+
+  #---- Input validation ---------------------------------------------------
+  .validateExp(scm)
+  
+  column <- list(...)
+  if (length(column) > 1) warning("For .validateColData(), only 1 value is accepted.")
+
+  column <- unlist(column[1])
+  .validateType(phenotype,c("string","null"))
+  
+  #---- Function code ------------------------------------------------------
+
+  if (!is.null(column) && !column %in% colnames(colData(scm))) {
+    colname <- if (!is.null(names(column))) paste0(" for ",names(column)) else "" 
+    stop("Invalid column. No column",colname," called '",column,"' present in colData(scm).", call. = FALSE)
+  } 
+  
+  return(invisible(unname(column)))
 }
 
 #---- is.empty ---------------------------------------------------------------------------------------------------------

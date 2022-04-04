@@ -13,6 +13,20 @@ test_that(".validateAssay",{
 })
 
 
+test_that(".validateColData",{
+  expect_error(.validateColData("not scMethrix"),msg.validateExp)
+  
+  expect_error(.validateColData(scm.mem,"Not a col"), msg.validateColData)
+  expect_error(.validateColData(scm.mem,colName = "Not a col"), msg.validateColData)
+  
+  errorMsg <- tryCatch({.validateColData(scm.mem,colName = "Not a col")},error = function(e) return(e))$message
+  expect_true(grepl("colName", errorMsg, fixed = TRUE))
+  
+  validCol <- names(colData(scm.mem))[1]
+  expect_equal(.validateColData(scm.mem, validCol), validCol)
+  expect_equal(.validateColData(scm.mem, col = validCol), validCol)
+})
+
 test_that(".validateArg",{
   func <- function(var = c("banana","banjo","ban")) {}
   

@@ -29,6 +29,7 @@ msg.validateAssay <- "Invalid assay"
 msg.validateArg <- "Invalid arg"
 msg.validateType <- "Invalid type"
 msg.validateValue <- "Invalid value"
+msg.validateColData <- "Invalid column"
 
 # scMethrix_data <- scm.mem
 # usethis::use_data(scMethrix_data,overwrite=TRUE)
