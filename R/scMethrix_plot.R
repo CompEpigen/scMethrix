@@ -249,7 +249,7 @@ plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NU
 #' data('scMethrix_data')
 #' plot_coverage(scm = scMethrix_data)
 #' @export
-plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = NULL,
+plot_coverage <- function(scm = NULL, type = c("density", "histogram"), pheno = NULL,
                           max_cov = 100, obs_lim = 1e+06, paletteID = "Dark Mint", show_legend = FALSE, verbose = TRUE,...) {
   
   #---- Input validation ---------------------------------------------------
@@ -324,121 +324,118 @@ plot_coverage <- function(scm = NULL, type = c("histogram", "density"), pheno = 
   
   return(p + scMethrix_theme(...))
 }
-
-#---- plot_sparsity ----------------------------------------------------------------------------------------------------
-#' Sparsity of sample
-#' @inheritParams plot_violin
-#' @param type `string`; Choose between `Boxplot` or `Scatterplot`. Default = `Scatterplot`
-#' @param by `string`; The variable for x-axis, `Sample` or `Chromosome.` If by `Sample`, and phenotype is not `NULL`, phenotype will be taken instead. Default = `Sample`
-#' @param phenotype `string`; Col name of `colData(m)`. Will be used as a factor to color different groups
-#' @param show_avg `boolean`; flag to show a dotted line representing the average value.
-#' @return [`ggplot2::ggplot2`] object
-#' @examples
-#' data('scMethrix_data')
-#' plot_sparsity(scm = scMethrix_data)
-#' @export
-plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "Boxplot", "Jitterplot"), by = c("Sample","Chromosome"), phenotype = NULL, show_legend = FALSE, verbose = TRUE, show_avg = TRUE, paletteID = "Dark Mint",...) {
-  
-  #---- Input validation ---------------------------------------------------
-  .validateExp(scm)
-  type <- .validateArg(type, plot_sparsity)
-  by <- .validateArg(by, plot_sparsity)
-  .validateAssay(scm,assay)
-  .validateType(phenotype,c("string","null"))
-  
-  Sparsity <- variable <- NULL
-  
-  colors_palette <- .getPalette(ncol(scm), paletteID = paletteID)
-  
-  if (!is.null(phenotype) && type == "Scatterplot" && by == "Chromosome") {
-    warning("Phenotype given for scatterplot when graphing by chromosome. Phenotype will be ignored.")
-    phenotype = NULL
-  }
-
-  if (!is.null(phenotype) && by == "Sample") {
-    if (!phenotype %in% colnames(colData(scm))) {
-      stop("Please provide a valid phenotype annotation column. The column must exist within colData(scm).")
-    } else {
-      by = "Phenotype"
-    }
-  }
-  
-  Sample <- Phenotype <- Count <- Sites <- Chromosome <- . <- NULL
-  
-  #---- Function code ------------------------------------------------------
-  chrs = rowRanges(scm)@seqnames
-  end = cumsum(chrs@lengths)
-  start = c(1, head(end, -1) + 1)
-  chrs = data.frame(Chromosome = as.character(chrs@values), Start = start, End = end, Sites = end-start)
-  
-  stats <- getStats(scm,perChr=TRUE, perSample = F, phenotype = phenotype, stats="Count")
-  stats <- merge(stats,chrs[,c("Chromosome","Sites")],by="Chromosome")
-  #stats[,Sparsity := Count/Sites]
-  
-  if (!is.null(phenotype)) {
-    pheno <- scm@colData[, phenotype,drop=FALSE]
-    pheno$Sample = row.names(pheno)
-    pheno <- as.data.table(pheno)
-    #pheno[ , Members := .N, by = .(Group)]
-    stats <- merge(stats,pheno,by="Sample")
-    setnames(stats, phenotype, "Phenotype")
-  } else {
-    stats[,Phenotype := Sample]
-  }
-  
-  stats <- stats[, lapply(.SD, as.character), by=.(Count,Sites)]
-  x_lab <- "Sample"
-  
-  
-  # Setup the graph data
-  if (type == "Scatterplot") {
-    
-    sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = by]
-    gg_data <- ggplot2::ggplot(sparsity, aes_string(x = by, y = "Sparsity", color = by))
-    gg_elem <- ggplot2::geom_point(show.legend = show_legend)
-    
-  } else {
-    
-    if (!is.null(phenotype)) {
-      sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = list(Phenotype,Chromosome)]
-    } else {
-      sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = list(Sample,Chromosome)]
-    }
-    
-    if (type == "Boxplot") {
-      gg_elem <- ggplot2::geom_boxplot(show.legend = show_legend)
-      gg_color <- by
-      gg_data <- ggplot2::ggplot(sparsity, aes_string(x=by, y="Sparsity", fill = gg_color))
-    } else {
-      dodge_dist = 2#length(ggplot_build(gg_data)$plot$scales$scales[[3]]$get_labels())
-      gg_elem <- ggplot2::geom_point(show.legend = show_legend, 
-                                     position = position_dodge(width = 1/dodge_dist))
-      if (by == "Phenotype" || by == "Sample") gg_color <- "Chromosome"
-      else if (!is.null(phenotype)) gg_color <- "Phenotype"
-      else gg_color <- "Sample"
-      gg_data <- ggplot2::ggplot(sparsity, aes_string(x=by, y="Sparsity", color = gg_color))
-    }
-  }
-
-  p <- gg_data + gg_elem + 
-    ggplot2::scale_color_manual(values = .getPalette(ncol(scm))) + #,name = legend_lab) + 
-    ylab("Sparsity (%)")# + xlab(x_lab) 
-  
-  if (show_avg) {
-    avg.spars = mean(sparsity$Sparsity)
-    p <- p + geom_hline(yintercept=avg.spars, linetype="dashed",
-                       color = "black", size=1)+
-            scale_y_continuous(
-              sec.axis = dup_axis(
-                breaks = avg.spars,
-                labels = parse(text="bar(x)"),
-                name = NULL
-              )
-            )
-  }
-  
-  return (p + scMethrix_theme(...))
-}
+#' 
+#' #---- plot_sparsity ----------------------------------------------------------------------------------------------------
+#' #' Sparsity of sample
+#' #' @inheritParams plot_violin
+#' #' @param type `string`; Choose between `Boxplot` or `Scatterplot`. Default = `Scatterplot`
+#' #' @param by `string`; The variable for x-axis, `Sample` or `Chromosome.` If by `Sample`, and phenotype is not `NULL`, phenotype will be taken instead. Default = `Sample`
+#' #' @param phenotype `string`; Column name of `colData(m)`. Will be used as a factor to color different groups
+#' #' @param show_avg `boolean`; flag to show a dotted line representing the average value.
+#' #' @return [`ggplot2::ggplot2`] object
+#' #' @examples
+#' #' data('scMethrix_data')
+#' #' plot_sparsity(scm = scMethrix_data)
+#' #' @export
+#' plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "Boxplot", "Jitterplot"), by = c("Sample","Chromosome"), phenotype = NULL, show_legend = FALSE, verbose = TRUE, show_avg = TRUE, paletteID = "Dark Mint",...) {
+#'   
+#'   #---- Input validation ---------------------------------------------------
+#'   .validateExp(scm)
+#'   type <- .validateArg(type, plot_sparsity)
+#'   by <- .validateArg(by, plot_sparsity)
+#'   .validateAssay(scm,assay)
+#'   .validateType(phenotype,c("string","null"))
+#'   
+#'   Sparsity <- variable <- NULL
+#'   
+#'   colors_palette <- .getPalette(ncol(scm), paletteID = paletteID)
+#'   
+#'   if (!is.null(phenotype) && type == "Scatterplot" && by == "Chromosome") {
+#'     warning("Phenotype given for scatterplot when graphing by chromosome. Phenotype will be ignored.")
+#'     phenotype = NULL
+#'   }
+#' 
+#'   if (!is.null(phenotype) && by == "Sample") {
+#'     if (!phenotype %in% colnames(colData(scm))) {
+#'       stop("Please provide a valid phenotype annotation column. The column must exist within colData(scm).")
+#'     } else {
+#'       by = "Phenotype"
+#'     }
+#'   }
+#'   
+#'   Sample <- Phenotype <- Count <- Sites <- Chromosome <- . <- NULL
+#'   
+#'   #---- Function code ------------------------------------------------------
+#'   chrs <- .getGRchrStats(rowRanges(scm))
+#'   
+#'   stats <- getStats(scm, perChr=TRUE, perSample = F, phenotype = phenotype, stats="Count")
+#'   stats <- merge(stats,chrs[,c("Chromosome","Sites")],by="Chromosome")
+#'   #stats[,Sparsity := Count/Sites]
+#'   
+#'   if (!is.null(phenotype)) {
+#'     pheno <- scm@colData[, phenotype,drop=FALSE]
+#'     pheno$Sample = row.names(pheno)
+#'     pheno <- as.data.table(pheno)
+#'     #pheno[ , Members := .N, by = .(Group)]
+#'     stats <- merge(stats,pheno,by="Sample")
+#'     setnames(stats, phenotype, "Phenotype")
+#'   } else {
+#'     stats[,Phenotype := Sample]
+#'   }
+#'   
+#'   stats <- stats[, lapply(.SD, as.character), by=.(Count,Sites)]
+#'   x_lab <- "Sample"
+#'   
+#'   
+#'   # Setup the graph data
+#'   if (type == "Scatterplot") {
+#'     
+#'     sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = by]
+#'     gg_data <- ggplot2::ggplot(sparsity, aes_string(x = by, y = "Sparsity", color = by))
+#'     gg_elem <- ggplot2::geom_point(show.legend = show_legend)
+#'     
+#'   } else {
+#'     
+#'     if (!is.null(phenotype)) {
+#'       sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = list(Phenotype,Chromosome)]
+#'     } else {
+#'       sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = list(Sample,Chromosome)]
+#'     }
+#'     
+#'     if (type == "Boxplot") {
+#'       gg_elem <- ggplot2::geom_boxplot(show.legend = show_legend)
+#'       gg_color <- by
+#'       gg_data <- ggplot2::ggplot(sparsity, aes_string(x=by, y="Sparsity", fill = gg_color))
+#'     } else {
+#'       dodge_dist = 2#length(ggplot_build(gg_data)$plot$scales$scales[[3]]$get_labels())
+#'       gg_elem <- ggplot2::geom_point(show.legend = show_legend, 
+#'                                      position = position_dodge(width = 1/dodge_dist))
+#'       if (by == "Phenotype" || by == "Sample") gg_color <- "Chromosome"
+#'       else if (!is.null(phenotype)) gg_color <- "Phenotype"
+#'       else gg_color <- "Sample"
+#'       gg_data <- ggplot2::ggplot(sparsity, aes_string(x=by, y="Sparsity", color = gg_color))
+#'     }
+#'   }
+#' 
+#'   p <- gg_data + gg_elem + 
+#'     ggplot2::scale_color_manual(values = .getPalette(ncol(scm))) + #,name = legend_lab) + 
+#'     ylab("Sparsity (%)")# + xlab(x_lab) 
+#'   
+#'   if (show_avg) {
+#'     avg.spars = mean(sparsity$Sparsity)
+#'     p <- p + geom_hline(yintercept=avg.spars, linetype="dashed",
+#'                        color = "black", size=1)+
+#'             scale_y_continuous(
+#'               sec.axis = dup_axis(
+#'                 breaks = avg.spars,
+#'                 labels = parse(text="bar(x)"),
+#'                 name = NULL
+#'               )
+#'             )
+#'   }
+#'   
+#'   return (p + scMethrix_theme(...))
+#' }
 
 # plotChrStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", "Proportion"), perSample = FALSE, 
 #                          phenotype = NULL, ignoreChrs = NULL, ignoreSamples = NULL, verbose = TRUE, show_legend = FALSE,...) {
@@ -482,10 +479,10 @@ plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "
 #' plotStats(scMethrix_data)
 #' @export
 #'
-plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", "Proportion"), 
+plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", "Proportion", "Sparsity"), 
                       type = c("Scatterplot", "Boxplot"), by = c("Sample", "Chromosome"), collapse = TRUE, 
                       phenotype = NULL, ignoreChrs = NULL, ignoreSamples = NULL, nCol = NULL, nRow = NULL, 
-                      verbose = TRUE, show_legend = FALSE, paletteID = "Dark Mint",...) {
+                      verbose = TRUE, show_legend = FALSE, show_avg = TRUE, paletteID = "Dark Mint",...) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
@@ -532,6 +529,9 @@ plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", 
   if (stat == "Proportion") {
     setnames(plotData, "Count", "Proportion")
     plotData[, `:=`(Proportion, Proportion/nrow(scm))]
+  } else if (stat == "Sparsity") {
+    setnames(plotData, "Count", "Sparsity")
+    plotData[, `:=`(Sparsity, 1-(Sparsity/nrow(scm)))]
   }
 
   # plot_dat$Chr <- gsub("^.{0,3}", "", plot_dat$Chr)
@@ -565,6 +565,19 @@ plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", 
   }
     
   #plotly::ggplotly(p = figure)
+  
+  # if (show_avg) {
+  #   avg.spars = mean(sparsity$Sparsity)
+  #   p <- p + geom_hline(yintercept=avg.spars, linetype="dashed",
+  #                       color = "black", size=1)+
+  #     scale_y_continuous(
+  #       sec.axis = dup_axis(
+  #         breaks = avg.spars,
+  #         labels = parse(text="bar(x)"),
+  #         name = NULL
+  #       )
+  #     )
+  # }
   
   return(figure  + scMethrix_theme(...))
 }
@@ -940,7 +953,6 @@ scMethrix_theme <- function(base_size = 12, base_family = "",...) {
     )
 }
 
-
 #---- .calcJitter ------------------------------------------------------------------------------------------------------
 #' Calculates jitter based on number of data points
 #' @description Jittering of few points can look bad, depending on the RNG, as some groups will have points on terminal edges of the space, while others will be nearly in line. This limits the spread of the jitter to improve visualization.
@@ -948,7 +960,7 @@ scMethrix_theme <- function(base_size = 12, base_family = "",...) {
 #' @param max numeric; Maximum jitter
 #'
 #' @return a number between 0 and 1
-#' @nord
+#' @noRd
 #' @examples
 #' .calcJitter(5)
 .calcJitter <- function(n, max = 0.8) {
