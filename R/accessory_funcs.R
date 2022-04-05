@@ -34,7 +34,7 @@ get_sample_name = function(filepath) {
   return(tools::file_path_sans_ext(basename(filepath)))
 }
 
-
+#---- .pasteList -------------------------------------------------------------------------------------------------------
 #' Helper function to nicely display a list of strings
 #' @description Will convert a list of string to a format of: `'string', 'string', and 'string'`. Similar effect to using `paste0("'",paste(vals, collapse = "', '"),"'")`, but will add an 'and' just before the end of the list.
 #' @param vals `list(string)`; the strings to format. Non-string values will be coerced to string, if possible.
@@ -61,7 +61,7 @@ get_sample_name = function(filepath) {
   return (txt)
 }
 
-#--- binarize -----------------------------------------------------------------------------------------------
+#---- binarize ---------------------------------------------------------------------------------------------------------
 #' Binarize an input value based on a `threshold`
 #' @details Assigns a value of 0 or 1 based on being < or > the `threshold`, respectively.
 #'  If `x == threshold`, `x` = 0. NA values are assigned as `rep_na`.
@@ -85,7 +85,7 @@ binarize = function(x,threshold = NULL, rep_na = NA, verbose = FALSE) {
   return(x)
 }
 
-#--- fill ---------------------------------------------------------------------------------------------------
+#---- fill -------------------------------------------------------------------------------------------------------------
 #' Fills a vector with a specified `fill` value
 #' @param x vector; A vector in which to fill the NA values
 #' @param val basic data type; Any value from one of R's basic data types (character, numeric, integer, logical, complex)
@@ -99,7 +99,7 @@ fill = function(x, val = 0) {
   return(x)
 }
 
-#--- normalize ----------------------------------------------------------------------------------------------
+#---- normalize --------------------------------------------------------------------------------------------------------
 #' Performs min-max normalization on a vector
 #' @details 
 #' There are 3 use cases for this function:
@@ -399,7 +399,8 @@ parse_source_idx = function(chr_idx = NULL, start_idx = NULL, end_idx = NULL, st
 #' @param dir string; the directory path to store the `bedgraph` files in
 #' @importFrom stats runif
 #' @return NULL, with `bedgraph` files placed in the specified `dir`
-.generate_random_bedgraph <- function(numfiles = 1, numrows = 1000000, chrs = 10, minsparsity = 0.5, maxsparsity = 1, rangeFactor = 2, randomize = FALSE, values = c(0,25,50,75,100), dir = NULL) {
+.generate_random_bedgraph <- function(numfiles = 1, numrows = 1000000, chrs = 10, minsparsity = 0.5, maxsparsity = 1, 
+                                      rangeFactor = 2, randomize = FALSE, values = c(0,25,50,75,100), dir = NULL) {
   
   start.time <- Sys.time()
   

@@ -1,3 +1,4 @@
+#---- cast_granges -----------------------------------------------------------------------------------------------------
 test_that("cast_granges",{
   expect_error(cast_granges("not a Granges"),"Invalid input class")
   
@@ -8,6 +9,15 @@ test_that("cast_granges",{
   expect_equal(gr,cast_granges(df))
 })
 
+#---- bin_granges ------------------------------------------------------------------------------------------------------
+test_that("bin_granges",{
+  expect_error(bin_granges(gr="not granges"),msg.validateType)
+  regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
+  expect_equal(length(bin_granges(regions,bin_size=10)),10) 
+  expect_equal(reduce(bin_granges(regions,bin_size=10)),regions)
+})
+
+#---- subset_ref_cpgs --------------------------------------------------------------------------------------------------
 test_that("subset_ref_cpgs",{
   
   ref_cpgs = data.frame(chr="chr1",start=(1:5*2-1), end=(1:5*2))
@@ -22,6 +32,7 @@ test_that("subset_ref_cpgs",{
   
 })
 
+#---- .getGRchrStats ---------------------------------------------------------------------------------------------------
 test_that(".getGRchrStats",{
   scm <- scm.mem
   gr <- rowRanges(scm)

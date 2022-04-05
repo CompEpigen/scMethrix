@@ -1,21 +1,16 @@
+#---- is_h5 ------------------------------------------------------------------------------------------------------------
 test_that("is_h5",{
   expect_true(is_h5(scm.h5))
   expect_false(is_h5(scm.mem))
-  
-  # scm <- scm.mem
-  # scm@metadata$is_h5 = TRUE
-  # expect_error(is_h5(scm),"Error in scMethrix object.")
-  # 
-  # scm <- scm.h5
-  # scm@metadata$is_h5 = FALSE
-  # expect_error(is_h5(scm),"Error in scMethrix object.")
 })
 
+#---- has_cov ----------------------------------------------------------------------------------------------------------
 test_that("has_cov",{
   expect_true(has_cov(scm.mem))
   expect_false(has_cov(remove_assay(scm.mem,assay="counts")))
 })
 
+#---- get_sample_name --------------------------------------------------------------------------------------------------
 test_that("get_sample_name", {
   expect_error(get_sample_name(5),msg.validateType)
   expect_equal("file",get_sample_name("c:/dir/dir.dir/file"))
@@ -24,6 +19,18 @@ test_that("get_sample_name", {
   expect_equal("file.name",get_sample_name("c:/dir/dir.dir/file.name.extension.bz2"))
 })
 
+#---- normalize --------------------------------------------------------------------------------------------------------
+test_that("normalize", {
+  vals <- c(0,1,2,3,4,5)
+  
+  expect_equal(normalize(vals),vals/max(vals))
+  expect_equal(normalize(vals, scale = TRUE),vals/max(vals))
+  expect_equal(normalize(vals, min = min(vals), max = max(vals)*2),vals/max(vals)/2)
+  expect_equal(normalize(vals, min = min(vals), max = max(vals), scale = TRUE),vals)
+  expect_equal(normalize(vals, min = min(vals), max = max(vals)*2, scale = TRUE),vals*2)
+})
+
+#---- .pasteList -------------------------------------------------------------------------------------------------------
 test_that(".pasteList", {
 
   vals = c("string1")
@@ -36,19 +43,18 @@ test_that(".pasteList", {
   expect_equal(.pasteList(vals),"'string1', 'string2', and 'string3'")
 })
 
-
+#---- binarize ---------------------------------------------------------------------------------------------------------
 test_that("binarize", {
   expect_error(binarize("not numbers"),"non-numeric argument to binary operator")
   expect_equal(binarize(c(0,0,100,100,75,NA)),c(0,0,1,1,1,NA))
 })
 
-test_that("bin_granges",{
-  expect_error(bin_granges(gr="not granges"),msg.validateType)
-  regions <- GenomicRanges::GRanges(seqnames = "chr1", ranges = IRanges(1,100))
-  expect_equal(length(bin_granges(regions,bin_size=10)),10) 
-  expect_equal(reduce(bin_granges(regions,bin_size=10)),regions)
+#---- fill -------------------------------------------------------------------------------------------------------------
+test_that("fill", {
+  expect_equal(fill(c(0,0,100,100,75,NA)),c(0,0,100,100,75,0))
 })
 
+#---- start,split,stop_time --------------------------------------------------------------------------------------------
 test_that("start,split,stop_time",{
  # expect_warning(stop_time())
 #  expect_warning(split_time())
@@ -74,6 +80,7 @@ test_that("start,split,stop_time",{
   
 })
 
+#---- split_vector -----------------------------------------------------------------------------------------------------
 test_that("split_vector",{
   vec <- c(1,2,3,4,5,6,7,8)
   expect_error(split_vector(vec,size=1,chunks=1),"Invalid input. Must contain 1 of")

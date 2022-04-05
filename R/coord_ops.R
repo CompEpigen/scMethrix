@@ -217,6 +217,8 @@ cast_datatable <- function(regions) {
 #' @description A helper function to easily determine loci start/end sites and their respective indices. Also show the number of sites within a chromosome as well as the chromosome width
 #' @param gr [`GRanges`][GenomicRanges::GRanges()]
 #' @return `data.frame()` 
+#' @noRd
+#' @export
 #' @examples
 #' data(scMethrix_data)
 #' .getGRchrStats(rowRanges(scMethrix_data))
