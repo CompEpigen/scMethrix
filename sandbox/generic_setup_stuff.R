@@ -97,6 +97,8 @@ pkgdown::build_site()
 
 saveRDS(colData, file = "colData.rds")
 
+plotly::ggplotly(p = figure)
+
 #Testing stuff
 scm1 <- load_scMethrix("d:/scm1.rds")
 scm2 <- load_scMethrix("d:/scm2.rds")

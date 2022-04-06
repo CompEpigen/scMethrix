@@ -160,7 +160,7 @@ setMethod(f = "featureNames", signature = "scMethrix", definition = function(obj
 #' 
 # @param from [minfi::GenomicRatioSet()]; an experiment object
 #' @section Coercion:
-#' An scMethrix object can be coerced from a [minfi::GenomicRatioSet()] or [SingleCellExperiment::SingleCellExperiment()] using the [methods::as()] function. However, due to limitations of [minfi::GenomicRatioSet()], coverage information cannot be recovered from a [minfi::GenomicRatioSet()]. As well, the output [`scMethrix`] object will be in HDF5 format by default.
+#' An scMethrix object can be coerced from a [minfi::GenomicRatioSet()] or [SingleCellExperiment::SingleCellExperiment()] using the [methods::as()] function. However, due to limitations of [minfi::GenomicRatioSet()], coverage information cannot be recovered from a [minfi::GenomicRatioSet()]. As well, the output [`scMethrix-class`] object will be in HDF5 format by default.
 #' 
 #' @md
 #' @importClassesFrom minfi GenomicRatioSet
@@ -385,14 +385,15 @@ S4Vectors::setValidity2("scMethrix", .validscMethrix)
 #' @param scm [`scMethrix-class`]; a single cell methylation experiment object
 #' @param assay `string`; name of an existing assay. Default = `score`
 #' @param new_assay `string`; name for transformed assay. Default = `new_assay`
+#' @param regions [`GRanges`][GenomicRanges::GRanges()]; genomic regions to be summarized. Can also be a [`data.table`][data.table::data.table-class] that follows [this][cast_datatable()] format.
 #' @param trans `function`; The transformation function. Default = `mean`
 #' @param verbose `boolean`; Flag for outputting function status messages. Default = `TRUE` 
 #' @param n_chunks `integer`; Number of chunks to split the [`scMethrix-class`] object in case it is very large. Default = `1`
+#' @param phenotype `string`; A phenotype to group by. Must be present in `colData()`. Default = `NULL`.
 #' @param n_threads `integer`; Maximum number of parallel instances. Default = `1`
 #' @param batch_size `integer`; The maximum number of elements to process at once.
 #' @param h5_dir `string`; The directory to store HDF5 files. Will be created if it does not exist. Default = `NULL`
 #' @param replace `boolean`; flag for whether to delete the contents of `h5_dir` before saving 
 #' @param overlap_type `string`; defines the type of the overlap of the CpG sites with the target region. Default value is `within`. For detailed description, see [IRanges::findOverlaps()].
 #' @param na.rm `boolean`; flag to remove `NA` values
-#' @param regions [`GRanges`][GenomicRanges::GRanges()]; genomic regions to be summarized. Can also be a [`data.table`][data.table::data.table-class] that follows [this][cast_datatable()] format.
-generic_scMethrix_function <- function(scm, assay, new_assay, trans, verbose, n_chunks, n_threads, h5_dir, overlap_type, batch_size, replace, na.rm) {}
+generic_scMethrix_function <- function(scm, assay, new_assay, regions, trans, verbose, n_chunks, n_threads, h5_dir, overlap_type, batch_size, replace, na.rm) {}

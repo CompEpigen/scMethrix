@@ -874,20 +874,24 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' 
 #' #Get stats for each sample
 #' getStats(scMethrix_data, perChr = FALSE)
+#' 
+##' #Get stats for each chromosome
+#' getStats(scMethrix_data, perSample = FALSE)
 #' @return data.table of summary stats
 #' @export
-getStats <- function(scm = NULL, assay="score", stats = c("Mean","Median","SD","Count"), perSample = TRUE, perChr = TRUE, ignoreChrs = NULL, ignoreSamples = NULL, verbose = TRUE) {
-  
+getStats <- function(scm = NULL, assay="score", stats = c("Mean","Median","SD","Count"), perSample = TRUE, perChr = TRUE, ignoreChrs = NULL, ignoreSamples = NULL, phenotype = NULL, verbose = TRUE) {
+
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)  
   assay <- .validateAssay(scm,assay)
   .validateType(perSample,"boolean")
   .validateType(perChr,"boolean")
   .validateType(verbose,"boolean")
+  .validateColData(scm, phenotype = phenotype)
   .validateType(ignoreChrs,c("string","null"))
   .validateType(ignoreSamples,c("string","null"))
   stats <- .validateArg(stats, getStats, multiple.match=T)
-  
+
   Chromosome <- Sample <- Count <- Mean <- SD <- ..cols <- x <- . <- NULL
   
   calc_mean <- "Mean" %in% stats

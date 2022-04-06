@@ -3,6 +3,7 @@
 -   Downgraded most imports to suggests
 -   Updated the vignette with new dataset and new functions
 -   Added R-CMD check
+-   Added HTML report
 
 # scMethrix 0.3.0.0000 (1-12-22)
 

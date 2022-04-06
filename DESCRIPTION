@@ -1,6 +1,6 @@
 Package: scMethrix
 Title: Fast and efficient summarization of single cell whole genome bisulfate data
-Version: 0.3.0.0000
+Version: 0.4.0.0000
 Authors@R: 
     person("Lindsay","Andrew", role = c("aut", "cre"), email = "a.lindsay@dkfz.de", comment = c(ORCID = "0000-0001-6607-5812")) 
 Description: This package summarizes single cell bisulfite data as stored in bedgraph files generated from multiple upstream pipelines. Available functions include: subsetting, filtering, imputing, clustering, and binning. Summarized data can be exported in multiple formats.

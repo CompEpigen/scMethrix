@@ -314,7 +314,7 @@
   if (length(column) > 1) warning("For .validateColData(), only 1 value is accepted.")
 
   column <- unlist(column[1])
-  .validateType(phenotype,c("string","null"))
+  .validateType(column,c("string","null"))
   
   #---- Function code ------------------------------------------------------
 

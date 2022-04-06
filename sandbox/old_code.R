@@ -106,28 +106,121 @@
 
 ### Basic algorithm
 
-if (batch_size != ncol(scm)) {
-  
-  # } else {
-  cols <- split_vector(1:ncol(scm),size=batch_size)
-  
-  if (verbose) message("Generated ", length(cols), " chunks...")
-  
-  out <- NULL
-  
-  for (i in 1:length(cols)) {
-    
-    col <- cols[[i]]
-    mtx <- as.data.table(get_matrix(scm,assay=name)[overlap_indices$xid,col])
-    mtx <- mtx[,lapply(.SD,op),by=overlap_indices$yid]
-    mtx <- mtx[,overlap_indices:=NULL]
-    
-    out <- cbind(out,mtx)
-    
-    rm(mtx)
-    gc()
-    
-    if (verbose) message("   Processed chunk ",i," (",split_time(),")")
-  }
-} else {
-  
+# if (batch_size != ncol(scm)) {
+#   
+#   # } else {
+#   cols <- split_vector(1:ncol(scm),size=batch_size)
+#   
+#   if (verbose) message("Generated ", length(cols), " chunks...")
+#   
+#   out <- NULL
+#   
+#   for (i in 1:length(cols)) {
+#     
+#     col <- cols[[i]]
+#     mtx <- as.data.table(get_matrix(scm,assay=name)[overlap_indices$xid,col])
+#     mtx <- mtx[,lapply(.SD,op),by=overlap_indices$yid]
+#     mtx <- mtx[,overlap_indices:=NULL]
+#     
+#     out <- cbind(out,mtx)
+#     
+#     rm(mtx)
+#     gc()
+#     
+#     if (verbose) message("   Processed chunk ",i," (",split_time(),")")
+#   }
+# } else {
+#   
+
+#---- oldPlotting ------------------------------------------------------------------------------------------------------
+
+#   figure <- figure + ggplot::geom_point()
+#   
+#   
+#   
+
+#     
+# }
+
+# 
+# if (stat == "Count" || stat == "Fractional Count") {
+#   
+#   plot_dat_gg <- ggplot(data = plotData, aes(x = Chromosome, y = Value, fill = Chromosome)) +
+#     ggplot2::geom_boxplot(col = "black", show.legend = show_legend) + 
+#     #ggplot2::geom_jitter(size = 0.6) + 
+#     ggplot2::theme_minimal(base_size = 12) + 
+#     ggplot2::theme(axis.title.x = element_blank(), 
+#                    axis.title.y = element_blank(),
+#                    axis.text.x = element_text(hjust = 1, size = 10, colour = "black"),
+#                    axis.text.y = element_text(size = 10, colour = "black")) +
+#     ylab("Coverage")   +           geom_hline(yintercept=avg.val, linetype="dashed", 
+#                                               color = "black", size=1)+  scale_y_continuous(
+#                                                 sec.axis = dup_axis(
+#                                                   breaks = avg.val,
+#                                                   labels = parse(text="bar(x)"),
+#                                                   name = NULL
+#                                                 ) ,labels = function(l) {
+#                                                   trans = l / 1000;
+#                                                   paste0(trans, "K")
+#                                                 })
+#   
+#   
+# } else {
+#   
+#   if (per_chr) {
+#     if (stat == "mean") {
+#       plotData[, which(grepl("^Median|Count", colnames(plotData))):=NULL]
+#     } else if (stat == "median"){
+#       plotData[, which(grepl("^Mean|Count", colnames(plotData))):=NULL]
+#     }
+#     
+#     colnames(plotData) <- c("Chromosome", "Sample", "measurement",
+#                             "sd")
+#     
+#     plotData[, `:=`(Value, as.numeric(as.character(Value)))]
+#     plotData[, `:=`(SD, as.numeric(as.character(SD)))]
+#     plotData[, `:=`(SDlow, Value - SD)]
+#     plotData[, `:=`(SDhigh, Value + SD)]
+#     plotData$sd_low <- ifelse(test = plotData$sd_low < 0, yes = 0,
+#                               no = plotData$sd_low)
+#     
+#     plot_dat_gg <- ggplot(data = plotData, aes(x = Chromosome, y = Value)) +
+#       ggplot2::geom_errorbar(aes(ymin = SDlow, ymax = SDhigh), col = "gray25") +
+#       ggplot2::geom_point(col = "maroon") + 
+#       ggplot2::facet_wrap(~Sample, nrow = nRow, ncol = nCol) + 
+#       ggplot2::theme_minimal(base_size = 12) + 
+#       ggplot2::theme(axis.title.x = element_blank(), 
+#                      axis.title.y = element_blank(),
+#                      axis.text.x = element_text(hjust = 1, size = 10, colour = "black"),
+#                      axis.text.y = element_text(size = 10, colour = "black")) +
+#       ylab(yTitle)
+#   } else {
+#     
+#     if (stat == "mean") {
+#       plotData[, which(grepl("^Median|Count", colnames(plotData))):=NULL]
+#     } else if (stat == "median"){
+#       plotData[, which(grepl("^Mean|Count", colnames(plotData))):=NULL]
+#     } 
+#     
+#     colnames(plotData) <- c("Sample", "measurement", "sd")
+#     plotData[, `:=`(Value, as.numeric(as.character(Value)))]
+#     plotData[, `:=`(SD, as.numeric(as.character(SD)))]
+#     plotData[, `:=`(SDlow, Value - SD)]
+#     plotData[, `:=`(SDhigh, Value + SD)]
+#     plotData$sd_low <- ifelse(test = plotData$sd_low < 0, yes = 0,
+#                               no = plotData$sd_low)
+#     plotData$sd_high <- ifelse(test = plotData$sd_high > 1, yes = 1,
+#                                no = plotData$sd_high)
+#     
+#     plot_dat_gg <- ggplot2::ggplot(data = plotData, aes(x = Sample, y = Value)) +
+#       ggplot2::geom_point(col = "maroon", size = 2) + 
+#       ggplot2::geom_errorbar(aes(ymin = SDlow, ymax = SDhigh), col = "gray25") + 
+#       ggplot2::geom_point(col = "maroon",size = 5) + theme_minimal(base_size = 16) + 
+#       ggplot2::theme(axis.title.x = element_blank(),
+#                      axis.text.x = element_text(angle = 45, hjust = 1, size = 12, colour = "black"), 
+#                      axis.text.y = element_text(size = 12, colour = "black"), 
+#                      axis.title.y = element_blank()) +
+#       ylab(yTitle)
+#     #ggplot2::ggtitle(label = plot_title)
+#   }
+# }

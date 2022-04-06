@@ -6,6 +6,7 @@
 #'
 #' Caution: If `colNames = TRUE`, it is up to the user to ensure that assay names or `colData()` columns are not protected in any downstream analysis of the `BED` files. See [BED format](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) for examples.
 #' @inheritParams .exportBedLike
+#' @inheritParams generic_scMethrix_function
 #' @return nothing
 #' @examples
 #' data('scMethrix_data')
@@ -26,6 +27,7 @@ exportBed <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "sco
 #' 
 #' The chromosome positions should be [zero-based](https://genome.ucsc.edu/FAQ/FAQtracks.html#tracks1).
 #' @inheritParams .exportBedLike
+#' @inheritParams generic_scMethrix_function
 #' @return Nothing
 #' @export
 #' @examples
@@ -56,8 +58,8 @@ exportBedGraph <- function(scm = NULL, path = tempdir(), assay = "score", suffix
 #' @param rowData `boolean`; add columns for `rowData()`. Default = `FALSE`
 #' @return Nothing
 #' @export
-#'
 #' @examples
+#' data('scMethrix_data') 
 .exportBedLike <- function(scm = NULL, path = tempdir(), suffix = NULL, assays = "score", na.rm = TRUE, 
                            trackName = NULL, extension = "bed", rowNames = FALSE, colNames = TRUE, rowData = FALSE, verbose = TRUE) {
   
@@ -283,8 +285,9 @@ exportBSseq <- function(scm, scoreAssay = "score", countAssay = "counts", path =
 #---- exportBigWig ----------------------------------------------------------------------------------------------------
 #' Exports an [`scMethrix`] object as `bigWig`.
 #' @inheritParams exportBed
+#' @inheritParams generic_scMethrix_function
 #' @return Nothing
-#' @example 
+#' @examples 
 #' \dontrun{#TODO: write example}
 #' @export
 exportBigWig <- function(scm, assay = "score", path = tempdir()){
@@ -328,6 +331,7 @@ exportBigWig <- function(scm, assay = "score", path = tempdir()){
 #---- exportSeurat -----------------------------------------------------------------------------------------------------
 #' Exports an [`scMethrix`] object as [Seurat::Seurat]
 #' @inheritParams .exportBedLike
+#' @inheritParams generic_scMethrix_function
 #' @return A [Seurat::Seurat] object
 #' @export
 #' @examples
