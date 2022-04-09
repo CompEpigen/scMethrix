@@ -1,26 +1,26 @@
-#---- prepare_plot_data ------------------------------------------------------------------------------------------------
-test_that("prepare_plot_data", {
+#---- .prepare_plot_data ------------------------------------------------------------------------------------------------
+test_that(".prepare_plot_data", {
   expect_error(get_region_summary("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(prepare_plot_data(scm, n_cpgs = "not an int"),msg.validateType)
+    expect_error(.prepare_plot_data(scm, n_cpgs = "not an int"),msg.validateType)
     
-    d <- prepare_plot_data(scm,na.rm=F)
+    d <- .prepare_plot_data(scm,na.rm=F)
     expect_equal(dim(d),c(nrow(scm)*ncol(scm),3))
     expect_equal(colnames(d),c("Sample","Value","Pheno"))
     
     n_NAs <- nrow(d[is.na(Value)]) 
-    d <- prepare_plot_data(scm,)
+    d <- .prepare_plot_data(scm,)
     expect_equal(dim(d),c(nrow(scm)*ncol(scm)-n_NAs,3))
     expect_equal(colnames(d),c("Sample","Value","Pheno"))
     
     n_cpgs = 50
-    d <- prepare_plot_data(scm,n_cpgs = n_cpgs,na.rm=F)
+    d <- .prepare_plot_data(scm,n_cpgs = n_cpgs,na.rm=F)
     expect_equal(dim(d),c(n_cpgs*ncol(scm),3))
     expect_equal(colnames(d),c("Sample","Value","Pheno"))
     
     n_NAs <- nrow(d[is.na(Value)]) 
-    d <- prepare_plot_data(scm,n_cpgs = n_cpgs)
+    d <- .prepare_plot_data(scm,n_cpgs = n_cpgs)
     expect_equal(dim(d),c(n_cpgs*ncol(scm)-n_NAs,3))
     expect_equal(colnames(d),c("Sample","Value","Pheno"))
     
@@ -43,38 +43,22 @@ invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     graph_test_helper(scm, plot_coverage, type="density",   pheno="Group")
   })
   
-#---- plot_sparsity ----------------------------------------------------------------------------------------------------
-  # test_that("plot_sparsity", {
-  # 
-  #     samp <- sampleNames(scm)
-  #     chr <- levels(rowRanges(scm)@seqnames)
-  #     pheno <- unique(colData(scm)$Group)
-  #   
-  #     plot = plot_sparsity(scm,type = "Scatterplot", by = "Sample")
-  #     graph_test_helper2(plot, expected_x = samp)
-  #     plot = plot_sparsity(scm,type = "Scatterplot", phenotype = "Group")
-  #     graph_test_helper2(plot, expected_x = pheno)
-  #     plot = plot_sparsity(scm,type = "Scatterplot", by = "Chromosome")
-  #     graph_test_helper2(plot, expected_x = chr)
-  #     
-  #     plot = plot_sparsity(scm,type = "Boxplot", by = "Sample")
-  #     graph_test_helper2(plot, expected_x = samp)
-  #     plot = plot_sparsity(scm,type = "Boxplot", phenotype = "Group")
-  #     graph_test_helper2(plot, expected_x = pheno)
-  #     plot = plot_sparsity(scm,type = "Boxplot", by = "Chromosome")
-  #     graph_test_helper2(plot, expected_x = chr)
-  #     
-  #     plot = plot_sparsity(scm,type = "Jitterplot", by = "Sample")
-  #     graph_test_helper2(plot, expected_x = samp, expected_group = chr)
-  #     plot = plot_sparsity(scm,type = "Jitterplot", phenotype = "Group")
-  #     graph_test_helper2(plot, expected_x = pheno, expected_group = chr)
-  #     
-  #     plot = plot_sparsity(scm,type = "Jitterplot", by = "Chromosome")
-  #     graph_test_helper2(plot, expected_x = chr, expected_group = samp)
-  #     plot = plot_sparsity(scm,type = "Jitterplot", by = "Chromosome", phenotype = "Group",show_legend = T)
-  #     graph_test_helper2(plot, expected_x = chr, expected_group = pheno)
-  #     
-  # })
+#---- plotDensity ------------------------------------------------------------------------------------------------------
+  test_that("plotDensity", {
+    
+    sampNames <- sampleNames(scm)
+    
+    graph_test_helper2(plotDensity(scm, by = "Sample", type = "Density"), 
+                       expected_label = sampNames)
+    
+    graph_test_helper2(plotDensity(scm, by = "Sample", type = "Violin"), 
+                       expected_x = sampNames)                  
+    
+    graph_test_helper2(plotDensity(scm, by = "Sample", type = "Histogram"), 
+                       expected_label = sampNames) 
+                         
+  })
+  
   
   #---- plotStats --------------------------------------------------------------------------------------------------------
   test_that("plotStats", {

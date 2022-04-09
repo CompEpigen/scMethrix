@@ -1,12 +1,12 @@
-#---- prepare_plot_data ------------------------------------------------------------------------------------------------
+#---- .prepare_plot_data ------------------------------------------------------------------------------------------------
 #' Formats an [`scMethrix`] matrix to long form data for plotting
 #' @inheritParams generic_scMethrix_function
 #' @param n_cpgs `integer`; Use these many random CpGs for plotting. Default = `25000`. Set it to `NULL` to use all - which can be memory expensive. The seed will be set to `n_cpgs` for consistency.
 #' @param pheno `string`; col name of `colData(scm)`. Will be used as a factor to color different groups
 #' @param na.rm `boolean`; remove NA values from the output
 #' @return 'Long' matrix for methylation
-#' @export
-prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL, verbose = TRUE, na.rm = T){
+#' @keywords internal
+.prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL, verbose = TRUE, na.rm = T){
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
@@ -16,7 +16,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
   .validateType(na.rm,"boolean")
 
   Pheno <- Sample <- Value <- NULL
-  
+
   if (n_cpgs > nrow(scm)) n_cpgs = NULL
   
   #---- Function code ------------------------------------------------------
@@ -52,7 +52,6 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
   
   gc(verbose = FALSE)
   return(plot.data)
-  
 }
 
 #---- .getPalette ------------------------------------------------------------------------------------------------------
@@ -68,7 +67,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #' 
 #' Custom palettes can also be [added](https://colorspace.r-forge.r-project.org/articles/hcl_palettes.html#registering-your-own-palettes-1).
 #' 
-#' To easily visualize the colors, use `scales::show_col(.getPalette())`
+#' To easily visualize the colors, use \code{scales::show_col(.getPalette())}
 #' 
 #' @param nColors `integer`; Number of colors. Default = `10`.
 #' @param paletteID `string`; the ID of the [`colorspace`](https://colorspace.r-forge.r-project.org//index.html) palette. Default = `"Dark Mint"`.
@@ -82,7 +81,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #' 
 #' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point()
 #' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point(aes(color=cyl)) + scale_color_manual(values= palette)
-#' @noRd
+#' @keywords internal
 .getPalette <- function(nColors = 10, paletteID = "Dark Mint", ...){
   
   #---- Input validation ---------------------------------------------------
@@ -135,7 +134,7 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
 #' 
 #' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point()
 #' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point(aes(shape=cyl)) + scale_shape_manual(values= shapes)
-#' @noRd
+#' @keywords internal
 .getShapes <- function(nShapes = NULL) {
   
   #---- Input validation ---------------------------------------------------
@@ -151,313 +150,72 @@ prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno =
   return(shapes[1:nShapes])
 }
 
-#---- plot_violin ------------------------------------------------------------------------------------------------------
-#' Violin Plot for `\beta`-Values
-#' @inheritParams prepare_plot_data
-#' @param n_cpgs `integer`; The number of CpGs to for plotting. Default = `25000`.
-#' @param paletteID `string`; Name of the `colorspace` palette to use for plotting.
-#' @param show_legend `boolean`; Display the legend on the plot
-#' @param ... Additional parameters to feed to [scMethrix_theme()]
-#' @return [`ggplot2::ggplot2`] object
-#' @export
-#' @import ggplot2
-#' @examples
-#' data('scMethrix_data')
-#' plot_violin(scm = scMethrix_data)
-plot_violin <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL,
-                        paletteID = "Dark Mint", show_legend = FALSE, verbose = TRUE,...) {
-  
-  #---- Input validation ---------------------------------------------------
-  Sample <- Value <- Pheno <- NULL
-  
-  .validateExp(scm)
-  .validateAssay(scm,assay)
-  .validateType(n_cpgs,"integer")
-  .validateType(pheno,c("string","null"))
-  .validateType(paletteID,"string")
-  .validateType(show_legend,"boolean")
-
-  #---- Function code ------------------------------------------------------
-  plot.data <- prepare_plot_data(scm=scm, assay = assay, n_cpgs = n_cpgs, pheno = pheno)
-  
-  palette <- .getPalette(ncol(scm), paletteID)
-  # generate the violin plot
-  
-  p <- ggplot2::ggplot(plot.data, ggplot2::aes(x = Sample, y = Value, fill = Pheno)) + 
-    ggplot2::geom_violin(alpha = 0.8, show.legend = show_legend) + ggplot2::theme_classic(base_size = 14) +
-    ggplot2::scale_fill_manual(values = palette) +
-    ggplot2::xlab(pheno) + ggplot2::ylab(expression(beta * "-value")) +
-    theme(axis.title.x = element_blank(), axis.text.x = element_text(size = 12,
-                                                                     colour = "black"), axis.text.y = element_text(size = 12, colour = "black"),
-          axis.title.y = element_blank(), legend.title = element_blank())
-  
-  return(p + scMethrix_theme(...))
-}
-
-#---- plot_density -----------------------------------------------------------------------------------------------------
-#' Density Plot of `\beta`-Values
+#---- plotDensity -----------------------------------------------------------------------------------------------------
+#' Plot value density
 #'
-#' @inheritParams plot_violin
+#' @inheritParams .prepare_plot_data
+#' @inheritParams .getPalette
 #' @param na.rm `boolean`; Remove NA values from the plot
+#' @param type `string`; Type of graph, either `Density` or `Violin`. Default = `Density`.
+#' @param showLegend boolean; Display the legend on the plot
+#' @param maxCpGs `integer`; Maximum number of CpGs to plot. Using all sites is likely not necessary to visualize trends, and is very computationally expensive. Default = `25000`.
 #' @return [`ggplot2::ggplot2`] object
 #' @export
 #' @examples
 #' data('scMethrix_data')
 #' plot_density(scm = scMethrix_data)
-plot_density <- function(scm = NULL, assay = "score", n_cpgs = 25000, pheno = NULL,
-                         paletteID = "Dark Mint", show_legend = FALSE, verbose = TRUE, na.rm = T,...) {
+plotDensity <- function(scm = NULL, assay = "score", by = c("Sample", "Chromosome"), type = c("Density", "Violin", "Histogram"), maxCpGs = 25000, phenotype = NULL,
+                         paletteID = "Dark Mint", showLegend = FALSE, verbose = TRUE, na.rm = T,...) {
   
   #---- Input validation ---------------------------------------------------
   Value <- Pheno <- NULL
   
   .validateExp(scm)
   .validateAssay(scm,assay)
-  .validateType(n_cpgs,"integer")
-  .validateType(pheno,c("string","null"))
+  type <- .validateArg(type, plotDensity)
+  .validateType(maxCpGs,"integer")
+  .validateType(phenotype,c("string","null"))
   .validateType(paletteID,"string")
-  .validateType(show_legend,"boolean")
+  .validateType(showLegend,"boolean")
   
   #---- Function code ------------------------------------------------------
-  plot.data <- prepare_plot_data(scm=scm, assay = assay, n_cpgs = n_cpgs, pheno = pheno)
+ # maxCpGs = min(nrow(scm),maxCpGs)
+  plot.data <- .prepare_plot_data(scm=scm, assay = assay, n_cpgs = maxCpGs, pheno = phenotype)
   palette <- .getPalette(ncol(scm), paletteID)
 
-    # generate the density plot
-
-  p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, color = Pheno)) + geom_density(lwd = 1, position = "identity", show.legend = show_legend,kernel="cosine",na.rm = na.rm) + ggplot2::theme_classic() +
-    ggplot2::xlab("Methylation") + ggplot2::ylab("Density") + ggplot2::theme_classic(base_size = 14) +
-    ggplot2::scale_color_manual(values = palette) +
-    ggplot2::xlab(expression(beta * "-value")) + theme(axis.title.x = element_blank(), 
-                                     axis.text.x = element_text(size = 12, colour = "black"), 
-                                     axis.text.y = element_text(size = 12, colour = "black"), 
-                                     axis.title.y = element_blank(), legend.title = element_blank())+
-                                     ggplot2::scale_color_manual(values = .getPalette(length(levels(plot.data$Pheno)),paletteID = paletteID))
+  if (type == "Density") {
+  
+  p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, color = Pheno, label = Pheno)) + 
+    ggplot2::geom_density(lwd = 1, position = "identity", show.legend = showLegend, kernel="cosine", na.rm = na.rm) + 
+    ggplot2::scale_color_manual(values = palette)
+  } else if (type == "Violin") {
+  
+  p <- ggplot2::ggplot(plot.data, ggplot2::aes(x = Sample, y = Value, fill = Pheno)) + 
+    ggplot2::geom_violin(alpha = 0.8, show.legend = showLegend) + 
+    ggplot2::scale_fill_manual(values = palette) +
+    ggplot2::xlab(phenotype) + ggplot2::ylab(expression(beta * "-value"))
+  
+  } else if (type == "Histogram") {
     
+    p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, fill = Sample, label = Sample)) + 
+      ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black", show.legend = showLegend) + 
+    ggplot2::scale_color_manual(values = palette)
+    
+  }
+  
+  p <- p + ggplot2::theme_classic(base_size = 14) +
+    ggplot2::theme(axis.title.x = element_blank(), 
+                   axis.text.x = element_text(size = 12, colour = "black"), 
+                   axis.text.y = element_text(size = 12, colour = "black"),
+                   axis.title.y = element_blank(), legend.title = element_blank()) +
+    ggplot2::xlab("") + 
+    ggplot2::ylab("")
+  
   
   gc(verbose = FALSE)
   
   return(p + scMethrix_theme(...))
 }
-
-#---- plot_coverage ----------------------------------------------------------------------------------------------------
-#' Coverage QC Plots
-#' @inheritParams plot_violin
-#' @param max_cov `integer`; Maximum coverage value to be plotted.
-#' @param type `string`; Choose between `histogram` or `density` plot.
-#' @param obs_lim `integer`; The maximum number of observations (`sites*samples`) to use. If the dataset is larger that this, random sites will be selected from the genome.
-#' @return [`ggplot2::ggplot2`] object
-#' @examples
-#' data('scMethrix_data')
-#' plot_coverage(scm = scMethrix_data)
-#' @export
-plot_coverage <- function(scm = NULL, type = c("density", "histogram"), pheno = NULL,
-                          max_cov = 100, obs_lim = 1e+06, paletteID = "Dark Mint", show_legend = FALSE, verbose = TRUE,...) {
-  
-  #---- Input validation ---------------------------------------------------
-  .validateExp(scm)
-  type <- .validateArg(type, plot_coverage)
-  .validateType(pheno,c("string","null"))
-  .validateType(max_cov,"integer")
-  .validateType(obs_lim,"integer")
-  .validateType(paletteID,"string")
-  .validateType(show_legend,"boolean")
-  
-  Value <- Sample <- Pheno <- NULL
-  
-  colors_palette <- .getPalette(ncol(scm), paletteID = paletteID)
-  
-  #---- Function code ------------------------------------------------------
-  if (matrixStats::product(dim(scm)) > obs_lim) {
-    message("The dataset is bigger than the size limit. A random subset of the object will be used that contains ~",
-            obs_lim, " observations.")
-    n_rows <- trunc(obs_lim/ncol(scm))
-    sel_rows <- sample(seq_len(nrow(scm)), size = n_rows,
-                       replace = FALSE)
-  } else {
-    sel_rows <- seq_len(nrow(scm))
-  }
-
-  plot.data <- prepare_plot_data(scm = scm[sel_rows, ], assay = "counts", pheno = pheno, na.rm = T)
-  #setnafill(plot.data,fill=0,cols="Value")
-  
-  plot.data <- plot.data[Value <= max_cov, ]
-
-  # generate the plots
-  if (is.null(pheno)) {
-    if (type == "density") {
-      p <- ggplot2::ggplot(plot.data, aes(Value, color = Sample)) +
-        ggplot2::geom_density(alpha = 0.5, adjust = 3, lwd = 1.5, show.legend = show_legend, na.rm = T,
-                              position = "identity") + ggplot2::theme_classic() +
-        ggplot2::scale_color_manual(values = colors_palette) + 
-        ggplot2::ylab("Density") + ggplot2::xlab("Coverage") +
-        scale_x_sqrt(breaks=c(0,1,2,4,8))# + scale_y_sqrt(breaks=c(0,1,2,4,8))
-      
-    } else if (type == "histogram") {
-      p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, fill = Sample)) + 
-        ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black", show.legend = show_legend) + 
-        ggplot2::theme_classic() +
-        ggplot2::xlab("Coverage") + ggplot2::ylab("Density")
-        ggplot2::scale_color_manual(values = colors_palette)
-      # print(p)
-    }
-  } else {
-    if (type == "density") {
-      p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, color = Pheno)) +
-        ggplot2::geom_density(alpha = 0.6, adjust = 1.5, lwd = 1, show.legend = show_legend,
-                              position = "identity") + ggplot2::theme_classic() + 
-        ggplot2::xlab("Coverage") + ggplot2::ylab("Density") +
-        ggplot2::scale_fill_manual(values = colors_palette)
-      # print(p)
-    } else if (type == "histogram") {
-      p <- ggplot2::ggplot(plot.data, ggplot2::aes(Value, fill = Pheno)) +
-        ggplot2::geom_histogram(alpha = 0.6, binwidth = 1, color = "black", show.legend = show_legend) + 
-        ggplot2::theme_classic() + ggplot2::xlab("Coverage") + ggplot2::ylab("Density") +
-        ggplot2::scale_fill_manual(values = colors_palette)
-      # print(p)
-    }
-  }
-  
-  gc(verbose = FALSE)
-  
-  p <- p + ggplot2::theme(axis.title.x = element_blank(), axis.text.x = element_text(size = 12,
-                                                                       colour = "black"), axis.text.y = element_text(size = 12, colour = "black"),
-            axis.title.y = element_blank(), legend.title = element_blank())
-  
-  return(p + scMethrix_theme(...))
-}
-#' 
-#' #---- plot_sparsity ----------------------------------------------------------------------------------------------------
-#' #' Sparsity of sample
-#' #' @inheritParams plot_violin
-#' #' @param type `string`; Choose between `Boxplot` or `Scatterplot`. Default = `Scatterplot`
-#' #' @param by `string`; The variable for x-axis, `Sample` or `Chromosome.` If by `Sample`, and phenotype is not `NULL`, phenotype will be taken instead. Default = `Sample`
-#' #' @param phenotype `string`; Column name of `colData(m)`. Will be used as a factor to color different groups
-#' #' @param show_avg `boolean`; flag to show a dotted line representing the average value.
-#' #' @return [`ggplot2::ggplot2`] object
-#' #' @examples
-#' #' data('scMethrix_data')
-#' #' plot_sparsity(scm = scMethrix_data)
-#' #' @export
-#' plot_sparsity <- function(scm = NULL, assay = "score", type = c("Scatterplot", "Boxplot", "Jitterplot"), by = c("Sample","Chromosome"), phenotype = NULL, show_legend = FALSE, verbose = TRUE, show_avg = TRUE, paletteID = "Dark Mint",...) {
-#'   
-#'   #---- Input validation ---------------------------------------------------
-#'   .validateExp(scm)
-#'   type <- .validateArg(type, plot_sparsity)
-#'   by <- .validateArg(by, plot_sparsity)
-#'   .validateAssay(scm,assay)
-#'   .validateType(phenotype,c("string","null"))
-#'   
-#'   Sparsity <- variable <- NULL
-#'   
-#'   colors_palette <- .getPalette(ncol(scm), paletteID = paletteID)
-#'   
-#'   if (!is.null(phenotype) && type == "Scatterplot" && by == "Chromosome") {
-#'     warning("Phenotype given for scatterplot when graphing by chromosome. Phenotype will be ignored.")
-#'     phenotype = NULL
-#'   }
-#' 
-#'   if (!is.null(phenotype) && by == "Sample") {
-#'     if (!phenotype %in% colnames(colData(scm))) {
-#'       stop("Please provide a valid phenotype annotation column. The column must exist within colData(scm).")
-#'     } else {
-#'       by = "Phenotype"
-#'     }
-#'   }
-#'   
-#'   Sample <- Phenotype <- Count <- Sites <- Chromosome <- . <- NULL
-#'   
-#'   #---- Function code ------------------------------------------------------
-#'   chrs <- .getGRchrStats(rowRanges(scm))
-#'   
-#'   stats <- getStats(scm, perChr=TRUE, perSample = F, phenotype = phenotype, stats="Count")
-#'   stats <- merge(stats,chrs[,c("Chromosome","Sites")],by="Chromosome")
-#'   #stats[,Sparsity := Count/Sites]
-#'   
-#'   if (!is.null(phenotype)) {
-#'     pheno <- scm@colData[, phenotype,drop=FALSE]
-#'     pheno$Sample = row.names(pheno)
-#'     pheno <- as.data.table(pheno)
-#'     #pheno[ , Members := .N, by = .(Group)]
-#'     stats <- merge(stats,pheno,by="Sample")
-#'     setnames(stats, phenotype, "Phenotype")
-#'   } else {
-#'     stats[,Phenotype := Sample]
-#'   }
-#'   
-#'   stats <- stats[, lapply(.SD, as.character), by=.(Count,Sites)]
-#'   x_lab <- "Sample"
-#'   
-#'   
-#'   # Setup the graph data
-#'   if (type == "Scatterplot") {
-#'     
-#'     sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = by]
-#'     gg_data <- ggplot2::ggplot(sparsity, aes_string(x = by, y = "Sparsity", color = by))
-#'     gg_elem <- ggplot2::geom_point(show.legend = show_legend)
-#'     
-#'   } else {
-#'     
-#'     if (!is.null(phenotype)) {
-#'       sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = list(Phenotype,Chromosome)]
-#'     } else {
-#'       sparsity <- stats[, .(Sparsity = sum(Count)/sum(Sites)*100), by = list(Sample,Chromosome)]
-#'     }
-#'     
-#'     if (type == "Boxplot") {
-#'       gg_elem <- ggplot2::geom_boxplot(show.legend = show_legend)
-#'       gg_color <- by
-#'       gg_data <- ggplot2::ggplot(sparsity, aes_string(x=by, y="Sparsity", fill = gg_color))
-#'     } else {
-#'       dodge_dist = 2#length(ggplot_build(gg_data)$plot$scales$scales[[3]]$get_labels())
-#'       gg_elem <- ggplot2::geom_point(show.legend = show_legend, 
-#'                                      position = position_dodge(width = 1/dodge_dist))
-#'       if (by == "Phenotype" || by == "Sample") gg_color <- "Chromosome"
-#'       else if (!is.null(phenotype)) gg_color <- "Phenotype"
-#'       else gg_color <- "Sample"
-#'       gg_data <- ggplot2::ggplot(sparsity, aes_string(x=by, y="Sparsity", color = gg_color))
-#'     }
-#'   }
-#' 
-#'   p <- gg_data + gg_elem + 
-#'     ggplot2::scale_color_manual(values = .getPalette(ncol(scm))) + #,name = legend_lab) + 
-#'     ylab("Sparsity (%)")# + xlab(x_lab) 
-#'   
-#'   if (show_avg) {
-#'     avg.spars = mean(sparsity$Sparsity)
-#'     p <- p + geom_hline(yintercept=avg.spars, linetype="dashed",
-#'                        color = "black", size=1)+
-#'             scale_y_continuous(
-#'               sec.axis = dup_axis(
-#'                 breaks = avg.spars,
-#'                 labels = parse(text="bar(x)"),
-#'                 name = NULL
-#'               )
-#'             )
-#'   }
-#'   
-#'   return (p + scMethrix_theme(...))
-#' }
-
-# plotChrStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", "Proportion"), perSample = FALSE, 
-#                          phenotype = NULL, ignoreChrs = NULL, ignoreSamples = NULL, verbose = TRUE, show_legend = FALSE,...) {
-#   
-#   getStat <- if(stat == "Mean" || stat == "Median") c(stat,"SD") else stat
-#   plotData <- getStats(scm, assay = assay, stats = getStat, perSample = perSample, perChr = TRUE, 
-#                        ignoreChrs = ignoreChrs, ignoreSamples = ignoreSamples)
-#   
-#   .plotStats(plotData = plotData, by = "Chromosome", collapsed = !perSample)
-#   
-# }
-# 
-# plotSampleStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", "Proportion"), perChr = FALSE, 
-#                             phenotype = NULL, ignoreChrs = NULL, ignoreSamples = NULL, verbose = TRUE, show_legend = FALSE,...) {
-#   
-#   getStat <- if(stat == "Mean" || stat == "Median") c(stat,"SD") else stat
-#   plotData <- getStats(scm, assay = assay, stats = getStat, perSample = TRUE, perChr = perChr, 
-#                        ignoreChrs = ignoreChrs, ignoreSamples = ignoreSamples)
-#   
-#   .plotStats(plotData = plotData, by = "Sample", collapsed = !perChr)
-# }
-
 
 #---- plotStats -------------------------------------------------------------------------------------------------------
 #' Plot descriptive statistics results from [getStats()]
