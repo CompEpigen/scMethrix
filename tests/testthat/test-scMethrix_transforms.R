@@ -7,7 +7,6 @@ test_that("bin_scMethrix", {
   
  invisible(lapply(list(scm.mem,scm.h5), function(scm) {
    
-   
    expect_error(bin_scMethrix(scm,regions=GRanges()),"Subsetting resulted in zero entries")
     # Check default conditions and threading
    # bin <- bin_scMethrix(scm, h5_dir = paste0(h5_dir,"/bin1"), n_threads = 2, replace = T)
@@ -62,7 +61,7 @@ test_that("bin_scMethrix", {
       
       for (i in 1:length(idx)) {
         
-        vals <- DelayedMatrixStats::colMeans2(score(sub)[idx[[i]],],na.rm=T)
+        vals <- DelayedMatrixStats::colMeans2(score(sub)[idx[[i]],,drop=FALSE], na.rm=TRUE)
         expect_equal(as.numeric(score(bin)[i,]),as.numeric(vals))
         
       }

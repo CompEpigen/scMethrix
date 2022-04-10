@@ -28,21 +28,7 @@ test_that(".prepare_plot_data", {
 })
 
 invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-  
-#---- plot_violin ------------------------------------------------------------------------------------------------------
-  test_that("plot_violin", {graph_test_helper(scm,plot_violin)})
-
-#---- plot_density -----------------------------------------------------------------------------------------------------
-  test_that("plot_density", {graph_test_helper(scm,plot_density)})
-
-#---- plot_coverage ----------------------------------------------------------------------------------------------------
-  test_that("plot_coverage", {
-    graph_test_helper(scm, plot_coverage, type="histogram")
-    graph_test_helper(scm, plot_coverage, type="density")
-    graph_test_helper(scm, plot_coverage, type="histogram", pheno="Group")
-    graph_test_helper(scm, plot_coverage, type="density",   pheno="Group")
-  })
-  
+ 
 #---- plotDensity ------------------------------------------------------------------------------------------------------
   test_that("plotDensity", {
     
