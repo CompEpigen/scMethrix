@@ -5,6 +5,7 @@
 #' @param pheno `string`; col name of `colData(scm)`. Will be used as a factor to color different groups
 #' @param na.rm `boolean`; remove NA values from the output
 #' @return 'Long' matrix for methylation
+#' @export
 #' @keywords internal
 .prepare_plot_data <- function(scm = NULL, assay="score", n_cpgs = 25000, pheno = NULL, verbose = TRUE, na.rm = T){
   
@@ -75,12 +76,16 @@
 #' @return vector of HEX colors
 #' @examples 
 #' palette <- .getPalette(nColors = 3, paletteID = "Plasma")
-#' scales::show_col(palette)#' 
+#' scales::show_col(palette)
 #' df <- mtcars[, c("mpg", "cyl", "wt")]
 #' df$cyl <- as.factor(df$cyl)
 #' 
-#' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point()
-#' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point(aes(color=cyl)) + scale_color_manual(values= palette)
+#' ggplot2::ggplot(df, ggplot2::aes(x=wt, y=mpg, group=cyl)) + ggplot2::geom_point()
+#' 
+#' ggplot2::ggplot(df, ggplot2::aes(x=wt, y=mpg, group=cyl)) + 
+#'      ggplot2::geom_point(ggplot2::aes(color=cyl)) + 
+#'      ggplot2::scale_color_manual(values= palette)
+#' @export
 #' @keywords internal
 .getPalette <- function(nColors = 10, paletteID = "Dark Mint", ...){
   
@@ -132,8 +137,12 @@
 #' df <- mtcars[, c("mpg", "cyl", "wt")]
 #' df$cyl <- as.factor(df$cyl)
 #' 
-#' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point()
-#' ggplot2::ggplot(df, aes(x=wt, y=mpg, group=cyl)) + geom_point(aes(shape=cyl)) + scale_shape_manual(values= shapes)
+#' ggplot2::ggplot(df, ggplot2::aes(x=wt, y=mpg, group=cyl)) + ggplot2::geom_point()
+#' 
+#' ggplot2::ggplot(df, ggplot2::aes(x=wt, y=mpg, group=cyl)) + 
+#'      ggplot2::geom_point(ggplot2::aes(shape=cyl)) + 
+#'      ggplot2::scale_shape_manual(values= shapes)
+#' @export
 #' @keywords internal
 .getShapes <- function(nShapes = NULL) {
   
@@ -153,22 +162,25 @@
 #---- plotDensity -----------------------------------------------------------------------------------------------------
 #' Plot value density
 #'
+#' @inheritParams generic_scMethrix_function
 #' @inheritParams .prepare_plot_data
 #' @inheritParams .getPalette
 #' @param na.rm `boolean`; Remove NA values from the plot
 #' @param type `string`; Type of graph, either `Density` or `Violin`. Default = `Density`.
+#' @param by `string`; Can plot via `Sample` or `Chromosome`. Default = `Sample`.
 #' @param showLegend boolean; Display the legend on the plot
 #' @param maxCpGs `integer`; Maximum number of CpGs to plot. Using all sites is likely not necessary to visualize trends, and is very computationally expensive. Default = `25000`.
 #' @return [`ggplot2::ggplot2`] object
+#' @import ggplot2
 #' @export
 #' @examples
 #' data('scMethrix_data')
-#' plot_density(scm = scMethrix_data)
+#' plotDensity(scm = scMethrix_data)
 plotDensity <- function(scm = NULL, assay = "score", by = c("Sample", "Chromosome"), type = c("Density", "Violin", "Histogram"), maxCpGs = 25000, phenotype = NULL,
                          paletteID = "Dark Mint", showLegend = FALSE, verbose = TRUE, na.rm = T,...) {
   
   #---- Input validation ---------------------------------------------------
-  Value <- Pheno <- NULL
+  Value <- Pheno <- Sample <- NULL
   
   .validateExp(scm)
   .validateAssay(scm,assay)
@@ -220,18 +232,19 @@ plotDensity <- function(scm = NULL, assay = "score", by = c("Sample", "Chromosom
 #---- plotStats -------------------------------------------------------------------------------------------------------
 #' Plot descriptive statistics results from [getStats()]
 #' @details Plot descriptive statistics
-#' @inheritParams plot_violin
+#' @inheritParams generic_scMethrix_function
+#' @inheritParams .getPalette
 #' @param stat `string`; Can plot `Mean`, `Median`, `Count`, or `Proportion`. `Count` is number of non-NA assay values, whereas `Proportion` is the proportion of non-NA assay values. Default = `Mean`.
 #' @param type `string`; Choose between `Boxplot` or `Scatterplot`. Only applies when `collapse = FALSE`. Default = `Scatterplot`.
 #' @param by `string`; Can plot via `Sample` or `Chromosome`. Default = `Sample`.
 #' @param collapse `boolean`; Collapse by sample or chromosome. Will collapse by the opposite of `by` value. Default = `TRUE`.
-#' @param phenotype `string`; Group samples by `phenotype`. The `phenotype` must have a corresponding column in `colData()`. Default = `NULL`.
 #' @param ignoreChrs `list(string)`; Chromosomes to ignore. Default = `NULL`.
 #' @param ignoreSamples `list(string)`; Samples to ignore. Default = `NULL`.
 #' @param nCol `integer`; Number of columns. Passed to [ggplot2::facet_wrap()].
 #' @param nRow `integer`; Number of rows. Passed to [ggplot2::facet_wrap()].
 #' @return [`ggplot2::ggplot2`] object
 #' @seealso [getStats()]
+#' @import ggplot2
 #' @examples
 #' data('scMethrix_data')
 #' plotStats(scMethrix_data)
@@ -240,7 +253,7 @@ plotDensity <- function(scm = NULL, assay = "score", by = c("Sample", "Chromosom
 plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", "Proportion", "Sparsity"), 
                       type = c("Scatterplot", "Boxplot"), by = c("Sample", "Chromosome"), collapse = TRUE, 
                       phenotype = NULL, ignoreChrs = NULL, ignoreSamples = NULL, nCol = NULL, nRow = NULL, 
-                      verbose = TRUE, show_legend = FALSE, show_avg = TRUE, paletteID = "Dark Mint",...) {
+                      verbose = TRUE, paletteID = "Dark Mint",...) {# show_legend = FALSE, show_avg = TRUE, ) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
@@ -267,7 +280,7 @@ plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", 
     warning("Ignored chromosomes are not present in the data: ",
             .pasteList(ignoreChrs[!ignoreChrs %in% levels(seqnames(scm))]))
   
-  Chromosome <- . <- Sample <- Proportion <- SD <- SDlow <- SDhigh <- Value <- NULL
+  Chromosome <- . <- Sample <- Proportion <- SD <- SDlow <- SDhigh <- Value <- Sparsity <- NULL
 
   #- Function code --------------------------------------------------------------------------
   
@@ -343,13 +356,14 @@ plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", 
 #---- plot_dim_red -----------------------------------------------------------------------------------------------------
 #' Plot dimensionality reduction
 #' @inheritParams generic_scMethrix_function
-#' @inheritParams plot_violin
+#' @inheritParams .getPalette
 #' @param dim_red `string`; name of a dimensionality reduction inside an [`scMethrix`] object. Should be a matrix of two columns representing
 #' the X and Y coordinates of the dim. red., with each row being a separate sample
 #' @param axis_labels `list(string)`; A named list of `X` and `Y` strings for labels, or `NULL` if no labels are desired
 #' @param color_anno `string`; Column name of `colData(scm)`. Default = `NULL.` Will be used as a factor to color different groups.
 #' @param shape_anno string; Column name of `colData(scm)`. Default = `NULL.` Will be used as a factor to shape different groups.
 #' @param show_dp_labels boolean; Flag to show the labels for dots. Default = `FALSE`
+#' @param ... Additional arguments
 #' @return [`ggplot2::ggplot2`] object
 #' @importFrom graphics par mtext lines axis legend title
 #' @export
@@ -485,7 +499,7 @@ plot_dim_red <- function(scm, dim_red, paletteID = "Dark Mint", color_anno = NUL
 
   #---- Input validation ---------------------------------------------------
   X <- Y <- Color <- Shape <- color <- shape <- shapes  <- colors <- Sample <- row_names <- NULL
-
+  
   .validateExp(scm)
   .validateType(dim_red,"string")
   if (!(dim_red %in% reducedDimNames(scm))) stop("Invalid dim_red specified. '",dim_red,"' does not exist in the experiment.")

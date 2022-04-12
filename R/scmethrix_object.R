@@ -7,6 +7,8 @@
 #' @slot colData [data.frame()]; metadata corresponding to samples. Accessed via [colData()]
 #' @slot metadata [list()]; metadata pertaining to the experiment. Accessed via [metadata()]
 #' @slot rowRanges [`GRanges`][GenomicRanges::GRanges()]; the genomic coordinates of CpG sites and associated metadata. Accessed via [rowRanges()], with row metadata accessed via [rowData()] or [mcols()]
+#' @param object [`scMethrix-class`]; a single cell methylation experiment object
+#' @param x [`scMethrix-class`]; a single cell methylation experiment object
 #' @exportClass scMethrix
 #' @seealso [scMethrix()] for additional details and the constructor function for the object
 #' \preformatted{(x, "scMethrix")}
