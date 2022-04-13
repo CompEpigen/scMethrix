@@ -6,6 +6,6 @@
 .Ruserdata
 /docs
 /sampleData
-/data_gen/*.bedGraph
+/inst/script/*.bed*
 /tests/testthat/*.pdf
 /vignettes/*_cache
