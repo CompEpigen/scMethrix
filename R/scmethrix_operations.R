@@ -332,164 +332,6 @@ merge_scMethrix2 <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by_row_nam
   return(scm)
 }
 
-#---- get_region_summary -----------------------------------------------------------------------------------------------
-#' Extracts and summarizes methylation or coverage info by regions of interest
-#' @details Summarizes regions and/or groups for descriptive statistics.
-#' @inheritParams generic_scMethrix_function
-#' @param by `function`; mathematical function by which regions should be summarized. Can be one of the following: `mean`, `median`, `maximum`, `minimum`, `sum`, or `sd`. Default = `mean`
-#' @param group `string`; a column name from sample annotation that defines groups. In this case, the number of `min_samples` will be tested group-wise.
-#' @importFrom methods setClass
-#' @return table of summary statistic for the given region
-#' @examples
-#' data('scMethrix_data')
-#' 
-#' # Determine global methylation of groups
-#' # summarize_stats(scMethrix_data, assay = 'score', group = "Group",  by = 'mean') 
-#' #TODO: update the scMethrix_data for group info
-#' 
-#' # Determine methylation status of chromosomes
-#' #summarize_stats(scMethrix_data, assay = "score", regions = range(rowRanges(scMethrix_data)))
-#' 
-#' # Determine methylation status of chromosomes by groups
-#' #summarize_stats(scMethrix_data, assay = "score", group = "Group", 
-#' #regions = range(rowRanges(scMethrix_data)))
-#' @export
-get_region_summary = function (scm = NULL, assay="score", regions = NULL, group = NULL, n_chunks=1, 
-                               n_threads = 1, by = c('mean', 'median', 'maximum', 'minimum', 'sum', 'sd'), 
-                               overlap_type = c("within", "start", "end", "any", "equal"), verbose = TRUE) {
-  
-  #---- Input validation ---------------------------------------------------
-  .validateExp(scm) 
-  assay <- .validateAssay(scm,assay)
-  .validateType(regions,c("Granges","null"))
-  .validateType(group,c("string","null"))
-  .validateType(n_chunks,"integer")
-  n_threads <- .validateThreads(n_threads)
-  by <- .validateArg(by,get_region_summary)
-  overlap_type <- .validateArg(overlap_type,get_region_summary)
-  .validateType(verbose,"boolean")
-  
-  if (!is.null(group) && !(group %in% colnames(scm@colData))){
-    stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."), call. = FALSE)
-  }
-  
-  if (n_chunks > nrow(scm)) {
-    n_chucks <- nrow(scm)
-    warning("n_chunks exceeds number of files. Defaulting to n_chunks = ",n_chunks)
-  }
-  
-  yid  <- NULL
-  
-  #---- Function code ------------------------------------------------------
-  if(verbose) message("Generating region summary...",start_time())
-  
-  
-  if (!is.null(regions)) {
-    regions = cast_granges(regions)
-  } else { # If no region is specifed, use entire chromosomes
-    regions = range(SummarizedExperiment::rowRanges(scm))
-  }
-  
-  regions$rid <- paste0("rid_", 1:length(regions))
-  
-  overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type)) #GenomicRanges::findOverlaps(rowRanges(m), regions)@from
-  
-  if(nrow(overlap_indices) == 0){
-    stop("No overlaps detected")
-  }
-  
-  colnames(overlap_indices) <- c("xid", "yid")
-  overlap_indices[,yid := paste0("rid_", yid)]
-  n_overlap_cpgs = overlap_indices[, .N, yid]
-  colnames(n_overlap_cpgs) = c('rid', 'n_overlap_CpGs')
-  
-  if(n_chunks==1){
-    if (assay == "score") {
-      dat = get_matrix(scm = scm[overlap_indices$xid,], assay = "score", add_loci = TRUE)
-    } else if (assay == "counts") {
-      dat = get_matrix(scm = scm[overlap_indices$xid,], assay = "counts", add_loci = TRUE)
-    }
-  } else {
-    
-    #stop("Chunking not enabled")
-    
-    if(nrow(overlap_indices) < n_chunks){
-      n_chunks <- nrow(overlap_indices)
-      warning("Fewer overlaps indicies than n_chunks. Defaulting to n_chunks = ",n_chunks)
-    }
-    
-    # if (n_chunks < n_threads) {
-    #   n_threads <- n_chunks
-    #   warning("n_threads < n_chunks. Defaulting to n_threads = ",n_threads)
-    # }
-    
-    cl <- parallel::makeCluster(n_threads)
-    doParallel::registerDoParallel(cl)
-    
-    parallel::clusterEvalQ(cl, c(library(data.table), library(scMethrix), sink(paste0("D:/Git/scMethrix/", Sys.getpid(), ".txt"))))
-    parallel::clusterEvalQ(cl, expr={
-      scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")
-    })
-    #parallel::clusterExport(cl,list('scm','scMethrix','type','is_h5','get_matrix','start_time','split_time','stop_time'))
-    
-    chunk_overlaps <- split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid) /
-                                                           ceiling(length(overlap_indices$xid)/n_chunks)))
-    
-    data <- parallel::parLapply(cl,chunk_overlaps,fun=function(i) {
-      get_matrix(scm[i,], assay = assay, add_loci = TRUE) # TODO: object of type 'S4' is not subsettable
-    })
-    
-    parallel::stopCluster(cl)
-    
-    data <- rbindlist(data)
-    
-  }
-  
-  if(nrow(overlap_indices) != nrow(dat)){
-    stop("Something went wrong")
-  }
-  
-  dat = cbind(overlap_indices, dat)
-  
-  #message("-Summarizing overlaps..\n")
-  if(by == "mean") {
-    message("Summarizing by average")
-    output = dat[, lapply(.SD, mean, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))]
-  } else if (by == "median") {
-    message("Summarizing by median")
-    output = dat[, lapply(.SD, median, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))]
-  } else if (by == "maximum") {
-    message("Summarizing by maximum")
-    output = suppressWarnings(
-      dat[, lapply(.SD, max, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))])
-    for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
-  } else if (by == "mininum") {
-    message("Summarizing by minimum")
-    output = suppressWarnings(
-      dat[, lapply(.SD, min, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))])
-    for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
-  } else if (by == "sum") {
-    message("Summarizing by sum")
-    output = dat[, lapply(.SD, sum, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))]
-  }
-  
-  output = merge(regions, output, by.x = 'rid', by.y = 'yid', all.x = TRUE)
-  
-  output = merge(n_overlap_cpgs, output, by = 'rid')
-  output$rid <- as.numeric(gsub("rid_","",output$rid))
-  
-  output <- output[order(output$rid),]
-  setnames(output, "seqnames", "chr")
-  
-  keep <- c("chr", "start", "end", "n_overlap_CpGs", "rid", colnames(scm))
-  output <- output[, keep, with=FALSE]
-  
-  if(verbose) message("Region summary generating in ",stop_time())
-  
-  return(output)
-}
-
-
 #---- get_matrix -------------------------------------------------------------------------------------------------------
 #' Extract assays from an [`scMethrix-class`] object
 #' @description Takes an [`scMethrix-class`] object and returns an assay in a specified matrix in the format used by the object (`matrix` or `HDF5matrix`). 
@@ -760,11 +602,12 @@ convert_scMethrix <- function(scm = NULL, type = c(NA,"HDF5","memory"), h5_dir =
   return(scm)
 }
 
-#--- subset_scMethrix -----------------------------------------------------------------------------------------------------
+#---- subset_scMethrix -------------------------------------------------------------------------------------------------
 #' Subsets an [`scMethrix-class`] object based on `regions`, `contigs` and/or `samples`.
 #' @description Takes [`scMethrix-class`] object and filters CpGs based on region, contig and/or sample. Can 
 #' either subset (`include`) to or filter (`exclude`) the specified parameters.
 #' @inheritParams generic_scMethrix_function
+#' @param regions [`GRanges`][GenomicRanges::GRanges()]; genomic regions to subset by. Can also be a [`data.table`][data.table::data.table-class] that follows [this][cast_datatable()] format.
 #' @param contigs `string`; array of chromosome names to subset by
 #' @param samples `string`; array of sample names to subset by
 #' @param by `string`; Subset to `include` or `exclude` the given criteria from the subset. Default = `include`.
@@ -863,8 +706,6 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' @inheritParams generic_scMethrix_function
 #' @param perSample `boolean`; Estimate stats per sample Default = `TRUE`
 #' @param perChr `boolean`; Estimate stats per chromosome. Default = `TRUE`
-#' @param ignoreChrs list(`string`); chromosomes to ignore
-#' @param ignoreSamples list(`string`); samples to ignore
 #' @param stats `string`; the stats to include. Default is `c("Mean","Median","SD","Count")`).
 #' @examples
 #' data('scMethrix_data')
@@ -879,7 +720,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' getStats(scMethrix_data, perSample = FALSE)
 #' @return data.table of summary stats
 #' @export
-getStats <- function(scm = NULL, assay="score", stats = c("Mean","Median","SD","Count"), perSample = TRUE, perChr = TRUE, ignoreChrs = NULL, ignoreSamples = NULL, phenotype = NULL, verbose = TRUE) {
+getStats <- function(scm = NULL, assay="score", regions = NULL, stats = c("Mean","Median","SD","Count"), perSample = TRUE, perChr = TRUE, phenotype = NULL, verbose = TRUE) {
 
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)  
@@ -888,8 +729,6 @@ getStats <- function(scm = NULL, assay="score", stats = c("Mean","Median","SD","
   .validateType(perChr,"boolean")
   .validateType(verbose,"boolean")
   .validateColData(scm, phenotype = phenotype)
-  .validateType(ignoreChrs,c("string","null"))
-  .validateType(ignoreSamples,c("string","null"))
   stats <- .validateArg(stats, getStats, multiple.match=T)
 
   Chromosome <- Sample <- Count <- Mean <- SD <- ..cols <- x <- . <- NULL
@@ -902,10 +741,7 @@ getStats <- function(scm = NULL, assay="score", stats = c("Mean","Median","SD","
   
   #---- Function code ------------------------------------------------------
   if (verbose) message("Getting descriptive statistics...",start_time())
-  
-  if (!is.null(ignoreSamples)) scm <- subset_scMethrix(scm,samples = ignoreSamples, by = "exclude")
-  if (!is.null(ignoreChrs)) scm <- subset_scMethrix(scm,contigs = ignoreChrs, by = "exclude")
-  
+
   mtx <- get_matrix(scm, assay = assay)
   chrs <- .getGRchrStats(rowRanges(scm))
   
@@ -990,7 +826,7 @@ getStats <- function(scm = NULL, assay="score", stats = c("Mean","Median","SD","
   return(stats)
 }
 
-#---- get_coldata_stats -------------------------------------------------------------------------------------
+#---- getColDataStats -------------------------------------------------------------------------------------
 #' Adds descriptive statistics to colData columns in an [`scMethrix-class`] object.
 #' @details Adds the mean, SD, and sample count for each sample in an [`scMethrix-class`] object. This can be accessed using `colData()`. Columns with the names of `mean`, `sd`, and `cpg` will be automatically overwritten, but `suffix` can be used to keep multiple stats columns.
 #' 
@@ -1002,15 +838,15 @@ getStats <- function(scm = NULL, assay="score", stats = c("Mean","Median","SD","
 #' @return An [`scMethrix-class`] object
 #' @examples
 #' data('scMethrix_data')
-#' get_coldata_stats(scMethrix_data)
+#' getColDataStats(scMethrix_data)
 #' @export
-get_coldata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean","SD","CpGs","Sparsity")) {
+getColDataStats <- function(scm, assay = "score", suffix="", stats = c("Mean","SD","CpGs","Sparsity")) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
   .validateAssay(scm,assay)
   .validateType(suffix,"string")
-  stats <- .validateArg(stats, get_coldata_stats,multiple.match=T)
+  stats <- .validateArg(stats, getColDataStats,multiple.match=T)
   
   calc_mean <- "Mean" %in% stats
   calc_sd <- "SD" %in% stats
@@ -1040,21 +876,21 @@ get_coldata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean",
   return(scm)
 }
 
-#--- get_rowdata_stats -------------------------------------------------------------------------------------
+#---- getRowDataStats --------------------------------------------------------------------------------------------------
 #' Adds descriptive statistics to metadata columns in an [`scMethrix-class`] object.
 #' @details Adds the mean, median, SD, and sample count and coverage (if present) for the `rowData()` in an [`scMethrix-class`] object. This can be accessed using `mcols()`.
 #' 
 #' This data will not be updated automatically for any subset, merge, bin, etc functions.
 #' 
 #' @inheritParams generic_scMethrix_function
-#' @inheritParams get_coldata_stats
+#' @inheritParams getColDataStats
 #' @param stats list of strings; the stats to include. Default is `c("Mean","SD","Cells","Sparsity")`
 #' @return An [`scMethrix-class`] object
 #' @examples
 #' data('scMethrix_data')
-#' get_rowdata_stats(scMethrix_data)
+#' getRowDataStats(scMethrix_data)
 #' @export
-get_rowdata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean","SD","Cells","Sparsity")) {
+getRowDataStats <- function(scm, assay = "score", suffix="", stats = c("Mean","SD","Cells","Sparsity")) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)  
@@ -1093,6 +929,164 @@ get_rowdata_stats <- function(scm, assay = "score", suffix="", stats = c("Mean",
   
   validObject(scm)
   return(scm)
+}
+
+
+#---- getRegionStats ---------------------------------------------------------------------------------------------------
+#' Extracts and summarizes methylation or coverage info by regions of interest
+#' @details Summarizes regions and/or groups for descriptive statistics.
+#' @inheritParams generic_scMethrix_function
+#' @param by `function`; mathematical function by which regions should be summarized. Can be one of the following: `mean`, `median`, `maximum`, `minimum`, `sum`, or `sd`. Default = `mean`
+#' @param group `string`; a column name from sample annotation that defines groups. In this case, the number of `min_samples` will be tested group-wise.
+#' @importFrom methods setClass
+#' @return table of summary statistic for the given region
+#' @examples
+#' data('scMethrix_data')
+#' 
+#' # Determine global methylation of groups
+#' # getRegionStats(scMethrix_data, assay = 'score', group = "Group",  by = 'mean') 
+#' #TODO: update the scMethrix_data for group info
+#' 
+#' # Determine methylation status of chromosomes
+#' #getRegionStats(scMethrix_data, assay = "score", regions = range(rowRanges(scMethrix_data)))
+#' 
+#' # Determine methylation status of chromosomes by groups
+#' #getRegionStats(scMethrix_data, assay = "score", group = "Group", 
+#' #regions = range(rowRanges(scMethrix_data)))
+#' @export
+getRegionStats = function (scm = NULL, assay="score", regions = NULL, group = NULL, n_chunks=1, 
+                           n_threads = 1, by = c('mean', 'median', 'maximum', 'minimum', 'sum', 'sd'), 
+                           overlap_type = c("within", "start", "end", "any", "equal"), verbose = TRUE) {
+  
+  #---- Input validation ---------------------------------------------------
+  .validateExp(scm) 
+  assay <- .validateAssay(scm,assay)
+  .validateType(regions,c("Granges","null"))
+  .validateType(group,c("string","null"))
+  .validateType(n_chunks,"integer")
+  n_threads <- .validateThreads(n_threads)
+  by <- .validateArg(by,getRegionStats)
+  overlap_type <- .validateArg(overlap_type,getRegionStats)
+  .validateType(verbose,"boolean")
+  
+  if (!is.null(group) && !(group %in% colnames(scm@colData))){
+    stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."), call. = FALSE)
+  }
+  
+  if (n_chunks > nrow(scm)) {
+    n_chucks <- nrow(scm)
+    warning("n_chunks exceeds number of files. Defaulting to n_chunks = ",n_chunks)
+  }
+  
+  yid  <- NULL
+  
+  #---- Function code ------------------------------------------------------
+  if(verbose) message("Generating region summary...",start_time())
+  
+  
+  if (!is.null(regions)) {
+    regions = cast_granges(regions)
+  } else { # If no region is specifed, use entire chromosomes
+    regions = range(SummarizedExperiment::rowRanges(scm))
+  }
+  
+  regions$rid <- paste0("rid_", 1:length(regions))
+  
+  overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type)) #GenomicRanges::findOverlaps(rowRanges(m), regions)@from
+  
+  if(nrow(overlap_indices) == 0){
+    stop("No overlaps detected")
+  }
+  
+  colnames(overlap_indices) <- c("xid", "yid")
+  overlap_indices[,yid := paste0("rid_", yid)]
+  n_overlap_cpgs = overlap_indices[, .N, yid]
+  colnames(n_overlap_cpgs) = c('rid', 'n_overlap_CpGs')
+  
+  if(n_chunks==1){
+    if (assay == "score") {
+      dat = get_matrix(scm = scm[overlap_indices$xid,], assay = "score", add_loci = TRUE)
+    } else if (assay == "counts") {
+      dat = get_matrix(scm = scm[overlap_indices$xid,], assay = "counts", add_loci = TRUE)
+    }
+  } else {
+    
+    #stop("Chunking not enabled")
+    
+    if(nrow(overlap_indices) < n_chunks){
+      n_chunks <- nrow(overlap_indices)
+      warning("Fewer overlaps indicies than n_chunks. Defaulting to n_chunks = ",n_chunks)
+    }
+    
+    # if (n_chunks < n_threads) {
+    #   n_threads <- n_chunks
+    #   warning("n_threads < n_chunks. Defaulting to n_threads = ",n_threads)
+    # }
+    
+    cl <- parallel::makeCluster(n_threads)
+    doParallel::registerDoParallel(cl)
+    
+    parallel::clusterEvalQ(cl, c(library(data.table), library(scMethrix), sink(paste0("D:/Git/scMethrix/", Sys.getpid(), ".txt"))))
+    parallel::clusterEvalQ(cl, expr={
+      scMethrix <- setClass(Class = "scMethrix", contains = "SingleCellExperiment")
+    })
+    #parallel::clusterExport(cl,list('scm','scMethrix','type','is_h5','get_matrix','start_time','split_time','stop_time'))
+    
+    chunk_overlaps <- split(overlap_indices$xid, ceiling(seq_along(overlap_indices$xid) /
+                                                           ceiling(length(overlap_indices$xid)/n_chunks)))
+    
+    data <- parallel::parLapply(cl, chunk_overlaps, fun = function(i) {
+      get_matrix(scm[i,], assay = assay, add_loci = TRUE) # TODO: object of type 'S4' is not subsettable
+    })
+    
+    parallel::stopCluster(cl)
+    
+    data <- rbindlist(data)
+    
+  }
+  
+  if(nrow(overlap_indices) != nrow(dat)){
+    stop("Something went wrong")
+  }
+  
+  dat = cbind(overlap_indices, dat)
+  
+  #message("-Summarizing overlaps..\n")
+  if(by == "mean") {
+    message("Summarizing by average")
+    output = dat[, lapply(.SD, mean, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))]
+  } else if (by == "median") {
+    message("Summarizing by median")
+    output = dat[, lapply(.SD, median, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))]
+  } else if (by == "maximum") {
+    message("Summarizing by maximum")
+    output = suppressWarnings(
+      dat[, lapply(.SD, max, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))])
+    for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
+  } else if (by == "mininum") {
+    message("Summarizing by minimum")
+    output = suppressWarnings(
+      dat[, lapply(.SD, min, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))])
+    for (j in 1:ncol(output)) set(output, which(is.infinite(output[[j]])), j, NA)
+  } else if (by == "sum") {
+    message("Summarizing by sum")
+    output = dat[, lapply(.SD, sum, na.rm = TRUE), by = yid, .SDcols = c(rownames(colData(scm)))]
+  }
+  
+  output = merge(regions, output, by.x = 'rid', by.y = 'yid', all.x = TRUE)
+  
+  output = merge(n_overlap_cpgs, output, by = 'rid')
+  output$rid <- as.numeric(gsub("rid_","",output$rid))
+  
+  output <- output[order(output$rid),]
+  setnames(output, "seqnames", "chr")
+  
+  keep <- c("chr", "start", "end", "n_overlap_CpGs", "rid", colnames(scm))
+  output <- output[, keep, with=FALSE]
+  
+  if(verbose) message("Region summary generating in ",stop_time())
+  
+  return(output)
 }
 
 # #--- expand_scMethrix -----------------------------------------------------------------------------------------------------

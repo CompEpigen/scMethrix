@@ -238,10 +238,6 @@ plotDensity <- function(scm = NULL, assay = "score", by = c("Sample", "Chromosom
 #' @param type `string`; Choose between `Boxplot` or `Scatterplot`. Only applies when `collapse = FALSE`. Default = `Scatterplot`.
 #' @param by `string`; Can plot via `Sample` or `Chromosome`. Default = `Sample`.
 #' @param collapse `boolean`; Collapse by sample or chromosome. Will collapse by the opposite of `by` value. Default = `TRUE`.
-#' @param ignoreChrs `list(string)`; Chromosomes to ignore. Default = `NULL`.
-#' @param ignoreSamples `list(string)`; Samples to ignore. Default = `NULL`.
-#' @param nCol `integer`; Number of columns. Passed to [ggplot2::facet_wrap()].
-#' @param nRow `integer`; Number of rows. Passed to [ggplot2::facet_wrap()].
 #' @return [`ggplot2::ggplot2`] object
 #' @seealso [getStats()]
 #' @import ggplot2
@@ -252,8 +248,7 @@ plotDensity <- function(scm = NULL, assay = "score", by = c("Sample", "Chromosom
 #'
 plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", "Proportion", "Sparsity"), 
                       type = c("Scatterplot", "Boxplot"), by = c("Sample", "Chromosome"), collapse = TRUE, 
-                      phenotype = NULL, ignoreChrs = NULL, ignoreSamples = NULL, nCol = NULL, nRow = NULL, 
-                      verbose = TRUE, paletteID = "Dark Mint",...) {# show_legend = FALSE, show_avg = TRUE, ) {
+                      phenotype = NULL, verbose = TRUE, paletteID = "Dark Mint",...) {# show_legend = FALSE, show_avg = TRUE, ) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
@@ -262,24 +257,12 @@ plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", 
   type <- .validateArg(type,plotStats)
   by <- .validateArg(by,plotStats)
   .validateType(phenotype,c("string","null"))
-  .validateType(ignoreChrs,c("string","null"))
-  .validateType(ignoreSamples,c("string","null"))
-  .validateType(nCol,c("integer","null"))
-  .validateType(nRow,c("integer","null"))
   .validateType(verbose,"boolean")
   
   if (!is.null(phenotype) && !phenotype %in% colnames(colData(scm))) 
     stop("Error in plotting. No column named '",phenotype,"' is present in colData(). Must be one of: ",
          .pasteList(colnames(colData(scm))))
 
-  if (any(!ignoreSamples %in% sampleNames(scm)))
-    warning("Ignored samples are not present in the data: ",
-            .pasteList(ignoreSamples[!ignoreSamples %in% sampleNames(scm)]))
-  
-  if (any(!ignoreChrs %in% levels(seqnames(scm))))
-    warning("Ignored chromosomes are not present in the data: ",
-            .pasteList(ignoreChrs[!ignoreChrs %in% levels(seqnames(scm))]))
-  
   Chromosome <- . <- Sample <- Proportion <- SD <- SDlow <- SDhigh <- Value <- Sparsity <- NULL
 
   #- Function code --------------------------------------------------------------------------
@@ -293,8 +276,7 @@ plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", 
   perSample <- if (by == "Sample") TRUE else !collapse
   group <- if (by == "Chromosome") "Sample" else "Chromosome" 
   
-  plotData <- getStats(scm, assay = assay, stats = getStat, perSample = perSample, perChr = perChr, 
-                       ignoreChrs = ignoreChrs, ignoreSamples = ignoreSamples)
+  plotData <- getStats(scm, assay = assay, stats = getStat, perSample = perSample, perChr = perChr)
   setDT(plotData)
  
   if (stat == "Proportion") {

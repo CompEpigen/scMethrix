@@ -1,3 +1,4 @@
+#---- save_scMethrix ---------------------------------------------------------------------------------------------------
 test_that("save_scMethrix", {
   
   expect_error(save_scMethrix("not scMethrix"),"A valid SummarizedExperiment-derived object needs to be supplied.")
@@ -44,85 +45,7 @@ test_that("save_scMethrix", {
   
 })
 
-test_that("get_rowdata_stats", {
-  
-  fmt <- function(x) round(as.numeric(x),4)
-  
-  expect_error(get_rowdata_stats("not scMethrix"),msg.validateExp)
-  
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
-    
-    cols <- ncol(rowData(scm))
-    s <- get_rowdata_stats(scm)
-    expect_equal(dim(rowData(s)),c(n_cpg,cols+4))
-    stats <- rowData(s)
-    
-    # Check stats
-    expect_equal(fmt(DelayedMatrixStats::rowMeans2(score(s),na.rm=TRUE)),fmt(stats$Mean))
-    expect_equal(fmt(ncol(scm)-DelayedMatrixStats::rowCounts(score(s),val=NA)),fmt(stats$Cells))
-    expect_equal(fmt((ncol(scm)-DelayedMatrixStats::rowCounts(score(s),val=NA))/ncol(scm)),fmt(stats$Sparsity))
-    
-    exp_sd <- DelayedMatrixStats::rowSds(score(s),na.rm=TRUE)
-    exp_sd[which(DelayedMatrixStats::rowCounts(score(s),val=NA) == (n_samples-1))] <- 0 # Since single sample rows will give SD as zero
-    expect_equal(fmt(exp_sd),fmt(stats$SD))
-    
-    # Check for stat subset
-    rd <- rowData(get_rowdata_stats(scm,stats=c("Mean")))
-    expect_equal(dim(rd),c(n_cpg,cols+1))
-    expect_true(colnames(rd)[cols+1] == "Mean")
-    rd <- rowData(get_rowdata_stats(scm,stats=c("SD")))
-    expect_true(colnames(rd)[cols+1] == "SD")
-    rd <- rowData(get_rowdata_stats(scm,stats=c("Cells")))
-    expect_true(colnames(rd)[cols+1] == "Cells")
-    rd <- rowData(get_rowdata_stats(scm,stats=c("Sparsity")))
-    expect_true(colnames(rd)[cols+1] == "Sparsity")
-    
-    rd <- rowData(get_rowdata_stats(scm,stat=c("Mean","SD")))
-    expect_equal(dim(rd),c(n_cpg,cols+2))
-    expect_true(any(colnames(rd) == "Mean"))
-    expect_true(any(colnames(rd) =="SD"))
-    
-  }))
-})
-
-test_that("get_coldata_stats", {
-  
-  fmt <- function(x) round(as.numeric(x),4)
-  
-  expect_error(get_coldata_stats("not scMethrix"),msg.validateExp)
-  
-  invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
-    
-    cols <- ncol(rowData(scm))
-    s <- get_coldata_stats(scm)
-    expect_equal(dim(colData(s)),c(n_samples,cols+4))
-    stats <- colData(s)
-    
-    # Check stats
-    expect_equal(fmt(DelayedMatrixStats::colMeans2(score(s),na.rm=TRUE)),fmt(stats$Mean))
-    #expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median[rng])
-    expect_equal(fmt(DelayedMatrixStats::colSds(score(s),na.rm=TRUE)),fmt(stats$SD))
-    expect_equal(fmt(nrow(scm)-DelayedMatrixStats::colCounts(score(s),val=NA)),fmt(stats$CpGs))
-    expect_equal(fmt((nrow(scm)-DelayedMatrixStats::colCounts(score(s),val=NA))/nrow(scm)),fmt(stats$Sparsity))
-    
-    # Check for stat subset
-    cd <- colData(get_coldata_stats(scm,stats=c("Mean")))
-    expect_equal(dim(cd),c(n_samples,cols+1))
-    expect_true(colnames(cd)[cols+1] == "Mean")
-    cd <- colData(get_coldata_stats(scm,stats=c("SD")))
-    expect_true(colnames(cd)[cols+1] =="SD")
-    cd <- colData(get_coldata_stats(scm,stats=c("CpGs")))
-    expect_true(colnames(cd)[cols+1] == "CpGs")
-    cd <- colData(get_coldata_stats(scm,stats=c("Sparsity")))
-    expect_true(colnames(cd)[cols+1] == "Sparsity")
-    
-    cd <- colData(get_coldata_stats(scm,stat=c("Mean","SD")))
-    expect_equal(dim(cd),c(n_samples,cols+2))
-    expect_true(any(colnames(cd) == "Mean"))
-    expect_true(any(colnames(cd) == "SD"))
-  }))
-})
-
+#---- remove_assay -----------------------------------------------------------------------------------------------------
 test_that("remove_assay", {
   
   expect_error(remove_assay("not scMethrix"),msg.validateExp)
@@ -138,6 +61,7 @@ test_that("remove_assay", {
   }))
 })
 
+#---- merge_scMethrix --------------------------------------------------------------------------------------------------
 test_that("merge_scMethrix", {
   
   expect_error(merge_scMethrix("not scMethrix"),msg.validateExp)
@@ -213,6 +137,7 @@ test_that("merge_scMethrix", {
   }))
 })
 
+#---- convert_scMethrix ------------------------------------------------------------------------------------------------
 test_that("convert_scMethrix", {
   
   expect_error(convert_scMethrix("not scMethrix"),msg.validateExp)
@@ -275,6 +200,7 @@ test_that("convert_scMethrix", {
   
 })
 
+#---- subset_scMethrix -------------------------------------------------------------------------------------------------
 test_that("subset_scMethrix", {
   
   expect_error(subset_scMethrix("not scMethrix"),msg.validateExp)
@@ -322,6 +248,7 @@ test_that("subset_scMethrix", {
   }))
 })
 
+#---- get_matrix -------------------------------------------------------------------------------------------------------
 test_that("get_matrix", {
  
   expect_error(get_matrix("not scMethrix"),msg.validateExp)
@@ -358,7 +285,7 @@ test_that("get_matrix", {
   }))
 })
 
-
+#---- remove_uncovered -------------------------------------------------------------------------------------------------
 test_that("remove_uncovered", {
   
   expect_error(remove_uncovered("not scMethrix"),msg.validateExp)
@@ -376,6 +303,7 @@ test_that("remove_uncovered", {
   }))
 })
 
+#---- getStats ---------------------------------------------------------------------------------------------------------
 test_that("getStats", {
   
   expect_error(getStats("not scMethrix"),msg.validateExp)
@@ -457,103 +385,110 @@ test_that("getStats", {
     expect_true(any(colnames(stats) == "Mean"))
     expect_true(any(colnames(stats) == "Median"))
     
-    # Check ignores
-    stats <- getStats(scm, perChr = FALSE, ignoreSamples = samples[-(1)])
-    expect_equal(stats$Sample,samples[1])
-    
-    stats <- getStats(scm, perSample = FALSE, ignoreChrs = chrs[-(1)])
-    expect_equal(stats$Chromosome,chrs[1])
   }))
 })
 
-test_that("get_region_summary", {
+#---- getRegionStats ---------------------------------------------------------------------------------------------------
+test_that("getRegionStats", {
   
-  expect_error(get_region_summary("not scMethrix"),msg.validateExp)
+  expect_error(getRegionStats("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-    expect_error(get_region_summary(scm,group="not a group"))
-    expect_error(get_region_summary(scm,type="not a type"))
-    expect_error(get_region_summary(scm,how="not a how"))
+    expect_error(getRegionStats(scm,group="not a group"))
+    expect_error(getRegionStats(scm,type="not a type"))
+    expect_error(getRegionStats(scm,how="not a how"))
     
     region <- GRanges(seqnames = c("chr1"), ranges = IRanges(1,10)) 
-    expect_error(get_region_summary(scm,region=region))
+    expect_error(getRegionStats(scm,region=region))
     
     region <- GRanges(seqnames = c("chr1","chr2"), ranges = IRanges(1,100000000)) 
-    expect_equal(dim(get_region_summary(scm,region=region)),c(2,9))
-  #expect_warning(get_region_summary(scm.mem,n_chunks=1000,region=region))
+    expect_equal(dim(getRegionStats(scm,region=region)),c(2,9))
+  #expect_warning(getRegionStats(scm.mem,n_chunks=1000,region=region))
   }))
 })
-# 
-# test_that("mask_by_coverage", {
-#   expect_error(mask_by_coverage("not scMethrix"),msg.validateExp)
-#   expect_error(mask_by_coverage(scm.mem,assay="not an assay"),msg.validateAssay)
-#   expect_error(mask_by_coverage(remove_assay(scm.mem,assay="counts")))
-#   expect_error(mask_by_coverage(scm.mem,n_threads=2))
-#   expect_error(mask_by_coverage(scm.mem,low_threshold=-1),"low_threshold")
-#   expect_error(mask_by_coverage(scm.mem,low_threshold="not numeric"),msg.validateType)
-#   expect_error(mask_by_coverage(scm.mem,avg_threshold=-1,"avg_threshold"))
-#   expect_error(mask_by_coverage(scm.mem,avg_threshold="not numeric"),msg.validateType)
-#   
-#   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-# 
-#     scm <- mask_by_coverage(scm,low_threshold=2,avg_threshold=NULL)
-#     expect_equal(dim(scm),c(n_cpg,n_samples))
-#     expect_equal(dim(remove_uncovered(scm)),c(length(which(rowSums(counts(scm),na.rm=TRUE) >= 2)),n_samples))
-# 
-#     scm <- mask_by_coverage(scm,low_threshold=NULL,avg_threshold=1) #Removes all rows with a sample with a coverage of 2
-#     expect_equal(dim(scm),c(n_cpg,n_samples))
-#     expect_equal(dim(remove_uncovered(scm)),c(length(which(rowMeans(counts(scm),na.rm=TRUE) == 1)),n_samples))
-# 
-#   }))
-# })
-# 
-# test_that("mask_by_sample", {
-#   expect_error(mask_by_sample("not scMethrix"),msg.validateExp)
-#   expect_error(mask_by_sample(scm.mem,assay="not an assay"),msg.validateAssay)
-#   expect_error(mask_by_sample(scm.mem,n_threads=2))
-#   expect_error(mask_by_sample(scm.mem,low_threshold=2,prop_threshold=1))
-#   expect_error(mask_by_sample(scm.mem,low_threshold=-1),"low_threshold")
-#   expect_error(mask_by_sample(scm.mem,low_threshold="not numeric"),msg.validateType)
-#   expect_error(mask_by_sample(scm.mem,prop_threshold=-1,"prop_threshold"))
-#   expect_error(mask_by_sample(scm.mem,prop_threshold=2,"prop_threshold"))
-#   expect_error(mask_by_sample(scm.mem,prop_threshold="not numeric"),msg.validateType)
-#   
-#   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-#     
-#     scm <- mask_by_sample(scm,low_threshold=2)
-#     expect_equal(dim(scm),c(n_cpg,n_samples))
-#     expect_equal(dim(remove_uncovered(scm)),c(length(which(ncol(scm) - rowCounts(score(scm),value=NA) >= 2)),n_samples))
-#     
-#     scm <- mask_by_sample(scm,low_threshold=NULL,prop_threshold=0.25) # Since 0.25 of 4 sample is 1, same result as low_threshold = 1
-#     expect_equal(dim(scm),c(n_cpg,n_samples))
-#     expect_equal(dim(remove_uncovered(scm)),c(length(which(ncol(scm) - rowCounts(score(scm),value=NA) > 1)),n_samples))
-#     
-#   }))
-# })
-# 
-# test_that("mask_by_variance", {
-#   expect_error(mask_by_variance("not scMethrix"),msg.validateExp)
-#   expect_error(mask_by_variance(scm.mem,assay="not an assay"),msg.validateAssay)
-#   expect_error(mask_by_variance(scm.mem,n_threads=2))
-#   expect_error(mask_by_variance(scm.mem,low_threshold=2,"low_threshold must be between 0 and 1"))
-#   expect_error(mask_by_variance(scm.mem,low_threshold=-1,"low_threshold must be between 0 and 1"))
-#   expect_error(mask_by_variance(scm.mem,low_threshold="not numeric"),msg.validateType)
-#   
-#   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
-#     
-#     #Since only 4 samples, only rows with 1 unique score value are masked
-#     uniq <- apply(score(scm),1,function(x) {
-#       uniq <- unique(x)
-#       return(length(uniq[!is.na(uniq)]))
-#     })
-#     
-#     scm <- mask_by_variance(scm,low_threshold=0.05)
-# 
-#     expect_equal(dim(scm),c(n_cpg,n_samples))
-#     expect_equal(dim(remove_uncovered(scm)),c(sum(uniq != 1),n_samples))
-#   }))
-# })
 
+#---- getRowDataStats --------------------------------------------------------------------------------------------------
+test_that("getRowDataStats", {
+  
+  fmt <- function(x) round(as.numeric(x),4)
+  
+  expect_error(getRowDataStats("not scMethrix"),msg.validateExp)
+  
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
+    
+    cols <- ncol(rowData(scm))
+    s <- getRowDataStats(scm)
+    expect_equal(dim(rowData(s)),c(n_cpg,cols+4))
+    stats <- rowData(s)
+    
+    # Check stats
+    expect_equal(fmt(DelayedMatrixStats::rowMeans2(score(s),na.rm=TRUE)),fmt(stats$Mean))
+    expect_equal(fmt(ncol(scm)-DelayedMatrixStats::rowCounts(score(s),val=NA)),fmt(stats$Cells))
+    expect_equal(fmt((ncol(scm)-DelayedMatrixStats::rowCounts(score(s),val=NA))/ncol(scm)),fmt(stats$Sparsity))
+    
+    exp_sd <- DelayedMatrixStats::rowSds(score(s),na.rm=TRUE)
+    exp_sd[which(DelayedMatrixStats::rowCounts(score(s),val=NA) == (n_samples-1))] <- 0 # Since single sample rows will give SD as zero
+    expect_equal(fmt(exp_sd),fmt(stats$SD))
+    
+    # Check for stat subset
+    rd <- rowData(getRowDataStats(scm,stats=c("Mean")))
+    expect_equal(dim(rd),c(n_cpg,cols+1))
+    expect_true(colnames(rd)[cols+1] == "Mean")
+    rd <- rowData(getRowDataStats(scm,stats=c("SD")))
+    expect_true(colnames(rd)[cols+1] == "SD")
+    rd <- rowData(getRowDataStats(scm,stats=c("Cells")))
+    expect_true(colnames(rd)[cols+1] == "Cells")
+    rd <- rowData(getRowDataStats(scm,stats=c("Sparsity")))
+    expect_true(colnames(rd)[cols+1] == "Sparsity")
+    
+    rd <- rowData(getRowDataStats(scm,stat=c("Mean","SD")))
+    expect_equal(dim(rd),c(n_cpg,cols+2))
+    expect_true(any(colnames(rd) == "Mean"))
+    expect_true(any(colnames(rd) =="SD"))
+    
+  }))
+})
+
+#---- getColDataStats --------------------------------------------------------------------------------------------------
+test_that("getColDataStats", {
+  
+  fmt <- function(x) round(as.numeric(x),4)
+  
+  expect_error(getColDataStats("not scMethrix"),msg.validateExp)
+  
+  invisible(lapply(list(scm.mem,scm.h5), function(scm) { 
+    
+    cols <- ncol(rowData(scm))
+    s <- getColDataStats(scm)
+    expect_equal(dim(colData(s)),c(n_samples,cols+4))
+    stats <- colData(s)
+    
+    # Check stats
+    expect_equal(fmt(DelayedMatrixStats::colMeans2(score(s),na.rm=TRUE)),fmt(stats$Mean))
+    #expect_equal(DelayedMatrixStats::rowMedians(score(s)[rng,],na.rm=TRUE),stats$median[rng])
+    expect_equal(fmt(DelayedMatrixStats::colSds(score(s),na.rm=TRUE)),fmt(stats$SD))
+    expect_equal(fmt(nrow(scm)-DelayedMatrixStats::colCounts(score(s),val=NA)),fmt(stats$CpGs))
+    expect_equal(fmt((nrow(scm)-DelayedMatrixStats::colCounts(score(s),val=NA))/nrow(scm)),fmt(stats$Sparsity))
+    
+    # Check for stat subset
+    cd <- colData(getColDataStats(scm,stats=c("Mean")))
+    expect_equal(dim(cd),c(n_samples,cols+1))
+    expect_true(colnames(cd)[cols+1] == "Mean")
+    cd <- colData(getColDataStats(scm,stats=c("SD")))
+    expect_true(colnames(cd)[cols+1] =="SD")
+    cd <- colData(getColDataStats(scm,stats=c("CpGs")))
+    expect_true(colnames(cd)[cols+1] == "CpGs")
+    cd <- colData(getColDataStats(scm,stats=c("Sparsity")))
+    expect_true(colnames(cd)[cols+1] == "Sparsity")
+    
+    cd <- colData(getColDataStats(scm,stat=c("Mean","SD")))
+    expect_equal(dim(cd),c(n_samples,cols+2))
+    expect_true(any(colnames(cd) == "Mean"))
+    expect_true(any(colnames(cd) == "SD"))
+  }))
+})
+
+#---- mask_scMethrix ---------------------------------------------------------------------------------------------------
 test_that("mask_scMethrix", {
 
   expect_error(mask_scMethrix("not scMethrix"),msg.validateExp)

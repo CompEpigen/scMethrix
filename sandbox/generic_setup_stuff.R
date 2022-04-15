@@ -94,6 +94,7 @@ devtools::run_examples()
 devtools::load_all(".")
 devtools::document()
 pkgdown::build_site()
+pkgdown::build_reference() 
 
 saveRDS(colData, file = "colData.rds")
 

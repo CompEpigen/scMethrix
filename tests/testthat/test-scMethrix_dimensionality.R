@@ -21,8 +21,8 @@ test_that("reduce_scMethrix", {
     expect_equal(dim(reduce_scMethrix(scm,n_cpg = some_cpgs,var="top")),c(some_cpgs,ncol(scm)))
 
     s1 <- reduce_scMethrix(scm,n_cpg = some_cpgs,var="top")
-    s1 <- get_rowdata_stats(s1)
-    s2 <- get_rowdata_stats(scm)
+    s1 <- getRowDataStats(s1)
+    s2 <- getRowDataStats(scm)
     expect_equal(sort(rowData(s1)$sd,decreasing = TRUE),sort(rowData(s2)$sd,decreasing = TRUE)[1:some_cpgs])
     
   }))

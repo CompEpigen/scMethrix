@@ -1,6 +1,6 @@
 #---- .prepare_plot_data ------------------------------------------------------------------------------------------------
 test_that(".prepare_plot_data", {
-  expect_error(get_region_summary("not scMethrix"),msg.validateExp)
+  expect_error(.prepare_plot_data("not scMethrix"),msg.validateExp)
   
   invisible(lapply(list(scm.mem,scm.h5), function(scm) {
     expect_error(.prepare_plot_data(scm, n_cpgs = "not an int"),msg.validateType)
