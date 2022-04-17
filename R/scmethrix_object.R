@@ -261,13 +261,13 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 #' @noRd
 .validDims <- function(object) {
   # Check the dimensions of assays are correct
-  assay_dim <- lapply(assays(object),dim)
-  exp_dim <- c(nrow(object),ncol(object))
-  match_dim <- sapply(assay_dim, identical, y=exp_dim)
-  if (!all(match_dim)) {
-    assay_names <- names(which(!match_dim))
-    return (paste0("   Wrong dim: Assay",  ifelse(length(assay_names > 1),"s","")," '", paste0(assay_names,collapse="', '"),
-                               "' should have dimensions of (",paste0(exp_dim,collapse=", "),")."))
+  assayDim <- lapply(object@assays@data,dim)
+  invalidDim <- !sapply(assayDim, identical, dim(object))
+  if (any(invalidDim)) {
+    invalidAssays <- names(which(invalidDim))
+    return (paste0("   Wrong dim: Assay",  ifelse(length(invalidAssays) > 1,"s","")," '", 
+            paste0(invalidAssays,collapse="', '"),
+            "' should have dimensions of (",paste0(dim(object),collapse=", "),")."))
   }
   return (NULL)
 }
@@ -275,56 +275,67 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 #---- .validH5 ---------------------------------------------------------------------------
 #' Make sure `is_h5` variable is present
 #' @param object An [`scMethrix`] object
-#' @noRd
+#' @export
+#' @keywords internal
 .validH5 <- function(object) {
   if (!"is_h5" %in% names(S4Vectors::metadata(object))) {
     return (paste0("   Missing variable: 'is_h5' is not present in metadata(). Add manually with:\n",
-                               "        metadata(object) <- append(metadata(object),list(is_h5 = [TRUE/FALSE]))"))
+                               "        metadata(object)$is_h5 <- [TRUE/FALSE]"))
+  } else if (!is.logical(S4Vectors::metadata(object)$is_h5)) {
+    return(paste0("   Invalid variable: 'is_h5' must be of type boolean"))
   }
+  
   return (NULL)
 }
 
 #---- .validSamples ---------------------------------------------------------------------------
 #' Check if all the sample names are consistent with assay data colnames
 #' @param object An [`scMethrix`] object
-#' @noRd
+#' @export
+#' @keywords internal
 .validSamples <- function(object) {
-  assay_cols <- lapply(assays(object),colnames)
-  match_cols <- sapply(assay_cols, identical, y=sampleNames(object))
-  if (!all(match_cols)) {
-    col_names <- names(which(!match_cols))
-    return (paste0("   Wrong colNames: Assay",  ifelse(length(col_names > 1),"s","")," '", paste0(col_names,collapse="', '"),
-                               "' contain column names that do not match colData()."))
+  #if (length(assays(object)) == 0) return (TRUE)
+  assayCols <- lapply(assays(object),colnames)
+  invalidCols <- !sapply(assayCols, identical, y=rownames(colData(object)))
+  if (any(invalidCols)) {
+    invalidSamples <- names(which(invalidCols))
+    return (paste0("   Wrong colNames: Assay",  ifelse(length(invalidSamples) > 1,"s","")," '",
+                   invalidFeatures(invalidSamples,collapse="', '"),
+                   "' uses column names that do not match colData()."))
   }
 }
 
 #---- .validFeatures ---------------------------------------------------------------------------
 #' Check if all the feature names are consistent with assay data rownames
 #' @param object An [`scMethrix`] object
-#' @noRd
+#' @export
+#' @keywords internal
 .validFeatures <- function(object) {
-  assay_rows <- lapply(assays(object),rownames)
-  match_rows <- sapply(assay_rows, identical, y=featureNames(object))
-  if (!all(match_rows)) {
-    row_names <- names(which(!match_rows))
-    return (paste0("   Wrong rowNames: Assay",  ifelse(length(row_names > 1),"s","")," '", paste0(row_names,collapse="', '"),
-                   "' contain row names that do not match rowData()."))
+  #if (length(assays(object)) == 0) return (TRUE)
+  assayRows <- lapply(assays(object),rownames)
+  invalidRows <- !sapply(assayRows, identical, y=rownames(rowData(object)))
+  if (any(invalidRows)) {
+    invalidFeatures <- names(which(invalidRows))
+    return (paste0("   Wrong colNames: Assay",  ifelse(length(invalidFeatures) > 1,"s","")," '",
+                   paste0(invalidFeatures,collapse="', '"),
+                   "' uses row names that do not match rowData()."))
   }
 }
 
 #---- .validAssays ---------------------------------------------------------------------------
 # Check if all assays are either matrix or HDF5matrix-related types
 #' @param object An [`scMethrix`] object
-#' @noRd
+#' @export
+#' @keywords internal
 .validAssays <- function(object) {
-  exp_type = if (is_h5(object)) c("HDF5Matrix","DelayedMatrix") else "matrix"
-  assay_class <- lapply(assays(object),class)
-  match_class <- lapply(assay_class, function (a) exp_type %in% a)
-  match_class <- sapply(match_class,any)
-  if (!all(match_class)) {
-    assay_names <- names(which(!match_class))
-    return (paste0("   Wrong type: Assay",  ifelse(length(assay_names > 1),"s","")," '", paste0(assay_names,collapse="', '"),
-                               "' are of wrong type. Should be ",paste0(exp_type,collapse=" or "),". Recommend using convert_scMethrix() to force type of all assays."))
+  #if (length(object@assays) == 0) return (TRUE)
+  expType = if (is_h5(object)) c("HDF5Matrix","DelayedMatrix") else "matrix"
+  assayClass <- lapply(object@assays@data,class)
+  invalidClass <- !sapply(assayClass, function (a) any(a %in% expType))
+  if (any(invalidClass)) {
+    invalidAssay <- names(which(invalidClass))
+    return (paste0("   Wrong type: Assay",  ifelse(length(invalidAssay) > 1,"s","")," '", paste0(invalidAssay,collapse="', '"),
+                               "' should be of type: ",paste0(expType,collapse=" or "),". Recommend using convert_scMethrix() to force type of all assays."))
   }  
   
   return (NULL)
@@ -333,7 +344,8 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 #---- .validRedDim ---------------------------------------------------------------------------
 # Check if all reduced dim names are consistent with sampleNames
 #' @param object An [`scMethrix`] object
-#' @noRd
+#' @export
+#' @keywords internal
 .validRedDim <- function(object) {  
   red_rows <- lapply(reducedDims(object),rownames)
   if (!is.empty(red_rows)) {
@@ -359,7 +371,8 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 #' * assay classes are consistent with `is_h5`
 #' @param object A [`scMethrix`] object
 #' @importFrom methods validObject
-#' @noRd
+#' @export
+#' @keywords internal
 .validscMethrix <- function(object) {
 
   errors <- c(
