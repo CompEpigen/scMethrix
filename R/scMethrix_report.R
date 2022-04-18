@@ -23,7 +23,7 @@ scMethrix_report <- function(scm, outputDir = tempdir(), prefix = NULL, nCpG = 1
   
   nCpG <- min(nrow(scm), nCpG)
 
-  plotDensityScore <- plotDensityCoverage <- NULL
+  plotDensityCoverage <- plotCoverageAll <- plotCoverage <- NULL
   
   #---- Function code ------------------------------------------------------
   
@@ -56,14 +56,18 @@ scMethrix_report <- function(scm, outputDir = tempdir(), prefix = NULL, nCpG = 1
   #---- Fig 3 --------------------------------------------------------------
   if (verbose) message(paste0("   Step 3 of 5: Methylation"))
   
-  plotMethylation <- plotStats(scm, assay = "score", stat = "Mean", by = "Sample")
+  plotMethylationAll <- plotStats(scm, assay = "score", stat = "Mean", by = "Sample", collapse = TRUE)
+  plotMethylation <- plotStats(scm, assay = "score", stat = "Mean", by = "Sample", collapse = FALSE)
   
   #---- Fig 4 --------------------------------------------------------------
   if (verbose) message(paste0("   Step 4 of 5: Coverage"))
   
   if (has_cov(scm)) {
-    plotCoverage <- plotStats(scm, assay = "counts", stat = "Mean", by = "Sample")
+    plotCoverageAll <- plotStats(scm, assay = "counts", stat = "Mean", by = "Sample", collapse = TRUE)
+    plotCoverage <- plotStats(scm, assay = "counts", stat = "Mean", by = "Sample", collapse = FALSE)
   }
+  
+  #---- knit ---------------------------------------------------------------
   
   if (verbose) message(paste0("Knitting report"))
   
@@ -83,7 +87,11 @@ scMethrix_report <- function(scm, outputDir = tempdir(), prefix = NULL, nCpG = 1
                                   plotCpGsCoveredCountBySampleAll = plotCpGsCoveredCountBySampleAll,
                                   plotCpGsCoveredCountByChrAll = plotCpGsCoveredCountByChrAll,
                                   plotCpGsCoveredFracBySampleAll = plotCpGsCoveredFracBySampleAll,
-                                  plotCpGsCoveredFracByChrAll = plotCpGsCoveredFracByChrAll))
+                                  plotCpGsCoveredFracByChrAll = plotCpGsCoveredFracByChrAll,
+                                  plotMethylationAll = plotMethylationAll,
+                                  plotMethylation = plotMethylation,
+                                  plotCoverageAll = plotCoverageAll,
+                                  plotCoverage = plotCoverage))
   
   stop_time()
 }

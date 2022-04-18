@@ -732,7 +732,7 @@ getStats <- function(scm = NULL, assay="score", regions = NULL, stats = c("Mean"
   .validateColData(scm, phenotype = phenotype)
   stats <- .validateArg(stats, getStats, multiple.match=T)
 
-  Chromosome <- Sample <- Count <- Mean <- SD <- ..cols <- x <- . <- NULL
+  Chromosome <- Sample <- Count <- Mean <- SD <- Sparsity <- ..cols <- x <- . <- NULL
   
   calc_mean <- "Mean" %in% stats
   calc_median <- "Median" %in% stats

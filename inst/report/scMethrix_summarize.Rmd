@@ -18,6 +18,14 @@ params:
   plotCpGsCoveredCountByChr: NULL
   plotCpGsCoveredFracBySample: NULL
   plotCpGsCoveredFracByChr: NULL
+  plotCpGsCoveredCountBySampleAll: NULL
+  plotCpGsCoveredCountByChrAll: NULL
+  plotCpGsCoveredFracBySampleAll: NULL
+  plotCpGsCoveredFracByChrAll: NULL
+  plotMethylationAll: NULL,
+  plotMethylation: NULL,
+  plotCoverageAll: NULL,
+  plotCoverage: NULL
 ---
 
 ```{r include=FALSE}
@@ -26,9 +34,12 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 ```{r echo=FALSE}
 # Input a named list of plots, and this creates a tabbed panel of the plots in plotly format
-putInTabs <- function(plots) {
+putInTabs <- function(plots, level = 2) {
+  
+  level <- paste(rep("#",level), collapse="")
+  
   for(plot in names(plots)) {
-    cat("##", plot, '{-}',  '\n\n')
+    cat(level, plot, '{-}',  '\n\n')
     print(htmltools::tagList(plotly::ggplotly(plots[[plot]])))
     cat( '\n\n')
   }
@@ -65,26 +76,46 @@ if (params$hasCov) {
 }
 ```
 
-# Density {.tabset .tabset-pills}
+# Density {.tabset}
 ```{r, results='asis', echo = FALSE}
 putInTabs(plots)
 ```
 
 <!-- Figure 2 -->
 
+# Reference CpGs covered {.tabset}
+```{r, echo=FALSE}
+plots <- list()
+plots[["Count"]] <- params$plotCpGsCoveredCountBySampleAll
+plots[["Proportion"]] <- params$plotCpGsCoveredFracBySampleAll
+```
+
+## By sample {.tabset}
+```{r, results='asis', echo = FALSE}
+putInTabs(plots, level = 3)
+```
+
+```{r, echo=FALSE}
+plots <- list()
+plots[["Count"]] <- params$plotCpGsCoveredCountByChrAll
+plots[["Proportion"]] <- params$plotCpGsCoveredFracByChrAll
+```
+
+## By chromosome {.tabset}
+```{r, results='asis', echo = FALSE}
+putInTabs(plots, level = 3)
+```
+
+## By sample/chromosome {.tabset}
 ```{r, echo=FALSE}
 plots <- list()
 plots[["Count"]] <- params$plotCpGsCoveredCountBySample
 plots[["Proportion"]] <- params$plotCpGsCoveredFracBySample
 ```
 
-# Reference CpGs covered (by sample) {.tabset .tabset-pills}
-# Density {.tabset .tabset-pills}
 ```{r, results='asis', echo = FALSE}
-putInTabs(plots)
+putInTabs(plots, level = 3)
 ```
-
-<!-- Figure 3 -->
 
 ```{r, echo=FALSE}
 plots <- list()
@@ -92,8 +123,40 @@ plots[["Count"]] <- params$plotCpGsCoveredCountByChr
 plots[["Proportion"]] <- params$plotCpGsCoveredFracByChr
 ```
 
-# Reference CpGs covered (by chromosome) {.tabset .tabset-pills}
+## By chromosome/sample {.tabset}
+```{r, results='asis', echo = FALSE}
+putInTabs(plots, level = 3)
+```
+
+{- .leave-tabset}
+
+<!-- Figure 3 -->
+
+# Methylation {.tabset}
+```{r, echo=FALSE}
+plots <- list()
+plots[["Whole genome"]] <- params$plotMethylationAll
+plots[["By chromosome"]] <- params$plotMethylation
+```
+
 ```{r, results='asis', echo = FALSE}
 putInTabs(plots)
 ```
 
+<!-- Figure 4 -->
+`r if (!params$hasCov) {"<!--"}`
+
+```{r, echo=FALSE}
+plots <- list()
+plots[["Whole genome"]] <- params$plotCoverageAll
+plots[["By chromosome"]] <- params$plotCoverage
+```
+
+# Coverage {.tabset}
+```{r, results='asis', echo = FALSE}
+  putInTabs(plots)
+```
+
+`r if (!params$hasCov) {"-->"}`
+
+End of report
