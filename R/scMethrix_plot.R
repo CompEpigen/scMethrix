@@ -271,7 +271,10 @@ plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", 
   
   colorPalette <- .getPalette(ncol(scm), paletteID = paletteID)
   
-  getStat <- if (stat == "Mean" || stat == "Median") c(stat,"SD") else "Count"
+  getStat <- stat
+  if (stat == "Mean" || stat == "Median") getStat <- c(stat,"SD")
+  if (stat == "Proportion") getStat <- "Sparsity"
+  
   perChr <- if (by == "Chromosome") TRUE else !collapse
   perSample <- if (by == "Sample") TRUE else !collapse
   group <- if (by == "Chromosome") "Sample" else "Chromosome" 
@@ -280,11 +283,8 @@ plotStats <- function(scm, assay = "score", stat = c("Mean", "Median", "Count", 
   setDT(plotData)
  
   if (stat == "Proportion") {
-    setnames(plotData, "Count", "Proportion")
-    plotData[, `:=`(Proportion, Proportion/nrow(scm))]
-  } else if (stat == "Sparsity") {
-    setnames(plotData, "Count", "Sparsity")
-    plotData[, `:=`(Sparsity, 1-(Sparsity/nrow(scm)))]
+    plotData[, `:=` (Sparsity, 1-Sparsity)]
+    setnames(plotData, "Sparsity", "Proportion")
   }
 
   # plot_dat$Chr <- gsub("^.{0,3}", "", plot_dat$Chr)

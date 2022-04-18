@@ -316,28 +316,31 @@ test_that("getStats", {
     samples <- sampleNames(scm)
     nSamples <- nrow(colData(scm))
     mtx <- score(scm)
+    nStatsCols <- 7
     
     # Check all
     stats <- getStats(scm, perSample = FALSE, perChr = FALSE)
-    expect_equal(dim(stats),c(1,6))
+    expect_equal(dim(stats),c(1,nStatsCols))
     expect_equal(fmt(mean(mtx, na.rm=TRUE)), fmt(stats$Mean))
     expect_equal(fmt(median(mtx,na.rm=TRUE)), fmt(stats$Median))
     expect_equal(fmt(sd(mtx,na.rm=TRUE)), fmt(stats$SD), tolerance=1e-1)
     expect_equal(sum(!is.na(mtx)), fmt(stats$Count))
+    expect_equal(fmt(sum(is.na(mtx))/(n_cpg*n_samples)), fmt(stats$Sparsity))
     
     # Check per sample
     stats <- getStats(scm, perSample = TRUE, perChr = FALSE)
-    expect_equal(dim(stats),c(nSamples,6))
+    expect_equal(dim(stats),c(nSamples,nStatsCols))
     expect_true(all(stats$Sample %in% samples))
     
     expect_equal(fmt(colMeans(mtx,na.rm=TRUE)), fmt(stats$Mean))
     expect_equal(fmt(colMedians(mtx,na.rm=TRUE)), fmt(stats$Median))
     expect_equal(fmt(colSds(mtx,na.rm=TRUE)), fmt(stats$SD), tolerance=1e-1)
     expect_equal(nrow(mtx)-fmt(colCounts(mtx,value=NA)), fmt(stats$Count))
+    expect_equal(fmt(colCounts(mtx,value=NA)/nrow(mtx)), fmt(stats$Sparsity))
     
     # Check per chr
     stats <- getStats(scm, perSample = FALSE, perChr = TRUE)
-    expect_equal(dim(stats),c(nChrs,6))
+    expect_equal(dim(stats),c(nChrs,nStatsCols))
     expect_true(all(stats$Chromosome %in% chrs))
     
     chr <- stats$Chromosome[[1]]
@@ -347,10 +350,11 @@ test_that("getStats", {
     expect_equal(fmt(median(mtx,na.rm=TRUE)), fmt(stats$Median))
     expect_equal(fmt(sd(mtx,na.rm=TRUE)), fmt(stats$SD), tolerance=1e-1)
     expect_equal(sum(!is.na(mtx)), fmt(stats$Count))
+    expect_equal(fmt(sum(rowAlls(mtx,value=NA))/nrow(mtx)), fmt(stats$Sparsity))
     
     # Check per sample, per chr
     stats <- getStats(scm, perSample = TRUE, perChr = TRUE)
-    expect_equal(dim(stats),c(nChrs*nSamples,6))
+    expect_equal(dim(stats),c(nChrs*nSamples,nStatsCols))
     expect_true(all(stats$Sample %in% samples))
     expect_true(all(stats$Chromosome %in% chrs))
     
@@ -362,6 +366,7 @@ test_that("getStats", {
     expect_equal(fmt(median(mtx,na.rm=TRUE)), fmt(stats$Median))
     expect_equal(fmt(sd(mtx,na.rm=TRUE)), fmt(stats$SD), tolerance=1e-1)
     expect_equal(sum(!is.na(mtx)), fmt(stats$Count))
+    expect_equal(fmt(colCounts(mtx,value=NA)/nrow(mtx)), fmt(stats$Sparsity))
     
     # Check for stat subset
     stats <- getStats(scm,stat="Mean")
@@ -380,6 +385,10 @@ test_that("getStats", {
     expect_equal(dim(stats),c(nChrs*nSamples,3))
     expect_true(colnames(stats)[ncol(stats)] == "SD")
     
+    stats <- getStats(scm,stat="Sparsity")
+    expect_equal(dim(stats),c(nChrs*nSamples,3))
+    expect_true(colnames(stats)[ncol(stats)] == "Sparsity")
+
     stats <- getStats(scm,stat=c("Mean","Median"))
     expect_equal(dim(stats),c(nChrs*nSamples,4))
     expect_true(any(colnames(stats) == "Mean"))

@@ -720,7 +720,8 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
 #' getStats(scMethrix_data, perSample = FALSE)
 #' @return data.table of summary stats
 #' @export
-getStats <- function(scm = NULL, assay="score", regions = NULL, stats = c("Mean","Median","SD","Count"), perSample = TRUE, perChr = TRUE, phenotype = NULL, verbose = TRUE) {
+getStats <- function(scm = NULL, assay="score", regions = NULL, stats = c("Mean","Median","SD","Count","Sparsity"), 
+                     perSample = TRUE, perChr = TRUE, phenotype = NULL, verbose = TRUE) {
 
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)  
@@ -737,18 +738,18 @@ getStats <- function(scm = NULL, assay="score", regions = NULL, stats = c("Mean"
   calc_median <- "Median" %in% stats
   calc_SD <- "SD" %in% stats
   calc_count <- "Count" %in% stats
+  calc_sparsity <-  "Sparsity" %in% stats
   cols <- as.character(stats)
   
   #---- Function code ------------------------------------------------------
   if (verbose) message("Getting descriptive statistics...",start_time())
 
   mtx <- get_matrix(scm, assay = assay)
-  chrs <- .getGRchrStats(rowRanges(scm))
+  chrs <- as.data.table(.getGRchrStats(rowRanges(scm)))
   
   stats <- lapply(1:nrow(chrs), function(x) {
     rows <- chrs$Start.idx[x]:chrs$End.idx[x]
-    mtx <- get_matrix(scm,assay=assay)
-    
+
     data.table::data.table(
       Sample = colnames(scm),
       Chromosome = chrs$Chromosome[x],
@@ -761,6 +762,8 @@ getStats <- function(scm = NULL, assay="score", regions = NULL, stats = c("Mean"
   
   stats <- data.table::rbindlist(l = stats, use.names = TRUE)
 
+  stats <<- stats
+  
   if (!perChr) {
     
     count = unlist(stats[, .(Count = lapply(.(Count),sum)), by=.(Sample)]$Count)
@@ -778,7 +781,7 @@ getStats <- function(scm = NULL, assay="score", regions = NULL, stats = c("Mean"
     if (calc_median) {
       median = stats[, .SD[which.max(Count)], by=Sample]$Median
     }
-      
+
     stats <- data.table::data.table(
       Sample = levels(factor(stats$Sample)),
       Chromosome = "All",
@@ -815,6 +818,29 @@ getStats <- function(scm = NULL, assay="score", regions = NULL, stats = c("Mean"
       Median = if (calc_median) median,
       Count =  count
     )
+  } 
+
+  if (calc_sparsity) {
+    if (perSample && perChr) {
+      chrs <- chrs[,c("Chromosome","Sites")]
+      setnames(chrs, "Sites", "Sparsity")
+      stats <- merge(stats,chrs,by="Chromosome")
+      stats[, Sparsity := 1-(Count/Sparsity)]
+    } else if (perChr) {
+      props <- lapply(1:nrow(chrs), function(x) {
+        rows <- chrs$Start.idx[x]:chrs$End.idx[x]
+        data.table::data.table(
+          Chromosome = chrs$Chromosome[x],
+          Sparsity = 1-((length(rows) - sum(DelayedMatrixStats::rowAlls(mtx, rows = rows, value=NA)))/length(rows))
+        )
+      })
+      props <- data.table::rbindlist(l = props, use.names = TRUE)
+      stats <- merge(stats,props,by="Chromosome")
+    } else if (perSample) {
+      stats[, Sparsity := 1-(Count/nrow(scm))]
+    } else {
+      stats[, Sparsity := 1-(Count/prod(dim(scm)))]
+    }
   }
   
   cols <- c("Sample","Chromosome",cols)
