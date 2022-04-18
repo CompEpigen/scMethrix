@@ -4,10 +4,8 @@
 #' If the directory contains required files (from previous run), it directly proceeds to generate html report.
 #' @inheritParams generic_scMethrix_function
 #' @param outputDir Output directory name where the files should be saved. Default = `tempdir()`
-#' @param plot_beta_dist  Can be time consuming. Default = `TRUE`
 #' @param nCpG Number of CpGs to use for estimating beta value distribution. Default = `10000`
 #' @param prefix If provided, the name of the report and the intermediate files will start with the prefix. Default = `""`
-#' @param n_thr Default 4. Only used if plot_beta_dist is TRUE
 #' @return an interactive html report
 #' @examples
 #' \dontrun{
@@ -15,7 +13,7 @@
 #' methrix::methrix_report(meth = methrix_data)
 #' }
 #' @export
-scMethrix_report <- function(scm, outputDir = tempdir(), prefix = NULL, nCpG = 10000) {
+scMethrix_report <- function(scm, outputDir = tempdir(), prefix = NULL, nCpG = 10000, verbose = FALSE) {
   
   #---- Input validation ---------------------------------------------------
   .validateExp(scm)
@@ -29,41 +27,47 @@ scMethrix_report <- function(scm, outputDir = tempdir(), prefix = NULL, nCpG = 1
   
   #---- Function code ------------------------------------------------------
   
-  start_time()
+  if (verbose) message("Generating report...", start_time())
   
   if (!dir.exists(outputDir)) 
       dir.create(path = outputDir, showWarnings = FALSE, recursive = TRUE)
   
   #---- Fig 1 --------------------------------------------------------------
-  message(paste0("Step 1 of 5: Plotting density"))
+  if (verbose) message(paste0("   Step 1 of 5: Plotting density"))
   
   plotDensityScore <- plotDensity(scm, assay = "score")
   if (has_cov(scm)) plotDensityCoverage <- plotDensity(scm, assay = "counts")
   
   #---- Fig 2 --------------------------------------------------------------
-  message(paste0("Step 2 of 5: Reference CpGs Covered"))
+  if (verbose) message(paste0("   Step 2 of 5: Reference CpGs Covered"))
   
   plotCpGsCoveredCountBySample <- plotStats(scm, assay = "score", collapse = FALSE, stat="Count", by = "Sample")
+  plotCpGsCoveredFracBySample <-  plotStats(scm, assay = "score", collapse = FALSE, stat="Proportion", by = "Sample")
+  
+  plotCpGsCoveredCountBySampleAll <- plotStats(scm, assay = "score", collapse = TRUE, stat="Count", by = "Sample")
+  plotCpGsCoveredFracBySampleAll <-  plotStats(scm, assay = "score", collapse = TRUE, stat="Proportion", by = "Sample")
+  
+  plotCpGsCoveredFracByChr <-     plotStats(scm, assay = "score", collapse = FALSE, stat="Proportion", by = "Chr")
   plotCpGsCoveredCountByChr <-    plotStats(scm, assay = "score", collapse = FALSE, stat="Count", by = "Chr")
   
-  plotCpGsCoveredFracBySample <-  plotStats(scm, assay = "score", collapse = FALSE, stat="Proportion", by = "Sample")
-  plotCpGsCoveredFracByChr <-     plotStats(scm, assay = "score", collapse = FALSE, stat="Proportion", by = "Chr")
+  plotCpGsCoveredFracByChrAll <-     plotStats(scm, assay = "score", collapse = TRUE, stat="Proportion", by = "Chr")
+  plotCpGsCoveredCountByChrAll <-    plotStats(scm, assay = "score", collapse = TRUE, stat="Count", by = "Chr")
   
   #---- Fig 3 --------------------------------------------------------------
-  message(paste0("Step 3 of 5: Methylation"))
+  if (verbose) message(paste0("   Step 3 of 5: Methylation"))
   
   plotMethylation <- plotStats(scm, assay = "score", stat = "Mean", by = "Sample")
   
   #---- Fig 4 --------------------------------------------------------------
-  message(paste0("Step 4 of 5: Coverage"))
+  if (verbose) message(paste0("   Step 4 of 5: Coverage"))
   
   if (has_cov(scm)) {
     plotCoverage <- plotStats(scm, assay = "counts", stat = "Mean", by = "Sample")
   }
   
-  message(paste0("Knitting report"))
-  md <- system.file("report", "scMethrix_summarize.Rmd", package = "scMethrix")
+  if (verbose) message(paste0("Knitting report"))
   
+  md <- system.file("report", "scMethrix_summarize.Rmd", package = "scMethrix")
   outputFile <- "scMethrix_report.html"
   if (!is.null(prefix)) outputFile <- paste(prefix, outputFile, sep="_")
 
@@ -75,7 +79,11 @@ scMethrix_report <- function(scm, outputDir = tempdir(), prefix = NULL, nCpG = 1
                                   plotCpGsCoveredCountBySample = plotCpGsCoveredCountBySample,
                                   plotCpGsCoveredCountByChr = plotCpGsCoveredCountByChr,
                                   plotCpGsCoveredFracBySample = plotCpGsCoveredFracBySample,
-                                  plotCpGsCoveredFracByChr = plotCpGsCoveredFracByChr))
+                                  plotCpGsCoveredFracByChr = plotCpGsCoveredFracByChr,
+                                  plotCpGsCoveredCountBySampleAll = plotCpGsCoveredCountBySampleAll,
+                                  plotCpGsCoveredCountByChrAll = plotCpGsCoveredCountByChrAll,
+                                  plotCpGsCoveredFracBySampleAll = plotCpGsCoveredFracBySampleAll,
+                                  plotCpGsCoveredFracByChrAll = plotCpGsCoveredFracByChrAll))
   
   stop_time()
 }
