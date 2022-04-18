@@ -223,7 +223,7 @@ cast_datatable <- function(regions) {
 #' data(scMethrix_data)
 #' .getGRchrStats(rowRanges(scMethrix_data))
 .getGRchrStats <- function(gr) {
-  chrs = gr@seqnames
+  chrs = seqnames(gr)
   end.idx = cumsum(chrs@lengths)
   start.idx = c(1, head(end.idx, -1) + 1)
   start.loci = start(range(gr))

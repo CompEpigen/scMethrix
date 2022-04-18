@@ -39,14 +39,14 @@ test_that("dim_red_scMethrix", {
     
     s <- suppressWarnings(impute_regions(scm))
     s <- reduce_scMethrix(s,assay="impute",n_cpg = 50)
+    n_components <- 2
     
-    n_components = 2
     #PCA
-    pca <- dim_red_scMethrix(s, assay = "impute", type="PCA",n_components = n_components)
+    pca <- dim_red_scMethrix(s, assay = "impute", type="PCA", n_components = n_components)
     expect_equal(reducedDimNames(pca),"PCA")
-    expect_equal(dim(reducedDim(pca)),c(ncol(s),n_components))
-    expect_equal(length(pca@metadata$PCA_vars),n_components)
-    
+    expect_equal(dim(reducedDim(pca)),c(ncol(s), n_components))
+    expect_equal(length(S4Vectors::metadata(pca)[["PCA_vars"]]), n_components)
+
     #UMAP
     umap <- dim_red_scMethrix(s, assay = "impute",type="UMAP", n_components = n_components)
     expect_equal(reducedDimNames(umap),"UMAP")

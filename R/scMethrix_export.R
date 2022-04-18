@@ -49,7 +49,6 @@ exportBedGraph <- function(scm = NULL, path = tempdir(), assay = "score", suffix
 #' @param path `string`; the `file.path` of the output directory. Default = `tempdir()`
 #' @param suffix `string`; optional suffix to add to the exported bed files. Default = `NULL`
 #' @param assays `string`; list of assays to include in each file. Each assay will be a separate column. Default = `"score"`
-# @param rowData string; include the sample metadata from `colData()`
 #' @param na.rm `boolean`; flag to remove the NA values from the output data. Default = `TRUE`
 #' @param trackName `string`; value for `track name=` in the header line. If NULL, the header line will be excluded. Default = `NULL`
 #' @param extension `string`; the extension to put on the file. Default = `"bed"`.

@@ -122,7 +122,7 @@ dim_red_scMethrix <- function(scm, assay="score", type=c("tSNE","UMAP","PCA"), p
     pc_vars <- round(pc_vars, digits = 2)
     
     SingleCellExperiment::reducedDim(scm, "PCA") <- meth$x[,1:n_components]
-    scm@metadata$PCA_vars <- pc_vars[1:n_components]
+    S4Vectors::metadata(scm)[["PCA_vars"]] <- pc_vars[1:n_components]
     
     if (verbose) {
       message("PCA vars (saved in metadata$PCA_vars):")

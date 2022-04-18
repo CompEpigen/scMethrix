@@ -1,6 +1,5 @@
 #' Class definition, slot descriptions, and accessor methods for [`scMethrix`]
-#' 
-#' #' @description For the constructor description, see the [`here`][scMethrix()].
+#' @description For the constructor description, see the [`here`][scMethrix()].
 #' @name scMethrix-class
 #' @docType class
 #' @slot assays [list()]; assays containing methylation or coverage information. Valid formats are either [matrix] or [HDF5Array] Accessed via [assays()].
@@ -300,7 +299,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
   if (any(invalidCols)) {
     invalidSamples <- names(which(invalidCols))
     return (paste0("   Wrong colNames: Assay",  ifelse(length(invalidSamples) > 1,"s","")," '",
-                   invalidFeatures(invalidSamples,collapse="', '"),
+                   paste0(invalidSamples,collapse="', '"),
                    "' uses column names that do not match colData()."))
   }
 }
@@ -323,7 +322,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 }
 
 #---- .validAssays ---------------------------------------------------------------------------
-# Check if all assays are either matrix or HDF5matrix-related types
+#' Check if all assays are either matrix or HDF5matrix-related types
 #' @param object An [`scMethrix`] object
 #' @export
 #' @keywords internal
@@ -342,7 +341,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 }
 
 #---- .validRedDim ---------------------------------------------------------------------------
-# Check if all reduced dim names are consistent with sampleNames
+#' Check if all reduced dim names are consistent with sampleNames
 #' @param object An [`scMethrix`] object
 #' @export
 #' @keywords internal
@@ -390,7 +389,7 @@ setMethod(f = "is_h5", signature = "scMethrix", definition = function(object)   
 
   if (!is.null(errors)) return (errors)
   
-  return (TRUE)
+  return (NULL)
 }
 
 S4Vectors::setValidity2("scMethrix", .validscMethrix)

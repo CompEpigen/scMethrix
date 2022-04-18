@@ -38,7 +38,7 @@
   
   if (!is.null(pheno)) {
     if (pheno %in% colnames(colData(scm))) {
-      #colnames(meth_sub) <- as.character(scm@colData[, pheno])
+      # colnames(meth_sub) <- as.character(colData(scm)[, pheno])
       #TODO: make sure the order is correct
       plot.data[, `:=`(Pheno, rep(colData(scm)[,pheno],each=nrow(meth_sub)))]
       plot.data[, `:=`(Pheno, as.factor(Pheno))]

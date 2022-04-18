@@ -216,18 +216,18 @@ test_that("subset_scMethrix", {
     # Subset by include
     s <- subset_scMethrix(scm, samples = samples, by="include")
     expect_equal(dim(s),c(n_cpg,length(samples)))
-    expect_equal(samples,colData(s)@rownames)
+    expect_equal(samples,rownames(colData(s)))
    
     s <- subset_scMethrix(scm, contigs = contigs, by="include")
-    expect_equal(dim(s),c(length(which(as.vector(rowRanges(scm)@seqnames) %in% contigs)),n_samples))
-    expect_equal(contigs,as.character(seqnames(s)@values))
+    expect_equal(dim(s),c(length(which(as.vector(GenomeInfoDb::seqnames(scm)) %in% contigs)),n_samples))
+    expect_equal(contigs,as.character(S4Vectors::runValue(seqnames(s))))
     
     s <- subset_scMethrix(scm, regions = regions, by="include")
-    expect_equal(dim(s),c(sum("seqnames"(scm)@lengths[1:2]),n_samples))
+    expect_equal(dim(s),c(sum(S4Vectors::runLength(GenomeInfoDb::seqnames(scm))[1:2]),n_samples))
     expect_equal(length(findOverlaps(regions,rowRanges(s))),length(rowRanges(s)))
       
     s <- subset_scMethrix(scm, samples = samples, contigs = contigs, regions = regions, by="include")
-    expect_equal(dim(s),c("seqnames"(scm[,c(1,3)])@lengths[1],length(samples)))
+    expect_equal(dim(s),c(S4Vectors::runLength(GenomeInfoDb::seqnames(scm[,c(1,3)]))[1],length(samples)))
     
     # Subset by exclude
     s <- subset_scMethrix(scm, samples = samples, by = "exclude")
@@ -235,15 +235,15 @@ test_that("subset_scMethrix", {
     expect_equal(length(intersect(rownames(colData(s)),samples)),0)
     
     s <- subset_scMethrix(scm, contigs = contigs, by = "exclude")
-    expect_equal(dim(s),c(n_cpg-length(which(as.vector(rowRanges(scm)@seqnames) %in% contigs)),n_samples))
-    expect_equal(length(intersect(contigs,as.character(seqnames(s)@values))),0)
+    expect_equal(dim(s),c(n_cpg-length(which(as.vector(GenomeInfoDb::seqnames(scm)) %in% contigs)),n_samples))
+    expect_equal(length(intersect(contigs,as.character(S4Vectors::runValue(seqnames(s))))),0)
     
     s <- subset_scMethrix(scm, regions = regions, by = "exclude")
-    expect_equal(dim(s),c(sum("seqnames"(scm)@lengths[c(-1,-2)]),n_samples))
+    expect_equal(dim(s),c(sum(S4Vectors::runLength(GenomeInfoDb::seqnames(scm))[c(-1,-2)]),n_samples))
     expect_equal(length(findOverlaps(regions,rowRanges(s))),0)
     
     s <- subset_scMethrix(scm, samples = samples, contigs = contigs, regions = regions, by = "exclude")
-    expect_equal(dim(s),c(sum("seqnames"(scm[,c(-1,-3)])@lengths[c(-1,-2)]),length(samples)))
+    expect_equal(dim(s),c(sum(S4Vectors::runLength(GenomeInfoDb::seqnames(scm[,c(-1,-3)]))[c(-1,-2)]),length(samples)))
     
   }))
 })

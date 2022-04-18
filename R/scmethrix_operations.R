@@ -164,7 +164,7 @@ merge_scMethrix <- function(scm1 = NULL, scm2 = NULL, h5_dir = NULL, by = c("row
   } else {
     
     # Merge by col
-    if (any(rownames(scm1@colData) %in% rownames(scm2@colData))) 
+    if (any(rownames(colData(scm1)) %in% rownames(colData(scm2)))) 
       stop("You have the same samples in your datasets. You need different samples for this merging.", call. = FALSE)
     
     
@@ -593,7 +593,7 @@ convert_scMethrix <- function(scm = NULL, type = c(NA,"HDF5","memory"), h5_dir =
       if (verbose) message("   Converted '",name,"' assay in ", split_time())
     }
     
-    scm@metadata$is_h5 <- FALSE
+    metadata(scm)["is_h5"] <- FALSE
   }
   
   if (verbose) message("Converted in ", stop_time())
@@ -661,7 +661,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
     
     if (!is.null(contigs)) {
       if (verbose) message("   Subsetting by contigs")
-      c <- as.character(GenomeInfoDb::seqnames(scm)@values)
+      c <- as.character(levels(GenomeInfoDb::seqnames(scm)))
       scm <- subset_scMethrix(scm,contigs = c[!c %in% contigs],by="include")
     }
     
@@ -676,7 +676,7 @@ subset_scMethrix <- function(scm = NULL, regions = NULL, contigs = NULL, samples
     if (!is.null(regions)) {
       regions <- cast_granges(regions)
       if (verbose) message("   Subsetting by regions")
-      scm <- scm[GenomicRanges::findOverlaps(rowRanges(scm), regions)@from]
+      scm <- scm[S4Vectors::queryHits(GenomicRanges::findOverlaps(rowRanges(scm), regions))]
     }
     
     if (!is.null(contigs)) {
@@ -995,7 +995,7 @@ getRegionStats = function (scm = NULL, assay="score", regions = NULL, group = NU
   overlap_type <- .validateArg(overlap_type,getRegionStats)
   .validateType(verbose,"boolean")
   
-  if (!is.null(group) && !(group %in% colnames(scm@colData))){
+  if (!is.null(group) && !(group %in% colnames(colData(scm)))){
     stop(paste("The column name ", group, " can't be found in colData. Please provid a valid group column."), call. = FALSE)
   }
   
@@ -1018,7 +1018,7 @@ getRegionStats = function (scm = NULL, assay="score", regions = NULL, group = NU
   
   regions$rid <- paste0("rid_", 1:length(regions))
   
-  overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type)) #GenomicRanges::findOverlaps(rowRanges(m), regions)@from
+  overlap_indices <- as.data.table(GenomicRanges::findOverlaps(scm, regions, type = overlap_type))
   
   if(nrow(overlap_indices) == 0){
     stop("No overlaps detected")

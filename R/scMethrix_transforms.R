@@ -510,7 +510,7 @@ collapse_samples <- function(scm = NULL, colname = NULL, trans = NULL, h5_dir = 
   if (verbose) message("Starting to collapse experiment...",start_time())
   
   assays <- list()
-  overlaps_indicies <- data.table(Sample = sampleNames(scm), Group = factor(scm@colData[,colname]))
+  overlaps_indicies <- data.table(Sample = sampleNames(scm), Group = factor(colData(scm)[,colname]))
 
   for (name in SummarizedExperiment::assayNames(scm)) {
     
@@ -618,7 +618,7 @@ impute_by_melissa <- function (scm, threshold = 50, assay = "score", new_assay =
 
   #---- Function code ------------------------------------------------------
   # Convert Granges to genomic interval [-1,1]
-  chrom_size <- scm@metadata$chrom_size
+  chrom_size <- S4Vectors::metadata(scm)["chrom_size"]
   chrom_start <- sapply(coverage(scm), function(x) {x@lengths[1]}+1)
   interval <- as.data.table(rowRanges(scm))[,.(seqnames,start)]
   
